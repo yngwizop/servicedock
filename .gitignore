@@ -1,0 +1,17 @@
+# SEHR WICHTIG: Deine geheime Konfiguration
+.env
+
+# Datenbank-Volume-Daten (falls es lokal erstellt wird)
+postgres_data/
+
+# Python / Backend
+backend/__pycache__/
+backend/.venv/
+
+# Node.js / Frontend
+frontend/node_modules/
+frontend/dist/
+
+# OS- und IDE-Dateien
+.DS_Store
+.vscode/

@@ -1,0 +1,4 @@
+/* Leer! 
+  Wir entfernen die störenden #root-Styles wie 'max-width' und 'padding', 
+  damit unser Tailwind 'min-h-screen' die volle Kontrolle hat.
+*/
