@@ -11,29 +11,21 @@ app = FastAPI()
 # === CORS Middleware ===
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Für Test, später auf Frontend-URL begrenzen
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # --- Konfiguration & Datenbank ---
-
-# Lade aus .env-Datei (gelesen von Docker Compose)
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://user:password@db:5432/dashboard"  # Fallback
-)
-ADMIN_PASSWORD = os.getenv(
-    "ADMIN_PASSWORD", 
-    "admin123" # Fallback, falls .env fehlt
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@db:5432/dashboard")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
 
 def get_connection():
     try:
         result = urlparse(DATABASE_URL)
         return psycopg2.connect(
-            dbname=result.path[1:],  # path beginnt mit '/'
+            dbname=result.path[1:],
             user=result.username,
             password=result.password,
             host=result.hostname,
@@ -49,7 +41,7 @@ class Shortcut(BaseModel):
     id: int | None = None
     name: str
     url: str
-    icon: str | None = None # Icon-Feld hinzugefügt, passend zur DB
+    icon: str | None = None
 
 class Service(BaseModel):
     id: int | None = None
@@ -58,17 +50,17 @@ class Service(BaseModel):
     url: str
     icon: str | None = None
 
-# NEU: Modell für Login
 class AdminLogin(BaseModel):
     password: str
 
-# NEU: Modell für Aussehen
+# NEU: Appearance-Modell angepasst
 class Appearance(BaseModel):
     id: int = 1
     bg_color: str | None = None
     bg_image_url: str | None = None
-    bg_opacity: float | None = Field(None, ge=0.0, le=1.0) # Wert zwischen 0 und 1
-
+    bg_opacity: float | None = Field(None, ge=0.0, le=1.0)
+    shortcut_cols: int | None = Field(None, ge=1, le=12)
+    service_cols: int | None = Field(None, ge=1, le=12) # <-- NEU HIER
 
 # --- API Routen ---
 
@@ -77,7 +69,7 @@ def root():
     return {"message": "Web Dashboard Backend is running"}
 
 # ===== Shortcuts (CRUD) =====
-
+# (Unverändert)
 @app.get("/api/shortcuts")
 def get_shortcuts():
     conn = get_connection()
@@ -134,7 +126,7 @@ def delete_shortcut(shortcut_id: int):
     return {"message": "deleted"}
 
 # ===== Services (CRUD) =====
-
+# (Unverändert)
 @app.get("/api/services")
 def get_services():
     conn = get_connection()
@@ -194,7 +186,7 @@ def delete_service(service_id: int):
     return {"message": "deleted"}
 
 
-# ===== NEU: Appearance =====
+# ===== Appearance (ANGEPASST) =====
 
 @app.get("/api/appearance")
 def get_appearance():
@@ -202,31 +194,36 @@ def get_appearance():
     cur = conn.cursor()
     # Stellt sicher, dass die Default-Zeile (id=1) existiert
     cur.execute(
-        "INSERT INTO appearance (id, bg_color, bg_opacity) "
-        "VALUES (1, '#f0f2f5', 1.0) "
+        "INSERT INTO appearance (id, bg_color, bg_opacity, shortcut_cols, service_cols) " # <-- service_cols hinzugefügt
+        "VALUES (1, '#f0f2f5', 1.0, 6, 6) " # <-- service_cols hinzugefügt
         "ON CONFLICT (id) DO NOTHING;"
     )
     conn.commit() 
     
-    cur.execute("SELECT bg_color, bg_image_url, bg_opacity FROM appearance WHERE id = 1;")
+    # NEU: service_cols hinzugefügt
+    cur.execute("SELECT bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols FROM appearance WHERE id = 1;")
     row = cur.fetchone()
     cur.close()
     conn.close()
     if not row:
-        # Sollte dank INSERT...ON CONFLICT nie passieren
         raise HTTPException(status_code=404, detail="Appearance settings not found")
     
-    return {"bg_color": row[0], "bg_image_url": row[1], "bg_opacity": float(row[2])}
+    return {
+        "bg_color": row[0], 
+        "bg_image_url": row[1], 
+        "bg_opacity": float(row[2]),
+        "shortcut_cols": row[3],
+        "service_cols": row[4]  # <-- NEU
+    }
 
 @app.put("/api/appearance")
 def update_appearance(appearance: Appearance):
     conn = get_connection()
     cur = conn.cursor()
     
-    # Baue die Query dynamisch, um nur gesendete Felder zu updaten
     updates = []
     params = []
-    # Nimm den Wert nur, wenn er im Request Body war (Pydantic setzt ihn sonst nicht auf None)
+    
     if appearance.bg_color is not None:
         updates.append("bg_color = %s")
         params.append(appearance.bg_color)
@@ -236,6 +233,13 @@ def update_appearance(appearance: Appearance):
     if appearance.bg_opacity is not None:
         updates.append("bg_opacity = %s")
         params.append(appearance.bg_opacity)
+    if appearance.shortcut_cols is not None:
+        updates.append("shortcut_cols = %s")
+        params.append(appearance.shortcut_cols)
+    # NEU: service_cols hinzugefügt
+    if appearance.service_cols is not None:
+        updates.append("service_cols = %s")
+        params.append(appearance.service_cols)
 
     if not updates:
         return {"message": "No changes provided"}
@@ -255,12 +259,10 @@ def update_appearance(appearance: Appearance):
     return {"message": "Appearance updated"}
 
 
-# ===== NEU: Auth =====
-
+# ===== Auth (Unverändert) =====
 @app.post("/api/login")
 def login(creds: AdminLogin):
     if creds.password == ADMIN_PASSWORD:
-        # In einer echten App würden wir hier einen JWT-Token zurückgeben
         return {"success": True, "message": "Login successful"}
     else:
         raise HTTPException(status_code=401, detail="Invalid credentials")
