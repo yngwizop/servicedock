@@ -93,6 +93,22 @@ function SettingsPanel({
               <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-md font-medium w-full transition-colors">Hinzufügen</button>
             </div>
           </form>
+
+          {/* Info-Hinweis für Icons */}
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <p className="text-sm text-blue-800 dark:text-blue-300">
+              💡 <strong>Tipp:</strong> Icons können von{' '}
+              <a
+                href="https://selfh.st/icons/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-blue-600 dark:hover:text-blue-200 font-medium"
+              >
+                selfh.st/icons
+              </a>
+              {' '}bezogen werden.
+            </p>
+          </div>
         </div>
       )}
 

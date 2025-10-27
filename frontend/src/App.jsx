@@ -18,10 +18,10 @@ function App() {
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark'); // Speichert die Wahl
+      localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light'); // Speichert die Wahl
+      localStorage.setItem('theme', 'light');
     }
   }, [theme]);
 
@@ -41,7 +41,7 @@ function App() {
   const [activeTab, setActiveTab] = useState("services");
 
   const [appearance, setAppearance] = useState({
-    bg_color: "#f0f2f5", // Wird nur noch im SettingsPanel verwendet
+    bg_color: "#f0f2f5",
     bg_image_url: null,
     bg_opacity: 1.0,
     shortcut_cols: 6,
@@ -77,10 +77,8 @@ function App() {
       const res = await fetch(`${BACKEND_URL}/api/appearance`);
       const data = await res.json();
       const safeData = {
-        // bg_color wird noch für das Settings Panel benötigt
         bg_color: data.bg_color || "#f0f2f5", 
         bg_image_url: data.bg_image_url || null,
-        // Sicherstellen, dass bg_opacity einen gültigen Wert hat
         bg_opacity: (data.bg_opacity !== null && data.bg_opacity !== undefined) ? data.bg_opacity : 1.0, 
         shortcut_cols: data.shortcut_cols || 6,
         service_cols: data.service_cols || 6,
@@ -91,7 +89,6 @@ function App() {
       console.error("Fehler beim Laden der Appearance:", err);
     }
   };
-
 
   useEffect(() => {
     fetchData();
@@ -204,10 +201,18 @@ function App() {
   };
 
   // --- Style-Objekte & Klassen ---
-  // pageStyle wird nicht mehr verwendet
-  // const pageStyle = {
-  //  backgroundColor: appearance.bg_color,
-  // };
+  
+  // NEU: Intelligente Hintergrundfarbe
+  // - Im Light Mode: Nutze die eingestellte bg_color
+  // - Im Dark Mode: Nutze dunkelgrau (#111827), AUSSER der User hat eine andere Farbe gewählt
+  const getBackgroundColor = () => {
+    if (theme === 'dark') {
+      // Wenn die Farbe noch die Standard-Hellfarbe ist, nutze dunkelgrau
+      return appearance.bg_color === '#f0f2f5' ? '#111827' : appearance.bg_color;
+    }
+    // Im Light Mode: Nutze die eingestellte Farbe
+    return appearance.bg_color;
+  };
 
   const bgImageStyle = {
     backgroundImage: appearance.bg_image_url
@@ -225,11 +230,13 @@ function App() {
   const serviceColsClass = gridColsLookup[appearance.service_cols] || 'lg:grid-cols-6';
   const shortcutColsClass = gridColsLookup[appearance.shortcut_cols] || 'lg:grid-cols-6';
 
-
   // --- RENDER ---
   return (
-    // KORRIGIERT: Inline-Style entfernt, bg-gray-100 als Standard hinzugefügt
-    <div className="relative min-h-screen bg-gray-100 dark:bg-gray-900">
+    // NEU: Intelligente Hintergrundfarbe per Inline-Style
+    <div 
+      className="relative min-h-screen" 
+      style={{ backgroundColor: getBackgroundColor() }}
+    >
       {/* 1. Hintergrundbild-Layer */}
       <div
         className="absolute inset-0 w-full h-full bg-cover bg-center transition-all duration-500"
@@ -238,7 +245,6 @@ function App() {
 
       {/* 2. Content-Layer */}
       <div className="relative z-10 min-h-screen p-8 md:p-12">
-        {/* 'dark:text-gray-200' für die Überschrift */}
         <h1 className="text-4xl font-bold mb-8 text-gray-800 dark:text-gray-200">Web Dashboard</h1>
 
         {/* === SERVICES (JETZT AUSGELAGERT) === */}
