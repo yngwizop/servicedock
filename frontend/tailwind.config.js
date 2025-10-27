@@ -2,8 +2,9 @@
 export default {
   content: [
     "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}", // Diese Zeile sagt Tailwind, wo es nach Klassen suchen soll
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class', // <-- ADD THIS LINE
   theme: {
     extend: {},
   },
