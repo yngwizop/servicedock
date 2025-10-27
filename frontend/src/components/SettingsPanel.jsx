@@ -11,9 +11,9 @@ function SettingsPanel({
   editAppearance, setEditAppearance, onSaveAppearance
 }) {
   return (
-    // NEU: Dark-Mode Hintergrund und Schatten
+    // GEÄNDERT: absolute → fixed, h-full → h-screen
     <div
-      className="absolute right-0 top-0 h-full w-96 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg z-30 shadow-2xl dark:shadow-blue-900/50 p-6 overflow-y-auto"
+      className="fixed right-0 top-0 h-screen w-96 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg z-30 shadow-2xl dark:shadow-blue-900/50 p-6 overflow-y-auto"
     >
       <div className="flex justify-between items-center mb-6">
         {/* NEU: Dark-Mode Text */}
