@@ -46,6 +46,8 @@ function App() {
     bg_opacity: 1.0,
     shortcut_cols: 6,
     service_cols: 6,
+    text_color_light: "#1f2937", // NEU: Schriftfarbe für Light Mode
+    text_color_dark: "#e5e7eb",  // NEU: Schriftfarbe für Dark Mode
   });
   const [editAppearance, setEditAppearance] = useState(appearance);
 
@@ -82,6 +84,8 @@ function App() {
         bg_opacity: (data.bg_opacity !== null && data.bg_opacity !== undefined) ? data.bg_opacity : 1.0, 
         shortcut_cols: data.shortcut_cols || 6,
         service_cols: data.service_cols || 6,
+        text_color_light: data.text_color_light || "#1f2937", // NEU
+        text_color_dark: data.text_color_dark || "#e5e7eb",   // NEU
       };
       setAppearance(safeData);
       setEditAppearance(safeData); 
@@ -214,6 +218,11 @@ function App() {
     return appearance.bg_color;
   };
 
+  // NEU: Funktion für Schriftfarbe je nach Theme
+  const getTextColor = () => {
+    return theme === 'light' ? appearance.text_color_light : appearance.text_color_dark;
+  };
+
   const bgImageStyle = {
     backgroundImage: appearance.bg_image_url
       ? `url(${appearance.bg_image_url})`
@@ -245,7 +254,13 @@ function App() {
 
       {/* 2. Content-Layer */}
       <div className="relative z-10 min-h-screen p-8 md:p-12">
-        <h1 className="text-4xl font-bold mb-8 text-gray-800 dark:text-gray-200">Web Dashboard</h1>
+        {/* NEU: Schriftfarbe per Inline-Style */}
+        <h1 
+          className="text-4xl font-bold mb-8 transition-colors duration-300" 
+          style={{ color: getTextColor() }}
+        >
+          Web Dashboard
+        </h1>
 
         {/* === SERVICES (JETZT AUSGELAGERT) === */}
         <ServiceGrid
@@ -255,6 +270,7 @@ function App() {
           colsClass={serviceColsClass}
           onUpdate={updateService}
           onDelete={deleteService}
+          textColor={getTextColor()} // NEU: Schriftfarbe übergeben
         />
 
         {/* === SHORTCUTS (JETZT AUSGELAGERT) === */}
@@ -265,6 +281,7 @@ function App() {
           colsClass={shortcutColsClass}
           onUpdate={updateShortcut}
           onDelete={deleteShortcut}
+          textColor={getTextColor()} // NEU: Schriftfarbe übergeben
         />
       </div>
 
@@ -350,6 +367,7 @@ function App() {
           editAppearance={editAppearance}
           setEditAppearance={setEditAppearance}
           onSaveAppearance={saveAppearance}
+          currentTheme={theme} // NEU: Aktuelles Theme übergeben
         />
       )}
     </div>

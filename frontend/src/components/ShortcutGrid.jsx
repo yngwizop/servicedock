@@ -1,18 +1,22 @@
 import React from 'react';
 import ShortcutLink from './ShortcutLink';
 
-// HIER SIND DEINE PROPS
 function ShortcutGrid({ 
   shortcuts, 
   setShortcuts, 
   isLoggedIn, 
   colsClass, 
   onUpdate, 
-  onDelete 
+  onDelete,
+  textColor // NEU: Schriftfarbe
 }) {
   return (
     <div className="mb-10">
-      <h2 className="text-2xl font-semibold mb-4 text-gray-700 dark:text-gray-300">
+      {/* NEU: Schriftfarbe per Inline-Style */}
+      <h2 
+        className="text-2xl font-semibold mb-4"
+        style={{ color: textColor }}
+      >
         Shortcuts
       </h2>
       <div className={`grid grid-cols-1 md:grid-cols-3 ${colsClass} gap-5`}>
@@ -31,7 +35,6 @@ function ShortcutGrid({
                   placeholder="Name"
                   className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded p-1.5 mb-2 w-full font-semibold text-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                   value={s.name}
-                  // HIER IST DEINE LOGIK
                   onChange={(e) =>
                     setShortcuts(
                       shortcuts.map((sc) =>
@@ -44,7 +47,6 @@ function ShortcutGrid({
                   placeholder="URL"
                   className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded p-1.5 mb-2 w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                   value={s.url}
-                  // HIER IST DEINE LOGIK
                   onChange={(e) =>
                     setShortcuts(
                       shortcuts.map((sc) =>
@@ -57,7 +59,6 @@ function ShortcutGrid({
                   placeholder="Icon URL oder Emoji 🔗"
                   className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded p-1.5 mb-2 w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                   value={s.icon || ""}
-                  // HIER IST DEINE LOGIK
                   onChange={(e) =>
                     setShortcuts(
                       shortcuts.map((sc) =>

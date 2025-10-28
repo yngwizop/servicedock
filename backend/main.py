@@ -53,14 +53,16 @@ class Service(BaseModel):
 class AdminLogin(BaseModel):
     password: str
 
-# NEU: Appearance-Modell angepasst
+# NEU: Appearance-Modell mit Schriftfarben
 class Appearance(BaseModel):
     id: int = 1
     bg_color: str | None = None
     bg_image_url: str | None = None
     bg_opacity: float | None = Field(None, ge=0.0, le=1.0)
     shortcut_cols: int | None = Field(None, ge=1, le=12)
-    service_cols: int | None = Field(None, ge=1, le=12) # <-- NEU HIER
+    service_cols: int | None = Field(None, ge=1, le=12)
+    text_color_light: str | None = None  # NEU
+    text_color_dark: str | None = None   # NEU
 
 # --- API Routen ---
 
@@ -69,7 +71,6 @@ def root():
     return {"message": "Web Dashboard Backend is running"}
 
 # ===== Shortcuts (CRUD) =====
-# (Unverändert)
 @app.get("/api/shortcuts")
 def get_shortcuts():
     conn = get_connection()
@@ -126,7 +127,6 @@ def delete_shortcut(shortcut_id: int):
     return {"message": "deleted"}
 
 # ===== Services (CRUD) =====
-# (Unverändert)
 @app.get("/api/services")
 def get_services():
     conn = get_connection()
@@ -186,25 +186,30 @@ def delete_service(service_id: int):
     return {"message": "deleted"}
 
 
-# ===== Appearance (ANGEPASST) =====
+# ===== Appearance (MIT SCHRIFTFARBEN) =====
 
 @app.get("/api/appearance")
 def get_appearance():
     conn = get_connection()
     cur = conn.cursor()
-    # Stellt sicher, dass die Default-Zeile (id=1) existiert
+    
+    # Stellt sicher, dass die Default-Zeile (id=1) existiert - MIT SCHRIFTFARBEN
     cur.execute(
-        "INSERT INTO appearance (id, bg_color, bg_opacity, shortcut_cols, service_cols) " # <-- service_cols hinzugefügt
-        "VALUES (1, '#f0f2f5', 1.0, 6, 6) " # <-- service_cols hinzugefügt
+        "INSERT INTO appearance (id, bg_color, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark) "
+        "VALUES (1, '#f0f2f5', 1.0, 6, 6, '#1f2937', '#e5e7eb') "
         "ON CONFLICT (id) DO NOTHING;"
     )
     conn.commit() 
     
-    # NEU: service_cols hinzugefügt
-    cur.execute("SELECT bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols FROM appearance WHERE id = 1;")
+    # NEU: text_color_light und text_color_dark hinzugefügt
+    cur.execute(
+        "SELECT bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark "
+        "FROM appearance WHERE id = 1;"
+    )
     row = cur.fetchone()
     cur.close()
     conn.close()
+    
     if not row:
         raise HTTPException(status_code=404, detail="Appearance settings not found")
     
@@ -213,7 +218,9 @@ def get_appearance():
         "bg_image_url": row[1], 
         "bg_opacity": float(row[2]),
         "shortcut_cols": row[3],
-        "service_cols": row[4]  # <-- NEU
+        "service_cols": row[4],
+        "text_color_light": row[5] if row[5] else "#1f2937",  # NEU mit Fallback
+        "text_color_dark": row[6] if row[6] else "#e5e7eb"    # NEU mit Fallback
     }
 
 @app.put("/api/appearance")
@@ -236,10 +243,16 @@ def update_appearance(appearance: Appearance):
     if appearance.shortcut_cols is not None:
         updates.append("shortcut_cols = %s")
         params.append(appearance.shortcut_cols)
-    # NEU: service_cols hinzugefügt
     if appearance.service_cols is not None:
         updates.append("service_cols = %s")
         params.append(appearance.service_cols)
+    # NEU: Schriftfarben hinzugefügt
+    if appearance.text_color_light is not None:
+        updates.append("text_color_light = %s")
+        params.append(appearance.text_color_light)
+    if appearance.text_color_dark is not None:
+        updates.append("text_color_dark = %s")
+        params.append(appearance.text_color_dark)
 
     if not updates:
         return {"message": "No changes provided"}
@@ -259,7 +272,7 @@ def update_appearance(appearance: Appearance):
     return {"message": "Appearance updated"}
 
 
-# ===== Auth (Unverändert) =====
+# ===== Auth =====
 @app.post("/api/login")
 def login(creds: AdminLogin):
     if creds.password == ADMIN_PASSWORD:

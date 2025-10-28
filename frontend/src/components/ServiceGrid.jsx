@@ -1,18 +1,24 @@
 import React from 'react';
 import ServiceCard from './ServiceCard';
 
-// HIER SIND DEINE WIEDERHERGESTELLTEN PROPS
 function ServiceGrid({ 
   services, 
   setServices, 
   isLoggedIn, 
   colsClass, 
   onUpdate, 
-  onDelete 
+  onDelete,
+  textColor // NEU: Schriftfarbe
 }) {
   return (
     <div className="mb-10">
-      <h2 className="text-2xl font-semibold mb-4 text-gray-700 dark:text-gray-300">Services</h2>
+      {/* NEU: Schriftfarbe per Inline-Style */}
+      <h2 
+        className="text-2xl font-semibold mb-4"
+        style={{ color: textColor }}
+      >
+        Services
+      </h2>
       <div className={`grid grid-cols-2 md:grid-cols-3 ${colsClass} gap-5`}>
         {services.map((s) => (
           <div
@@ -28,7 +34,6 @@ function ServiceGrid({
                 <input
                   className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded p-1.5 mb-2 w-full font-semibold text-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                   value={s.name}
-                  // HIER IST DEINE WIEDERHERGESTELLTE LOGIK
                   onChange={(e) =>
                     setServices(
                       services.map((serv) =>
@@ -42,7 +47,6 @@ function ServiceGrid({
                 <input
                   className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded p-1.5 mb-2 w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                   value={s.description || ""}
-                  // HIER IST DEINE WIEDERHERGESTELLTE LOGIK
                   onChange={(e) =>
                     setServices(
                       services.map((serv) =>
@@ -56,7 +60,6 @@ function ServiceGrid({
                 <input
                   className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded p-1.5 mb-2 w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                   value={s.url}
-                  // HIER IST DEINE WIEDERHERGESTELLTE LOGIK
                   onChange={(e) =>
                     setServices(
                       services.map((serv) =>
@@ -71,7 +74,6 @@ function ServiceGrid({
                   placeholder="Icon URL oder Emoji ✉️"
                   className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded p-1.5 mb-2 w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                   value={s.icon || ""}
-                  // HIER IST DEINE WIEDERHERGESTELLTE LOGIK
                   onChange={(e) =>
                     setServices(
                       services.map((serv) =>
