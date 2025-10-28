@@ -15,14 +15,12 @@ Ein modernes, selbst gehostetes Dashboard zum Verwalten und Organisieren deiner 
 ### 📱 Services & Shortcuts
 - **Services**: Detaillierte Karten mit Name, Beschreibung, URL und Icon
 - **Shortcuts**: Kompakte Links für schnellen Zugriff
-- Drag-and-Drop-fähiges Layout
 - Icon-Support via URL oder Emoji
-- Externe Icons von [selfh.st/icons](https://selfh.st/icons/)
+- Externe Icons können von [selfh.st/icons](https://selfh.st/icons/) verwendet werden
 
 ### 🔐 Admin-Bereich
 - Passwortgeschützter Login
 - Intuitives Edit-Modal für Services und Shortcuts
-- Zwei-Stufen-Löschen zum Schutz vor versehentlichem Löschen
 - Live-Bearbeitung mit sofortiger Vorschau
 - Settings-Panel mit Tabs für bessere Organisation
 
@@ -156,13 +154,6 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-### Datenbank-Migration
-```bash
-# Neue Spalten zur appearance-Tabelle hinzufügen
-docker exec -it <postgres-container> psql -U user -d dashboard
-ALTER TABLE appearance ADD COLUMN text_color_light VARCHAR(7) DEFAULT '#1f2937';
-ALTER TABLE appearance ADD COLUMN text_color_dark VARCHAR(7) DEFAULT '#e5e7eb';
-```
 
 ## 🐛 Troubleshooting
 
@@ -182,6 +173,7 @@ docker-compose logs backend
 ## 📝 To-Do / Roadmap
 
 - [ ] Drag & Drop für Service-Reihenfolge
+- [ ] Multiple Spalten Support zur besseren Organisation der Services/Shortcuts
 - [ ] Export/Import von Konfigurationen
 - [ ] Multi-User-Support
 - [ ] Kategorien/Gruppen für Services
