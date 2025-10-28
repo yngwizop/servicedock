@@ -172,8 +172,9 @@ function App() {
     fetchData();
   };
 
-  const updateService = async (id) => { 
-    const serviceToUpdate = services.find((s) => s.id === id);
+  const updateService = async (id, updatedData) => { 
+    // Nutze die übergebenen Daten statt aus dem State zu suchen
+    const serviceToUpdate = updatedData || services.find((s) => s.id === id);
     if (!serviceToUpdate) return;
     await fetch(`${BACKEND_URL}/api/services/${id}`, {
       method: "PUT",
@@ -183,8 +184,9 @@ function App() {
     fetchData();
   };
 
-  const updateShortcut = async (id) => { 
-    const shortcutToUpdate = shortcuts.find((s) => s.id === id);
+  const updateShortcut = async (id, updatedData) => { 
+    // Nutze die übergebenen Daten statt aus dem State zu suchen
+    const shortcutToUpdate = updatedData || shortcuts.find((s) => s.id === id);
     if (!shortcutToUpdate) return;
     await fetch(`${BACKEND_URL}/api/shortcuts/${id}`, {
       method: "PUT",

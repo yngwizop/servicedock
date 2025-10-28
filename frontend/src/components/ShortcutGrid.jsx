@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ShortcutLink from './ShortcutLink';
+import EditModal from './EditModal';
 
 function ShortcutGrid({ 
   shortcuts, 
@@ -8,11 +9,21 @@ function ShortcutGrid({
   colsClass, 
   onUpdate, 
   onDelete,
-  textColor // NEU: Schriftfarbe
+  textColor
 }) {
+  const [editingShortcut, setEditingShortcut] = useState(null);
+
+  const handleSave = async (updatedShortcut) => {
+    // Erst den State aktualisieren
+    setShortcuts(
+      shortcuts.map((s) => (s.id === updatedShortcut.id ? updatedShortcut : s))
+    );
+    // Dann ans Backend senden (mit den aktualisierten Daten)
+    await onUpdate(updatedShortcut.id, updatedShortcut);
+  };
+
   return (
     <div className="mb-10">
-      {/* NEU: Schriftfarbe per Inline-Style */}
       <h2 
         className="text-2xl font-semibold mb-4"
         style={{ color: textColor }}
@@ -21,73 +32,33 @@ function ShortcutGrid({
       </h2>
       <div className={`grid grid-cols-1 md:grid-cols-3 ${colsClass} gap-5`}>
         {shortcuts.map((s) => (
-          <div
-            key={s.id}
-            className={`transition-all ${
-              isLoggedIn
-                ? "bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm shadow-lg rounded-xl p-4 ring-2 ring-blue-500/50"
-                : ""
-            }`}
-          >
-            {isLoggedIn ? (
-              <>
-                <input
-                  placeholder="Name"
-                  className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded p-1.5 mb-2 w-full font-semibold text-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-                  value={s.name}
-                  onChange={(e) =>
-                    setShortcuts(
-                      shortcuts.map((sc) =>
-                        sc.id === s.id ? { ...sc, name: e.target.value } : sc
-                      )
-                    )
-                  }
-                />
-                <input
-                  placeholder="URL"
-                  className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded p-1.5 mb-2 w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-                  value={s.url}
-                  onChange={(e) =>
-                    setShortcuts(
-                      shortcuts.map((sc) =>
-                        sc.id === s.id ? { ...sc, url: e.target.value } : sc
-                      )
-                    )
-                  }
-                />
-                <input
-                  placeholder="Icon URL oder Emoji 🔗"
-                  className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded p-1.5 mb-2 w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-                  value={s.icon || ""}
-                  onChange={(e) =>
-                    setShortcuts(
-                      shortcuts.map((sc) =>
-                        sc.id === s.id ? { ...sc, icon: e.target.value } : sc
-                      )
-                    )
-                  }
-                />
-                <div className="flex justify-between items-center mt-2">
-                  <button
-                    onClick={() => onUpdate(s.id)}
-                    className="bg-green-600 hover:bg-green-700 text-white p-1.5 px-3 rounded-md text-sm font-medium transition-colors"
-                  >
-                    Speichern
-                  </button>
-                  <button
-                    onClick={() => onDelete(s.id)}
-                    className="text-gray-500 hover:text-red-600 p-1 rounded-md transition-colors"
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </>
-            ) : (
-              <ShortcutLink shortcut={s} />
+          <div key={s.id} className="relative group">
+            <ShortcutLink shortcut={s} />
+            
+            {/* Edit-Button (nur im eingeloggten Modus) */}
+            {isLoggedIn && (
+              <button
+                onClick={() => setEditingShortcut(s)}
+                className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
+                title="Bearbeiten"
+              >
+                ✏️
+              </button>
             )}
           </div>
         ))}
       </div>
+
+      {/* Edit Modal */}
+      {editingShortcut && (
+        <EditModal
+          item={editingShortcut}
+          type="shortcut"
+          onClose={() => setEditingShortcut(null)}
+          onSave={handleSave}
+          onDelete={onDelete}
+        />
+      )}
     </div>
   );
 }
