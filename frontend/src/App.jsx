@@ -402,7 +402,7 @@ function App() {
           shortcutUrl={shortcutUrl}
           setShortcutUrl={setShortcutUrl}
           shortcutIcon={shortcutIcon}
-          setShortcutIcon={setServiceIcon}
+          setShortcutIcon={setShortcutIcon}
 
           editAppearance={editAppearance}
           setEditAppearance={setEditAppearance}
