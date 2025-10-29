@@ -5,7 +5,6 @@ function ShortcutLink({ shortcut }) {
     shortcut.icon.includes('.') || shortcut.icon.includes('/')
   );
   
-  // HIER IST DEINE WIEDERHERGESTELLTE FUNKTION
   const displayUrl = (url) => {
     try {
       const parsedUrl = new URL(url);
@@ -20,13 +19,13 @@ function ShortcutLink({ shortcut }) {
       href={shortcut.url}
       target="_blank"
       rel="noopener noreferrer"
-      // HIER SIND DIE DARK-MODE KLASSEN
+      draggable={false} // NEU
       className="flex items-center gap-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md shadow-lg rounded-xl p-4 transition-all duration-300 hover:shadow-xl dark:hover:shadow-lg dark:hover:shadow-blue-900/30 hover:scale-[1.03]"
     >
       {shortcut.icon && (
         <div className={`flex-shrink-0 rounded-lg p-2 w-10 h-10 flex items-center justify-center ${isUrl ? 'bg-white/80 dark:bg-gray-700' : 'bg-gray-200/80 dark:bg-gray-600'}`}>
           {isUrl ? (
-            <img src={shortcut.icon} alt={shortcut.name} className="w-full h-full object-contain"/>
+            <img src={shortcut.icon} alt={shortcut.name} className="w-full h-full object-contain" draggable={false}/>
           ) : (
             <span className="text-xl">{shortcut.icon}</span>
           )}

@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS shortcuts (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     url TEXT NOT NULL,
-    icon TEXT
+    icon TEXT,
+    position INT DEFAULT 0 -- NEU: Reihenfolge/Priorität für Drag & Drop
 );
 
 CREATE TABLE IF NOT EXISTS services (
@@ -12,7 +13,8 @@ CREATE TABLE IF NOT EXISTS services (
     name TEXT NOT NULL,
     description TEXT,
     url TEXT NOT NULL,
-    icon TEXT
+    icon TEXT,
+    position INT DEFAULT 0 -- NEU: Reihenfolge/Priorität für Drag & Drop
 );
 
 -- HIER SIND DIE ÄNDERUNGEN (CREATE TABLE)
@@ -26,7 +28,9 @@ CREATE TABLE IF NOT EXISTS appearance (
     -- NEU: Spalten für Theme-Farben
     text_color_light VARCHAR(20) DEFAULT '#1f2937',
     text_color_dark VARCHAR(20) DEFAULT '#e5e7eb',
-    CHECK (id = 1)
+    -- NEU: Validierung für bg_opacity (0..1)
+    CHECK (id = 1),
+    CHECK (bg_opacity >= 0 AND bg_opacity <= 1)
 );
 
 -- HIER SIND DIE ÄNDERUNGEN (INSERT/UPDATE)
@@ -35,20 +39,19 @@ INSERT INTO appearance (id, bg_color, bg_opacity, shortcut_cols, service_cols, t
 VALUES (1, '#f0f2f5', 1.0, 6, 6, '#1f2937', '#e5e7eb')
 ON CONFLICT (id) DO UPDATE
 SET
-    bg_color = COALESCE(appearance.bg_color, '#f0f2f5'),
-    bg_opacity = COALESCE(appearance.bg_opacity, 1.0),
-    shortcut_cols = COALESCE(appearance.shortcut_cols, 6),
-    service_cols = COALESCE(appearance.service_cols, 6),
-    -- NEU: Update-Logik für Theme-Farben
-    text_color_light = COALESCE(appearance.text_color_light, '#1f2937'),
-    text_color_dark = COALESCE(appearance.text_color_dark, '#e5e7eb');
+    bg_color = COALESCE(EXCLUDED.bg_color, appearance.bg_color),
+    bg_opacity = COALESCE(EXCLUDED.bg_opacity, appearance.bg_opacity),
+    shortcut_cols = COALESCE(EXCLUDED.shortcut_cols, appearance.shortcut_cols),
+    service_cols = COALESCE(EXCLUDED.service_cols, appearance.service_cols),
+    text_color_light = COALESCE(EXCLUDED.text_color_light, appearance.text_color_light),
+    text_color_dark = COALESCE(EXCLUDED.text_color_dark, appearance.text_color_dark);
 
 
 -- (Optional) Dummy-Daten (Unverändert)
-INSERT INTO services (name, description, url, icon) VALUES
-('Mein Mail', 'Postfach checken', 'https://mail.google.com', '✉️')
+INSERT INTO services (name, description, url, icon, position) VALUES
+('Mein Mail', 'Postfach checken', 'https://mail.google.com', '✉️', 1)
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO shortcuts (name, url, icon) VALUES
-('Google', 'https://google.com', 'https://cdn.jsdelivr.net/gh/selfhst/icons/svg/google.svg')
+INSERT INTO shortcuts (name, url, icon, position) VALUES
+('Google', 'https://google.com', 'https://cdn.jsdelivr.net/gh/selfhst/icons/svg/google.svg', 1)
 ON CONFLICT (id) DO NOTHING;

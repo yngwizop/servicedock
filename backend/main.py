@@ -4,6 +4,8 @@ from urllib.parse import urlparse
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from typing import List, Any
+from fastapi import Body
 
 # --- Initialisierung ---
 app = FastAPI()
@@ -75,25 +77,29 @@ def root():
 def get_shortcuts():
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, name, url, icon FROM shortcuts ORDER BY id;")
+    # Sortiere nach position (persistente Reihenfolge), fallback id
+    cur.execute("SELECT id, name, url, icon, position FROM shortcuts ORDER BY position ASC, id ASC;")
     rows = cur.fetchall()
     cur.close()
     conn.close()
-    return [{"id": r[0], "name": r[1], "url": r[2], "icon": r[3]} for r in rows]
+    return [{"id": r[0], "name": r[1], "url": r[2], "icon": r[3], "position": r[4]} for r in rows]
 
 @app.post("/api/shortcuts")
 def add_shortcut(shortcut: Shortcut):
     conn = get_connection()
     cur = conn.cursor()
+    # Position an das Ende setzen
     cur.execute(
-        "INSERT INTO shortcuts (name, url, icon) VALUES (%s, %s, %s) RETURNING id;",
+        "INSERT INTO shortcuts (name, url, icon, position) VALUES (%s, %s, %s, (SELECT COALESCE(MAX(position),0)+1 FROM shortcuts)) RETURNING id, position;",
         (shortcut.name, shortcut.url, shortcut.icon)
     )
-    new_id = cur.fetchone()[0]
+    row = cur.fetchone()
+    new_id = row[0]
+    new_pos = row[1]
     conn.commit()
     cur.close()
     conn.close()
-    return {"id": new_id, **shortcut.dict()}
+    return {"id": new_id, "position": new_pos, **shortcut.dict()}
 
 @app.put("/api/shortcuts/{shortcut_id}")
 def update_shortcut(shortcut_id: int, shortcut: Shortcut):
@@ -131,12 +137,13 @@ def delete_shortcut(shortcut_id: int):
 def get_services():
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, name, description, url, icon FROM services ORDER BY id;")
+    # Sortiere nach position (persistente Reihenfolge), fallback id
+    cur.execute("SELECT id, name, description, url, icon, position FROM services ORDER BY position ASC, id ASC;")
     rows = cur.fetchall()
     cur.close()
     conn.close()
     return [
-        {"id": r[0], "name": r[1], "description": r[2], "url": r[3], "icon": r[4]}
+        {"id": r[0], "name": r[1], "description": r[2], "url": r[3], "icon": r[4], "position": r[5]}
         for r in rows
     ]
 
@@ -145,14 +152,16 @@ def add_service(service: Service):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO services (name, description, url, icon) VALUES (%s, %s, %s, %s) RETURNING id;",
+        "INSERT INTO services (name, description, url, icon, position) VALUES (%s, %s, %s, %s, (SELECT COALESCE(MAX(position),0)+1 FROM services)) RETURNING id, position;",
         (service.name, service.description, service.url, service.icon)
     )
-    new_id = cur.fetchone()[0]
+    row = cur.fetchone()
+    new_id = row[0]
+    new_pos = row[1]
     conn.commit()
     cur.close()
     conn.close()
-    return {"id": new_id, **service.dict()}
+    return {"id": new_id, "position": new_pos, **service.dict()}
 
 @app.put("/api/services/{service_id}")
 def update_service(service_id: int, service: Service):
@@ -279,3 +288,88 @@ def login(creds: AdminLogin):
         return {"success": True, "message": "Login successful"}
     else:
         raise HTTPException(status_code=401, detail="Invalid credentials")
+
+# NEU: Endpunkte zum Setzen der Reihenfolge
+@app.put("/api/admin/services/reorder")
+def reorder_services(body: Any = Body(...)):
+    # akzeptiere entweder ein rohes Array oder ein Objekt { "ids": [...] }
+    ids = None
+    if isinstance(body, dict) and "ids" in body:
+        ids = body["ids"]
+    elif isinstance(body, list):
+        ids = body
+    else:
+        raise HTTPException(status_code=422, detail="Expected JSON array or object with 'ids' key")
+
+    # Validieren: Liste von Integern
+    try:
+        ids_clean = [int(x) for x in ids]
+    except Exception:
+        raise HTTPException(status_code=422, detail="IDs must be integers")
+
+    if not ids_clean:
+        return {"message": "no ids provided"}
+
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        # atomisches UPDATE via CASE ... END
+        cases = []
+        params = []
+        for idx, s_id in enumerate(ids_clean, start=1):
+            cases.append("WHEN %s THEN %s")
+            params.extend([s_id, idx])
+        case_sql = " ".join(cases)
+        in_placeholders = ", ".join(["%s"] * len(ids_clean))
+        params.extend(ids_clean)
+        sql = f"UPDATE services SET position = CASE id {case_sql} END WHERE id IN ({in_placeholders});"
+        cur.execute(sql, tuple(params))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        raise HTTPException(status_code=500, detail=f"Failed to reorder services: {e}")
+    cur.close()
+    conn.close()
+    return {"message": "services reordered"}
+
+@app.put("/api/admin/shortcuts/reorder")
+def reorder_shortcuts(body: Any = Body(...)):
+    if isinstance(body, dict) and "ids" in body:
+        ids = body["ids"]
+    elif isinstance(body, list):
+        ids = body
+    else:
+        raise HTTPException(status_code=422, detail="Expected JSON array or object with 'ids' key")
+
+    try:
+        ids_clean = [int(x) for x in ids]
+    except Exception:
+        raise HTTPException(status_code=422, detail="IDs must be integers")
+
+    if not ids_clean:
+        return {"message": "no ids provided"}
+
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cases = []
+        params = []
+        for idx, s_id in enumerate(ids_clean, start=1):
+            cases.append("WHEN %s THEN %s")
+            params.extend([s_id, idx])
+        case_sql = " ".join(cases)
+        in_placeholders = ", ".join(["%s"] * len(ids_clean))
+        params.extend(ids_clean)
+        sql = f"UPDATE shortcuts SET position = CASE id {case_sql} END WHERE id IN ({in_placeholders});"
+        cur.execute(sql, tuple(params))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        raise HTTPException(status_code=500, detail=f"Failed to reorder shortcuts: {e}")
+    cur.close()
+    conn.close()
+    return {"message": "shortcuts reordered"}

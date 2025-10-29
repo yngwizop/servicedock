@@ -66,6 +66,7 @@ function App() {
       const sRes = await fetch(`${BACKEND_URL}/api/services`);
       const servicesData = await sRes.json();
       setServices(servicesData);
+
       const scRes = await fetch(`${BACKEND_URL}/api/shortcuts`);
       const shortcutsData = await scRes.json();
       setShortcuts(shortcutsData);
@@ -196,6 +197,41 @@ function App() {
     fetchData();
   };
 
+  // NEU: Reihenfolge persistieren (warte auf Response, rollback nur bei Fehler)
+  const reorderServices = async (orderedIds) => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/services/reorder`, { // PFAD GEÄNDERT
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderedIds),
+      });
+      if (!res.ok) {
+        console.error("Failed to reorder services, reloading data");
+        await fetchData();
+      }
+    } catch (err) {
+      console.error("Failed to reorder services", err);
+      await fetchData();
+    }
+  };
+
+  const reorderShortcuts = async (orderedIds) => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/shortcuts/reorder`, { // PFAD GEÄNDERT
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderedIds),
+      });
+      if (!res.ok) {
+        console.error("Failed to reorder shortcuts, reloading data");
+        await fetchData();
+      }
+    } catch (err) {
+      console.error("Failed to reorder shortcuts", err);
+      await fetchData();
+    }
+  };
+
   const saveAppearance = async () => { 
     await fetch(`${BACKEND_URL}/api/appearance`, {
       method: "PUT",
@@ -273,6 +309,7 @@ function App() {
           onUpdate={updateService}
           onDelete={deleteService}
           textColor={getTextColor()} // NEU: Schriftfarbe übergeben
+          onReorder={reorderServices} // NEU
         />
 
         {/* === SHORTCUTS (JETZT AUSGELAGERT) === */}
@@ -284,6 +321,7 @@ function App() {
           onUpdate={updateShortcut}
           onDelete={deleteShortcut}
           textColor={getTextColor()} // NEU: Schriftfarbe übergeben
+          onReorder={reorderShortcuts} // NEU
         />
       </div>
 
@@ -364,7 +402,7 @@ function App() {
           shortcutUrl={shortcutUrl}
           setShortcutUrl={setShortcutUrl}
           shortcutIcon={shortcutIcon}
-          setShortcutIcon={setShortcutIcon}
+          setShortcutIcon={setServiceIcon}
 
           editAppearance={editAppearance}
           setEditAppearance={setEditAppearance}

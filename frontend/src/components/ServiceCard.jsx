@@ -10,7 +10,7 @@ function ServiceCard({ service }) {
       href={service.url}
       target="_blank"
       rel="noopener noreferrer"
-      // HIER SIND DIE DARK-MODE KLASSEN
+      draggable={false} // NEU: verhindert Konflikte mit Wrapper-Drag
       className="flex items-start gap-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md shadow-lg rounded-xl p-4 transition-all duration-300 hover:shadow-xl dark:hover:shadow-lg dark:hover:shadow-blue-900/30 hover:scale-[1.03]"
     >
       {service.icon && (
@@ -20,6 +20,7 @@ function ServiceCard({ service }) {
               src={service.icon} 
               alt={service.name} 
               className="w-full h-full object-contain"
+              draggable={false} // NEU
             />
           </div>
         ) : (
