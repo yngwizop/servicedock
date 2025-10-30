@@ -3,6 +3,7 @@ import ServiceGrid from "./components/ServiceGrid";
 import ShortcutGrid from "./components/ShortcutGrid";
 import LoginModal from "./components/LoginModal";
 import SettingsPanel from "./components/SettingsPanel";
+import ClockWidget from "./components/ClockWidget";
 
 // 🛠 Backend-URL anpassen je nach Setup
 const BACKEND_URL = "http://192.168.178.83:8000";
@@ -48,6 +49,7 @@ function App() {
     service_cols: 6,
     text_color_light: "#1f2937", // NEU: Schriftfarbe für Light Mode
     text_color_dark: "#e5e7eb",  // NEU: Schriftfarbe für Dark Mode
+    clock_format: "24h",         // NEU: Uhrenformat
   });
   const [editAppearance, setEditAppearance] = useState(appearance);
 
@@ -87,6 +89,7 @@ function App() {
         service_cols: data.service_cols || 6,
         text_color_light: data.text_color_light || "#1f2937", // NEU
         text_color_dark: data.text_color_dark || "#e5e7eb",   // NEU
+        clock_format: data.clock_format || "24h",             // NEU
       };
       setAppearance(safeData);
       setEditAppearance(safeData); 
@@ -292,13 +295,22 @@ function App() {
 
       {/* 2. Content-Layer */}
       <div className="relative z-10 min-h-screen p-8 md:p-12">
-        {/* NEU: Schriftfarbe per Inline-Style */}
-        <h1 
-          className="text-4xl font-bold mb-8 transition-colors duration-300" 
-          style={{ color: getTextColor() }}
-        >
-          Web Dashboard
-        </h1>
+        {/* Header mit Titel und Uhr */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+          {/* Titel (oben links) */}
+          <h1 
+            className="text-4xl font-bold transition-colors duration-300" 
+            style={{ color: getTextColor() }}
+          >
+            Web Dashboard
+          </h1>
+          
+          {/* Uhr-Widget (oben rechts auf Desktop, darunter auf Mobile) */}
+          <ClockWidget 
+            textColor={getTextColor()} 
+            use24Hour={appearance.clock_format === '24h'}
+          />
+        </div>
 
         {/* === SERVICES (JETZT AUSGELAGERT) === */}
         <ServiceGrid

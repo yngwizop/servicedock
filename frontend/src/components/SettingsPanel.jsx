@@ -101,48 +101,93 @@ function SettingsPanel({
 
       {/* === Tab-Inhalt: Appearance === */}
       {activeTab === "appearance" && (
-        <div className="space-y-4 p-1">
-          <h3 className="font-semibold text-gray-700 dark:text-gray-200">Aussehen anpassen</h3>
+        <div className="space-y-6 p-1">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Aussehen anpassen</h3>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Background Color</label>
-            <input
-              type="color"
-              value={editAppearance.bg_color || "#ffffff"}
-              onChange={(e) => setEditAppearance({ ...editAppearance, bg_color: e.target.value })}
-              className="w-full h-10 p-1 border border-gray-300 dark:border-gray-600 rounded-md"
-            />
+          {/* Sektion: Hintergrund */}
+          <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+              🎨 Hintergrund
+            </h4>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Hintergrundfarbe
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={editAppearance.bg_color || "#ffffff"}
+                  onChange={(e) => setEditAppearance({ ...editAppearance, bg_color: e.target.value })}
+                  className="w-16 h-10 p-1 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={editAppearance.bg_color || "#ffffff"}
+                  onChange={(e) => setEditAppearance({ ...editAppearance, bg_color: e.target.value })}
+                  className="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white p-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono"
+                  placeholder="#ffffff"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Hintergrundbild URL
+              </label>
+              <input
+                type="text"
+                placeholder="https://..."
+                value={editAppearance.bg_image_url || ""}
+                onChange={(e) => setEditAppearance({ ...editAppearance, bg_image_url: e.target.value })}
+                className="border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 p-2 w-full rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Bild-Deckkraft: <span className="font-mono text-blue-600 dark:text-blue-400">{editAppearance.bg_opacity}</span>
+              </label>
+              <input
+                type="range"
+                min="0" max="1" step="0.05"
+                value={editAppearance.bg_opacity}
+                onChange={(e) => setEditAppearance({ ...editAppearance, bg_opacity: parseFloat(e.target.value) })}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+              />
+            </div>
           </div>
 
-          {/* NEU: Schriftfarben direkt nach Background Color */}
-          <div className="space-y-3">
-            <h4 className="font-semibold text-gray-700 dark:text-gray-200 text-sm">Schriftfarben</h4>
+          {/* Sektion: Schriftfarben */}
+          <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+              ✏️ Schriftfarben
+            </h4>
             
-            {/* NEU: Hinweis welcher Modus aktuell aktiv ist */}
-            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-700">
               <p className="text-xs text-blue-800 dark:text-blue-300">
                 💡 Aktuell im <strong>{currentTheme === 'light' ? 'Light' : 'Dark'} Mode</strong>. 
-                Wechsle den Modus mit dem Mond/Sonne-Button, um die Farben zu sehen.
+                Wechsle den Modus mit dem 🌙/☀️-Button, um die Farben zu testen.
               </p>
             </div>
 
             {/* Light Mode Schriftfarbe */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Schriftfarbe (Light Mode)
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Light Mode
               </label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <input
                   type="color"
                   value={editAppearance.text_color_light || "#1f2937"}
                   onChange={(e) => setEditAppearance({ ...editAppearance, text_color_light: e.target.value })}
-                  className="w-16 h-10 p-1 border border-gray-300 dark:border-gray-600 rounded-md"
+                  className="w-16 h-10 p-1 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer"
                 />
                 <input
                   type="text"
                   value={editAppearance.text_color_light || "#1f2937"}
                   onChange={(e) => setEditAppearance({ ...editAppearance, text_color_light: e.target.value })}
-                  className="flex-1 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white p-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono"
+                  className="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white p-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono"
                   placeholder="#1f2937"
                 />
               </div>
@@ -150,81 +195,109 @@ function SettingsPanel({
 
             {/* Dark Mode Schriftfarbe */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Schriftfarbe (Dark Mode)
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Dark Mode
               </label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <input
                   type="color"
                   value={editAppearance.text_color_dark || "#e5e7eb"}
                   onChange={(e) => setEditAppearance({ ...editAppearance, text_color_dark: e.target.value })}
-                  className="w-16 h-10 p-1 border border-gray-300 dark:border-gray-600 rounded-md"
+                  className="w-16 h-10 p-1 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer"
                 />
                 <input
                   type="text"
                   value={editAppearance.text_color_dark || "#e5e7eb"}
                   onChange={(e) => setEditAppearance({ ...editAppearance, text_color_dark: e.target.value })}
-                  className="flex-1 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white p-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono"
+                  className="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white p-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono"
                   placeholder="#e5e7eb"
                 />
               </div>
             </div>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Background Image URL</label>
-            <input
-              type="text"
-              placeholder="https://..."
-              value={editAppearance.bg_image_url || ""}
-              onChange={(e) => setEditAppearance({ ...editAppearance, bg_image_url: e.target.value })}
-              className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 p-2 w-full rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Background Opacity ({editAppearance.bg_opacity})</label>
-            <input
-              type="range"
-              min="0" max="1" step="0.05"
-              value={editAppearance.bg_opacity}
-              onChange={(e) => setEditAppearance({ ...editAppearance, bg_opacity: parseFloat(e.target.value) })}
-              className="w-full"
-            />
+
+          {/* Sektion: Layout */}
+          <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+              📐 Layout & Spalten
+            </h4>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Service-Spalten (Desktop): <span className="font-mono text-blue-600 dark:text-blue-400">{editAppearance.service_cols}</span>
+              </label>
+              <input
+                type="range"
+                min="2" max="10" step="1"
+                value={editAppearance.service_cols}
+                onChange={(e) => setEditAppearance({ ...editAppearance, service_cols: parseInt(e.target.value) })}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Shortcut-Spalten (Desktop): <span className="font-mono text-blue-600 dark:text-blue-400">{editAppearance.shortcut_cols}</span>
+              </label>
+              <input
+                type="range"
+                min="2" max="8" step="1"
+                value={editAppearance.shortcut_cols}
+                onChange={(e) => setEditAppearance({ ...editAppearance, shortcut_cols: parseInt(e.target.value) })}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+              />
+            </div>
           </div>
 
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Service-Spalten (Desktop): {editAppearance.service_cols}
-            </label>
-            <input
-              type="range"
-              min="2" max="10" step="1"
-              value={editAppearance.service_cols}
-              onChange={(e) => setEditAppearance({ ...editAppearance, service_cols: parseInt(e.target.value) })}
-              className="w-full"
-            />
+          {/* Sektion: Uhr */}
+          <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+              🕐 Uhr-Einstellungen
+            </h4>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                Zeitformat
+              </label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
+                  <input
+                    type="radio"
+                    name="clock_format"
+                    value="24h"
+                    checked={editAppearance.clock_format === '24h'}
+                    onChange={(e) => setEditAppearance({ ...editAppearance, clock_format: e.target.value })}
+                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                  />
+                  <div>
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">24-Stunden</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">14:30:45</div>
+                  </div>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
+                  <input
+                    type="radio"
+                    name="clock_format"
+                    value="12h"
+                    checked={editAppearance.clock_format === '12h'}
+                    onChange={(e) => setEditAppearance({ ...editAppearance, clock_format: e.target.value })}
+                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                  />
+                  <div>
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">12-Stunden</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">2:30:45 PM</div>
+                  </div>
+                </label>
+              </div>
+            </div>
           </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Shortcut-Spalten (Desktop): {editAppearance.shortcut_cols}
-            </label>
-            <input
-              type="range"
-              min="2" max="8" step="1"
-              value={editAppearance.shortcut_cols}
-              onChange={(e) => setEditAppearance({ ...editAppearance, shortcut_cols: parseInt(e.target.value) })}
-              className="w-full"
-            />
-          </div>
-          
+          {/* Save Button */}
           <button
             onClick={onSaveAppearance}
-            className="bg-green-600 hover:bg-green-700 text-white p-2.5 rounded-md w-full font-medium transition-colors"
+            className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg w-full font-medium transition-colors shadow-md hover:shadow-lg"
           >
-            Save Changes
+            ✓ Änderungen speichern
           </button>
         </div>
       )}

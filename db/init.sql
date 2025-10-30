@@ -28,23 +28,33 @@ CREATE TABLE IF NOT EXISTS appearance (
     -- NEU: Spalten für Theme-Farben
     text_color_light VARCHAR(20) DEFAULT '#1f2937',
     text_color_dark VARCHAR(20) DEFAULT '#e5e7eb',
-    -- NEU: Validierung für bg_opacity (0..1)
-    CHECK (id = 1),
-    CHECK (bg_opacity >= 0 AND bg_opacity <= 1)
+    -- NEU: Uhrenformat (12h oder 24h)
+    clock_format VARCHAR(3) DEFAULT '24h',
+    -- Constraints mit Namen für bessere Fehlermeldungen
+    CONSTRAINT appearance_single_row CHECK (id = 1),
+    CONSTRAINT appearance_opacity_range CHECK (bg_opacity >= 0 AND bg_opacity <= 1),
+    CONSTRAINT appearance_clock_format_valid CHECK (clock_format IN ('12h', '24h')),
+    CONSTRAINT appearance_cols_range CHECK (shortcut_cols >= 1 AND shortcut_cols <= 12 AND service_cols >= 1 AND service_cols <= 12)
 );
+
+-- Indizes für bessere Performance beim Sortieren
+CREATE INDEX IF NOT EXISTS idx_services_position ON services(position);
+CREATE INDEX IF NOT EXISTS idx_shortcuts_position ON shortcuts(position);
 
 -- HIER SIND DIE ÄNDERUNGEN (INSERT/UPDATE)
 -- Fügt die Standard-Einstellungszeile ein/aktualisiert sie.
-INSERT INTO appearance (id, bg_color, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark)
-VALUES (1, '#f0f2f5', 1.0, 6, 6, '#1f2937', '#e5e7eb')
+INSERT INTO appearance (id, bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format)
+VALUES (1, '#f0f2f5', NULL, 1.0, 6, 6, '#1f2937', '#e5e7eb', '24h')
 ON CONFLICT (id) DO UPDATE
 SET
     bg_color = COALESCE(EXCLUDED.bg_color, appearance.bg_color),
+    bg_image_url = COALESCE(EXCLUDED.bg_image_url, appearance.bg_image_url),
     bg_opacity = COALESCE(EXCLUDED.bg_opacity, appearance.bg_opacity),
     shortcut_cols = COALESCE(EXCLUDED.shortcut_cols, appearance.shortcut_cols),
     service_cols = COALESCE(EXCLUDED.service_cols, appearance.service_cols),
     text_color_light = COALESCE(EXCLUDED.text_color_light, appearance.text_color_light),
-    text_color_dark = COALESCE(EXCLUDED.text_color_dark, appearance.text_color_dark);
+    text_color_dark = COALESCE(EXCLUDED.text_color_dark, appearance.text_color_dark),
+    clock_format = COALESCE(EXCLUDED.clock_format, appearance.clock_format);
 
 
 -- (Optional) Dummy-Daten (Unverändert)
