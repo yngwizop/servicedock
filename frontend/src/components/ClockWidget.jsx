@@ -101,7 +101,7 @@ function ClockWidget({ textColor, locale = (typeof navigator !== 'undefined' && 
       role="group"
       aria-label="Uhrzeit und Datum"
     >
-      <div className="text-3xl md:text-4xl font-bold tabular-nums" aria-hidden="false" role="timer">
+      <div className="text-xl md:text-2xl font-bold tabular-nums" aria-hidden="false" role="timer">
         {formatTime()}
       </div>
 

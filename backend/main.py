@@ -66,6 +66,7 @@ class Appearance(BaseModel):
     text_color_light: str | None = None  # NEU
     text_color_dark: str | None = None   # NEU
     clock_format: str | None = None      # NEU: 12h oder 24h
+    weather_city: str | None = None      # NEU: Stadt für Wetter-Widget
 
 # --- API Routen ---
 
@@ -202,20 +203,7 @@ def delete_service(service_id: int):
 def get_appearance():
     conn = get_connection()
     cur = conn.cursor()
-    
-    # Stellt sicher, dass die Default-Zeile (id=1) existiert - MIT SCHRIFTFARBEN UND CLOCK_FORMAT
-    cur.execute(
-        "INSERT INTO appearance (id, bg_color, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format) "
-        "VALUES (1, '#f0f2f5', 1.0, 6, 6, '#1f2937', '#e5e7eb', '24h') "
-        "ON CONFLICT (id) DO NOTHING;"
-    )
-    conn.commit() 
-    
-    # NEU: clock_format hinzugefügt
-    cur.execute(
-        "SELECT bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format "
-        "FROM appearance WHERE id = 1;"
-    )
+    cur.execute("SELECT bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city FROM appearance WHERE id = 1;")
     row = cur.fetchone()
     cur.close()
     conn.close()
@@ -231,7 +219,8 @@ def get_appearance():
         "service_cols": row[4],
         "text_color_light": row[5] if row[5] else "#1f2937",
         "text_color_dark": row[6] if row[6] else "#e5e7eb",
-        "clock_format": row[7] if row[7] else "24h"  # NEU
+        "clock_format": row[7] if row[7] else "24h",
+        "weather_city": row[8] if row[8] else "Berlin"
     }
 
 @app.put("/api/appearance")
@@ -268,6 +257,10 @@ def update_appearance(appearance: Appearance):
     if appearance.clock_format is not None:
         updates.append("clock_format = %s")
         params.append(appearance.clock_format)
+    # NEU: Wetterstadt hinzugefügt
+    if appearance.weather_city is not None:
+        updates.append("weather_city = %s")
+        params.append(appearance.weather_city)
 
     if not updates:
         return {"message": "No changes provided"}

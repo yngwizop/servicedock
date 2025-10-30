@@ -291,6 +291,29 @@ function SettingsPanel({
               </div>
             </div>
           </div>
+
+          {/* Sektion: Wetter */}
+          <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+              🌤️ Wetter-Widget
+            </h4>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Stadt
+              </label>
+              <input
+                type="text"
+                value={editAppearance.weather_city || ''}
+                onChange={(e) => setEditAppearance({ ...editAppearance, weather_city: e.target.value })}
+                placeholder="z.B. Berlin, München, Hamburg"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Wetterdaten werden alle 30 Minuten aktualisiert
+              </p>
+            </div>
+          </div>
           
           {/* Save Button */}
           <button

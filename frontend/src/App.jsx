@@ -4,6 +4,7 @@ import ShortcutGrid from "./components/ShortcutGrid";
 import LoginModal from "./components/LoginModal";
 import SettingsPanel from "./components/SettingsPanel";
 import ClockWidget from "./components/ClockWidget";
+import WeatherWidget from "./components/WeatherWidget";
 
 // 🛠 Backend-URL anpassen je nach Setup
 const BACKEND_URL = "http://192.168.178.83:8000";
@@ -50,6 +51,7 @@ function App() {
     text_color_light: "#1f2937", // NEU: Schriftfarbe für Light Mode
     text_color_dark: "#e5e7eb",  // NEU: Schriftfarbe für Dark Mode
     clock_format: "24h",         // NEU: Uhrenformat
+    weather_city: "Berlin",      // NEU: Stadt für Wetter-Widget
   });
   const [editAppearance, setEditAppearance] = useState(appearance);
 
@@ -90,6 +92,7 @@ function App() {
         text_color_light: data.text_color_light || "#1f2937", // NEU
         text_color_dark: data.text_color_dark || "#e5e7eb",   // NEU
         clock_format: data.clock_format || "24h",             // NEU
+        weather_city: data.weather_city || "Berlin",          // NEU
       };
       setAppearance(safeData);
       setEditAppearance(safeData); 
@@ -305,11 +308,27 @@ function App() {
             Web Dashboard
           </h1>
           
-          {/* Uhr-Widget (oben rechts auf Desktop, darunter auf Mobile) */}
-          <ClockWidget 
-            textColor={getTextColor()} 
-            use24Hour={appearance.clock_format === '24h'}
-          />
+          {/* Widgets (oben rechts auf Desktop) */}
+          <div className="flex items-center gap-6">
+            <WeatherWidget 
+              city={appearance.weather_city} 
+              textColor={getTextColor()}
+            />
+            
+            {/* Moderner vertikaler Trenner */}
+            <div className="hidden md:flex items-center">
+              <div 
+                className="w-px h-16 bg-gradient-to-b from-transparent via-current to-transparent opacity-30"
+                style={{ color: getTextColor() }}
+                aria-hidden="true"
+              />
+            </div>
+            
+            <ClockWidget 
+              textColor={getTextColor()} 
+              use24Hour={appearance.clock_format === '24h'}
+            />
+          </div>
         </div>
 
         {/* === SERVICES (JETZT AUSGELAGERT) === */}
