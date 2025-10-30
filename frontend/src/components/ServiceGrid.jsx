@@ -74,27 +74,33 @@ function ServiceGrid({
 			return;
 		}
 
-		// robust approach: remove moved from a copy, then find current index of target in the modified array
-		const newServices = [...services];
-		const srcIndex = newServices.findIndex(s => s.id === draggedId);
+		const srcIndex = services.findIndex(s => s.id === draggedId);
 		if (srcIndex === -1) return;
+
+		// Find target index BEFORE removing the dragged element
+		const targetIndex = services.findIndex(s => s.id === targetId);
+		if (targetIndex === -1) return;
+
+		// Determine insertion side at drop time
+		const el = e.currentTarget;
+		const side = computeSide(e, el);
+		const before = (side === 'left');
+		
+		// Calculate desired insertion index in the original array
+		let desiredIndex = before ? targetIndex : targetIndex + 1;
+
+		// Now remove the dragged element
+		const newServices = [...services];
 		const [moved] = newServices.splice(srcIndex, 1);
 
-		// find target index after removal
-		// compute insertion side at drop time (more robust than relying on dragOver state)
-		const newTargetIndex = newServices.findIndex(s => s.id === targetId);
-		if (newTargetIndex === -1) {
-			// fallback: append
-			newServices.push(moved);
-		} else {
-			// determine side using the actual event and target element
-			const el = e.currentTarget;
-			const side = computeSide(e, el);
-			const before = (side === 'left');
-			const insertIndex = before ? newTargetIndex : newTargetIndex + 1;
-			const safeIndex = Math.max(0, Math.min(newServices.length, insertIndex));
-			newServices.splice(safeIndex, 0, moved);
+		// Adjust insertion index if we removed an element before the target
+		let finalIndex = desiredIndex;
+		if (srcIndex < desiredIndex) {
+			finalIndex = desiredIndex - 1;
 		}
+		
+		finalIndex = Math.max(0, Math.min(newServices.length, finalIndex));
+		newServices.splice(finalIndex, 0, moved);
 
 		setServices(newServices);
 		setDragOver({ id: null, side: null });
@@ -111,32 +117,95 @@ function ServiceGrid({
 		const srcIndex = services.findIndex(s => s.id === draggedId);
 		if (srcIndex === -1) return;
 
-		// Build a new array without the moved item
-		const newServices = [...services];
-		const [moved] = newServices.splice(srcIndex, 1);
-
-		// If we have a grid ref, compute insertion index based on pointer position
-		let insertIndex = newServices.length; // default: end
+		// Build visual list from DOM (exclude dragged element) BEFORE mutating the services array
+		let desiredIndexInServices = services.length; // default append
 		if (gridRef && gridRef.current) {
-			const children = Array.from(gridRef.current.children).filter(ch => ch && ch.dataset && ch.dataset.key !== undefined);
-			// Fallback: use all children in DOM order
 			const domChildren = Array.from(gridRef.current.children);
-			for (let i = 0; i < domChildren.length; i++) {
-				const ch = domChildren[i];
-				if (!ch) continue;
-				const rect = ch.getBoundingClientRect();
-				const mid = rect.left + rect.width / 2;
-				if (e.clientX < mid) {
-					insertIndex = i;
-					break;
+			const visual = domChildren
+				.filter(ch => ch && ch.dataset && ch.dataset.id && Number(ch.dataset.id) !== draggedId)
+				.map(ch => ({ id: Number(ch.dataset.id), rect: ch.getBoundingClientRect() }));
+
+			if (visual.length === 0) {
+				desiredIndexInServices = services.length;
+			} else {
+				// group visual items into rows (tolerance)
+				const rows = [];
+				visual.forEach(item => {
+					const topKey = Math.round(item.rect.top);
+					let row = rows.find(r => Math.abs(Math.round(r.top) - topKey) <= 8);
+					if (!row) { row = { top: item.rect.top, items: [] }; rows.push(row); }
+					row.items.push(item);
+				});
+
+				rows.sort((a,b) => a.top - b.top);
+				rows.forEach(r => r.items.sort((a,b) => a.rect.left - b.rect.left));
+
+				// determine target row by Y
+				const y = e.clientY;
+				let targetRow = rows.find(r => r.items.some(it => y >= it.rect.top && y <= it.rect.bottom));
+				if (!targetRow) {
+					let best = null; let bestDist = Infinity;
+					for (const r of rows) { const dist = Math.abs(y - r.top); if (dist < bestDist) { bestDist = dist; best = r; } }
+					targetRow = best || rows[rows.length-1];
 				}
+
+				// find column in row by X midpoint
+				const x = e.clientX;
+				let insertInRow = targetRow.items.length;
+				for (let i = 0; i < targetRow.items.length; i++) {
+					const it = targetRow.items[i];
+					const mid = it.rect.left + it.rect.width/2;
+					if (x < mid) { insertInRow = i; break; }
+				}
+
+				// compute visual position in the filtered array (index where we want to insert in visual order)
+				let countBefore = 0;
+				for (const r of rows) {
+					if (r === targetRow) break;
+					countBefore += r.items.length;
+				}
+				const visualPos = countBefore + insertInRow; // position in visual array (0..visual.length)
+				
+				// Map visualPos to services array index BEFORE removing the dragged element
+				// visual array excludes the dragged element, so we need to find where visualPos points in the original services array
+				if (visualPos >= visual.length) {
+					// Append at end
+					desiredIndexInServices = services.length;
+				} else {
+					// Find the service at visual[visualPos] in the original services array
+					const targetId = visual[visualPos].id;
+					const targetIndexInServices = services.findIndex(s => s.id === targetId);
+					desiredIndexInServices = targetIndexInServices;
+				}
+				
+				// DEBUG: print visual mapping and computed positions for troubleshooting
+				try {
+					console.debug('[dnd-debug] drop candidate', {
+						draggedId,
+						srcIndex,
+						mouse: { x: e.clientX, y: e.clientY },
+						visual: visual.map(v => ({ id: v.id, left: Math.round(v.rect.left), top: Math.round(v.rect.top), w: Math.round(v.rect.width) })),
+						rows: rows.map(r => ({ top: Math.round(r.top), len: r.items.length })),
+						visualPos,
+						desiredIndexInServices
+					});
+				} catch (err) { /* ignore debug failures */ }
 			}
+		} else {
+			desiredIndexInServices = services.length;
 		}
 
-		const safeIndex = Math.max(0, Math.min(newServices.length, insertIndex));
-		newServices.splice(safeIndex, 0, moved);
-
-		setServices(newServices);
+		// Now remove the dragged element and insert at the correct position
+		const newServices = [...services];
+		const [moved] = newServices.splice(srcIndex, 1);
+		
+		// Adjust finalIndex: if we removed an element before the target, shift index down by 1
+		let finalIndex = desiredIndexInServices;
+		if (srcIndex < desiredIndexInServices) {
+			finalIndex = desiredIndexInServices - 1;
+		}
+		finalIndex = Math.max(0, Math.min(newServices.length, finalIndex));
+		newServices.splice(finalIndex, 0, moved);		setServices(newServices);
 		setDragOver({ id: null, side: null });
 		setDraggingId(null);
 		if (onReorder) onReorder(newServices.map(s => s.id));
@@ -154,6 +223,7 @@ function ServiceGrid({
 				{services.map((s) => (
 					<div
 						key={s.id}
+						data-id={s.id}
 						className={`relative group ${isLoggedIn ? (draggingId === s.id ? 'cursor-grabbing' : 'cursor-grab') : ''}`}
 						draggable={isLoggedIn}
 						onDragStart={(e) => onDragStart(e, s.id)}
