@@ -132,6 +132,8 @@ function ShortcutGrid({
         onDragOver={(e) => e.preventDefault()}   // NEU
         onDrop={onDropGrid}                      // NEU
         className={`grid grid-cols-1 md:grid-cols-3 ${colsClass} gap-5`}
+        role="list"
+        aria-label="Shortcut list"
       >
         {shortcuts.map((s) => (
           <div 
@@ -142,6 +144,8 @@ function ShortcutGrid({
             onDragEnd={onDragEnd}
             onDragOver={(e) => onDragOverItem(e, s.id)}
             onDrop={(e) => onDropOnItem(e, s.id)}
+            role="listitem"
+            tabIndex={0}
           >
             {/* Insert indicator (links) */}
             {dragOver.id === s.id && dragOver.side === 'left' && draggingId && (
@@ -162,6 +166,7 @@ function ShortcutGrid({
                 onClick={() => setEditingShortcut(s)}
                 className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
                 title="Bearbeiten"
+                aria-label={`Shortcut ${s.name || s.id} bearbeiten`}
               >
                 ✏️
               </button>

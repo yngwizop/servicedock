@@ -20,16 +20,17 @@ function EditModal({ item, type, onClose, onSave, onDelete }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="editmodal-title">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+          <h3 id="editmodal-title" className="text-xl font-bold text-gray-800 dark:text-gray-100">
             {type === 'service' ? 'Service bearbeiten' : 'Shortcut bearbeiten'}
           </h3>
           <button
             onClick={onClose}
             className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 text-2xl transition-colors"
+            aria-label="Modal schließen"
           >
             ×
           </button>

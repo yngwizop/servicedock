@@ -1,5 +1,15 @@
 import React from 'react';
 
+// Wetter-Widget Felder für SettingsPanel
+const WEATHER_FIELDS = [
+  { key: 'temperature', label: 'Temperatur', api: 'temperature_2m', icon: '🌡️' },
+  { key: 'humidity', label: 'Luftfeuchtigkeit', api: 'relative_humidity_2m', icon: '💧' },
+  { key: 'wind', label: 'Wind', api: 'wind_speed_10m', icon: '🌀' },
+  { key: 'precipitation', label: 'Niederschlag', api: 'precipitation', icon: '🌧️' },
+  { key: 'cloudCover', label: 'Bewölkung', api: 'cloud_cover', icon: '☁️' },
+  { key: 'pressure', label: 'Luftdruck', api: 'surface_pressure', icon: '🔽' },
+];
+
 function SettingsPanel({
   onClose,
   activeTab,
@@ -9,15 +19,18 @@ function SettingsPanel({
   onAddShortcut,
   shortcutName, setShortcutName, shortcutUrl, setShortcutUrl, shortcutIcon, setShortcutIcon,
   editAppearance, setEditAppearance, onSaveAppearance,
+  isSavingAppearance, showSaved,
   currentTheme // NEU: Aktuelles Theme
 }) {
   return (
     <div
       className="fixed right-0 top-0 h-screen w-96 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg z-30 shadow-2xl dark:shadow-blue-900/50 p-6 overflow-y-auto"
+      role="region"
+      aria-label="Dashboard Einstellungen"
     >
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard Settings</h2>
-        <button onClick={onClose} className="text-3xl text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 transition-colors">&times;</button>
+        <button onClick={onClose} className="text-3xl text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 transition-colors" aria-label="Panel schließen">&times;</button>
       </div>
 
       {/* Tab-Navigation */}
@@ -310,18 +323,49 @@ function SettingsPanel({
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Wetterdaten werden alle 30 Minuten aktualisiert
+                Wetterdaten werden alle 2 Stunden automatisch aktualisiert und zwischengespeichert (Cache).
+                Manuelle Aktualisierung ist jederzeit per Button im Widget möglich.
               </p>
+            </div>
+
+            {/* Wetterdaten Felder Auswahl */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                Angezeigte Wetterdaten
+              </label>
+              <div className="grid grid-cols-1 gap-3">
+                {WEATHER_FIELDS.map(f => (
+                  <label key={f.key} className="flex items-center gap-3 cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
+                    <input
+                      type="checkbox"
+                      checked={editAppearance.weather_fields?.includes(f.key) ?? (f.key === 'temperature' || f.key === 'humidity')}
+                      onChange={e => {
+                        const checked = e.target.checked;
+                        let newFields = editAppearance.weather_fields ? [...editAppearance.weather_fields] : ['temperature', 'humidity'];
+                        if (checked && !newFields.includes(f.key)) newFields.push(f.key);
+                        if (!checked) newFields = newFields.filter(k => k !== f.key);
+                        setEditAppearance({ ...editAppearance, weather_fields: newFields });
+                      }}
+                      className="appearance-none w-4 h-4 border-2 border-gray-300 dark:border-gray-600 rounded-full bg-transparent checked:bg-transparent checked:border-gray-300 dark:checked:border-gray-600 relative checked:before:content-[''] checked:before:absolute checked:before:top-1/2 checked:before:left-1/2 checked:before:transform checked:before:-translate-x-1/2 checked:before:-translate-y-1/2 checked:before:w-2 checked:before:h-2 checked:before:bg-blue-600 checked:before:rounded-full focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span className="text-2xl flex-shrink-0" aria-hidden="true">{f.icon}</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">{f.label}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
           
           {/* Save Button */}
-          <button
-            onClick={onSaveAppearance}
-            className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg w-full font-medium transition-colors shadow-md hover:shadow-lg"
-          >
-            ✓ Änderungen speichern
-          </button>
+          <div>
+            <button
+              onClick={onSaveAppearance}
+              disabled={isSavingAppearance}
+              className={`bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg w-full font-medium transition-colors shadow-md hover:shadow-lg ${isSavingAppearance ? 'opacity-70 cursor-wait' : ''}`}
+            >
+              {isSavingAppearance ? 'Wird gespeichert' : showSaved ? 'Gespeichert' : 'Speichern'}
+            </button>
+          </div>
         </div>
       )}
     </div>

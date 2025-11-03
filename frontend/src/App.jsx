@@ -8,6 +8,7 @@ import WeatherWidget from "./components/WeatherWidget";
 
 // 🛠 Backend-URL anpassen je nach Setup
 const BACKEND_URL = "http://192.168.178.83:8000";
+const WEATHER_FIELDS_KEY = 'appearance_weather_fields';
 
 // --- Haupt-App ---
 function App() {
@@ -54,6 +55,8 @@ function App() {
     weather_city: "Berlin",      // NEU: Stadt für Wetter-Widget
   });
   const [editAppearance, setEditAppearance] = useState(appearance);
+  const [isSavingAppearance, setIsSavingAppearance] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
 
   // Form-Felder für Settings-Panel
   const [serviceName, setServiceName] = useState("");
@@ -93,7 +96,26 @@ function App() {
         text_color_dark: data.text_color_dark || "#e5e7eb",   // NEU
         clock_format: data.clock_format || "24h",             // NEU
         weather_city: data.weather_city || "Berlin",          // NEU
+        // merge weather_fields from localStorage if present (frontend-only setting)
+        weather_fields: (function(){
+          try {
+            const stored = localStorage.getItem(WEATHER_FIELDS_KEY);
+            if (stored) return JSON.parse(stored);
+          } catch (e) { /* ignore */ }
+          return null;
+        })()
       };
+      // If no weather_fields in backend, fallback to defaults or stored value
+      if (!safeData.weather_fields) {
+        // try to get from localStorage or default to temp+humidity
+        try {
+          const stored = localStorage.getItem(WEATHER_FIELDS_KEY);
+          safeData.weather_fields = stored ? JSON.parse(stored) : ['temperature','humidity'];
+        } catch (e) {
+          safeData.weather_fields = ['temperature','humidity'];
+        }
+      }
+
       setAppearance(safeData);
       setEditAppearance(safeData); 
     } catch (err) {
@@ -239,13 +261,43 @@ function App() {
   };
 
   const saveAppearance = async () => { 
-    await fetch(`${BACKEND_URL}/api/appearance`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editAppearance),
-    });
-    fetchAppearance();
-    setShowSettings(false);
+    setIsSavingAppearance(true);
+
+    // Ensure at least temperature+humidity are present
+    const weatherFieldsSafe = (editAppearance.weather_fields && editAppearance.weather_fields.length)
+      ? editAppearance.weather_fields
+      : ['temperature','humidity'];
+
+    const appearanceToSave = { ...editAppearance, weather_fields: weatherFieldsSafe };
+
+    // Persist weather_fields locally because backend doesn't (yet) store this array
+    try {
+      localStorage.setItem(WEATHER_FIELDS_KEY, JSON.stringify(weatherFieldsSafe));
+    } catch (e) { console.warn('Could not persist weather_fields to localStorage', e); }
+
+    // Optimistic UI update: apply changes immediately
+    setAppearance(appearanceToSave);
+    setEditAppearance(appearanceToSave);
+
+    try {
+      await fetch(`${BACKEND_URL}/api/appearance`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(appearanceToSave),
+      });
+      // show brief confirmation (keep panel open, user requested manual close)
+      setShowSaved(true);
+      setTimeout(() => {
+        setShowSaved(false);
+      }, 1400);
+    } catch (err) {
+      console.error('Failed to save appearance:', err);
+      // Optionally: revert optimistic update by refetching from backend
+    } finally {
+      // try to reconcile server state in background
+      fetchAppearance();
+      setIsSavingAppearance(false);
+    }
   };
 
   // --- Style-Objekte & Klassen ---
@@ -297,7 +349,7 @@ function App() {
       ></div>
 
       {/* 2. Content-Layer */}
-      <div className="relative z-10 min-h-screen p-8 md:p-12">
+  <div className="relative z-10 min-h-screen p-8 md:p-12 max-w-full overflow-x-hidden">
         {/* Header mit Titel und Uhr */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
           {/* Titel (oben links) */}
@@ -309,10 +361,11 @@ function App() {
           </h1>
           
           {/* Widgets (oben rechts auf Desktop) */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 max-w-full overflow-x-hidden">
             <WeatherWidget 
               city={appearance.weather_city} 
               textColor={getTextColor()}
+              weatherFields={appearance.weather_fields || ['temperature','humidity']}
             />
             
             {/* Moderner vertikaler Trenner */}
@@ -438,6 +491,8 @@ function App() {
           editAppearance={editAppearance}
           setEditAppearance={setEditAppearance}
           onSaveAppearance={saveAppearance}
+          isSavingAppearance={isSavingAppearance}
+          showSaved={showSaved}
           currentTheme={theme} // NEU: Aktuelles Theme übergeben
         />
       )}

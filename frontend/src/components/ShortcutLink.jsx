@@ -20,7 +20,8 @@ function ShortcutLink({ shortcut }) {
       target="_blank"
       rel="noopener noreferrer"
       draggable={false} // NEU
-      className="flex items-center gap-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md shadow-lg rounded-xl p-4 transition-all duration-300 hover:shadow-xl dark:hover:shadow-lg dark:hover:shadow-blue-900/30 hover:scale-[1.03]"
+      className="flex items-center gap-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md shadow-lg rounded-xl p-4 transition-all duration-300 hover:shadow-xl dark:hover:shadow-blue-900/30 hover:scale-[1.03]"
+      aria-label={`Shortcut: ${shortcut.name}, ${displayUrl(shortcut.url)}`}
     >
       {shortcut.icon && (
         <div className={`flex-shrink-0 rounded-lg p-2 w-10 h-10 flex items-center justify-center ${isUrl ? 'bg-white/80 dark:bg-gray-700' : 'bg-gray-200/80 dark:bg-gray-600'}`}>

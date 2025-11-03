@@ -12,6 +12,7 @@ function ServiceCard({ service }) {
       rel="noopener noreferrer"
       draggable={false} // NEU: verhindert Konflikte mit Wrapper-Drag
       className="flex items-start gap-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md shadow-lg rounded-xl p-4 transition-all duration-300 hover:shadow-xl dark:hover:shadow-lg dark:hover:shadow-blue-900/30 hover:scale-[1.03]"
+      aria-label={`Service: ${service.name}${service.description ? ', ' + service.description : ''}`}
     >
       {service.icon && (
         isUrl ? (

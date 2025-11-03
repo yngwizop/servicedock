@@ -3,7 +3,7 @@ import React from 'react';
 function LoginModal({ onSubmit, password, setPassword, error, onClose }) {
   return (
     // Hintergrund-Overlay bleibt gleich
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="loginmodal-title">
       <form
         onSubmit={onSubmit}
         // NEU: Dark-Mode Hintergrund und Schatten
@@ -14,11 +14,12 @@ function LoginModal({ onSubmit, password, setPassword, error, onClose }) {
           onClick={onClose}
           // NEU: Dark-Mode Textfarben
           className="absolute top-2 right-2 text-3xl text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+          aria-label="Modal schließen"
         >
           &times;
         </button>
         {/* NEU: Dark-Mode Textfarbe */}
-        <h3 className="text-xl font-semibold text-center text-gray-800 dark:text-gray-100">Admin-Login</h3>
+        <h3 id="loginmodal-title" className="text-xl font-semibold text-center text-gray-800 dark:text-gray-100">Admin-Login</h3>
         <input
           type="password"
           placeholder="Admin-Passwort"
