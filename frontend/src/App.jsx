@@ -8,7 +8,9 @@ import WeatherWidget from "./components/WeatherWidget";
 import { Moon, Sun, Lock, Gear, SignOut } from 'phosphor-react';
 
 // 🛠 Backend-URL anpassen je nach Setup
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
+// Default: use REACT_APP_BACKEND_URL if provided, otherwise use same host the page was loaded from
+// This allows opening the frontend at http://<VM_IP>:3000 and automatically target http://<VM_IP>:8000
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
 
 // NEU: Konstante für localStorage-Key (falls später wieder gebraucht)
 const WEATHER_FIELDS_KEY = 'appearance_weather_fields';
