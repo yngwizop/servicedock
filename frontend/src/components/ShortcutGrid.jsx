@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import ShortcutLink from './ShortcutLink';
 import EditModal from './EditModal';
+import { Pencil } from 'phosphor-react';
 
 function ShortcutGrid({ 
   shortcuts, 
@@ -168,7 +169,7 @@ function ShortcutGrid({
                 title="Bearbeiten"
                 aria-label={`Shortcut ${s.name || s.id} bearbeiten`}
               >
-                ✏️
+                <Pencil size={16} />
               </button>
             )}
           </div>

@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS appearance (
     clock_format VARCHAR(3) DEFAULT '24h',
     -- NEU: Stadt für Wetter-Widget
     weather_city VARCHAR(100) DEFAULT 'Berlin',
+    -- NEU: Auswahl der Wetterfelder als JSON-Array
+    weather_fields JSONB DEFAULT '["temperature", "humidity"]',
     -- Constraints mit Namen für bessere Fehlermeldungen
     CONSTRAINT appearance_single_row CHECK (id = 1),
     CONSTRAINT appearance_opacity_range CHECK (bg_opacity >= 0 AND bg_opacity <= 1),
@@ -45,8 +47,8 @@ CREATE INDEX IF NOT EXISTS idx_shortcuts_position ON shortcuts(position);
 
 -- HIER SIND DIE ÄNDERUNGEN (INSERT/UPDATE)
 -- Fügt die Standard-Einstellungszeile ein/aktualisiert sie.
-INSERT INTO appearance (id, bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city)
-VALUES (1, '#f0f2f5', NULL, 1.0, 6, 6, '#1f2937', '#e5e7eb', '24h', 'Berlin')
+INSERT INTO appearance (id, bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields)
+VALUES (1, '#f0f2f5', NULL, 1.0, 6, 6, '#1f2937', '#e5e7eb', '24h', 'Berlin', '["temperature", "humidity"]')
 ON CONFLICT (id) DO UPDATE
 SET
     bg_color = COALESCE(EXCLUDED.bg_color, appearance.bg_color),
@@ -57,7 +59,8 @@ SET
     text_color_light = COALESCE(EXCLUDED.text_color_light, appearance.text_color_light),
     text_color_dark = COALESCE(EXCLUDED.text_color_dark, appearance.text_color_dark),
     clock_format = COALESCE(EXCLUDED.clock_format, appearance.clock_format),
-    weather_city = COALESCE(EXCLUDED.weather_city, appearance.weather_city);
+    weather_city = COALESCE(EXCLUDED.weather_city, appearance.weather_city),
+    weather_fields = COALESCE(EXCLUDED.weather_fields, appearance.weather_fields);
 
 
 -- (Optional) Dummy-Daten (Unverändert)

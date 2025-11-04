@@ -33,7 +33,7 @@ const debugLog = (...args) => {
   }
 };
 
-export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', weatherFields = ['temperature', 'humidity'] }) {
+export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', weatherFields = ['temperature', 'humidity'], onLocationChange }) {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -122,6 +122,7 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
       const cached = getGeocodeCache(cityName);
       if (cached) {
         debugLog(`Using cached geocode for ${cityName}`);
+        if (onLocationChange) onLocationChange(cached);
         return cached;
       }
 
@@ -130,23 +131,24 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
       const response = await fetch(
         `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=de&format=json`
       );
-      
+
       if (!response.ok) {
         throw new Error('Geocoding fehlgeschlagen');
       }
-      
+
       const data = await response.json();
-      
+
       if (!data.results || data.results.length === 0) {
         throw new Error(`Stadt "${cityName}" nicht gefunden`);
       }
-      
-      const { latitude, longitude, name, country } = data.results[0];
-      const location = { latitude, longitude, name, country };
-      
+
+      const { latitude, longitude, name, country, postal_code } = data.results[0];
+      const location = { latitude, longitude, name, country, postal_code };
+
       // Save to cache
       setGeocodeCache(cityName, location);
-      
+      if (onLocationChange) onLocationChange(location);
+
       return location;
     } catch (err) {
       console.error('Geocoding error:', err);
@@ -200,7 +202,7 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
   useEffect(() => {
     let isMounted = true;
 
-    const loadWeather = async (skipCache = false) => {
+  const loadWeather = async (skipCache = false) => {
       if (!city || city.trim() === '') {
         setError('Keine Stadt angegeben');
         setLoading(false);
@@ -230,15 +232,19 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
         debugLog(`Fetching fresh weather data for ${city}`);
         
         // Step 1: Geocode city name (uses cache internally)
-        const location = await geocodeCity(city);
-        
+  const location = await geocodeCity(city);
+  // Callback wird im geocodeCity aufgerufen
+
         // Step 2: Fetch weather data
         const weatherData = await fetchWeather(location.latitude, location.longitude);
-        
+
         if (isMounted) {
           const weatherObj = {
             cityName: location.name,
             country: location.country,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            postalCode: location.postal_code,
             weatherCode: weatherData.weather_code,
             temperature: weatherData.temperature_2m,
             humidity: weatherData.relative_humidity_2m,
@@ -247,10 +253,10 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
             cloudCover: weatherData.cloud_cover,
             pressure: weatherData.surface_pressure,
           };
-          
+
           // Save to cache
           setWeatherCache(city, weatherObj);
-          
+
           setWeather(weatherObj);
           setIsFromCache(false);
           setCacheAge(0);
@@ -299,12 +305,16 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
       try {
         setError(null);
         
-        const location = await geocodeCity(city);
+  const location = await geocodeCity(city);
+  // Callback wird im geocodeCity aufgerufen
         const weatherData = await fetchWeather(location.latitude, location.longitude);
-        
+
         const weatherObj = {
           cityName: location.name,
           country: location.country,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          postalCode: location.postal_code,
           weatherCode: weatherData.weather_code,
           temperature: weatherData.temperature_2m,
           humidity: weatherData.relative_humidity_2m,
@@ -313,7 +323,7 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
           cloudCover: weatherData.cloud_cover,
           pressure: weatherData.surface_pressure,
         };
-        
+
         setWeatherCache(city, weatherObj);
         setWeather(weatherObj);
         setIsFromCache(false);
@@ -366,7 +376,7 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
     const precipitation = typeof weather.precipitation === 'number' ? weather.precipitation.toFixed(1) : '-';
     const cloudCover = typeof weather.cloudCover === 'number' ? Math.round(weather.cloudCover) : '-';
     const pressure = typeof weather.pressure === 'number' ? Math.round(weather.pressure) : '-';
-    
+
     // Calculate cache age in minutes
     const cacheAgeMinutes = cacheAge ? Math.round(cacheAge / 60000) : 0;
     const cacheAgeHours = cacheAge ? Math.round(cacheAge / 3600000) : 0;
@@ -375,10 +385,11 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
       : cacheAgeMinutes > 0 
         ? `vor ${cacheAgeMinutes} Min.` 
         : 'gerade eben';
-    
+
+
     return (
       <div 
-        className="flex items-center gap-3 text-base md:text-lg font-medium group flex-wrap"
+        className="flex flex-row items-center gap-3 text-base md:text-lg font-medium group flex-wrap"
         style={{ color: textColor || '#1f2937' }}
         aria-label={`Wetter in ${weather.cityName}: ${weatherFields.map(f => {
           if (f === 'temperature') return `${temp} Grad Celsius`;

@@ -5,9 +5,12 @@ import LoginModal from "./components/LoginModal";
 import SettingsPanel from "./components/SettingsPanel";
 import ClockWidget from "./components/ClockWidget";
 import WeatherWidget from "./components/WeatherWidget";
+import { Moon, Sun, Lock, Gear, SignOut } from 'phosphor-react';
 
 // 🛠 Backend-URL anpassen je nach Setup
-const BACKEND_URL = "http://192.168.178.83:8000";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
+
+// NEU: Konstante für localStorage-Key (falls später wieder gebraucht)
 const WEATHER_FIELDS_KEY = 'appearance_weather_fields';
 
 // --- Haupt-App ---
@@ -34,6 +37,8 @@ function App() {
   };
   
   // --- (DEINE BESTEHENDEN STATES) ---
+  // Wetter-Geocoding Info für SettingsPanel
+  const [weatherLocationInfo, setWeatherLocationInfo] = useState(null);
   const [services, setServices] = useState([]);
   const [shortcuts, setShortcuts] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -96,25 +101,8 @@ function App() {
         text_color_dark: data.text_color_dark || "#e5e7eb",   // NEU
         clock_format: data.clock_format || "24h",             // NEU
         weather_city: data.weather_city || "Berlin",          // NEU
-        // merge weather_fields from localStorage if present (frontend-only setting)
-        weather_fields: (function(){
-          try {
-            const stored = localStorage.getItem(WEATHER_FIELDS_KEY);
-            if (stored) return JSON.parse(stored);
-          } catch (e) { /* ignore */ }
-          return null;
-        })()
+        weather_fields: data.weather_fields || ['temperature', 'humidity'] // NEU: Direkt aus Backend
       };
-      // If no weather_fields in backend, fallback to defaults or stored value
-      if (!safeData.weather_fields) {
-        // try to get from localStorage or default to temp+humidity
-        try {
-          const stored = localStorage.getItem(WEATHER_FIELDS_KEY);
-          safeData.weather_fields = stored ? JSON.parse(stored) : ['temperature','humidity'];
-        } catch (e) {
-          safeData.weather_fields = ['temperature','humidity'];
-        }
-      }
 
       setAppearance(safeData);
       setEditAppearance(safeData); 
@@ -270,11 +258,6 @@ function App() {
 
     const appearanceToSave = { ...editAppearance, weather_fields: weatherFieldsSafe };
 
-    // Persist weather_fields locally because backend doesn't (yet) store this array
-    try {
-      localStorage.setItem(WEATHER_FIELDS_KEY, JSON.stringify(weatherFieldsSafe));
-    } catch (e) { console.warn('Could not persist weather_fields to localStorage', e); }
-
     // Optimistic UI update: apply changes immediately
     setAppearance(appearanceToSave);
     setEditAppearance(appearanceToSave);
@@ -366,6 +349,7 @@ function App() {
               city={appearance.weather_city} 
               textColor={getTextColor()}
               weatherFields={appearance.weather_fields || ['temperature','humidity']}
+              onLocationChange={setWeatherLocationInfo}
             />
             
             {/* Moderner vertikaler Trenner */}
@@ -415,35 +399,35 @@ function App() {
         {/* Theme-Toggle-Button */}
         <button
           onClick={toggleTheme}
-          className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all text-xl hover:scale-110"
+          className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
           title="Toggle Theme"
         >
-          {theme === 'light' ? '🌙' : '☀️'}
+          {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
         </button>
 
         {!isLoggedIn ? (
           <button
             onClick={() => setShowLogin(true)}
-            className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all text-xl hover:scale-110"
+            className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
             title="Admin-Login"
           >
-            🔒
+            <Lock size={24} />
           </button>
         ) : (
           <>
             <button
               onClick={() => setShowSettings(!showSettings)}
-              className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all text-xl hover:scale-110"
+              className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
               title="Einstellungen"
             >
-              ⚙️
+              <Gear size={24} />
             </button>
             <button
               onClick={handleLogout}
-              className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all text-xl hover:scale-110"
+              className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
               title="Logout"
             >
-              🔓
+              <SignOut size={24} />
             </button>
           </>
         )}
@@ -469,7 +453,6 @@ function App() {
           onClose={() => setShowSettings(false)}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          
           onAddService={addService}
           serviceName={serviceName}
           setServiceName={setServiceName}
@@ -479,7 +462,6 @@ function App() {
           setServiceUrl={setServiceUrl}
           serviceIcon={serviceIcon}
           setServiceIcon={setServiceIcon}
-
           onAddShortcut={addShortcut}
           shortcutName={shortcutName}
           setShortcutName={setShortcutName}
@@ -487,13 +469,13 @@ function App() {
           setShortcutUrl={setShortcutUrl}
           shortcutIcon={shortcutIcon}
           setShortcutIcon={setShortcutIcon}
-
           editAppearance={editAppearance}
           setEditAppearance={setEditAppearance}
           onSaveAppearance={saveAppearance}
           isSavingAppearance={isSavingAppearance}
           showSaved={showSaved}
-          currentTheme={theme} // NEU: Aktuelles Theme übergeben
+          currentTheme={theme}
+          weatherLocationInfo={weatherLocationInfo}
         />
       )}
     </div>

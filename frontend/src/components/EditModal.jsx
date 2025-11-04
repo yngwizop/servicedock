@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Trash } from 'phosphor-react';
 
 function EditModal({ item, type, onClose, onSave, onDelete }) {
   // type ist entweder "service" oder "shortcut"
@@ -124,9 +125,11 @@ function EditModal({ item, type, onClose, onSave, onDelete }) {
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="bg-red-600 hover:bg-red-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors"
+                className="bg-red-600 hover:bg-red-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors flex items-center justify-center"
+                aria-label="Löschen"
+                title="Löschen"
               >
-                🗑️
+                <Trash size={18} weight="bold" />
               </button>
               <button
                 onClick={onClose}

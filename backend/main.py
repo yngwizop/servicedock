@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Any
 from fastapi import Body
+import json
 
 # --- Initialisierung ---
 app = FastAPI()
@@ -67,6 +68,7 @@ class Appearance(BaseModel):
     text_color_dark: str | None = None   # NEU
     clock_format: str | None = None      # NEU: 12h oder 24h
     weather_city: str | None = None      # NEU: Stadt für Wetter-Widget
+    weather_fields: list[str] | None = None  # NEU: Liste der anzuzeigenden Wetterfelder
 
 # --- API Routen ---
 
@@ -203,7 +205,7 @@ def delete_service(service_id: int):
 def get_appearance():
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city FROM appearance WHERE id = 1;")
+    cur.execute("SELECT bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields FROM appearance WHERE id = 1;")
     row = cur.fetchone()
     cur.close()
     conn.close()
@@ -220,7 +222,8 @@ def get_appearance():
         "text_color_light": row[5] if row[5] else "#1f2937",
         "text_color_dark": row[6] if row[6] else "#e5e7eb",
         "clock_format": row[7] if row[7] else "24h",
-        "weather_city": row[8] if row[8] else "Berlin"
+        "weather_city": row[8] if row[8] else "Berlin",
+        "weather_fields": row[9] if row[9] else ["temperature", "humidity"]
     }
 
 @app.put("/api/appearance")
@@ -261,6 +264,10 @@ def update_appearance(appearance: Appearance):
     if appearance.weather_city is not None:
         updates.append("weather_city = %s")
         params.append(appearance.weather_city)
+    # NEU: Wetterfelder hinzugefügt
+    if appearance.weather_fields is not None:
+        updates.append("weather_fields = %s")
+        params.append(json.dumps(appearance.weather_fields))  # JSON speichern
 
     if not updates:
         return {"message": "No changes provided"}

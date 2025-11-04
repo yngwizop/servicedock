@@ -1,4 +1,5 @@
 import React from 'react';
+import { Pencil, Moon, Sun } from 'phosphor-react';
 
 // Wetter-Widget Felder für SettingsPanel
 const WEATHER_FIELDS = [
@@ -20,7 +21,8 @@ function SettingsPanel({
   shortcutName, setShortcutName, shortcutUrl, setShortcutUrl, shortcutIcon, setShortcutIcon,
   editAppearance, setEditAppearance, onSaveAppearance,
   isSavingAppearance, showSaved,
-  currentTheme // NEU: Aktuelles Theme
+  currentTheme, // NEU: Aktuelles Theme
+  weatherLocationInfo // NEU: Geocoding Info Objekt { name, country, latitude, longitude, postal_code }
 }) {
   return (
     <div
@@ -179,8 +181,15 @@ function SettingsPanel({
             
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-700">
               <p className="text-xs text-blue-800 dark:text-blue-300">
-                💡 Aktuell im <strong>{currentTheme === 'light' ? 'Light' : 'Dark'} Mode</strong>. 
-                Wechsle den Modus mit dem 🌙/☀️-Button, um die Farben zu testen.
+                💡 Aktuell im <strong>{currentTheme === 'light' ? 'Light' : 'Dark'} Mode</strong>.{' '}
+                Wechsle den Modus mit dem{' '}
+                <span className="inline-flex items-center gap-1 whitespace-nowrap" aria-hidden="true">
+                  <Moon size={12} />
+                  <span className="text-gray-600 dark:text-gray-400">/</span>
+                  <Sun size={12} />
+                </span>
+                <span className="sr-only"> Theme-Umschalter (Mond und Sonne)</span>
+                {' '}Button, um die Farben zu testen.
               </p>
             </div>
 
@@ -322,6 +331,16 @@ function SettingsPanel({
                 placeholder="z.B. Berlin, München, Hamburg"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              {/* Geocoding Info Anzeige */}
+              {weatherLocationInfo && weatherLocationInfo.name && weatherLocationInfo.country && (
+                <div className="mt-2 text-xs text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-900/30 rounded px-2 py-1">
+                  <span className="font-semibold">Gefundener Ort:</span> {weatherLocationInfo.name}, {weatherLocationInfo.country}
+                  {weatherLocationInfo.postal_code ? `, PLZ: ${weatherLocationInfo.postal_code}` : ''}
+                  {typeof weatherLocationInfo.latitude === 'number' && typeof weatherLocationInfo.longitude === 'number' ?
+                    `, (${weatherLocationInfo.latitude.toFixed(4)}, ${weatherLocationInfo.longitude.toFixed(4)})`
+                    : ''}
+                </div>
+              )}
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 Wetterdaten werden alle 2 Stunden automatisch aktualisiert und zwischengespeichert (Cache).
                 Manuelle Aktualisierung ist jederzeit per Button im Widget möglich.

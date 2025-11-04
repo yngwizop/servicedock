@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import ServiceCard from './ServiceCard';
 import EditModal from './EditModal';
+import { Pencil } from 'phosphor-react';
 
 function ServiceGrid({ 
   services = [], 
@@ -284,7 +285,7 @@ function ServiceGrid({
                 className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-200 hover:scale-110"
                 aria-label={`Service ${s.name || s.id} bearbeiten`}
                 title="Bearbeiten"
-              >✏️</button>
+              ><Pencil size={16} /></button>
             )}
           </div>
         ))}
