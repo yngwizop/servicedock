@@ -16,7 +16,7 @@ function ServiceCard({ service }) {
     >
       {service.icon && (
         isUrl ? (
-          <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 rounded-lg p-2.5 w-12 h-12 flex items-center justify-center">
+          <div className="flex-shrink-0 bg-blue-100 dark:bg-gray-700 rounded-lg p-2.5 w-12 h-12 flex items-center justify-center">
             <img 
               src={service.icon} 
               alt={service.name} 
@@ -25,7 +25,7 @@ function ServiceCard({ service }) {
             />
           </div>
         ) : (
-          <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/50 rounded-lg p-2.5 w-12 h-12 flex items-center justify-center">
+          <div className="flex-shrink-0 bg-blue-100 dark:bg-gray-600 rounded-lg p-2.5 w-12 h-12 flex items-center justify-center">
             <span className="text-2xl">
               {service.icon}
             </span>
