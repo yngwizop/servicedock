@@ -19,22 +19,22 @@ function ShortcutLink({ shortcut }) {
       href={shortcut.url}
       target="_blank"
       rel="noopener noreferrer"
-      draggable={false} // NEU
-      className="flex items-center gap-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md shadow-lg rounded-xl p-4 transition-all duration-300 hover:shadow-xl dark:hover:shadow-blue-900/30 hover:scale-[1.03]"
+      draggable={false}
+      className="flex items-center gap-3 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md shadow-lg rounded-lg p-3 transition-all duration-300 hover:shadow-xl dark:hover:shadow-blue-900/30 hover:scale-[1.03]"
       aria-label={`Shortcut: ${shortcut.name}, ${displayUrl(shortcut.url)}`}
     >
       {shortcut.icon && (
-        <div className={`flex-shrink-0 rounded-lg p-2 w-10 h-10 flex items-center justify-center ${isUrl ? 'bg-white/80 dark:bg-gray-700' : 'bg-gray-200/80 dark:bg-gray-600'}`}>
+        <div className={`flex-shrink-0 rounded-md p-1.5 w-9 h-9 flex items-center justify-center ${isUrl ? 'bg-white/80 dark:bg-gray-700' : 'bg-gray-200/80 dark:bg-gray-600'}`}>
           {isUrl ? (
             <img src={shortcut.icon} alt={shortcut.name} className="w-full h-full object-contain" draggable={false}/>
           ) : (
-            <span className="text-xl">{shortcut.icon}</span>
+            <span className="text-lg">{shortcut.icon}</span>
           )}
         </div>
       )}
       <div className="flex-grow min-w-0">
-        <h3 className="font-semibold text-gray-800 dark:text-gray-100 truncate">{shortcut.name}</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{displayUrl(shortcut.url)}</p>
+        <h3 className="font-medium text-sm text-gray-800 dark:text-gray-100 truncate">{shortcut.name}</h3>
+        <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{displayUrl(shortcut.url)}</p>
       </div>
     </a>
   );
