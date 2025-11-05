@@ -431,9 +431,10 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
           )}
         </button>
         <span className="text-3xl md:text-4xl" aria-hidden="true">{icon}</span>
+        <span className="text-gray-400 dark:text-gray-500" aria-hidden="true">•</span>
         {(() => {
           const activeFields = [];
-          if (weatherFields.includes('temperature')) activeFields.push(<span className="whitespace-nowrap" aria-label="Temperatur" style={{ color: textColor }}>{temp}°C</span>);
+          if (weatherFields.includes('temperature')) activeFields.push(<span className="whitespace-nowrap flex items-center gap-1" style={{ color: textColor }}><span className="text-xl md:text-2xl" aria-hidden="true">🌡️</span>{temp}°C</span>);
           if (weatherFields.includes('humidity')) activeFields.push(<span className="whitespace-nowrap flex items-center gap-1" style={{ color: textColor }}><span className="text-xl md:text-2xl" aria-hidden="true">💧</span>{humidity}%</span>);
           if (weatherFields.includes('wind')) activeFields.push(<span className="whitespace-nowrap flex items-center gap-1" style={{ color: textColor }}><span className="text-xl md:text-2xl" aria-hidden="true">🌀</span>{wind} km/h</span>);
           if (weatherFields.includes('precipitation')) activeFields.push(<span className="whitespace-nowrap flex items-center gap-1" style={{ color: textColor }}><span className="text-xl md:text-2xl" aria-hidden="true">🌧️</span>{precipitation} mm</span>);
