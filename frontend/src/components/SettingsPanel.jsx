@@ -26,7 +26,7 @@ function SettingsPanel({
 }) {
   return (
     <div
-      className="fixed right-0 top-0 h-screen w-96 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg z-30 shadow-2xl dark:shadow-blue-900/50 p-6 overflow-y-auto"
+      className="fixed right-0 top-0 h-screen w-96 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg z-30 shadow-2xl dark:shadow-blue-900/50 p-6 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent dark:[&::-webkit-scrollbar-thumb]:bg-gray-600"
       role="region"
       aria-label="Dashboard Einstellungen"
     >
@@ -36,12 +36,12 @@ function SettingsPanel({
       </div>
 
       {/* Tab-Navigation */}
-      <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+      <div className="flex mb-6 -mx-6 px-6">
         <button
           onClick={() => setActiveTab("services")}
-          className={`py-2 px-4 transition-all ${
+          className={`flex-1 py-3 px-4 transition-all duration-300 relative ${
             activeTab === "services"
-              ? "border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-semibold"
+              ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
           }`}
         >
@@ -49,9 +49,9 @@ function SettingsPanel({
         </button>
         <button
           onClick={() => setActiveTab("appearance")}
-          className={`py-2 px-4 transition-all ${
+          className={`flex-1 py-3 px-4 transition-all duration-300 relative ${
             activeTab === "appearance"
-              ? "border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-semibold"
+              ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
           }`}
         >
@@ -116,7 +116,7 @@ function SettingsPanel({
 
       {/* === Tab-Inhalt: Appearance === */}
       {activeTab === "appearance" && (
-        <div className="space-y-6 p-1">
+        <div className="space-y-6">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Aussehen anpassen</h3>
           
           {/* Sektion: Hintergrund */}
