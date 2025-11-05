@@ -130,6 +130,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# === Startup Event ===
+@app.on_event("startup")
+async def startup_event():
+    """Wird beim Start der Anwendung ausgeführt"""
+    try:
+        # Automatisches Bereinigen von Audit-Logs älter als 90 Tage
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        cur.execute(
+            "DELETE FROM audit_log WHERE timestamp < NOW() - INTERVAL '90 days';"
+        )
+        deleted_count = cur.rowcount
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        if deleted_count > 0:
+            print(f"✓ Startup: {deleted_count} alte Audit-Logs gelöscht (>90 Tage)")
+        else:
+            print("✓ Startup: Keine alten Audit-Logs zum Löschen")
+            
+    except Exception as e:
+        print(f"⚠ Startup cleanup error: {e}")
+
+
 # --- Konfiguration & Datenbank ---
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@db:5432/dashboard")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
@@ -608,17 +635,28 @@ def update_proxmox_config(config: ProxmoxConfig):
     existing = cur.fetchone()
     
     # Wenn kein neuer Token angegeben wurde, behalte den alten
+    token_was_updated = bool(config.token_value)
     if not config.token_value and existing:
         encrypted_token = existing[1]  # Behalte den alten verschlüsselten Token
     
     if existing:
-        cur.execute(
-            """UPDATE proxmox_config 
-               SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s 
-               WHERE id=1 
-               RETURNING id;""",
-            (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node)
-        )
+        # Wenn ein neuer Token gesetzt wurde, aktualisiere token_created_at
+        if token_was_updated:
+            cur.execute(
+                """UPDATE proxmox_config 
+                   SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s, token_created_at=NOW() 
+                   WHERE id=1 
+                   RETURNING id;""",
+                (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node)
+            )
+        else:
+            cur.execute(
+                """UPDATE proxmox_config 
+                   SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s 
+                   WHERE id=1 
+                   RETURNING id;""",
+                (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node)
+            )
     else:
         cur.execute(
             """INSERT INTO proxmox_config (id, host, port, token_name, token_value, verify_ssl, node) 
@@ -1000,6 +1038,72 @@ def get_audit_stats():
     }
 
 
+@app.post("/api/admin/audit-logs/cleanup")
+def cleanup_old_audit_logs(days: int = 90):
+    """Löscht Audit-Logs die älter als X Tage sind (Standard: 90 Tage)"""
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    # Zähle wie viele gelöscht werden
+    cur.execute(
+        "SELECT COUNT(*) FROM audit_log WHERE timestamp < NOW() - INTERVAL '%s days';",
+        (days,)
+    )
+    count_to_delete = cur.fetchone()[0]
+    
+    # Lösche alte Einträge
+    cur.execute(
+        "DELETE FROM audit_log WHERE timestamp < NOW() - INTERVAL '%s days';",
+        (days,)
+    )
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return {
+        "message": f"Alte Audit-Logs gelöscht",
+        "deleted_count": count_to_delete,
+        "older_than_days": days
+    }
+
+
+class DeleteLogsRequest(BaseModel):
+    password: str
+
+
+@app.post("/api/admin/audit-logs/delete-all")
+def delete_all_audit_logs(request: DeleteLogsRequest):
+    """Löscht ALLE Audit-Logs (Admin-Passwort erforderlich)"""
+    
+    # Prüfe Admin-Passwort
+    admin_password = os.getenv("ADMIN_PASSWORD", "admin")
+    if request.password != admin_password:
+        raise HTTPException(status_code=403, detail="Falsches Admin-Passwort")
+    
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    # Zähle wie viele gelöscht werden
+    cur.execute("SELECT COUNT(*) FROM audit_log;")
+    count_to_delete = cur.fetchone()[0]
+    
+    # Lösche alle Einträge
+    cur.execute("DELETE FROM audit_log;")
+    
+    # Setze Auto-Increment zurück
+    cur.execute("ALTER SEQUENCE audit_log_id_seq RESTART WITH 1;")
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return {
+        "message": "Alle Audit-Logs gelöscht",
+        "deleted_count": count_to_delete
+    }
+
+
 # ===== Token Rotation =====
 
 @app.get("/api/admin/proxmox/token-info")
@@ -1037,7 +1141,7 @@ def get_token_info():
         last_rotated_str = None
     
     # Empfehlung
-    rotation_recommended = age_days and age_days > 90  # Empfehle Rotation nach 90 Tagen
+    rotation_recommended = age_days and age_days > 60  # Empfehle Rotation nach 60 Tagen
     
     return {
         "configured": True,

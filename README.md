@@ -24,12 +24,30 @@ Ein modernes, selbst gehostetes Dashboard zum Verwalten und Organisieren deiner 
 - Live-Bearbeitung mit sofortiger Vorschau
 - Settings-Panel mit Tabs für bessere Organisation
 
+### 📊 Proxmox Monitoring (Admin-only)
+- **VM/Container-Übersicht**: Zeigt alle VMs und LXC-Container
+- **Status-Anzeige**: Live-Status (running/stopped) mit Farb-Kodierung
+- **Remote-Control**: Start, Stop, Reboot direkt aus dem Dashboard
+- **Filter & Sortierung**: 6 Sortier-Optionen + Typ/Status-Filter
+- **Token-Verschlüsselung**: API-Tokens werden mit Fernet (AES-128) verschlüsselt
+
+### 🛡️ Security Features (Admin-only)
+- **Audit-Logging**: Alle Proxmox-Aktionen werden protokolliert
+  - Automatische Bereinigung alter Logs (>90 Tage) beim Start
+  - Manuelles Löschen via Security Dashboard (Passwort erforderlich)
+- **Rate-Limiting**: Schutz vor API-Missbrauch (30/min View, 10/min Control)
+- **Token-Rotation**: Automatische Warnung nach 60 Tagen, Tracking von Token-Alter
+- **Security Dashboard**: Übersicht über Audit-Logs, Statistiken und Token-Status
+
 ### 🚀 Technologie-Stack
-- **Frontend**: React 18 + Tailwind CSS
-- **Backend**: FastAPI (Python)
-- **Datenbank**: PostgreSQL
+- **Frontend**: React 20 + Tailwind CSS + Vite
+- **Backend**: FastAPI (Python 3.11)
+- **Datenbank**: PostgreSQL 16
 - **Deployment**: Docker + Docker Compose
 - **Styling**: Tailwind CSS mit Dark Mode Support
+- **Icons**: Phosphor Icons
+- **Proxmox API**: proxmoxer library
+- **Security**: cryptography (Fernet), slowapi (Rate-Limiting)
 
 ## 📦 Installation
 
@@ -113,6 +131,21 @@ http://localhost:3000
 **Auth**
 - `POST /api/login` - Admin-Login
 
+**Proxmox Monitoring** (Admin-only)
+- `GET /api/proxmox/vms` - Alle VMs/Container abrufen
+- `GET /api/proxmox/config` - Proxmox-Konfiguration abrufen
+- `PUT /api/proxmox/config` - Proxmox-Konfiguration speichern
+- `POST /api/proxmox/vm/{vmid}/start` - VM/Container starten
+- `POST /api/proxmox/vm/{vmid}/stop` - VM/Container stoppen
+- `POST /api/proxmox/vm/{vmid}/reboot` - VM/Container neustarten
+
+**Security** (Admin-only)
+- `GET /api/admin/audit-logs` - Audit-Logs abrufen
+- `GET /api/admin/audit-stats` - Audit-Statistiken abrufen
+- `POST /api/admin/audit-logs/cleanup` - Alte Logs löschen
+- `POST /api/admin/audit-logs/delete-all` - Alle Logs löschen (Passwort)
+- `GET /api/admin/proxmox/token-info` - Token-Alter und Rotation-Status
+
 ## 📂 Projektstruktur
 
 ```
@@ -126,7 +159,10 @@ web-dashboard/
 │   │   │   ├── ShortcutGrid.jsx
 │   │   │   ├── EditModal.jsx
 │   │   │   ├── LoginModal.jsx
-│   │   │   └── SettingsPanel.jsx
+│   │   │   ├── SettingsPanel.jsx
+│   │   │   ├── ProxmoxCard.jsx
+│   │   │   ├── ProxmoxGrid.jsx
+│   │   │   └── SecurityDashboard.jsx
 │   │   ├── App.jsx
 │   │   └── index.css
 │   └── package.json
@@ -134,7 +170,11 @@ web-dashboard/
 │   ├── main.py
 │   ├── requirements.txt
 │   └── Dockerfile
+├── db/
+│   └── init.sql
 ├── docker-compose.yml
+├── SECURITY_FEATURES.md
+├── TOKEN_ROTATION_GUIDE.md
 └── README.md
 ```
 
@@ -172,6 +212,13 @@ docker-compose logs backend
 
 ## 📝 To-Do / Roadmap
 
+- [x] Proxmox Monitoring Integration
+- [x] Token-Verschlüsselung (Fernet AES-128)
+- [x] Audit-Logging für alle Proxmox-Aktionen
+- [x] Rate-Limiting (30/min View, 10/min Control)
+- [x] Token-Rotation Tracking (60 Tage Empfehlung)
+- [x] Security Dashboard mit Statistiken
+- [x] Automatische Audit-Log-Bereinigung (>90 Tage)
 - [ ] Drag & Drop für Service-Reihenfolge
 - [ ] Multiple Spalten Support zur besseren Organisation der Services/Shortcuts
 - [ ] Export/Import von Konfigurationen

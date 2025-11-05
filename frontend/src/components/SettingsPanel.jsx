@@ -13,8 +13,8 @@ const WEATHER_FIELDS = [
 
 function SettingsPanel({
   onClose,
-  activeTab,
-  setActiveTab,
+  activeTab,      // Wird nicht mehr verwendet - nur für Kompatibilität
+  setActiveTab,   // Wird nicht mehr verwendet - nur für Kompatibilität
   onAddService,
   serviceName, setServiceName, serviceDesc, setServiceDesc, serviceUrl, setServiceUrl, serviceIcon, setServiceIcon,
   onAddShortcut,
@@ -24,6 +24,9 @@ function SettingsPanel({
   currentTheme, // NEU: Aktuelles Theme
   weatherLocationInfo // NEU: Geocoding Info Objekt { name, country, latitude, longitude, postal_code }
 }) {
+  // NEU: Eigener Tab-State für Settings-Panel (unabhängig von Haupt-App!)
+  const [panelTab, setPanelTab] = React.useState('services');
+  
   // NEU: State für Proxmox-Konfiguration
   const [proxmoxConfig, setProxmoxConfig] = React.useState({
     host: '',
@@ -59,10 +62,10 @@ function SettingsPanel({
       }
     };
     
-    if (activeTab === 'proxmox') {
+    if (panelTab === 'proxmox') {
       fetchProxmoxConfig();
     }
-  }, [activeTab]);
+  }, [panelTab]);
 
   // Speichere Proxmox-Konfiguration
   const handleSaveProxmox = async (e) => {
@@ -103,9 +106,9 @@ function SettingsPanel({
       {/* Tab-Navigation */}
       <div className="flex mb-6 -mx-6 px-6 overflow-x-auto">
         <button
-          onClick={() => setActiveTab("services")}
+          onClick={() => setPanelTab("services")}
           className={`flex-1 py-3 px-4 transition-all duration-300 relative whitespace-nowrap ${
-            activeTab === "services"
+            panelTab === "services"
               ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
           }`}
@@ -113,9 +116,9 @@ function SettingsPanel({
           Services
         </button>
         <button
-          onClick={() => setActiveTab("appearance")}
+          onClick={() => setPanelTab("appearance")}
           className={`flex-1 py-3 px-4 transition-all duration-300 relative whitespace-nowrap ${
-            activeTab === "appearance"
+            panelTab === "appearance"
               ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
           }`}
@@ -123,9 +126,9 @@ function SettingsPanel({
           Appearance
         </button>
         <button
-          onClick={() => setActiveTab("proxmox")}
+          onClick={() => setPanelTab("proxmox")}
           className={`flex-1 py-3 px-4 transition-all duration-300 relative whitespace-nowrap ${
-            activeTab === "proxmox"
+            panelTab === "proxmox"
               ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
           }`}
@@ -135,7 +138,7 @@ function SettingsPanel({
       </div>
 
       {/* === Tab-Inhalt: Services === */}
-      {activeTab === "services" && (
+      {panelTab === "services" && (
         <div className="space-y-6">
           <form
             onSubmit={onAddService}
@@ -190,7 +193,7 @@ function SettingsPanel({
       )}
 
       {/* === Tab-Inhalt: Appearance === */}
-      {activeTab === "appearance" && (
+      {panelTab === "appearance" && (
         <div className="space-y-6">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Aussehen anpassen</h3>
           
@@ -464,7 +467,7 @@ function SettingsPanel({
       )}
 
       {/* === Tab-Inhalt: Proxmox === */}
-      {activeTab === "proxmox" && (
+      {panelTab === "proxmox" && (
         <div className="space-y-6">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Proxmox Konfiguration</h3>
           

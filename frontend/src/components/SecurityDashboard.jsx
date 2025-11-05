@@ -20,6 +20,10 @@ function SecurityDashboard({ isLoggedIn, onOpenSettings }) {
   const [auditStats, setAuditStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState('overview'); // overview, logs, stats
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -56,6 +60,40 @@ function SecurityDashboard({ isLoggedIn, onOpenSettings }) {
     } catch (error) {
       console.error('Error fetching security data:', error);
       setLoading(false);
+    }
+  };
+
+  const handleDeleteAllLogs = async () => {
+    if (!deletePassword) {
+      setDeleteError('Bitte gib das Admin-Passwort ein');
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError('');
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/audit-logs/delete-all`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: deletePassword })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(`✓ ${data.deleted_count} Audit-Logs erfolgreich gelöscht`);
+        setShowDeleteModal(false);
+        setDeletePassword('');
+        fetchSecurityData(); // Reload data
+      } else {
+        const error = await res.json();
+        setDeleteError(error.detail || 'Fehler beim Löschen');
+      }
+    } catch (error) {
+      console.error('Error deleting logs:', error);
+      setDeleteError('Netzwerkfehler beim Löschen');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -174,7 +212,7 @@ function SecurityDashboard({ isLoggedIn, onOpenSettings }) {
               <div className="flex items-center gap-3">
                 <ArrowsClockwise 
                   size={28} 
-                  className={tokenInfo?.rotation_recommended ? 'text-orange-500' : 'text-green-500'} 
+                  className={tokenInfo?.rotation_recommended ? 'text-red-500' : 'text-green-500'} 
                   weight="bold"
                 />
                 <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
@@ -182,7 +220,7 @@ function SecurityDashboard({ isLoggedIn, onOpenSettings }) {
                 </h3>
               </div>
               {tokenInfo?.rotation_recommended && (
-                <Warning size={24} className="text-orange-500" weight="fill" />
+                <Warning size={24} className="text-red-500" weight="fill" />
               )}
             </div>
             
@@ -210,16 +248,16 @@ function SecurityDashboard({ isLoggedIn, onOpenSettings }) {
                 )}
                 <div className={`mt-4 p-3 rounded-lg ${
                   tokenInfo.rotation_recommended 
-                    ? 'bg-orange-100 dark:bg-orange-900/30' 
+                    ? 'bg-red-100 dark:bg-red-900/30' 
                     : 'bg-green-100 dark:bg-green-900/30'
                 }`}>
                   <p className={`text-sm font-semibold ${
                     tokenInfo.rotation_recommended 
-                      ? 'text-orange-800 dark:text-orange-300' 
+                      ? 'text-red-800 dark:text-red-300' 
                       : 'text-green-800 dark:text-green-300'
                   }`}>
                     {tokenInfo.rotation_recommended 
-                      ? '⚠️ Rotation empfohlen (>90 Tage)' 
+                      ? '⚠️ Rotation empfohlen (>60 Tage)' 
                       : '✓ Token ist aktuell'}
                   </p>
                 </div>
@@ -299,10 +337,17 @@ function SecurityDashboard({ isLoggedIn, onOpenSettings }) {
       {/* Logs View */}
       {activeView === 'logs' && (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
               Letzte 10 Audit-Einträge
             </h3>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center gap-2 transition-colors"
+            >
+              <XCircle size={20} weight="fill" />
+              Alle Logs löschen
+            </button>
           </div>
           
           <div className="overflow-x-auto">
@@ -411,6 +456,63 @@ function SecurityDashboard({ isLoggedIn, onOpenSettings }) {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 border-2 border-red-500">
+            <div className="flex items-center gap-3 mb-4">
+              <Warning size={32} className="text-red-500" weight="fill" />
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+                Alle Audit-Logs löschen?
+              </h3>
+            </div>
+            
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Diese Aktion kann nicht rückgängig gemacht werden. Alle Audit-Log-Einträge werden permanent gelöscht.
+            </p>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Admin-Passwort zur Bestätigung:
+              </label>
+              <input
+                type="password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleDeleteAllLogs()}
+                placeholder="Passwort eingeben"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                autoFocus
+              />
+              {deleteError && (
+                <p className="mt-2 text-sm text-red-500">{deleteError}</p>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeletePassword('');
+                  setDeleteError('');
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                disabled={isDeleting}
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={handleDeleteAllLogs}
+                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Lösche...' : 'Löschen'}
+              </button>
             </div>
           </div>
         </div>

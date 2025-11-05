@@ -7,6 +7,11 @@ Dieses Dokument beschreibt die drei implementierten Sicherheitsfunktionen für d
 ### Funktionalität
 Alle API-Zugriffe auf Proxmox-Ressourcen werden in einer zentralen Audit-Log-Tabelle protokolliert.
 
+### Automatische Bereinigung
+- **Beim Backend-Start**: Alle Logs älter als **90 Tage** werden automatisch gelöscht
+- **Startup-Log**: Zeigt Anzahl gelöschter Einträge im Backend-Log
+- **Verhindert**: Unbegrenztes Wachstum der Datenbank
+
 ### Geloggte Informationen
 - **Timestamp**: Zeitpunkt des Zugriffs
 - **User Type**: Typ des Nutzers (admin/guest)
@@ -75,6 +80,43 @@ GET /api/admin/audit-stats
   }
 }
 ```
+
+#### Alte Logs bereinigen
+```bash
+POST /api/admin/audit-logs/cleanup?days=90
+```
+
+**Parameter:**
+- `days` (optional): Lösche Logs älter als X Tage (Standard: 90)
+
+**Antwort:**
+```json
+{
+  "message": "Alte Audit-Logs gelöscht",
+  "deleted_count": 15,
+  "older_than_days": 90
+}
+```
+
+#### Alle Logs löschen (Admin-Passwort erforderlich)
+```bash
+POST /api/admin/audit-logs/delete-all
+Content-Type: application/json
+
+{
+  "password": "admin"
+}
+```
+
+**Antwort:**
+```json
+{
+  "message": "Alle Audit-Logs gelöscht",
+  "deleted_count": 65
+}
+```
+
+**Hinweis:** Diese Funktion setzt auch die Auto-Increment-ID zurück.
 
 ### Datenbank-Schema
 ```sql
@@ -187,7 +229,7 @@ GET /api/admin/proxmox/token-info
 - `created_at`: Erstellungsdatum
 - `last_rotated`: Letztes Rotationsdatum
 - `age_days`: Alter in Tagen
-- `rotation_recommended`: `true` wenn älter als 90 Tage
+- `rotation_recommended`: `true` wenn älter als 60 Tage
 
 #### Token rotieren
 ```bash
@@ -264,6 +306,8 @@ fi
 - Regelmäßig überprüfen auf verdächtige Aktivitäten
 - Filter nach fehlgeschlagenen Aktionen (`status=failed`)
 - Überwachen von IP-Adressen mit vielen Fehlversuchen
+- **Automatische Bereinigung**: Logs älter als 90 Tage werden beim Start gelöscht
+- **Manuelle Bereinigung**: "Alle Logs löschen" Button im Security Dashboard (Admin-Passwort erforderlich)
 
 ### 3. Rate-Limiting
 - Schützt vor Brute-Force-Angriffen
@@ -271,9 +315,11 @@ fi
 - Bei Bedarf Limits anpassen in `main.py`
 
 ### 4. Token-Rotation
-- **Empfohlen**: Token alle 90 Tage rotieren
+- **Empfohlen**: Token alle 60 Tage rotieren (vorher 90 Tage)
 - Bei Sicherheitsvorfällen sofort rotieren
 - Alte Tokens in Proxmox löschen
+- **Token-Secret wird aus Sicherheitsgründen nicht im Frontend angezeigt**
+- Bei Rotation muss der neue Token-Wert manuell eingegeben werden
 
 ### 5. Netzwerk-Sicherheit
 - Dashboard nur über HTTPS erreichbar machen
@@ -298,7 +344,7 @@ fi
 ### Token-Rotation-Alerts
 Setze Benachrichtigungen:
 - Bei `rotation_recommended: true`
-- Bei Token-Alter > 120 Tage (kritisch)
+- Bei Token-Alter > 80 Tage (kritisch)
 
 ---
 
@@ -311,6 +357,23 @@ docker compose exec db psql -U user -d dashboard -c "\d audit_log"
 
 # Prüfe Backend-Logs
 docker compose logs backend --tail 50
+
+# Prüfe Startup-Bereinigung
+docker compose logs backend | grep "Startup:"
+```
+
+### Audit-Logs laufen voll
+Die automatische Bereinigung läuft nur beim Backend-Start. Für manuelle Bereinigung:
+
+```bash
+# Im Security Dashboard: Audit Logs Tab → "Alle Logs löschen" Button
+# Oder via API:
+curl -X POST http://localhost:8000/api/admin/audit-logs/cleanup?days=90
+
+# Alle Logs löschen (Passwort erforderlich):
+curl -X POST http://localhost:8000/api/admin/audit-logs/delete-all \
+  -H "Content-Type: application/json" \
+  -d '{"password": "admin"}'
 ```
 
 ### Rate-Limiting funktioniert nicht
@@ -329,7 +392,16 @@ docker compose exec db psql -U user -d dashboard -c "\d proxmox_config"
 
 # Prüfe Encryption
 curl http://localhost:8000/api/admin/proxmox/token-info
+
+# Prüfe ob token_created_at aktualisiert wird
+docker compose exec -T db psql -U user -d dashboard -c \
+  "SELECT token_name, token_created_at FROM proxmox_config WHERE id = 1;"
 ```
+
+**Häufige Probleme:**
+- Token-Wert muss neu eingegeben werden (wird nicht aus DB geladen)
+- `token_created_at` wird nur aktualisiert wenn `token_value` gesendet wird
+- Nach dem Speichern verschwindet der Token-Wert aus dem Formular (Sicherheit)
 
 ---
 

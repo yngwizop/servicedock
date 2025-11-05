@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ProxmoxCard from './ProxmoxCard';
-import { ArrowsClockwise, WarningCircle, GearSix } from 'phosphor-react';
+import { ArrowsClockwise, WarningCircle, GearSix, LockKey, FunnelSimple, SortAscending } from 'phosphor-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
 
@@ -10,6 +10,29 @@ function ProxmoxGrid({ isLoggedIn, onOpenSettings }) {
   const [error, setError] = useState(null);
   const [isConfigured, setIsConfigured] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  
+  // Filter & Sort States
+  const [sortBy, setSortBy] = useState('name-asc'); // name-asc, name-desc, status, type
+  const [filterType, setFilterType] = useState('all'); // all, qemu, lxc
+  const [filterStatus, setFilterStatus] = useState('all'); // all, running, stopped
+
+  // Login-Check: Nur für Admins
+  if (!isLoggedIn) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <LockKey size={64} className="text-gray-400 dark:text-gray-600" weight="duotone" />
+        <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+          Proxmox Monitoring
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">
+          Bitte melde dich als Admin an, um das Proxmox Monitoring zu nutzen.
+        </p>
+        <div className="mt-4 text-sm text-gray-500 dark:text-gray-500">
+          🔒 Nur für Administratoren
+        </div>
+      </div>
+    );
+  }
 
   // Lade Proxmox-Daten
   const fetchProxmoxData = async () => {
@@ -99,6 +122,49 @@ function ProxmoxGrid({ isLoggedIn, onOpenSettings }) {
     }
   };
 
+  // Filter und Sortier-Logik
+  const getFilteredAndSortedResources = () => {
+    let filtered = [...resources];
+    
+    // Filter nach Typ
+    if (filterType !== 'all') {
+      filtered = filtered.filter(r => r.type === filterType);
+    }
+    
+    // Filter nach Status
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(r => r.status === filterStatus);
+    }
+    
+    // Sortierung
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name-asc':
+          return a.name.localeCompare(b.name);
+        case 'name-desc':
+          return b.name.localeCompare(a.name);
+        case 'status':
+          // Running zuerst, dann stopped
+          if (a.status === b.status) return a.name.localeCompare(b.name);
+          return a.status === 'running' ? -1 : 1;
+        case 'type':
+          // QEMU zuerst, dann LXC
+          if (a.type === b.type) return a.name.localeCompare(b.name);
+          return a.type === 'qemu' ? -1 : 1;
+        case 'vmid-asc':
+          return a.vmid - b.vmid;
+        case 'vmid-desc':
+          return b.vmid - a.vmid;
+        default:
+          return 0;
+      }
+    });
+    
+    return filtered;
+  };
+
+  const filteredResources = getFilteredAndSortedResources();
+
   // Nicht konfiguriert
   if (!isConfigured && !loading) {
     return (
@@ -159,14 +225,14 @@ function ProxmoxGrid({ isLoggedIn, onOpenSettings }) {
 
   return (
     <div>
-      {/* Header mit Refresh-Button */}
+      {/* Header mit Resource Count */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
             Proxmox Monitoring
           </h2>
           <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-3 py-1 rounded-full text-sm font-semibold">
-            {resources.length} {resources.length === 1 ? 'Resource' : 'Resources'}
+            {filteredResources.length} / {resources.length}
           </span>
         </div>
         
@@ -195,16 +261,91 @@ function ProxmoxGrid({ isLoggedIn, onOpenSettings }) {
         </div>
       </div>
 
-      {/* Grid mit VMs/LXCs */}
-      {resources.length === 0 ? (
+      {/* Filter & Sort Bar */}
+      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl shadow-lg p-4 mb-6 border border-gray-200 dark:border-gray-700">
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Sort Icon */}
+          <div className="flex items-center gap-2">
+            <SortAscending size={20} className="text-gray-600 dark:text-gray-400" />
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Filter & Sort:</span>
+          </div>
+
+          {/* Sortierung */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+          >
+            <option value="name-asc">Name A-Z</option>
+            <option value="name-desc">Name Z-A</option>
+            <option value="vmid-asc">VM-ID aufsteigend</option>
+            <option value="vmid-desc">VM-ID absteigend</option>
+            <option value="status">Status (Running zuerst)</option>
+            <option value="type">Typ (VM zuerst)</option>
+          </select>
+
+          {/* Typ Filter */}
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+          >
+            <option value="all">Alle Typen</option>
+            <option value="qemu">Nur VMs</option>
+            <option value="lxc">Nur Container</option>
+          </select>
+
+          {/* Status Filter */}
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+          >
+            <option value="all">Alle Status</option>
+            <option value="running">Nur Running</option>
+            <option value="stopped">Nur Stopped</option>
+          </select>
+
+          {/* Reset Button */}
+          {(sortBy !== 'name-asc' || filterType !== 'all' || filterStatus !== 'all') && (
+            <button
+              onClick={() => {
+                setSortBy('name-asc');
+                setFilterType('all');
+                setFilterStatus('all');
+              }}
+              className="px-3 py-2 text-sm bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded-lg transition-all"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Grid mit VMs/LXCs - SCHMALER! */}
+      {filteredResources.length === 0 ? (
         <div className="text-center py-12">
+          <FunnelSimple size={48} className="mx-auto mb-3 text-gray-400 dark:text-gray-600" />
           <p className="text-gray-600 dark:text-gray-400 text-lg">
-            Keine VMs oder Container gefunden
+            {resources.length === 0 
+              ? 'Keine VMs oder Container gefunden' 
+              : 'Keine Ergebnisse mit aktuellen Filtern'}
           </p>
+          {(filterType !== 'all' || filterStatus !== 'all') && (
+            <button
+              onClick={() => {
+                setFilterType('all');
+                setFilterStatus('all');
+              }}
+              className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all"
+            >
+              Filter zurücksetzen
+            </button>
+          )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {resources.map((resource) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+          {filteredResources.map((resource) => (
             <ProxmoxCard
               key={resource.id}
               resource={resource}
