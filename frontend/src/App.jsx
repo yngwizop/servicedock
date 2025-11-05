@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import ServiceGrid from "./components/ServiceGrid";
 import ShortcutGrid from "./components/ShortcutGrid";
+import ProxmoxGrid from "./components/ProxmoxGrid";
+import SecurityDashboard from "./components/SecurityDashboard";
 import LoginModal from "./components/LoginModal";
 import SettingsPanel from "./components/SettingsPanel";
 import ClockWidget from "./components/ClockWidget";
@@ -370,29 +372,88 @@ function App() {
           </div>
         </div>
 
-        {/* === SERVICES (JETZT AUSGELAGERT) === */}
-        <ServiceGrid
-          services={services}
-          setServices={setServices}
-          isLoggedIn={isLoggedIn}
-          colsClass={serviceColsClass}
-          onUpdate={updateService}
-          onDelete={deleteService}
-          textColor={getTextColor()} // NEU: Schriftfarbe übergeben
-          onReorder={reorderServices} // NEU
-        />
+        {/* === TAB NAVIGATION === */}
+        <div className="flex gap-4 mb-8 border-b border-gray-300 dark:border-gray-700">
+          <button
+            onClick={() => setActiveTab("services")}
+            className={`px-6 py-3 font-semibold transition-all ${
+              activeTab === "services"
+                ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+            }`}
+          >
+            Services & Shortcuts
+          </button>
+          <button
+            onClick={() => setActiveTab("monitoring")}
+            className={`px-6 py-3 font-semibold transition-all ${
+              activeTab === "monitoring"
+                ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+            }`}
+          >
+            Proxmox Monitoring
+          </button>
+          <button
+            onClick={() => setActiveTab("security")}
+            className={`px-6 py-3 font-semibold transition-all ${
+              activeTab === "security"
+                ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+            }`}
+          >
+            Security
+          </button>
+        </div>
 
-        {/* === SHORTCUTS (JETZT AUSGELAGERT) === */}
-        <ShortcutGrid
-          shortcuts={shortcuts}
-          setShortcuts={setShortcuts}
-          isLoggedIn={isLoggedIn}
-          colsClass={shortcutColsClass}
-          onUpdate={updateShortcut}
-          onDelete={deleteShortcut}
-          textColor={getTextColor()} // NEU: Schriftfarbe übergeben
-          onReorder={reorderShortcuts} // NEU
-        />
+        {/* === CONTENT BASED ON ACTIVE TAB === */}
+        {activeTab === "services" && (
+          <>
+            {/* === SERVICES (JETZT AUSGELAGERT) === */}
+            <ServiceGrid
+              services={services}
+              setServices={setServices}
+              isLoggedIn={isLoggedIn}
+              colsClass={serviceColsClass}
+              onUpdate={updateService}
+              onDelete={deleteService}
+              textColor={getTextColor()} // NEU: Schriftfarbe übergeben
+              onReorder={reorderServices} // NEU
+            />
+
+            {/* === SHORTCUTS (JETZT AUSGELAGERT) === */}
+            <ShortcutGrid
+              shortcuts={shortcuts}
+              setShortcuts={setShortcuts}
+              isLoggedIn={isLoggedIn}
+              colsClass={shortcutColsClass}
+              onUpdate={updateShortcut}
+              onDelete={deleteShortcut}
+              textColor={getTextColor()} // NEU: Schriftfarbe übergeben
+              onReorder={reorderShortcuts} // NEU
+            />
+          </>
+        )}
+
+        {activeTab === "monitoring" && (
+          <ProxmoxGrid 
+            isLoggedIn={isLoggedIn}
+            onOpenSettings={() => {
+              setShowSettings(true);
+              setActiveTab("services"); // Wechsle zurück zu Services/Settings
+            }}
+          />
+        )}
+
+        {activeTab === "security" && (
+          <SecurityDashboard 
+            isLoggedIn={isLoggedIn}
+            onOpenSettings={() => {
+              setShowSettings(true);
+              setActiveTab("services");
+            }}
+          />
+        )}
       </div>
 
       {/* 3. Admin-UI-Layer */}

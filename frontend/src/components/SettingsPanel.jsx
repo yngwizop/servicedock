@@ -24,6 +24,71 @@ function SettingsPanel({
   currentTheme, // NEU: Aktuelles Theme
   weatherLocationInfo // NEU: Geocoding Info Objekt { name, country, latitude, longitude, postal_code }
 }) {
+  // NEU: State für Proxmox-Konfiguration
+  const [proxmoxConfig, setProxmoxConfig] = React.useState({
+    host: '',
+    port: 8006,
+    token_name: '',
+    token_value: '',
+    verify_ssl: false,
+    node: ''
+  });
+  const [isSavingProxmox, setIsSavingProxmox] = React.useState(false);
+  const [proxmoxSaved, setProxmoxSaved] = React.useState(false);
+
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
+
+  // Lade Proxmox-Konfiguration beim Öffnen
+  React.useEffect(() => {
+    const fetchProxmoxConfig = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/proxmox/config`);
+        const data = await res.json();
+        if (data.configured) {
+          setProxmoxConfig({
+            host: data.host || '',
+            port: data.port || 8006,
+            token_name: data.token_name || '',
+            token_value: '', // Secret wird aus Sicherheitsgründen nicht zurückgegeben
+            verify_ssl: data.verify_ssl || false,
+            node: data.node || ''
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load Proxmox config:', err);
+      }
+    };
+    
+    if (activeTab === 'proxmox') {
+      fetchProxmoxConfig();
+    }
+  }, [activeTab]);
+
+  // Speichere Proxmox-Konfiguration
+  const handleSaveProxmox = async (e) => {
+    e.preventDefault();
+    setIsSavingProxmox(true);
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/proxmox/config`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(proxmoxConfig)
+      });
+
+      if (res.ok) {
+        setProxmoxSaved(true);
+        setTimeout(() => setProxmoxSaved(false), 2000);
+      } else {
+        alert('Fehler beim Speichern der Proxmox-Konfiguration');
+      }
+    } catch (err) {
+      console.error('Failed to save Proxmox config:', err);
+      alert('Fehler beim Speichern der Proxmox-Konfiguration');
+    } finally {
+      setIsSavingProxmox(false);
+    }
+  };
   return (
     <div
       className="fixed right-0 top-0 h-screen w-96 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg z-30 shadow-2xl dark:shadow-blue-900/50 p-6 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent dark:[&::-webkit-scrollbar-thumb]:bg-gray-600"
@@ -36,26 +101,36 @@ function SettingsPanel({
       </div>
 
       {/* Tab-Navigation */}
-      <div className="flex mb-6 -mx-6 px-6">
+      <div className="flex mb-6 -mx-6 px-6 overflow-x-auto">
         <button
           onClick={() => setActiveTab("services")}
-          className={`flex-1 py-3 px-4 transition-all duration-300 relative ${
+          className={`flex-1 py-3 px-4 transition-all duration-300 relative whitespace-nowrap ${
             activeTab === "services"
               ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
           }`}
         >
-          Services & Shortcuts
+          Services
         </button>
         <button
           onClick={() => setActiveTab("appearance")}
-          className={`flex-1 py-3 px-4 transition-all duration-300 relative ${
+          className={`flex-1 py-3 px-4 transition-all duration-300 relative whitespace-nowrap ${
             activeTab === "appearance"
               ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
           }`}
         >
           Appearance
+        </button>
+        <button
+          onClick={() => setActiveTab("proxmox")}
+          className={`flex-1 py-3 px-4 transition-all duration-300 relative whitespace-nowrap ${
+            activeTab === "proxmox"
+              ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
+              : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
+          }`}
+        >
+          Proxmox
         </button>
       </div>
 
@@ -384,6 +459,148 @@ function SettingsPanel({
             >
               {isSavingAppearance ? 'Wird gespeichert' : showSaved ? 'Gespeichert' : 'Speichern'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* === Tab-Inhalt: Proxmox === */}
+      {activeTab === "proxmox" && (
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Proxmox Konfiguration</h3>
+          
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <p className="text-sm text-blue-800 dark:text-blue-300 mb-2">
+              <strong>📋 Wichtig:</strong> Du benötigst einen API Token von deinem Proxmox-Server.
+            </p>
+            <p className="text-xs text-blue-700 dark:text-blue-400">
+              Erstelle den Token in Proxmox unter: <strong>Datacenter → Permissions → API Tokens</strong>
+            </p>
+          </div>
+
+          <form onSubmit={handleSaveProxmox} className="space-y-4">
+            {/* Proxmox Host */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Proxmox Host/IP
+              </label>
+              <input
+                type="text"
+                value={proxmoxConfig.host}
+                onChange={(e) => setProxmoxConfig({ ...proxmoxConfig, host: e.target.value })}
+                placeholder="z.B. 192.168.1.100 oder pve.example.com"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            {/* Port */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Port
+              </label>
+              <input
+                type="number"
+                value={proxmoxConfig.port}
+                onChange={(e) => setProxmoxConfig({ ...proxmoxConfig, port: parseInt(e.target.value) })}
+                placeholder="8006"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            {/* Token Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                API Token Name
+              </label>
+              <input
+                type="text"
+                value={proxmoxConfig.token_name}
+                onChange={(e) => setProxmoxConfig({ ...proxmoxConfig, token_name: e.target.value })}
+                placeholder="z.B. root@pam!mytoken"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                required
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Format: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">user@realm!tokenname</code>
+              </p>
+            </div>
+
+            {/* Token Secret */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                API Token Secret
+              </label>
+              <input
+                type="password"
+                value={proxmoxConfig.token_value}
+                onChange={(e) => setProxmoxConfig({ ...proxmoxConfig, token_value: e.target.value })}
+                placeholder="********-****-****-****-************"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                required={!proxmoxConfig.host}
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Der Secret wird nur beim ersten Einrichten oder beim Ändern benötigt
+              </p>
+            </div>
+
+            {/* Node (Optional) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Node Name (optional)
+              </label>
+              <input
+                type="text"
+                value={proxmoxConfig.node}
+                onChange={(e) => setProxmoxConfig({ ...proxmoxConfig, node: e.target.value })}
+                placeholder="z.B. pve oder leer für alle Nodes"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Leer lassen, um VMs/LXCs von allen Nodes anzuzeigen
+              </p>
+            </div>
+
+            {/* SSL Verification */}
+            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+              <input
+                type="checkbox"
+                id="verify_ssl"
+                checked={proxmoxConfig.verify_ssl}
+                onChange={(e) => setProxmoxConfig({ ...proxmoxConfig, verify_ssl: e.target.checked })}
+                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+              />
+              <label htmlFor="verify_ssl" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                SSL-Zertifikat verifizieren
+              </label>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2 ml-1">
+              ⚠️ Deaktiviere dies nur bei self-signed Zertifikaten
+            </p>
+
+            {/* Save Button */}
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={isSavingProxmox}
+                className={`bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg w-full font-medium transition-colors shadow-md hover:shadow-lg ${
+                  isSavingProxmox ? 'opacity-70 cursor-wait' : ''
+                }`}
+              >
+                {isSavingProxmox ? 'Wird gespeichert...' : proxmoxSaved ? '✓ Gespeichert' : 'Konfiguration speichern'}
+              </button>
+            </div>
+          </form>
+
+          {/* Info */}
+          <div className="p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-2">
+              🔒 Sicherheitshinweis
+            </h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Der API Token wird verschlüsselt in der Datenbank gespeichert. 
+              Stelle sicher, dass der Token nur die minimal notwendigen Berechtigungen hat.
+            </p>
           </div>
         </div>
       )}

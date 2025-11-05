@@ -45,6 +45,39 @@ CREATE TABLE IF NOT EXISTS appearance (
 CREATE INDEX IF NOT EXISTS idx_services_position ON services(position);
 CREATE INDEX IF NOT EXISTS idx_shortcuts_position ON shortcuts(position);
 
+-- NEU: Proxmox-Konfigurationstabelle
+CREATE TABLE IF NOT EXISTS proxmox_config (
+    id INT PRIMARY KEY DEFAULT 1,
+    host VARCHAR(255) NOT NULL,
+    port INT DEFAULT 8006,
+    token_name VARCHAR(255) NOT NULL,  -- z.B. "root@pam!mytoken"
+    token_value TEXT NOT NULL,         -- Der API Token Secret (verschlüsselt)
+    verify_ssl BOOLEAN DEFAULT FALSE,
+    node VARCHAR(100),                 -- Optional: spezifischer Node-Name
+    token_created_at TIMESTAMP DEFAULT NOW(),  -- NEU: Wann wurde Token erstellt
+    token_last_rotated TIMESTAMP,               -- NEU: Letzte Rotation
+    CONSTRAINT proxmox_single_row CHECK (id = 1)
+);
+
+-- NEU: Audit-Log Tabelle für API-Zugriffe
+CREATE TABLE IF NOT EXISTS audit_log (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP DEFAULT NOW(),
+    user_type VARCHAR(50),              -- 'admin', 'guest', 'system'
+    ip_address VARCHAR(45),             -- IPv4 oder IPv6
+    action VARCHAR(100) NOT NULL,       -- 'START_VM', 'STOP_VM', 'VIEW_VMS', etc.
+    resource_type VARCHAR(50),          -- 'vm', 'lxc', 'config'
+    resource_id VARCHAR(100),           -- VM ID, Config ID, etc.
+    status VARCHAR(20),                 -- 'success', 'failed', 'denied'
+    details TEXT,                       -- Zusätzliche Infos (JSON)
+    user_agent TEXT                     -- Browser/Client Info
+);
+
+-- Index für schnelle Abfragen
+CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_log(action);
+CREATE INDEX IF NOT EXISTS idx_audit_ip ON audit_log(ip_address);
+
 -- HIER SIND DIE ÄNDERUNGEN (INSERT/UPDATE)
 -- Fügt die Standard-Einstellungszeile ein/aktualisiert sie.
 INSERT INTO appearance (id, bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields)
