@@ -324,18 +324,21 @@ function App() {
 
   // --- RENDER ---
   return (
-    // NEU: Intelligente Hintergrundfarbe per Inline-Style
-    <div 
-      className="relative min-h-screen" 
-      style={{ backgroundColor: getBackgroundColor() }}
-    >
-      {/* 1. Hintergrundbild-Layer */}
+    // Outer Container ohne Hintergrundfarbe
+    <div className="relative min-h-screen">
+      {/* 1. Hintergrundfarbe-Layer - FIXED */}
       <div
-        className="absolute inset-0 w-full h-full bg-cover bg-center transition-all duration-500"
+        className="fixed inset-0 w-full h-full"
+        style={{ backgroundColor: getBackgroundColor() }}
+      ></div>
+
+      {/* 2. Hintergrundbild-Layer - FIXED damit es nicht scrollt */}
+      <div
+        className="fixed inset-0 w-full h-full bg-cover bg-center transition-all duration-500"
         style={bgImageStyle}
       ></div>
 
-      {/* 2. Content-Layer */}
+      {/* 3. Content-Layer */}
   <div className="relative z-10 min-h-screen p-8 md:p-12 max-w-full overflow-x-hidden">
         {/* Header mit Titel und Uhr */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
