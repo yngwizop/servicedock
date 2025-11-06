@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Verhindert Layout-Shift durch Scrollbar */
+@layer base {
+  html {
+    overflow-y: scroll;
+  }
+}
+
 /* Custom range slider styling */
 @layer components {
   input[type="range"]::-webkit-slider-thumb {

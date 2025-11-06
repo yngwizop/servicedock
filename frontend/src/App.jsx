@@ -324,18 +324,22 @@ function App() {
 
   // --- RENDER ---
   return (
-    // Outer Container ohne Hintergrundfarbe
+    // Outer Container
     <div className="relative min-h-screen">
       {/* 1. Hintergrundfarbe-Layer - FIXED */}
       <div
-        className="fixed inset-0 w-full h-full"
+        className="fixed inset-0 w-full h-full -z-10 pointer-events-none"
         style={{ backgroundColor: getBackgroundColor() }}
       ></div>
 
       {/* 2. Hintergrundbild-Layer - FIXED damit es nicht scrollt */}
       <div
-        className="fixed inset-0 w-full h-full bg-cover bg-center transition-all duration-500"
-        style={bgImageStyle}
+        className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat pointer-events-none"
+        style={{
+          ...bgImageStyle,
+          backgroundAttachment: 'fixed',
+          willChange: 'auto'
+        }}
       ></div>
 
       {/* 3. Content-Layer */}
