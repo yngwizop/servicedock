@@ -36,6 +36,7 @@ function SettingsPanel({
     verify_ssl: false,
     node: ''
   });
+  const [savedTokenName, setSavedTokenName] = React.useState(''); // Gespeicherter Token-Name (maskiert)
   const [isSavingProxmox, setIsSavingProxmox] = React.useState(false);
   const [proxmoxSaved, setProxmoxSaved] = React.useState(false);
 
@@ -48,10 +49,13 @@ function SettingsPanel({
         const res = await fetch(`${BACKEND_URL}/api/proxmox/config`);
         const data = await res.json();
         if (data.configured) {
+          // Speichere den maskierten Token-Namen separat
+          setSavedTokenName(data.token_name || '');
+          
           setProxmoxConfig({
             host: data.host || '',
             port: data.port || 8006,
-            token_name: data.token_name || '',
+            token_name: '', // Leer lassen - wird als Placeholder angezeigt
             token_value: '', // Secret wird aus Sicherheitsgründen nicht zurückgegeben
             verify_ssl: data.verify_ssl || false,
             node: data.node || ''
@@ -520,12 +524,17 @@ function SettingsPanel({
                 type="text"
                 value={proxmoxConfig.token_name}
                 onChange={(e) => setProxmoxConfig({ ...proxmoxConfig, token_name: e.target.value })}
-                placeholder="z.B. root@pam!mytoken"
+                placeholder={savedTokenName || "z.B. root@pam!mytoken"}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                 required
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 Format: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">user@realm!tokenname</code>
+                {savedTokenName && (
+                  <span className="ml-2 text-blue-500">
+                    (Aktuell: {savedTokenName})
+                  </span>
+                )}
               </p>
             </div>
 

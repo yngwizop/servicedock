@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ProxmoxCard from './ProxmoxCard';
-import { ArrowsClockwise, WarningCircle, GearSix, LockKey, FunnelSimple, SortAscending } from 'phosphor-react';
+import { ArrowsClockwise, WarningCircle, GearSix, LockKey, FunnelSimple, SortAscending, MagnifyingGlass } from 'phosphor-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
 
@@ -12,27 +12,10 @@ function ProxmoxGrid({ isLoggedIn, onOpenSettings }) {
   const [autoRefresh, setAutoRefresh] = useState(true);
   
   // Filter & Sort States
+  const [searchQuery, setSearchQuery] = useState(''); // NEU: Suchfeld
   const [sortBy, setSortBy] = useState('name-asc'); // name-asc, name-desc, status, type
   const [filterType, setFilterType] = useState('all'); // all, qemu, lxc
   const [filterStatus, setFilterStatus] = useState('all'); // all, running, stopped
-
-  // Login-Check: Nur für Admins
-  if (!isLoggedIn) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <LockKey size={64} className="text-gray-400 dark:text-gray-600" weight="duotone" />
-        <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-300">
-          Proxmox Monitoring
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">
-          Bitte melde dich als Admin an, um das Proxmox Monitoring zu nutzen.
-        </p>
-        <div className="mt-4 text-sm text-gray-500 dark:text-gray-500">
-          🔒 Nur für Administratoren
-        </div>
-      </div>
-    );
-  }
 
   // Lade Proxmox-Daten
   const fetchProxmoxData = async () => {
@@ -70,19 +53,39 @@ function ProxmoxGrid({ isLoggedIn, onOpenSettings }) {
 
   // Initial load
   useEffect(() => {
-    fetchProxmoxData();
-  }, []);
+    if (isLoggedIn) {
+      fetchProxmoxData();
+    }
+  }, [isLoggedIn]);
 
   // Auto-refresh alle 30 Sekunden
   useEffect(() => {
-    if (!autoRefresh || !isConfigured) return;
+    if (!autoRefresh || !isConfigured || !isLoggedIn) return;
     
     const interval = setInterval(() => {
       fetchProxmoxData();
     }, 30000); // 30 Sekunden
 
     return () => clearInterval(interval);
-  }, [autoRefresh, isConfigured]);
+  }, [autoRefresh, isConfigured, isLoggedIn]);
+
+  // Login-Check: Nur für Admins (NACH allen Hooks!)
+  if (!isLoggedIn) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <LockKey size={64} className="text-gray-400 dark:text-gray-600" weight="duotone" />
+        <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+          Proxmox Monitoring
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">
+          Bitte melde dich als Admin an, um das Proxmox Monitoring zu nutzen.
+        </p>
+        <div className="mt-4 text-sm text-gray-500 dark:text-gray-500">
+          🔒 Nur für Administratoren
+        </div>
+      </div>
+    );
+  }
 
   // VM/Container Aktionen
   const handleStart = async (vmid, type) => {
@@ -125,6 +128,16 @@ function ProxmoxGrid({ isLoggedIn, onOpenSettings }) {
   // Filter und Sortier-Logik
   const getFilteredAndSortedResources = () => {
     let filtered = [...resources];
+    
+    // Suche nach Name oder VM-ID
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(r => 
+        r.name.toLowerCase().includes(query) || 
+        r.vmid.toString().includes(query) ||
+        r.node.toLowerCase().includes(query)
+      );
+    }
     
     // Filter nach Typ
     if (filterType !== 'all') {
@@ -270,6 +283,27 @@ function ProxmoxGrid({ isLoggedIn, onOpenSettings }) {
             <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Filter & Sort:</span>
           </div>
 
+          {/* Suchfeld - NEU */}
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <MagnifyingGlass size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Suche nach Name, ID oder Node..."
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl"
+                title="Suche löschen"
+              >
+                ×
+              </button>
+            )}
+          </div>
+
           {/* Sortierung */}
           <select
             value={sortBy}
@@ -307,9 +341,10 @@ function ProxmoxGrid({ isLoggedIn, onOpenSettings }) {
           </select>
 
           {/* Reset Button */}
-          {(sortBy !== 'name-asc' || filterType !== 'all' || filterStatus !== 'all') && (
+          {(searchQuery || sortBy !== 'name-asc' || filterType !== 'all' || filterStatus !== 'all') && (
             <button
               onClick={() => {
+                setSearchQuery('');
                 setSortBy('name-asc');
                 setFilterType('all');
                 setFilterStatus('all');
@@ -322,29 +357,32 @@ function ProxmoxGrid({ isLoggedIn, onOpenSettings }) {
         </div>
       </div>
 
-      {/* Grid mit VMs/LXCs - SCHMALER! */}
+      {/* Grid mit VMs/LXCs - NOCH SCHMALER mit bis zu 6 Spalten! */}
       {filteredResources.length === 0 ? (
         <div className="text-center py-12">
           <FunnelSimple size={48} className="mx-auto mb-3 text-gray-400 dark:text-gray-600" />
           <p className="text-gray-600 dark:text-gray-400 text-lg">
             {resources.length === 0 
               ? 'Keine VMs oder Container gefunden' 
-              : 'Keine Ergebnisse mit aktuellen Filtern'}
+              : searchQuery 
+                ? `Keine Ergebnisse für "${searchQuery}"`
+                : 'Keine Ergebnisse mit aktuellen Filtern'}
           </p>
-          {(filterType !== 'all' || filterStatus !== 'all') && (
+          {(searchQuery || filterType !== 'all' || filterStatus !== 'all') && (
             <button
               onClick={() => {
+                setSearchQuery('');
                 setFilterType('all');
                 setFilterStatus('all');
               }}
               className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all"
             >
-              Filter zurücksetzen
+              Suche & Filter zurücksetzen
             </button>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
           {filteredResources.map((resource) => (
             <ProxmoxCard
               key={resource.id}

@@ -564,14 +564,7 @@ def get_proxmox_connection():
             user_part = token_name
             token_id = 'default'
         
-        print(f"DEBUG: Connecting to Proxmox:")
-        print(f"  Host: {host}")
-        print(f"  Port: {port}")
-        print(f"  User: {user_part}")
-        print(f"  Token ID: {token_id}")
-        print(f"  Token Value: {token_value[:10]}..." if token_value else "  Token Value: None")
-        print(f"  Verify SSL: {verify_ssl}")
-        
+        # Proxmox API Connection erstellen
         proxmox = ProxmoxAPI(
             host,
             port=port,
@@ -582,15 +575,14 @@ def get_proxmox_connection():
         )
         return proxmox, node
     except Exception as e:
-        print(f"Proxmox connection error: {e}")
-        import traceback
-        traceback.print_exc()
+        # Keine Details loggen, um Token-Leaks zu vermeiden
+        print(f"Proxmox connection error (check config)")
         return None, None
 
 
 @app.get("/api/proxmox/config")
 def get_proxmox_config():
-    """Gibt Proxmox-Konfiguration zurück (ohne Secret)"""
+    """Gibt Proxmox-Konfiguration zurück (ohne Secret, token_name maskiert)"""
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -610,12 +602,21 @@ def get_proxmox_config():
             "node": None
         }
     
+    # Maskiere token_name: zeige nur user@realm!*** statt vollem Token-Namen
+    token_name = row[3]
+    masked_token_name = None
+    if token_name and '!' in token_name:
+        user_realm = token_name.split('!')[0]  # z.B. "lxc-creator@pve"
+        masked_token_name = f"{user_realm}!***"
+    elif token_name:
+        masked_token_name = "***"
+    
     return {
         "configured": True,
         "id": row[0],
         "host": row[1],
         "port": row[2],
-        "token_name": row[3],
+        "token_name": masked_token_name,
         "verify_ssl": row[4],
         "node": row[5]
     }

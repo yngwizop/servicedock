@@ -601,7 +601,71 @@ curl -s http://localhost:8000/api/proxmox/vms | jq .
 
 ---
 
-## 📚 Weiterführende Dokumentation
+## � ADMIN_PASSWORD Änderung (Re-Encryption)
+
+### Problem
+Wenn du dein `ADMIN_PASSWORD` änderst, können die verschlüsselten Tokens nicht mehr entschlüsselt werden, da der Encryption Key vom Passwort abgeleitet wird!
+
+### ⚠️ Symptome nach Passwort-Änderung
+- Proxmox Monitoring zeigt keine VMs mehr
+- Backend-Log: `Decryption error: InvalidToken`
+- 401 Unauthorized bei Proxmox-Zugriff
+
+### Lösung: Re-Encryption Script
+
+#### Schritt 1: Backup erstellen
+```bash
+# Datenbank-Backup
+docker compose exec db pg_dump -U user dashboard > backup_$(date +%Y%m%d).sql
+```
+
+#### Schritt 2: Re-Encryption ausführen
+```bash
+# Script starten
+docker compose exec backend python3 /app/re_encrypt_tokens.py
+
+# Script fragt nach:
+Altes ADMIN_PASSWORD: [dein altes Passwort]
+Neues ADMIN_PASSWORD: [dein neues Passwort]
+Neues ADMIN_PASSWORD bestätigen: [nochmal neues Passwort]
+
+# Ausgabe bei Erfolg:
+✅ Entschlüsselung mit altem Passwort erfolgreich
+✅ Verschlüsselung mit neuem Passwort erfolgreich
+✅ Token erfolgreich re-encrypted!
+✅ Verifikation erfolgreich!
+🎉 Token kann jetzt mit neuem ADMIN_PASSWORD entschlüsselt werden
+```
+
+#### Schritt 3: docker-compose.yml anpassen
+```yaml
+services:
+  backend:
+    environment:
+      - ADMIN_PASSWORD=dein-neues-passwort  # ← HIER ÄNDERN
+```
+
+#### Schritt 4: Backend neu starten
+```bash
+docker compose restart backend
+```
+
+#### Schritt 5: Testen
+```bash
+# Teste ob Proxmox Monitoring funktioniert
+curl http://localhost:8000/api/proxmox/vms | jq .
+```
+
+### Alternative: Neuer Token
+Falls Re-Encryption nicht funktioniert:
+
+1. **Neuen Token in Proxmox erstellen**
+2. **Im Dashboard speichern** (Settings → Proxmox Tab)
+3. **Wird automatisch mit neuem Passwort verschlüsselt**
+
+---
+
+## �📚 Weiterführende Dokumentation
 
 - [SECURITY_FEATURES.md](SECURITY_FEATURES.md) - Übersicht aller Security-Features
 - [ENCRYPTION.md](ENCRYPTION.md) - Details zur Verschlüsselung

@@ -461,6 +461,29 @@ Alle drei Sicherheitsfunktionen sind implementiert und funktionsfähig:
 |---------|--------|-------------|
 | **Audit-Logging** | ✅ Aktiv | Alle API-Zugriffe werden protokolliert |
 | **Rate-Limiting** | ✅ Aktiv | 30/min für Views, 10/min für Controls |
-| **Token-Rotation** | ✅ Aktiv | Tracking und Empfehlung nach 90 Tagen |
+| **Token-Rotation** | ✅ Aktiv | Tracking und Empfehlung nach 60 Tagen |
+| **Token-Verschlüsselung** | ✅ Aktiv | Fernet AES-128, abgeleitet von ADMIN_PASSWORD |
+| **Token-Name Maskierung** | ✅ Aktiv | Token-Name wird im Frontend als `user@realm!***` angezeigt |
+| **Log-Bereinigung** | ✅ Aktiv | Auto-Cleanup >90 Tage, manuell via Security Dashboard |
+
+### Wichtige Sicherheitshinweise
+
+1. **Token-Value wird NIE im Frontend angezeigt**
+   - Aus Sicherheitsgründen wird `token_value` nicht von der API zurückgegeben
+   - Bei Rotation muss der neue Token manuell eingegeben werden
+
+2. **Token-Name wird maskiert**
+   - API gibt nur `user@realm!***` zurück statt vollem Token-Namen
+   - Verhindert Token-ID-Leaks bei API-Abfragen
+
+3. **DEBUG-Logs entfernt**
+   - Keine Logs mit Token-Werten oder anderen sensitiven Daten
+   - Error-Logs zeigen nur generische Meldungen
+
+4. **ADMIN_PASSWORD Änderung**
+   - Bei Änderung des ADMIN_PASSWORD müssen Tokens re-encrypted werden
+   - Siehe [TOKEN_ROTATION_GUIDE.md](TOKEN_ROTATION_GUIDE.md) → "ADMIN_PASSWORD Änderung"
+   - Re-Encryption Script: `backend/re_encrypt_tokens.py`
 
 Die Implementierung folgt Best-Practices für Homelab-Sicherheit und kann bei Bedarf erweitert werden.
+
