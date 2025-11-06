@@ -14,7 +14,7 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
 
-function SecurityDashboard({ isLoggedIn, onOpenSettings }) {
+function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
   const [tokenInfo, setTokenInfo] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
   const [auditStats, setAuditStats] = useState(null);
@@ -154,20 +154,27 @@ function SecurityDashboard({ isLoggedIn, onOpenSettings }) {
       {/* Header */}
       <div className="flex items-center gap-3">
         <Shield size={32} className="text-blue-600 dark:text-blue-400" weight="fill" />
-        <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
+        <h2 
+          className="text-3xl font-bold transition-colors duration-300"
+          style={{ 
+            color: textColor,
+            textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
+          }}
+        >
           Security Dashboard
         </h2>
       </div>
 
       {/* View Toggle */}
-      <div className="flex gap-2 border-b border-gray-300 dark:border-gray-700">
+      <div className="flex gap-2 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-xl px-4 pt-3 pb-2 border border-gray-300/50 dark:border-gray-600/50 shadow-lg">
         <button
           onClick={() => setActiveView('overview')}
-          className={`px-4 py-2 font-semibold transition-all ${
+          className={`px-4 py-2 font-semibold transition-all rounded-lg ${
             activeView === 'overview'
-              ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+              ? 'bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30'
           }`}
+          style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
         >
           <div className="flex items-center gap-2">
             <Eye size={20} />
@@ -176,11 +183,12 @@ function SecurityDashboard({ isLoggedIn, onOpenSettings }) {
         </button>
         <button
           onClick={() => setActiveView('logs')}
-          className={`px-4 py-2 font-semibold transition-all ${
+          className={`px-4 py-2 font-semibold transition-all rounded-lg ${
             activeView === 'logs'
-              ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+              ? 'bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30'
           }`}
+          style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
         >
           <div className="flex items-center gap-2">
             <ListBullets size={20} />
@@ -189,11 +197,12 @@ function SecurityDashboard({ isLoggedIn, onOpenSettings }) {
         </button>
         <button
           onClick={() => setActiveView('stats')}
-          className={`px-4 py-2 font-semibold transition-all ${
+          className={`px-4 py-2 font-semibold transition-all rounded-lg ${
             activeView === 'stats'
-              ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+              ? 'bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30'
           }`}
+          style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
         >
           <div className="flex items-center gap-2">
             <ChartBar size={20} />

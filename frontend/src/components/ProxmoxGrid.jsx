@@ -4,7 +4,7 @@ import { ArrowsClockwise, WarningCircle, GearSix, LockKey, FunnelSimple, SortAsc
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
 
-function ProxmoxGrid({ isLoggedIn, onOpenSettings }) {
+function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -241,7 +241,13 @@ function ProxmoxGrid({ isLoggedIn, onOpenSettings }) {
       {/* Header mit Resource Count */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+          <h2 
+            className="text-2xl font-bold transition-colors duration-300"
+            style={{ 
+              color: textColor,
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
+            }}
+          >
             Proxmox Monitoring
           </h2>
           <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-3 py-1 rounded-full text-sm font-semibold">

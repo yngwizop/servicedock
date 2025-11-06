@@ -97,7 +97,10 @@ function ClockWidget({ textColor, locale = (typeof navigator !== 'undefined' && 
   return (
     <div
       className="flex flex-col items-start md:items-end space-y-1"
-      style={{ color: textColor }}
+      style={{ 
+        color: textColor,
+        textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
+      }}
       role="group"
       aria-label="Uhrzeit und Datum"
     >

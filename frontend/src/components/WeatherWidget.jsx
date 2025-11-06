@@ -338,15 +338,19 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
     loadWeather();
   };
 
-  // Loading state
+    // Loading state
   if (loading) {
     return (
       <div 
-        className="flex items-center gap-2 text-sm"
-        style={{ color: textColor }}
+        className="flex items-center gap-2 text-base md:text-lg animate-pulse" 
+        style={{ 
+          color: textColor,
+          textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
+        }}
         aria-label="Wetter wird geladen"
+        aria-busy="true"
       >
-        <span className="animate-pulse">🌡️</span>
+        <span>�️</span>
         <span>Lädt...</span>
       </div>
     );
@@ -356,8 +360,12 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
   if (error) {
     return (
       <div 
-        className="flex items-center gap-2 text-sm"
-        style={{ color: textColor }}
+        className="flex items-center gap-2 text-base md:text-lg cursor-pointer hover:opacity-80" 
+        onClick={handleManualRefresh}
+        style={{ 
+          color: textColor,
+          textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
+        }}
         aria-label="Wetter-Fehler"
         title={error}
       >
@@ -390,7 +398,10 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
     return (
       <div 
         className="flex flex-row items-center gap-3 text-base md:text-lg font-medium group flex-wrap"
-        style={{ color: textColor || '#1f2937' }}
+        style={{ 
+          color: textColor || '#1f2937',
+          textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
+        }}
         aria-label={`Wetter in ${weather.cityName}: ${weatherFields.map(f => {
           if (f === 'temperature') return `${temp} Grad Celsius`;
           if (f === 'humidity') return `Luftfeuchtigkeit ${humidity} Prozent`;

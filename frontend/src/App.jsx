@@ -342,10 +342,13 @@ function App() {
   <div className="relative z-10 min-h-screen p-8 md:p-12 max-w-full overflow-x-hidden">
         {/* Header mit Titel und Uhr */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
-          {/* Titel (oben links) */}
+          {/* Titel (oben links) - mit Text-Shadow für bessere Lesbarkeit */}
           <h1 
-            className="text-4xl font-bold transition-colors duration-300" 
-            style={{ color: getTextColor() }}
+            className="text-4xl font-bold transition-colors duration-300"
+            style={{ 
+              color: getTextColor(),
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
+            }}
           >
             Web Dashboard
           </h1>
@@ -375,35 +378,38 @@ function App() {
           </div>
         </div>
 
-        {/* === TAB NAVIGATION === */}
-        <div className="flex gap-4 mb-8 border-b border-gray-300 dark:border-gray-700">
+        {/* === TAB NAVIGATION === - Glasmorphismus-Effekt für bessere Lesbarkeit */}
+        <div className="flex gap-4 mb-8 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-xl px-4 pt-4 pb-2 border border-gray-300/50 dark:border-gray-600/50 shadow-lg">
           <button
             onClick={() => setActiveTab("services")}
-            className={`px-6 py-3 font-semibold transition-all ${
+            className={`px-6 py-3 font-semibold transition-all rounded-lg ${
               activeTab === "services"
-                ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                ? "bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm"
+                : "text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30 hover:text-gray-900 dark:hover:text-gray-100"
             }`}
+            style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
           >
             Services & Shortcuts
           </button>
           <button
             onClick={() => setActiveTab("monitoring")}
-            className={`px-6 py-3 font-semibold transition-all ${
+            className={`px-6 py-3 font-semibold transition-all rounded-lg ${
               activeTab === "monitoring"
-                ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                ? "bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm"
+                : "text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30 hover:text-gray-900 dark:hover:text-gray-100"
             }`}
+            style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
           >
             Proxmox Monitoring
           </button>
           <button
             onClick={() => setActiveTab("security")}
-            className={`px-6 py-3 font-semibold transition-all ${
+            className={`px-6 py-3 font-semibold transition-all rounded-lg ${
               activeTab === "security"
-                ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                ? "bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm"
+                : "text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30 hover:text-gray-900 dark:hover:text-gray-100"
             }`}
+            style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
           >
             Security
           </button>
@@ -441,6 +447,7 @@ function App() {
         {activeTab === "monitoring" && (
           <ProxmoxGrid 
             isLoggedIn={isLoggedIn}
+            textColor={getTextColor()}
             onOpenSettings={() => {
               setShowSettings(true);
               setActiveTab("services"); // Wechsle zurück zu Services/Settings
@@ -451,6 +458,7 @@ function App() {
         {activeTab === "security" && (
           <SecurityDashboard 
             isLoggedIn={isLoggedIn}
+            textColor={getTextColor()}
             onOpenSettings={() => {
               setShowSettings(true);
               setActiveTab("services");
