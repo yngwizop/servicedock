@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ProxmoxCard from './ProxmoxCard';
 import { ArrowsClockwise, WarningCircle, GearSix, LockKey, FunnelSimple, SortAscending, MagnifyingGlass } from 'phosphor-react';
+import { authenticatedFetch } from '../utils/auth';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
 
@@ -23,7 +24,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
       setError(null);
       
       // Prüfe erst, ob Proxmox konfiguriert ist
-      const configRes = await fetch(`${BACKEND_URL}/api/proxmox/config`);
+      const configRes = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/config`);
       const configData = await configRes.json();
       
       if (!configData.configured) {
@@ -35,7 +36,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
       setIsConfigured(true);
       
       // Hole VM/LXC Daten
-      const res = await fetch(`${BACKEND_URL}/api/proxmox/vms`);
+      const res = await fetch(`${BACKEND_URL}/api/proxmox/vms`); // Read-only endpoint ohne Auth
       
       if (!res.ok) {
         throw new Error('Failed to fetch Proxmox data');
@@ -90,38 +91,38 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
   // VM/Container Aktionen
   const handleStart = async (vmid, type) => {
     try {
-      await fetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/start?vm_type=${type}`, {
+      await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/start?vm_type=${type}`, {
         method: 'POST'
       });
       // Reload nach kurzer Verzögerung, damit Proxmox den Status aktualisiert hat
       setTimeout(fetchProxmoxData, 2000);
     } catch (err) {
       console.error('Failed to start VM:', err);
-      alert('Failed to start VM/Container');
+      alert('Failed to start VM/Container. Please check your authentication.');
     }
   };
 
   const handleStop = async (vmid, type) => {
     try {
-      await fetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/stop?vm_type=${type}`, {
+      await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/stop?vm_type=${type}`, {
         method: 'POST'
       });
       setTimeout(fetchProxmoxData, 2000);
     } catch (err) {
       console.error('Failed to stop VM:', err);
-      alert('Failed to stop VM/Container');
+      alert('Failed to stop VM/Container. Please check your authentication.');
     }
   };
 
   const handleReboot = async (vmid, type) => {
     try {
-      await fetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/reboot?vm_type=${type}`, {
+      await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/reboot?vm_type=${type}`, {
         method: 'POST'
       });
       setTimeout(fetchProxmoxData, 2000);
     } catch (err) {
       console.error('Failed to reboot VM:', err);
-      alert('Failed to reboot VM/Container');
+      alert('Failed to reboot VM/Container. Please check your authentication.');
     }
   };
 

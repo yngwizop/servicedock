@@ -3,6 +3,23 @@
 Ein modernes, selbst gehostetes Dashboard zum Verwalten und Organisieren deiner Web-Services und Shortcuts. Perfekt für Homelab-Setups, Self-Hosting-Enthusiasten oder als persönliche Startseite.
 
 
+## 📚 Dokumentation
+
+### 🚀 Setup & Installation
+- **[INITIAL_SETUP.md](INITIAL_SETUP.md)** - Vollständige Ersteinrichtung mit Tool-Installation, Key-Generierung und Docker-Setup
+- **[PROXMOX_SETUP.md](PROXMOX_SETUP.md)** - Proxmox API Token erstellen und Integration einrichten
+
+### 🔒 Sicherheit
+- **[SECURITY_IMPLEMENTATION.md](SECURITY_IMPLEMENTATION.md)** - Technische Details der implementierten Security-Features
+- **[SECURITY_FEATURES.md](SECURITY_FEATURES.md)** - Audit-Logging, Rate-Limiting und Security-Dashboard
+- **[ENCRYPTION.md](ENCRYPTION.md)** - Token-Verschlüsselung mit Fernet (AES-128)
+
+### 🔄 Maintenance
+- **[TOKEN_ROTATION_GUIDE.md](TOKEN_ROTATION_GUIDE.md)** - Proxmox API Tokens regelmäßig erneuern
+- **[RE_ENCRYPTION_GUIDE.md](RE_ENCRYPTION_GUIDE.md)** - Encryption Key wechseln und Tokens neu verschlüsseln
+
+---
+
 ## ✨ Features
 
 ### 🎨 Anpassbares Design

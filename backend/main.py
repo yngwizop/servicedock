@@ -1,10 +1,11 @@
 import os
 import psycopg2
 from urllib.parse import urlparse
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
-from typing import List, Any
+from typing import List, Any, Optional
 from fastapi import Body
 import json
 from proxmoxer import ProxmoxAPI
@@ -13,34 +14,84 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from cryptography.fernet import Fernet
 import base64
 import hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import Request
 import json as json_lib
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from jose import JWTError, jwt
+import bcrypt
 
 # Disable SSL warnings for self-signed certificates
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
+# --- Security Configuration ---
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", os.urandom(32).hex())  # Für JWT
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 480  # 8 Stunden
+
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", os.urandom(32).hex())  # Für JWT
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 120  # 2 Stunden
+
+# HTTP Bearer token scheme
+security = HTTPBearer()
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verifiziert ein Passwort gegen einen Hash"""
+    # Verwende bcrypt direkt
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+def get_password_hash(password: str) -> str:
+    """Erstellt einen Hash aus einem Passwort"""
+    # Verwende bcrypt direkt mit 12 rounds
+    salt = bcrypt.gensalt(rounds=12)
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    """Erstellt ein JWT-Token"""
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    """
+    Verifiziert das JWT-Token aus dem Authorization Header.
+    Wird als Dependency für geschützte Endpunkte verwendet.
+    """
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        return payload
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+
 # --- Encryption Setup ---
 def get_encryption_key():
     """
-    Generiert oder lädt den Verschlüsselungs-Key.
-    Der Key wird aus ENCRYPTION_KEY Umgebungsvariable geladen,
-    oder aus ADMIN_PASSWORD abgeleitet (für Kompatibilität).
+    Lädt den Verschlüsselungs-Key aus der ENCRYPTION_KEY Umgebungsvariable.
+    WICHTIG: ENCRYPTION_KEY muss gesetzt sein - kein Fallback mehr!
     """
     encryption_key = os.getenv("ENCRYPTION_KEY")
     
-    if encryption_key:
-        # Verwende den expliziten Encryption Key
-        key_bytes = encryption_key.encode()
-    else:
-        # Fallback: Leite Key vom Admin-Passwort ab
-        admin_pw = os.getenv("ADMIN_PASSWORD", "admin123")
-        key_bytes = admin_pw.encode()
+    if not encryption_key:
+        raise ValueError(
+            "ENCRYPTION_KEY environment variable is required! "
+            "Generate one with: python3 -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
+        )
     
     # Erstelle einen 32-Byte Key mit SHA256
+    key_bytes = encryption_key.encode()
     hash_digest = hashlib.sha256(key_bytes).digest()
     # Fernet benötigt Base64-kodierten Key
     fernet_key = base64.urlsafe_b64encode(hash_digest)
@@ -122,11 +173,28 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # === CORS Middleware ===
+# WICHTIG: In Production auf spezifische Frontend-URL einschränken!
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+allowed_origins = [FRONTEND_URL]
+
+# In Development auch localhost-Varianten erlauben
+if os.getenv("ENVIRONMENT") == "development":
+    allowed_origins.extend([
+        "http://localhost:3000",
+        "http://localhost:4173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:4173",
+        "http://192.168.178.83:3000",  # Deine Server-IP
+        "http://192.168.178.83:8000"   # Backend-IP
+    ])
+
+print(f"🔒 CORS allowed origins: {allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -159,7 +227,22 @@ async def startup_event():
 
 # --- Konfiguration & Datenbank ---
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@db:5432/dashboard")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
+
+# Admin-Passwort (wird gehasht in DB gespeichert)
+ADMIN_PASSWORD_HASH = None  # Wird beim ersten Start gesetzt
+
+def initialize_admin_password():
+    """
+    Initialisiert das Admin-Passwort beim ersten Start.
+    Hasht das Passwort aus der Umgebungsvariable.
+    """
+    global ADMIN_PASSWORD_HASH
+    admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
+    ADMIN_PASSWORD_HASH = get_password_hash(admin_password)
+    print(f"✓ Admin password initialized (hashed)")
+
+# Initialisiere beim Import
+initialize_admin_password()
 
 def get_connection():
     try:
@@ -236,7 +319,7 @@ def get_shortcuts():
     return [{"id": r[0], "name": r[1], "url": r[2], "icon": r[3], "position": r[4]} for r in rows]
 
 @app.post("/api/shortcuts")
-def add_shortcut(shortcut: Shortcut):
+def add_shortcut(shortcut: Shortcut, token: dict = Depends(verify_token)):
     conn = get_connection()
     cur = conn.cursor()
     # Position an das Ende setzen
@@ -253,7 +336,7 @@ def add_shortcut(shortcut: Shortcut):
     return {"id": new_id, "position": new_pos, **shortcut.dict()}
 
 @app.put("/api/shortcuts/{shortcut_id}")
-def update_shortcut(shortcut_id: int, shortcut: Shortcut):
+def update_shortcut(shortcut_id: int, shortcut: Shortcut, token: dict = Depends(verify_token)):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -269,7 +352,7 @@ def update_shortcut(shortcut_id: int, shortcut: Shortcut):
     return {"message": "updated", "id": shortcut_id, **shortcut.dict()}
 
 @app.delete("/api/shortcuts/{shortcut_id}")
-def delete_shortcut(shortcut_id: int):
+def delete_shortcut(shortcut_id: int, token: dict = Depends(verify_token)):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -299,7 +382,7 @@ def get_services():
     ]
 
 @app.post("/api/services")
-def add_service(service: Service):
+def add_service(service: Service, token: dict = Depends(verify_token)):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -315,7 +398,7 @@ def add_service(service: Service):
     return {"id": new_id, "position": new_pos, **service.dict()}
 
 @app.put("/api/services/{service_id}")
-def update_service(service_id: int, service: Service):
+def update_service(service_id: int, service: Service, token: dict = Depends(verify_token)):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -331,7 +414,7 @@ def update_service(service_id: int, service: Service):
     return {"message": "updated", "id": service_id, **service.dict()}
 
 @app.delete("/api/services/{service_id}")
-def delete_service(service_id: int):
+def delete_service(service_id: int, token: dict = Depends(verify_token)):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -374,7 +457,7 @@ def get_appearance():
     }
 
 @app.put("/api/appearance")
-def update_appearance(appearance: Appearance):
+def update_appearance(appearance: Appearance, token: dict = Depends(verify_token)):
     conn = get_connection()
     cur = conn.cursor()
     
@@ -436,15 +519,50 @@ def update_appearance(appearance: Appearance):
 
 # ===== Auth =====
 @app.post("/api/login")
-def login(creds: AdminLogin):
-    if creds.password == ADMIN_PASSWORD:
-        return {"success": True, "message": "Login successful"}
-    else:
+@limiter.limit("5/minute")  # Max 5 Login-Versuche pro Minute (Brute-Force-Schutz)
+def login(creds: AdminLogin, request: Request):
+    """
+    Login-Endpunkt mit JWT-Token-Generierung.
+    Verwendet bcrypt-Hashing für Passwort-Vergleich.
+    """
+    client_ip = get_client_ip(request)
+    
+    # Verifiziere Passwort gegen Hash
+    if not verify_password(creds.password, ADMIN_PASSWORD_HASH):
+        log_audit(
+            action="LOGIN_FAILED",
+            status="failed",
+            user_type="admin",
+            ip_address=client_ip,
+            details={"reason": "Invalid password"}
+        )
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Erstelle JWT-Token
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": "admin", "type": "admin"},
+        expires_delta=access_token_expires
+    )
+    
+    log_audit(
+        action="LOGIN_SUCCESS",
+        status="success",
+        user_type="admin",
+        ip_address=client_ip
+    )
+    
+    return {
+        "success": True,
+        "message": "Login successful",
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60  # in Sekunden
+    }
 
 # NEU: Endpunkte zum Setzen der Reihenfolge
 @app.put("/api/admin/services/reorder")
-def reorder_services(body: Any = Body(...)):
+def reorder_services(body: Any = Body(...), token: dict = Depends(verify_token)):
     # akzeptiere entweder ein rohes Array oder ein Objekt { "ids": [...] }
     ids = None
     if isinstance(body, dict) and "ids" in body:
@@ -488,7 +606,7 @@ def reorder_services(body: Any = Body(...)):
     return {"message": "services reordered"}
 
 @app.put("/api/admin/shortcuts/reorder")
-def reorder_shortcuts(body: Any = Body(...)):
+def reorder_shortcuts(body: Any = Body(...), token: dict = Depends(verify_token)):
     if isinstance(body, dict) and "ids" in body:
         ids = body["ids"]
     elif isinstance(body, list):
@@ -581,7 +699,7 @@ def get_proxmox_connection():
 
 
 @app.get("/api/proxmox/config")
-def get_proxmox_config():
+def get_proxmox_config(token: dict = Depends(verify_token)):
     """Gibt Proxmox-Konfiguration zurück (ohne Secret, token_name maskiert)"""
     conn = get_connection()
     cur = conn.cursor()
@@ -623,7 +741,7 @@ def get_proxmox_config():
 
 
 @app.put("/api/proxmox/config")
-def update_proxmox_config(config: ProxmoxConfig):
+def update_proxmox_config(config: ProxmoxConfig, token: dict = Depends(verify_token)):
     """Speichert Proxmox-Konfiguration (Token wird verschlüsselt)"""
     conn = get_connection()
     cur = conn.cursor()
@@ -773,7 +891,7 @@ def get_proxmox_vms(request: Request):
 
 @app.post("/api/proxmox/vm/{vmid}/start")
 @limiter.limit("10/minute")  # Max 10 Start-Befehle pro Minute
-def start_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None):
+def start_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, token: dict = Depends(verify_token)):
     """Startet eine VM oder LXC"""
     client_ip = get_client_ip(request) if request else "unknown"
     
@@ -853,7 +971,7 @@ def start_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None):
 
 @app.post("/api/proxmox/vm/{vmid}/stop")
 @limiter.limit("10/minute")  # Max 10 Stop-Befehle pro Minute
-def stop_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None):
+def stop_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, token: dict = Depends(verify_token)):
     """Stoppt eine VM oder LXC"""
     client_ip = get_client_ip(request) if request else "unknown"
     proxmox, _ = get_proxmox_connection()
@@ -896,7 +1014,7 @@ def stop_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None):
 
 @app.post("/api/proxmox/vm/{vmid}/reboot")
 @limiter.limit("10/minute")  # Max 10 Reboot-Befehle pro Minute
-def reboot_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None):
+def reboot_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, token: dict = Depends(verify_token)):
     """Startet eine VM oder LXC neu"""
     client_ip = get_client_ip(request) if request else "unknown"
     proxmox, _ = get_proxmox_connection()
@@ -940,7 +1058,7 @@ def reboot_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None)
 # ===== Audit Log Endpoints =====
 
 @app.get("/api/admin/audit-logs")
-def get_audit_logs(limit: int = 100, offset: int = 0):
+def get_audit_logs(limit: int = 100, offset: int = 0, token: dict = Depends(verify_token)):
     """Holt die neuesten Audit-Log-Einträge (Admin-only)"""
     conn = get_connection()
     cur = conn.cursor()
@@ -987,7 +1105,7 @@ def get_audit_logs(limit: int = 100, offset: int = 0):
 
 
 @app.get("/api/admin/audit-stats")
-def get_audit_stats():
+def get_audit_stats(token: dict = Depends(verify_token)):
     """Holt Statistiken über Audit-Logs (Admin-only)"""
     conn = get_connection()
     cur = conn.cursor()
@@ -1040,7 +1158,7 @@ def get_audit_stats():
 
 
 @app.post("/api/admin/audit-logs/cleanup")
-def cleanup_old_audit_logs(days: int = 90):
+def cleanup_old_audit_logs(days: int = 90, token: dict = Depends(verify_token)):
     """Löscht Audit-Logs die älter als X Tage sind (Standard: 90 Tage)"""
     conn = get_connection()
     cur = conn.cursor()
@@ -1074,12 +1192,11 @@ class DeleteLogsRequest(BaseModel):
 
 
 @app.post("/api/admin/audit-logs/delete-all")
-def delete_all_audit_logs(request: DeleteLogsRequest):
+def delete_all_audit_logs(request: DeleteLogsRequest, token: dict = Depends(verify_token)):
     """Löscht ALLE Audit-Logs (Admin-Passwort erforderlich)"""
     
-    # Prüfe Admin-Passwort
-    admin_password = os.getenv("ADMIN_PASSWORD", "admin")
-    if request.password != admin_password:
+    # Zusätzliche Passwort-Prüfung für diese kritische Operation
+    if not verify_password(request.password, ADMIN_PASSWORD_HASH):
         raise HTTPException(status_code=403, detail="Falsches Admin-Passwort")
     
     conn = get_connection()
@@ -1108,7 +1225,7 @@ def delete_all_audit_logs(request: DeleteLogsRequest):
 # ===== Token Rotation =====
 
 @app.get("/api/admin/proxmox/token-info")
-def get_token_info():
+def get_token_info(token: dict = Depends(verify_token)):
     """Gibt Informationen über das Alter des aktuellen Tokens zurück"""
     conn = get_connection()
     cur = conn.cursor()
@@ -1155,7 +1272,7 @@ def get_token_info():
 
 
 @app.post("/api/admin/proxmox/rotate-token")
-def rotate_token(config: ProxmoxConfig):
+def rotate_token(config: ProxmoxConfig, token: dict = Depends(verify_token)):
     """
     Rotiert den Proxmox-Token (speichert neuen Token und updated Zeitstempel)
     """

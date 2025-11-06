@@ -11,6 +11,7 @@ import {
   Eye,
   LockKey
 } from 'phosphor-react';
+import { authenticatedFetch } from '../utils/auth';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
 
@@ -36,9 +37,9 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
   const fetchSecurityData = async () => {
     try {
       const [tokenRes, logsRes, statsRes] = await Promise.all([
-        fetch(`${BACKEND_URL}/api/admin/proxmox/token-info`),
-        fetch(`${BACKEND_URL}/api/admin/audit-logs?limit=10`),
-        fetch(`${BACKEND_URL}/api/admin/audit-stats`)
+        authenticatedFetch(`${BACKEND_URL}/api/admin/proxmox/token-info`),
+        authenticatedFetch(`${BACKEND_URL}/api/admin/audit-logs?limit=10`),
+        authenticatedFetch(`${BACKEND_URL}/api/admin/audit-stats`)
       ]);
 
       if (tokenRes.ok) {
@@ -63,37 +64,22 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
     }
   };
 
-  const handleDeleteAllLogs = async () => {
+    const handleDeleteAllLogs = async () => {
     if (!deletePassword) {
-      setDeleteError('Bitte gib das Admin-Passwort ein');
+      alert('Please enter admin password');
       return;
     }
-
-    setIsDeleting(true);
-    setDeleteError('');
-
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/admin/audit-logs/delete-all`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: deletePassword })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        alert(`✓ ${data.deleted_count} Audit-Logs erfolgreich gelöscht`);
-        setShowDeleteModal(false);
-        setDeletePassword('');
-        fetchSecurityData(); // Reload data
-      } else {
-        const error = await res.json();
-        setDeleteError(error.detail || 'Fehler beim Löschen');
-      }
-    } catch (error) {
-      console.error('Error deleting logs:', error);
-      setDeleteError('Netzwerkfehler beim Löschen');
-    } finally {
-      setIsDeleting(false);
+    const res = await authenticatedFetch(`${BACKEND_URL}/api/admin/audit-logs/delete-all`, {
+      method: 'POST',
+      body: JSON.stringify({ password: deletePassword })
+    });
+    if (res.ok) {
+      setAuditLogs([]);
+      setDeletePassword('');
+      setShowDeleteConfirm(false);
+      fetchSecurityData();
+    } else {
+      alert('Failed to delete logs');
     }
   };
 

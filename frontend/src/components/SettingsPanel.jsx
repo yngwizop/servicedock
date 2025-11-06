@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pencil, Moon, Sun } from 'phosphor-react';
+import { authenticatedFetch } from '../utils/auth';
 
 // Wetter-Widget Felder für SettingsPanel
 const WEATHER_FIELDS = [
@@ -46,7 +47,7 @@ function SettingsPanel({
   React.useEffect(() => {
     const fetchProxmoxConfig = async () => {
       try {
-        const res = await fetch(`${BACKEND_URL}/api/proxmox/config`);
+        const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/config`);
         const data = await res.json();
         if (data.configured) {
           // Speichere den maskierten Token-Namen separat
@@ -77,9 +78,8 @@ function SettingsPanel({
     setIsSavingProxmox(true);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/proxmox/config`, {
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/config`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(proxmoxConfig)
       });
 

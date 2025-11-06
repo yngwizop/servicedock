@@ -8,6 +8,7 @@ import SettingsPanel from "./components/SettingsPanel";
 import ClockWidget from "./components/ClockWidget";
 import WeatherWidget from "./components/WeatherWidget";
 import { Moon, Sun, Lock, Gear, SignOut } from 'phosphor-react';
+import { setAuthToken, getAuthToken, clearAuthToken, isAuthenticated, authenticatedFetch, getAuthHeaders } from './utils/auth';
 
 // 🛠 Backend-URL anpassen je nach Setup
 // Default: use REACT_APP_BACKEND_URL if provided, otherwise use same host the page was loaded from
@@ -45,7 +46,7 @@ function App() {
   const [weatherLocationInfo, setWeatherLocationInfo] = useState(null);
   const [services, setServices] = useState([]);
   const [shortcuts, setShortcuts] = useState([]);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(isAuthenticated()); // Prüfe Token beim Start
   const [showSettings, setShowSettings] = useState(false);
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -130,20 +131,29 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: password }),
       });
+      
       if (res.ok) {
+        const data = await res.json();
+        
+        // Speichere JWT-Token
+        setAuthToken(data.access_token, data.expires_in);
+        
         setIsLoggedIn(true);
         setPassword("");
         setShowLogin(false);
         setLoginError("");
       } else {
-        setLoginError("Falsches Passwort.");
+        const errorData = await res.json().catch(() => ({}));
+        setLoginError(errorData.detail || "Falsches Passwort.");
       }
     } catch (err) {
+      console.error("Login error:", err);
       setLoginError("Login-Fehler. Läuft das Backend?");
     }
   };
 
   const handleLogout = () => {
+    clearAuthToken(); // Lösche JWT-Token
     setIsLoggedIn(false);
     setShowSettings(false);
   };
@@ -152,77 +162,120 @@ function App() {
   const addService = async (e) => { 
     e.preventDefault();
     if (!serviceName || !serviceUrl) return;
-    await fetch(`${BACKEND_URL}/api/services`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: serviceName,
-        description: serviceDesc,
-        url: serviceUrl,
-        icon: serviceIcon,
-      }),
-    });
-    setServiceName("");
-    setServiceDesc("");
-    setServiceUrl("");
-    setServiceIcon("");
-    fetchData();
+    
+    try {
+      await authenticatedFetch(`${BACKEND_URL}/api/services`, {
+        method: "POST",
+        body: JSON.stringify({
+          name: serviceName,
+          description: serviceDesc,
+          url: serviceUrl,
+          icon: serviceIcon,
+        }),
+      });
+      setServiceName("");
+      setServiceDesc("");
+      setServiceUrl("");
+      setServiceIcon("");
+      fetchData();
+    } catch (err) {
+      console.error("Error adding service:", err);
+      if (err.message.includes('Session expired')) {
+        setIsLoggedIn(false);
+        setLoginError("Session abgelaufen. Bitte neu einloggen.");
+        setShowLogin(true);
+      }
+    }
   };
 
   const addShortcut = async (e) => { 
     e.preventDefault();
     if (!shortcutName || !shortcutUrl) return;
-    await fetch(`${BACKEND_URL}/api/shortcuts`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: shortcutName, url: shortcutUrl, icon: shortcutIcon }),
-    });
-    setShortcutName("");
-    setShortcutUrl("");
-    setShortcutIcon("");
-    fetchData();
+    
+    try {
+      await authenticatedFetch(`${BACKEND_URL}/api/shortcuts`, {
+        method: "POST",
+        body: JSON.stringify({ name: shortcutName, url: shortcutUrl, icon: shortcutIcon }),
+      });
+      setShortcutName("");
+      setShortcutUrl("");
+      setShortcutIcon("");
+      fetchData();
+    } catch (err) {
+      console.error("Error adding shortcut:", err);
+      if (err.message.includes('Session expired')) {
+        setIsLoggedIn(false);
+        setLoginError("Session abgelaufen. Bitte neu einloggen.");
+        setShowLogin(true);
+      }
+    }
   };
 
   const deleteService = async (id) => { 
-    await fetch(`${BACKEND_URL}/api/services/${id}`, { method: "DELETE" });
-    fetchData();
+    try {
+      await authenticatedFetch(`${BACKEND_URL}/api/services/${id}`, { method: "DELETE" });
+      fetchData();
+    } catch (err) {
+      console.error("Error deleting service:", err);
+      if (err.message.includes('Session expired')) {
+        setIsLoggedIn(false);
+      }
+    }
   };
 
   const deleteShortcut = async (id) => { 
-    await fetch(`${BACKEND_URL}/api/shortcuts/${id}`, { method: "DELETE" });
-    fetchData();
+    try {
+      await authenticatedFetch(`${BACKEND_URL}/api/shortcuts/${id}`, { method: "DELETE" });
+      fetchData();
+    } catch (err) {
+      console.error("Error deleting shortcut:", err);
+      if (err.message.includes('Session expired')) {
+        setIsLoggedIn(false);
+      }
+    }
   };
 
   const updateService = async (id, updatedData) => { 
     // Nutze die übergebenen Daten statt aus dem State zu suchen
     const serviceToUpdate = updatedData || services.find((s) => s.id === id);
     if (!serviceToUpdate) return;
-    await fetch(`${BACKEND_URL}/api/services/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(serviceToUpdate),
-    });
-    fetchData();
+    try {
+      await authenticatedFetch(`${BACKEND_URL}/api/services/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(serviceToUpdate),
+      });
+      fetchData();
+    } catch (err) {
+      console.error("Error updating service:", err);
+      if (err.message.includes('Session expired')) {
+        setIsLoggedIn(false);
+      }
+    }
   };
 
   const updateShortcut = async (id, updatedData) => { 
     // Nutze die übergebenen Daten statt aus dem State zu suchen
     const shortcutToUpdate = updatedData || shortcuts.find((s) => s.id === id);
     if (!shortcutToUpdate) return;
-    await fetch(`${BACKEND_URL}/api/shortcuts/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(shortcutToUpdate),
-    });
-    fetchData();
+    try {
+      await authenticatedFetch(`${BACKEND_URL}/api/shortcuts/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(shortcutToUpdate),
+      });
+      fetchData();
+    } catch (err) {
+      console.error("Error updating shortcut:", err);
+      if (err.message.includes('Session expired')) {
+        setIsLoggedIn(false);
+      }
+    }
   };
 
   // NEU: Reihenfolge persistieren (warte auf Response, rollback nur bei Fehler)
   const reorderServices = async (orderedIds) => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/admin/services/reorder`, { // PFAD GEÄNDERT
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/admin/services/reorder`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderedIds),
       });
       if (!res.ok) {
@@ -231,15 +284,17 @@ function App() {
       }
     } catch (err) {
       console.error("Failed to reorder services", err);
+      if (err.message.includes('Session expired')) {
+        setIsLoggedIn(false);
+      }
       await fetchData();
     }
   };
 
   const reorderShortcuts = async (orderedIds) => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/admin/shortcuts/reorder`, { // PFAD GEÄNDERT
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/admin/shortcuts/reorder`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderedIds),
       });
       if (!res.ok) {
@@ -248,6 +303,9 @@ function App() {
       }
     } catch (err) {
       console.error("Failed to reorder shortcuts", err);
+      if (err.message.includes('Session expired')) {
+        setIsLoggedIn(false);
+      }
       await fetchData();
     }
   };
@@ -267,9 +325,8 @@ function App() {
     setEditAppearance(appearanceToSave);
 
     try {
-      await fetch(`${BACKEND_URL}/api/appearance`, {
+      await authenticatedFetch(`${BACKEND_URL}/api/appearance`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(appearanceToSave),
       });
       // show brief confirmation (keep panel open, user requested manual close)
@@ -279,6 +336,9 @@ function App() {
       }, 1400);
     } catch (err) {
       console.error('Failed to save appearance:', err);
+      if (err.message.includes('Session expired')) {
+        setIsLoggedIn(false);
+      }
       // Optionally: revert optimistic update by refetching from backend
     } finally {
       // try to reconcile server state in background
