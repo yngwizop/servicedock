@@ -52,7 +52,7 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
   };
 
   return (
-    <div className="group bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-800/95 dark:to-gray-900/95 backdrop-blur-md rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 p-4 border border-gray-200/50 dark:border-gray-700/50 hover:scale-[1.02] hover:border-blue-400/50 dark:hover:border-blue-500/50">
+    <div className="group bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-800/95 dark:to-gray-900/95 rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-200 p-4 border-2 border-gray-200/50 dark:border-gray-700/50 hover:border-blue-400 dark:hover:border-blue-500 will-change-auto">
       {/* Header - Kompakter */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -145,34 +145,36 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
         </div>
       )}
       
-      {/* Control Buttons - Kompakter mit Icons */}
+      {/* Control Buttons - Elegant & Modern */}
       {isAdmin && (
-        <div className="flex gap-1.5 mt-3">
+        <div className="flex gap-2 mt-3">
           {!isRunning ? (
+            // Gestoppt: Kompakter Start-Button
             <button
               onClick={() => onStart(resource.vmid, resource.type)}
-              className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 text-xs font-semibold shadow-md hover:shadow-lg"
-              title="Start"
+              className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 text-xs font-medium shadow-md hover:shadow-lg hover:scale-[1.02] group"
+              title="VM/Container starten"
             >
-              <Play size={14} weight="fill" />
+              <Play size={14} weight="fill" className="group-hover:scale-110 transition-transform" />
               <span>Start</span>
             </button>
           ) : (
+            // Running: Drei kompakte Icon-Buttons
             <>
               <button
                 onClick={() => onStop(resource.vmid, resource.type)}
-                className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-2 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 text-xs font-semibold shadow-md hover:shadow-lg"
-                title="Stop"
+                className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white py-2 px-2 rounded-lg transition-all flex items-center justify-center gap-1 text-xs font-medium shadow-md hover:shadow-lg hover:scale-[1.02] group"
+                title="Stoppen"
               >
-                <Stop size={14} weight="fill" />
+                <Stop size={14} weight="fill" className="group-hover:scale-110 transition-transform" />
                 <span className="hidden sm:inline">Stop</span>
               </button>
               <button
                 onClick={() => onReboot(resource.vmid, resource.type)}
-                className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-2 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 text-xs font-semibold shadow-md hover:shadow-lg"
-                title="Reboot"
+                className="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white py-2 px-2 rounded-lg transition-all flex items-center justify-center gap-1 text-xs font-medium shadow-md hover:shadow-lg hover:scale-[1.02] group"
+                title="Neustarten"
               >
-                <ArrowsClockwise size={14} weight="bold" />
+                <ArrowsClockwise size={14} weight="bold" className="group-hover:rotate-180 transition-transform duration-500" />
                 <span className="hidden sm:inline">Reboot</span>
               </button>
             </>
