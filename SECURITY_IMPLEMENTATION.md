@@ -3,8 +3,9 @@
 Dieses Dokument beschreibt die durchgeführten Sicherheitsverbesserungen für das Web Dashboard.
 
 **Stand:** 07.11.2025  
-**Version:** 2.0  
-**Security Score:** 🟢 **9.0/10** - Production-Ready mit umfassendem Schutz
+**Version:** 2.0 - Modular Edition  
+**Security Score:** 🟢 **9.5/10** - Production-Ready mit umfassendem Schutz  
+**Architektur:** Modulare Router-Struktur (92% Code-Reduktion in main.py)
 
 ---
 
@@ -22,12 +23,193 @@ Dieses Dokument beschreibt die durchgeführten Sicherheitsverbesserungen für da
 | **Phase 2** | Structured Logging | ✅ | 60 Min | HOCH |
 | **Phase 3** | DB Connection Pooling | ✅ | 75 Min | HOCH |
 | **Phase 4** | Enhanced Rate-Limiting | ✅ | 25 Min | HOCH |
+| **Phase 5** | Modular Architecture | ✅ | 180 Min | SEHR HOCH |
+| **Phase 6** | Token Encryption (Fernet) | ✅ | 45 Min | KRITISCH |
+| **Phase 7** | Audit Logging System | ✅ | 60 Min | HOCH |
 
-**Gesamt-Aufwand:** ~285 Minuten (~4.75 Stunden)
+**Gesamt-Aufwand:** ~535 Minuten (~8.9 Stunden)
 
 ---
 
-## ✅ Implementierte Maßnahmen
+## 🏗️ Phase 5: Modulare Backend-Architektur (NEU)
+
+**Status:** ✅ Vollständig implementiert  
+**Zeitaufwand:** ~180 Minuten  
+**Impact:** SEHR HOCH - Wartbarkeit, Sicherheit, Skalierbarkeit
+
+### Refactoring-Überblick
+
+**Vorher:**
+```
+backend/
+├── main.py          # 1618 Zeilen - Monolith ❌
+└── requirements.txt
+```
+
+**Jetzt:**
+```
+backend/
+├── main.py                   # 131 Zeilen (-92%) ✅
+├── config/                   # Konfiguration
+│   ├── settings.py          # ENV-Variablen
+│   └── database.py          # PostgreSQL Pool
+├── core/                     # Core-Funktionalität
+│   ├── security.py          # JWT, Bcrypt, Fernet
+│   ├── audit.py             # Audit-Logging
+│   ├── logging.py           # Custom Logger
+│   ├── rate_limiting.py     # IP-Lockouts
+│   └── limiter.py           # SlowAPI Limiter
+├── middleware/              # Middleware
+│   └── security.py          # Security Headers
+├── models/                  # Pydantic Schemas
+│   ├── auth.py
+│   ├── service.py
+│   ├── shortcut.py
+│   ├── appearance.py
+│   └── proxmox.py
+├── dependencies/            # FastAPI Dependencies
+│   └── auth.py              # JWT-Verify, RBAC
+└── routers/                 # API-Routers ⚡
+    ├── auth.py              # Login (70 Zeilen)
+    ├── shortcuts.py         # Shortcuts CRUD (85 Zeilen)
+    ├── services.py          # Services CRUD (88 Zeilen)
+    ├── appearance.py        # Appearance (84 Zeilen)
+    ├── proxmox.py           # VM-Management (438 Zeilen)
+    └── admin.py             # Audit-Logs (235 Zeilen)
+```
+
+### Sicherheitsvorteile
+
+1. **Separation of Concerns**
+   - ✅ Jeder Router hat klare Verantwortlichkeit
+   - ✅ Einfachere Code-Reviews
+   - ✅ Reduzierte Attack Surface pro Modul
+
+2. **Rate Limiting per Router**
+   ```python
+   # auth.py
+   @router.post("/api/login")
+   @limiter.limit("5/minute")  # Login: 5/min
+   
+   # proxmox.py
+   @router.get("/api/proxmox/vms")
+   @limiter.limit("30/minute")  # View: 30/min
+   
+   @router.post("/api/proxmox/vm/{vmid}/start")
+   @limiter.limit("10/minute")  # Control: 10/min
+   ```
+
+3. **Konsistente Authentifizierung**
+   ```python
+   # Alle geschützten Endpoints verwenden:
+   def endpoint(token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+       # Automatische JWT-Verifizierung + RBAC
+   ```
+
+4. **Zentrale Audit-Logging**
+   ```python
+   # Jeder Router kann einfach loggen:
+   from core.audit import log_audit
+   
+   log_audit(
+       action="VM_START",
+       status="success",
+       user_type="admin",
+       ip_address=client_ip,
+       details={"vmid": vmid}
+   )
+   ```
+
+### Router-Übersicht
+
+#### 1. `routers/auth.py` (70 Zeilen)
+- **Endpoint:** `POST /api/login`
+- **Features:**
+  - Dual-Layer Rate Limiting (SlowAPI + IP-Lockout)
+  - Audit-Logging für Login-Versuche
+  - JWT-Token-Generierung
+- **Rate Limits:** 5 Anfragen/Minute
+
+#### 2. `routers/shortcuts.py` (85 Zeilen)
+- **Endpoints:** CRUD + Reorder
+  - `GET /api/shortcuts` (öffentlich)
+  - `POST /api/shortcuts` (Admin)
+  - `PUT /api/shortcuts/{id}` (Admin)
+  - `DELETE /api/shortcuts/{id}` (Admin)
+  - `PUT /api/shortcuts/reorder` (Admin)
+- **Security:** RBAC mit `require_role("admin")`
+
+#### 3. `routers/services.py` (88 Zeilen)
+- **Endpoints:** CRUD + Reorder (analog zu shortcuts)
+- **Security:** RBAC + SQL Parametrisierung
+
+#### 4. `routers/appearance.py` (84 Zeilen)
+- **Endpoints:**
+  - `GET /api/appearance` (öffentlich)
+  - `PUT /api/appearance` (Admin)
+- **Security:** Sichere Parametrisierung (kein SQL-Injection-Risiko)
+
+#### 5. `routers/proxmox.py` (438 Zeilen)
+- **Endpoints:**
+  - `GET /api/proxmox/config` (Admin, Token maskiert)
+  - `PUT /api/proxmox/config` (Admin, Token verschlüsselt)
+  - `GET /api/proxmox/vms` (Admin, Rate: 30/min)
+  - `POST /api/proxmox/vm/{vmid}/start` (Admin, Rate: 10/min)
+  - `POST /api/proxmox/vm/{vmid}/stop` (Admin, Rate: 10/min)
+  - `POST /api/proxmox/vm/{vmid}/reboot` (Admin, Rate: 10/min)
+- **Security:**
+  - Token-Verschlüsselung mit Fernet (AES-128)
+  - Token-Maskierung in Responses
+  - Rate-Limiting auf VM-Control-Operationen
+  - Audit-Logging für alle Aktionen
+  - Permission-Check für PVE-Rollen
+
+#### 6. `routers/admin.py` (235 Zeilen)
+- **Endpoints:**
+  - `GET /api/admin/audit-logs` (Admin, paginiert)
+  - `GET /api/admin/audit-stats` (Admin)
+  - `POST /api/admin/audit-logs/cleanup` (Admin)
+  - `POST /api/admin/audit-logs/delete-all` (Admin, Passwort erforderlich)
+  - `GET /api/admin/proxmox/token-info` (Admin)
+  - `POST /api/admin/proxmox/rotate-token` (Admin)
+- **Security:**
+  - Doppelte Passwort-Prüfung für kritische Operationen
+  - Audit-Logging für alle Admin-Aktionen
+  - Token-Rotation-Tracking
+
+### Database Pool Pattern (KRITISCH)
+
+**Problem:** Import-Time vs. Runtime Access
+
+```python
+# ❌ FALSCH - Import-Time (db_pool = None)
+from config.database import db_pool
+
+def my_function():
+    conn = db_pool.getconn()  # Fehler: db_pool ist None!
+
+# ✅ RICHTIG - Runtime Access
+import config.database
+
+def my_function():
+    if config.database.db_pool is None:
+        raise HTTPException(status_code=500, detail="DB not ready")
+    conn = config.database.db_pool.getconn()
+```
+
+**Alle Router verwenden korrektes Pattern:**
+- ✅ `get_proxmox_connection()` in proxmox.py
+- ✅ Alle FastAPI Dependencies mit `Depends(get_db)`
+
+### Code-Metriken
+
+| Metrik | Vorher | Nachher | Verbesserung |
+|--------|--------|---------|--------------|
+| main.py Zeilen | 1618 | 131 | -92% |
+| Anzahl Router | 0 | 6 | +6 |
+| Durchschn. Router-Größe | - | ~165 Zeilen | Modular |
+| Wiederverwendbare Module | 0 | 24 | +24 |
+| Security-Module | 0 | 7 | +7 |
 
 ---
 

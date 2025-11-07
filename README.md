@@ -127,41 +127,100 @@ http://localhost:3000
 
 ## 🔧 Backend-API
 
-### Endpoints
+### Architektur
 
-**Services**
-- `GET /api/services` - Alle Services abrufen
-- `POST /api/services` - Service hinzufügen
-- `PUT /api/services/{id}` - Service aktualisieren
-- `DELETE /api/services/{id}` - Service löschen
+Das Backend verwendet eine **modulare Router-Architektur**:
 
-**Shortcuts**
-- `GET /api/shortcuts` - Alle Shortcuts abrufen
-- `POST /api/shortcuts` - Shortcut hinzufügen
-- `PUT /api/shortcuts/{id}` - Shortcut aktualisieren
-- `DELETE /api/shortcuts/{id}` - Shortcut löschen
+```
+backend/
+├── main.py                  # App-Initialisierung (131 Zeilen)
+├── config/                  # Konfiguration
+│   ├── settings.py          # ENV-Variablen
+│   └── database.py          # PostgreSQL Connection Pool
+├── core/                    # Core-Funktionalität
+│   ├── security.py          # JWT, Bcrypt, Encryption (Fernet)
+│   ├── audit.py             # Audit-Logging
+│   ├── rate_limiting.py     # IP-basierte Rate Limits
+│   └── limiter.py           # Shared SlowAPI Limiter
+├── middleware/              # Middleware
+│   └── security.py          # Security Headers
+├── models/                  # Pydantic Schemas
+│   ├── auth.py
+│   ├── service.py
+│   ├── shortcut.py
+│   ├── appearance.py
+│   └── proxmox.py
+├── dependencies/            # FastAPI Dependencies
+│   └── auth.py              # JWT-Verifizierung, require_role()
+└── routers/                 # API-Routers (modular)
+    ├── auth.py              # Login (70 Zeilen)
+    ├── shortcuts.py         # Shortcuts CRUD + Reorder (85 Zeilen)
+    ├── services.py          # Services CRUD + Reorder (88 Zeilen)
+    ├── appearance.py        # Appearance Settings (84 Zeilen)
+    ├── proxmox.py           # VM-Management (438 Zeilen)
+    └── admin.py             # Audit-Logs + Token-Rotation (235 Zeilen)
+```
 
-**Appearance**
-- `GET /api/appearance` - Design-Einstellungen abrufen
-- `PUT /api/appearance` - Design-Einstellungen aktualisieren
+**Vorteile der modularen Struktur:**
+- ✅ 92% Code-Reduktion in main.py (1618 → 131 Zeilen)
+- ✅ Klare Separation of Concerns
+- ✅ Einfache Wartbarkeit und Erweiterbarkeit
+- ✅ Bessere Testbarkeit
+- ✅ Wiederverwendbare Komponenten
 
-**Auth**
-- `POST /api/login` - Admin-Login
+### API Endpoints
 
-**Proxmox Monitoring** (Admin-only)
-- `GET /api/proxmox/vms` - Alle VMs/Container abrufen
-- `GET /api/proxmox/config` - Proxmox-Konfiguration abrufen
-- `PUT /api/proxmox/config` - Proxmox-Konfiguration speichern
-- `POST /api/proxmox/vm/{vmid}/start` - VM/Container starten
-- `POST /api/proxmox/vm/{vmid}/stop` - VM/Container stoppen
-- `POST /api/proxmox/vm/{vmid}/reboot` - VM/Container neustarten
+**Authentication**
+- `POST /api/login` - Admin-Login mit JWT
+  - Rate Limit: 5 Anfragen/Minute (SlowAPI)
+  - IP-basierter Lockout nach 5 Fehlversuchen
 
-**Security** (Admin-only)
-- `GET /api/admin/audit-logs` - Audit-Logs abrufen
-- `GET /api/admin/audit-stats` - Audit-Statistiken abrufen
-- `POST /api/admin/audit-logs/cleanup` - Alte Logs löschen
-- `POST /api/admin/audit-logs/delete-all` - Alle Logs löschen (Passwort)
-- `GET /api/admin/proxmox/token-info` - Token-Alter und Rotation-Status
+**Services** (`/api/services`)
+- `GET /` - Alle Services abrufen (öffentlich)
+- `POST /` - Service hinzufügen (Admin-only)
+- `PUT /{id}` - Service aktualisieren (Admin-only)
+- `DELETE /{id}` - Service löschen (Admin-only)
+- `PUT /reorder` - Services neu sortieren (Admin-only)
+
+**Shortcuts** (`/api/shortcuts`)
+- `GET /` - Alle Shortcuts abrufen (öffentlich)
+- `POST /` - Shortcut hinzufügen (Admin-only)
+- `PUT /{id}` - Shortcut aktualisieren (Admin-only)
+- `DELETE /{id}` - Shortcut löschen (Admin-only)
+- `PUT /reorder` - Shortcuts neu sortieren (Admin-only)
+
+**Appearance** (`/api/appearance`)
+- `GET /` - Design-Einstellungen abrufen (öffentlich)
+- `PUT /` - Design-Einstellungen aktualisieren (Admin-only)
+
+**Proxmox Monitoring** (`/api/proxmox`) - Admin-only
+- `GET /config` - Proxmox-Konfiguration abrufen (Token maskiert)
+- `PUT /config` - Proxmox-Konfiguration speichern (Token verschlüsselt)
+- `GET /vms` - Alle VMs/Container abrufen
+  - Rate Limit: 30 Anfragen/Minute
+- `POST /vm/{vmid}/start` - VM/Container starten
+  - Rate Limit: 10 Anfragen/Minute
+  - Query-Parameter: `vm_type` (qemu/lxc)
+- `POST /vm/{vmid}/stop` - VM/Container stoppen
+  - Rate Limit: 10 Anfragen/Minute
+- `POST /vm/{vmid}/reboot` - VM/Container neustarten
+  - Rate Limit: 10 Anfragen/Minute
+
+**Admin Security** (`/api/admin`) - Admin-only
+- `GET /audit-logs` - Audit-Logs abrufen (paginiert)
+  - Query-Parameter: `limit` (default: 100), `offset` (default: 0)
+- `GET /audit-stats` - Audit-Statistiken abrufen
+  - Aktionen (24h), Top-IPs (7d), Fehlerrate (24h)
+- `POST /audit-logs/cleanup` - Alte Logs löschen
+  - Query-Parameter: `days` (default: 90)
+- `POST /audit-logs/delete-all` - Alle Logs löschen
+  - Body: `{"password": "admin-password"}`
+- `GET /proxmox/token-info` - Token-Alter und Rotation-Status
+- `POST /proxmox/rotate-token` - Proxmox API Token rotieren
+
+**System**
+- `GET /` - Health Check
+- `GET /api/info` - API-Information (Version, Router-Liste)
 
 ## 📂 Projektstruktur
 
@@ -180,20 +239,65 @@ web-dashboard/
 │   │   │   ├── ProxmoxCard.jsx
 │   │   │   ├── ProxmoxGrid.jsx
 │   │   │   └── SecurityDashboard.jsx
+│   │   ├── utils/
+│   │   │   └── auth.js           # JWT-Token-Verwaltung
 │   │   ├── App.jsx
 │   │   └── index.css
-│   └── package.json
+│   ├── package.json
+│   └── Dockerfile
 ├── backend/
-│   ├── main.py
+│   ├── main.py                   # App-Initialisierung (131 Zeilen) ⚡
+│   ├── config/                   # Konfiguration
+│   │   ├── __init__.py
+│   │   ├── settings.py           # ENV-Variablen, Keys
+│   │   └── database.py           # PostgreSQL Connection Pool
+│   ├── core/                     # Core-Funktionalität
+│   │   ├── __init__.py
+│   │   ├── security.py           # JWT, Bcrypt, Fernet-Encryption
+│   │   ├── audit.py              # Audit-Logging
+│   │   ├── logging.py            # Custom Logger
+│   │   ├── rate_limiting.py      # IP-basierte Lockouts
+│   │   └── limiter.py            # Shared SlowAPI Limiter
+│   ├── middleware/               # FastAPI Middleware
+│   │   ├── __init__.py
+│   │   └── security.py           # Security Headers
+│   ├── models/                   # Pydantic Schemas
+│   │   ├── __init__.py
+│   │   ├── auth.py
+│   │   ├── service.py
+│   │   ├── shortcut.py
+│   │   ├── appearance.py
+│   │   └── proxmox.py
+│   ├── dependencies/             # FastAPI Dependencies
+│   │   ├── __init__.py
+│   │   └── auth.py               # JWT-Verify, require_role()
+│   ├── routers/                  # API-Routers (modular) ⚡
+│   │   ├── auth.py               # Login (70 Zeilen)
+│   │   ├── shortcuts.py          # Shortcuts CRUD (85 Zeilen)
+│   │   ├── services.py           # Services CRUD (88 Zeilen)
+│   │   ├── appearance.py         # Appearance Settings (84 Zeilen)
+│   │   ├── proxmox.py            # VM-Management (438 Zeilen)
+│   │   └── admin.py              # Audit-Logs + Token-Rotation (235 Zeilen)
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── db/
 │   └── init.sql
 ├── docker-compose.yml
+├── .env                          # Umgebungsvariablen (nicht im Repo)
 ├── SECURITY_FEATURES.md
+├── SECURITY_IMPLEMENTATION.md
 ├── TOKEN_ROTATION_GUIDE.md
+├── ENCRYPTION.md
+├── INITIAL_SETUP.md
+├── PROXMOX_SETUP.md
 └── README.md
 ```
+
+**Highlights:**
+- ⚡ **main.py**: Von 1618 auf 131 Zeilen reduziert (92% Reduktion)
+- 🧩 **Modulare Router**: 6 spezialisierte Router für klare Struktur
+- 🔒 **Security-First**: Encryption, Audit-Logging, Rate-Limiting
+- 📦 **Connection Pooling**: Effizientes PostgreSQL-Handling (min=2, max=10)
 
 ## 🛠️ Entwicklung
 

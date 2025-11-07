@@ -274,7 +274,7 @@ function App() {
   // NEU: Reihenfolge persistieren (warte auf Response, rollback nur bei Fehler)
   const reorderServices = async (orderedIds) => {
     try {
-      const res = await authenticatedFetch(`${BACKEND_URL}/api/admin/services/reorder`, {
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/services/reorder`, {
         method: "PUT",
         body: JSON.stringify(orderedIds),
       });
@@ -293,7 +293,7 @@ function App() {
 
   const reorderShortcuts = async (orderedIds) => {
     try {
-      const res = await authenticatedFetch(`${BACKEND_URL}/api/admin/shortcuts/reorder`, {
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/shortcuts/reorder`, {
         method: "PUT",
         body: JSON.stringify(orderedIds),
       });

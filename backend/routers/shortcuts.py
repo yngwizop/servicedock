@@ -1,9 +1,12 @@
 """Shortcuts CRUD router"""
-from fastapi import APIRouter, HTTPException, Depends
+from typing import Any
+from fastapi import APIRouter, HTTPException, Depends, Body
 
 from models.shortcut import Shortcut
+from models.reorder import ReorderRequest
 from dependencies.auth import require_role
 from config.database import get_db
+from core.logging import logger
 
 router = APIRouter(prefix="/api/shortcuts", tags=["shortcuts"])
 
@@ -51,3 +54,20 @@ def delete_shortcut(shortcut_id: int, token: dict = Depends(require_role("admin"
     if not deleted:
         raise HTTPException(status_code=404, detail="Shortcut not found")
     return {"message": "deleted"}
+
+@router.put("/reorder", tags=["admin"])
+def reorder_shortcuts(request: ReorderRequest, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+    """Reorder shortcuts"""
+    cur = db.cursor()
+    try:
+        for idx, shortcut_id in enumerate(request.newOrder):
+            cur.execute(
+                "UPDATE shortcuts SET position = %s WHERE id = %s;",
+                (idx, shortcut_id)
+            )
+        db.commit()
+        return {"message": "Shortcuts reordered successfully"}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Reorder shortcuts failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reorder shortcuts")
