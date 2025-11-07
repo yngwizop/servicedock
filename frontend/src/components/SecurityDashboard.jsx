@@ -69,17 +69,30 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
       alert('Please enter admin password');
       return;
     }
-    const res = await authenticatedFetch(`${BACKEND_URL}/api/admin/audit-logs/delete-all`, {
-      method: 'POST',
-      body: JSON.stringify({ password: deletePassword })
-    });
-    if (res.ok) {
-      setAuditLogs([]);
-      setDeletePassword('');
-      setShowDeleteConfirm(false);
-      fetchSecurityData();
-    } else {
-      alert('Failed to delete logs');
+    
+    try {
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/admin/audit-logs/delete-all`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password: deletePassword })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        alert(`✅ ${data.deleted_count} Logs erfolgreich gelöscht`);
+        setAuditLogs([]);
+        setDeletePassword('');
+        setShowDeleteConfirm(false);
+        fetchSecurityData();
+      } else {
+        const errorData = await res.json();
+        alert(`❌ Fehler: ${errorData.detail || 'Failed to delete logs'}`);
+      }
+    } catch (err) {
+      console.error('Delete logs error:', err);
+      alert(`❌ Fehler beim Löschen: ${err.message}`);
     }
   };
 

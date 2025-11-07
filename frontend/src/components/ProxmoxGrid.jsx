@@ -91,38 +91,56 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
   // VM/Container Aktionen
   const handleStart = async (vmid, type) => {
     try {
-      await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/start?vm_type=${type}`, {
+      const response = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/start?vm_type=${type}`, {
         method: 'POST'
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to start VM/Container');
+      }
+      
       // Reload nach kurzer Verzögerung, damit Proxmox den Status aktualisiert hat
       setTimeout(fetchProxmoxData, 2000);
     } catch (err) {
       console.error('Failed to start VM:', err);
-      alert('Failed to start VM/Container. Please check your authentication.');
+      alert(`Failed to start VM/Container: ${err.message}`);
     }
   };
 
   const handleStop = async (vmid, type) => {
     try {
-      await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/stop?vm_type=${type}`, {
+      const response = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/stop?vm_type=${type}`, {
         method: 'POST'
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to stop VM/Container');
+      }
+      
       setTimeout(fetchProxmoxData, 2000);
     } catch (err) {
       console.error('Failed to stop VM:', err);
-      alert('Failed to stop VM/Container. Please check your authentication.');
+      alert(`Failed to stop VM/Container: ${err.message}`);
     }
   };
 
   const handleReboot = async (vmid, type) => {
     try {
-      await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/reboot?vm_type=${type}`, {
+      const response = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/reboot?vm_type=${type}`, {
         method: 'POST'
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to reboot VM/Container');
+      }
+      
       setTimeout(fetchProxmoxData, 2000);
     } catch (err) {
       console.error('Failed to reboot VM:', err);
-      alert('Failed to reboot VM/Container. Please check your authentication.');
+      alert(`Failed to reboot VM/Container: ${err.message}`);
     }
   };
 
