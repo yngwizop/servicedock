@@ -22,18 +22,32 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from jose import JWTError, jwt
 import bcrypt
+from starlette.middleware.base import BaseHTTPMiddleware
+from datetime import datetime, timedelta
+from fastapi import Request
+import json as json_lib
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from jose import JWTError, jwt
+import bcrypt
 
 # Disable SSL warnings for self-signed certificates
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # --- Security Configuration ---
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", os.urandom(32).hex())  # Für JWT
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 480  # 8 Stunden
+# JWT Secret Key - MUSS aus ENV kommen, kein Fallback!
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError(
+        "JWT_SECRET_KEY environment variable is required! "
+        "Generate one with: openssl rand -hex 32"
+    )
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", os.urandom(32).hex())  # Für JWT
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 120  # 2 Stunden
+
+# Token-Laufzeit - von ENV laden mit sicherem Default (2 Stunden)
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "120"))
 
 # HTTP Bearer token scheme
 security = HTTPBearer()
@@ -75,6 +89,56 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) 
         return payload
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+
+def require_role(required_role: str):
+    """
+    Dependency für Rollen-basierte Zugriffskontrolle.
+    Prüft ob der Token die erforderliche Rolle hat.
+    
+    Usage:
+        @app.get("/api/admin/something")
+        def admin_only(token: dict = Depends(require_role("admin"))):
+            ...
+    
+    Args:
+        required_role: Erforderliche Rolle (z.B. "admin", "user", "guest")
+    
+    Returns:
+        dict: Token-Payload wenn Rolle korrekt
+    
+    Raises:
+        HTTPException: 401 bei ungültigem Token, 403 bei fehlender Rolle
+    """
+    def role_checker(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+        try:
+            token = credentials.credentials
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            
+            # Prüfe Username
+            username: str = payload.get("sub")
+            if username is None:
+                raise HTTPException(
+                    status_code=401, 
+                    detail="Invalid authentication credentials"
+                )
+            
+            # Prüfe Rolle
+            user_role = payload.get("type")
+            if user_role != required_role:
+                raise HTTPException(
+                    status_code=403, 
+                    detail=f"Access denied. Required role: {required_role}"
+                )
+            
+            return payload
+            
+        except JWTError:
+            raise HTTPException(
+                status_code=401, 
+                detail="Invalid authentication credentials"
+            )
+    
+    return role_checker
 
 # --- Encryption Setup ---
 def get_encryption_key():
@@ -119,6 +183,33 @@ def decrypt_value(encrypted_text: str) -> str:
         return None
 
 # --- Audit Logging ---
+def sanitize_audit_details(details: dict) -> dict:
+    """
+    Entfernt sensible Keys aus Audit-Details.
+    Verhindert dass Token/Passwörter in Logs landen.
+    
+    Args:
+        details: Dictionary mit Details
+        
+    Returns:
+        dict: Bereinigtes Dictionary
+    """
+    if not details:
+        return details
+    
+    SENSITIVE_KEYS = [
+        'password', 'token', 'token_value', 'secret', 'key',
+        'authorization', 'api_key', 'access_token', 'refresh_token',
+        'new_token_value', 'token_secret', 'private_key'
+    ]
+    
+    sanitized = details.copy()
+    for key in SENSITIVE_KEYS:
+        if key in sanitized:
+            sanitized[key] = '***REDACTED***'
+    
+    return sanitized
+
 def log_audit(
     action: str,
     status: str = "success",
@@ -130,13 +221,16 @@ def log_audit(
     user_agent: str = None
 ):
     """
-    Schreibt einen Eintrag ins Audit-Log
+    Schreibt einen Eintrag ins Audit-Log.
+    Details werden automatisch sanitized (sensible Daten entfernt).
     """
     try:
         conn = get_connection()
         cur = conn.cursor()
         
-        details_json = json_lib.dumps(details) if details else None
+        # Sanitize details BEFORE logging!
+        safe_details = sanitize_audit_details(details)
+        details_json = json_lib.dumps(safe_details) if safe_details else None
         
         cur.execute(
             """INSERT INTO audit_log 
@@ -151,14 +245,40 @@ def log_audit(
         print(f"Audit log error: {e}")
         # Fehler beim Logging sollten nicht die Hauptfunktion blockieren
 
+# X-Forwarded-For Trust Configuration
+TRUST_FORWARDED_HEADERS = os.getenv("TRUST_FORWARDED_HEADERS", "false").lower() == "true"
+TRUSTED_PROXIES = [ip.strip() for ip in os.getenv("TRUSTED_PROXIES", "").split(",") if ip.strip()]
+
 def get_client_ip(request: Request) -> str:
-    """Extrahiert die Client-IP aus dem Request"""
-    # Prüfe X-Forwarded-For Header (für Proxy/Load Balancer)
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    """
+    Extrahiert die Client-IP aus dem Request.
+    Berücksichtigt X-Forwarded-For nur wenn TRUST_FORWARDED_HEADERS=true
     
-    # Fallback: Direct Client IP
+    Args:
+        request: FastAPI Request-Objekt
+        
+    Returns:
+        str: Client-IP-Adresse oder "unknown"
+    """
+    
+    # Wenn Forwarded Headers vertrauenswürdig sind (hinter Reverse Proxy)
+    if TRUST_FORWARDED_HEADERS:
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            # Nimm die erste IP (Original Client)
+            client_ip = forwarded.split(",")[0].strip()
+            
+            # Optional: Prüfe ob Request von vertrauenswürdigem Proxy kommt
+            if TRUSTED_PROXIES and request.client:
+                proxy_ip = request.client.host
+                if proxy_ip not in TRUSTED_PROXIES:
+                    print(f"⚠️  Warning: Untrusted proxy {proxy_ip} sent X-Forwarded-For: {client_ip}")
+                    # Fallback auf Proxy-IP (sicherer)
+                    return proxy_ip
+            
+            return client_ip
+    
+    # Fallback: Direkte Client-IP (ohne Proxy)
     if request.client:
         return request.client.host
     
@@ -172,31 +292,77 @@ limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# === CORS Middleware ===
-# WICHTIG: In Production auf spezifische Frontend-URL einschränken!
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
-allowed_origins = [FRONTEND_URL]
+# === CORS Configuration ===
+# Sicherer Default: production (Fail-Safe!)
+ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
+FRONTEND_URL = os.getenv("FRONTEND_URL")
 
-# In Development auch localhost-Varianten erlauben
-if os.getenv("ENVIRONMENT") == "development":
+# In Production: FRONTEND_URL ist mandatory
+if ENVIRONMENT == "production":
+    if not FRONTEND_URL:
+        raise ValueError(
+            "FRONTEND_URL environment variable is required in production!\n"
+            "Example: FRONTEND_URL=https://dashboard.example.com"
+        )
+    allowed_origins = [FRONTEND_URL]
+    print(f"🔒 CORS Production mode: Only {FRONTEND_URL} allowed")
+
+# In Development: Localhost-Varianten + optional FRONTEND_URL
+elif ENVIRONMENT == "development":
+    allowed_origins = []
+    if FRONTEND_URL:
+        allowed_origins.append(FRONTEND_URL)
+    
+    # Hardcoded localhost-Varianten (OK in Development!)
     allowed_origins.extend([
         "http://localhost:3000",
         "http://localhost:4173",
+        "http://localhost:5173",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:4173",
-        "http://192.168.178.83:3000",  # Deine Server-IP
+        "http://127.0.0.1:5173",
+        "http://192.168.178.83:3000",  # Dev-Server-IP
         "http://192.168.178.83:8000"   # Backend-IP
     ])
+    print(f"� CORS Development mode: {len(allowed_origins)} origins allowed")
 
-print(f"🔒 CORS allowed origins: {allowed_origins}")
+else:
+    raise ValueError(f"Invalid ENVIRONMENT: {ENVIRONMENT}. Must be 'production' or 'development'")
 
+# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=["Authorization", "Content-Type"],  # Spezifisch statt "*"
 )
+
+# === Security Headers Middleware ===
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Fügt Security-Headers hinzu (nur in Production)"""
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        
+        # Security Headers nur in Production
+        if ENVIRONMENT == "production":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+            response.headers["X-Content-Type-Options"] = "nosniff"
+            response.headers["X-Frame-Options"] = "DENY"
+            response.headers["X-XSS-Protection"] = "1; mode=block"
+            response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+            # CSP - Basic Policy (bei Bedarf anpassen)
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+                "style-src 'self' 'unsafe-inline'; "
+                "img-src 'self' data: https:; "
+                "connect-src 'self' " + FRONTEND_URL + ";"
+            )
+        
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 # === Startup Event ===
 @app.on_event("startup")
@@ -208,7 +374,7 @@ async def startup_event():
         cur = conn.cursor()
         
         cur.execute(
-            "DELETE FROM audit_log WHERE timestamp < NOW() - INTERVAL '90 days';"
+            "DELETE FROM audit_log WHERE timestamp < NOW() - make_interval(days => 90);"
         )
         deleted_count = cur.rowcount
         
@@ -234,12 +400,26 @@ ADMIN_PASSWORD_HASH = None  # Wird beim ersten Start gesetzt
 def initialize_admin_password():
     """
     Initialisiert das Admin-Passwort beim ersten Start.
-    Hasht das Passwort aus der Umgebungsvariable.
+    ADMIN_PASSWORD muss gesetzt sein - kein Fallback!
+    Minimum 8 Zeichen erforderlich.
     """
     global ADMIN_PASSWORD_HASH
-    admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
+    admin_password = os.getenv("ADMIN_PASSWORD")
+    
+    if not admin_password:
+        raise ValueError(
+            "ADMIN_PASSWORD environment variable is required! "
+            "Set a strong password (min. 8 characters) in your .env file."
+        )
+    
+    if len(admin_password) < 8:
+        raise ValueError(
+            "ADMIN_PASSWORD must be at least 8 characters long! "
+            "Current length: " + str(len(admin_password))
+        )
+    
     ADMIN_PASSWORD_HASH = get_password_hash(admin_password)
-    print(f"✓ Admin password initialized (hashed)")
+    print(f"✓ Admin password initialized (hashed, length: {len(admin_password)} chars)")
 
 # Initialisiere beim Import
 initialize_admin_password()
@@ -319,7 +499,7 @@ def get_shortcuts():
     return [{"id": r[0], "name": r[1], "url": r[2], "icon": r[3], "position": r[4]} for r in rows]
 
 @app.post("/api/shortcuts")
-def add_shortcut(shortcut: Shortcut, token: dict = Depends(verify_token)):
+def add_shortcut(shortcut: Shortcut, token: dict = Depends(require_role("admin"))):
     conn = get_connection()
     cur = conn.cursor()
     # Position an das Ende setzen
@@ -336,7 +516,7 @@ def add_shortcut(shortcut: Shortcut, token: dict = Depends(verify_token)):
     return {"id": new_id, "position": new_pos, **shortcut.dict()}
 
 @app.put("/api/shortcuts/{shortcut_id}")
-def update_shortcut(shortcut_id: int, shortcut: Shortcut, token: dict = Depends(verify_token)):
+def update_shortcut(shortcut_id: int, shortcut: Shortcut, token: dict = Depends(require_role("admin"))):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -352,7 +532,7 @@ def update_shortcut(shortcut_id: int, shortcut: Shortcut, token: dict = Depends(
     return {"message": "updated", "id": shortcut_id, **shortcut.dict()}
 
 @app.delete("/api/shortcuts/{shortcut_id}")
-def delete_shortcut(shortcut_id: int, token: dict = Depends(verify_token)):
+def delete_shortcut(shortcut_id: int, token: dict = Depends(require_role("admin"))):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -382,7 +562,7 @@ def get_services():
     ]
 
 @app.post("/api/services")
-def add_service(service: Service, token: dict = Depends(verify_token)):
+def add_service(service: Service, token: dict = Depends(require_role("admin"))):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -398,7 +578,7 @@ def add_service(service: Service, token: dict = Depends(verify_token)):
     return {"id": new_id, "position": new_pos, **service.dict()}
 
 @app.put("/api/services/{service_id}")
-def update_service(service_id: int, service: Service, token: dict = Depends(verify_token)):
+def update_service(service_id: int, service: Service, token: dict = Depends(require_role("admin"))):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -414,7 +594,7 @@ def update_service(service_id: int, service: Service, token: dict = Depends(veri
     return {"message": "updated", "id": service_id, **service.dict()}
 
 @app.delete("/api/services/{service_id}")
-def delete_service(service_id: int, token: dict = Depends(verify_token)):
+def delete_service(service_id: int, token: dict = Depends(require_role("admin"))):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -457,7 +637,7 @@ def get_appearance():
     }
 
 @app.put("/api/appearance")
-def update_appearance(appearance: Appearance, token: dict = Depends(verify_token)):
+def update_appearance(appearance: Appearance, token: dict = Depends(require_role("admin"))):
     conn = get_connection()
     cur = conn.cursor()
     
@@ -562,7 +742,7 @@ def login(creds: AdminLogin, request: Request):
 
 # NEU: Endpunkte zum Setzen der Reihenfolge
 @app.put("/api/admin/services/reorder")
-def reorder_services(body: Any = Body(...), token: dict = Depends(verify_token)):
+def reorder_services(body: Any = Body(...), token: dict = Depends(require_role("admin"))):
     # akzeptiere entweder ein rohes Array oder ein Objekt { "ids": [...] }
     ids = None
     if isinstance(body, dict) and "ids" in body:
@@ -606,7 +786,7 @@ def reorder_services(body: Any = Body(...), token: dict = Depends(verify_token))
     return {"message": "services reordered"}
 
 @app.put("/api/admin/shortcuts/reorder")
-def reorder_shortcuts(body: Any = Body(...), token: dict = Depends(verify_token)):
+def reorder_shortcuts(body: Any = Body(...), token: dict = Depends(require_role("admin"))):
     if isinstance(body, dict) and "ids" in body:
         ids = body["ids"]
     elif isinstance(body, list):
@@ -699,7 +879,7 @@ def get_proxmox_connection():
 
 
 @app.get("/api/proxmox/config")
-def get_proxmox_config(token: dict = Depends(verify_token)):
+def get_proxmox_config(token: dict = Depends(require_role("admin"))):
     """Gibt Proxmox-Konfiguration zurück (ohne Secret, token_name maskiert)"""
     conn = get_connection()
     cur = conn.cursor()
@@ -741,7 +921,7 @@ def get_proxmox_config(token: dict = Depends(verify_token)):
 
 
 @app.put("/api/proxmox/config")
-def update_proxmox_config(config: ProxmoxConfig, token: dict = Depends(verify_token)):
+def update_proxmox_config(config: ProxmoxConfig, token: dict = Depends(require_role("admin"))):
     """Speichert Proxmox-Konfiguration (Token wird verschlüsselt)"""
     conn = get_connection()
     cur = conn.cursor()
@@ -891,7 +1071,7 @@ def get_proxmox_vms(request: Request):
 
 @app.post("/api/proxmox/vm/{vmid}/start")
 @limiter.limit("10/minute")  # Max 10 Start-Befehle pro Minute
-def start_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, token: dict = Depends(verify_token)):
+def start_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, token: dict = Depends(require_role("admin"))):
     """Startet eine VM oder LXC"""
     client_ip = get_client_ip(request) if request else "unknown"
     
@@ -971,7 +1151,7 @@ def start_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, 
 
 @app.post("/api/proxmox/vm/{vmid}/stop")
 @limiter.limit("10/minute")  # Max 10 Stop-Befehle pro Minute
-def stop_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, token: dict = Depends(verify_token)):
+def stop_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, token: dict = Depends(require_role("admin"))):
     """Stoppt eine VM oder LXC"""
     client_ip = get_client_ip(request) if request else "unknown"
     proxmox, _ = get_proxmox_connection()
@@ -1014,7 +1194,7 @@ def stop_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, t
 
 @app.post("/api/proxmox/vm/{vmid}/reboot")
 @limiter.limit("10/minute")  # Max 10 Reboot-Befehle pro Minute
-def reboot_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, token: dict = Depends(verify_token)):
+def reboot_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, token: dict = Depends(require_role("admin"))):
     """Startet eine VM oder LXC neu"""
     client_ip = get_client_ip(request) if request else "unknown"
     proxmox, _ = get_proxmox_connection()
@@ -1058,7 +1238,7 @@ def reboot_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None,
 # ===== Audit Log Endpoints =====
 
 @app.get("/api/admin/audit-logs")
-def get_audit_logs(limit: int = 100, offset: int = 0, token: dict = Depends(verify_token)):
+def get_audit_logs(limit: int = 100, offset: int = 0, token: dict = Depends(require_role("admin"))):
     """Holt die neuesten Audit-Log-Einträge (Admin-only)"""
     conn = get_connection()
     cur = conn.cursor()
@@ -1105,7 +1285,7 @@ def get_audit_logs(limit: int = 100, offset: int = 0, token: dict = Depends(veri
 
 
 @app.get("/api/admin/audit-stats")
-def get_audit_stats(token: dict = Depends(verify_token)):
+def get_audit_stats(token: dict = Depends(require_role("admin"))):
     """Holt Statistiken über Audit-Logs (Admin-only)"""
     conn = get_connection()
     cur = conn.cursor()
@@ -1158,21 +1338,21 @@ def get_audit_stats(token: dict = Depends(verify_token)):
 
 
 @app.post("/api/admin/audit-logs/cleanup")
-def cleanup_old_audit_logs(days: int = 90, token: dict = Depends(verify_token)):
+def cleanup_old_audit_logs(days: int = 90, token: dict = Depends(require_role("admin"))):
     """Löscht Audit-Logs die älter als X Tage sind (Standard: 90 Tage)"""
     conn = get_connection()
     cur = conn.cursor()
     
     # Zähle wie viele gelöscht werden
     cur.execute(
-        "SELECT COUNT(*) FROM audit_log WHERE timestamp < NOW() - INTERVAL '%s days';",
+        "SELECT COUNT(*) FROM audit_log WHERE timestamp < NOW() - make_interval(days => %s);",
         (days,)
     )
     count_to_delete = cur.fetchone()[0]
     
     # Lösche alte Einträge
     cur.execute(
-        "DELETE FROM audit_log WHERE timestamp < NOW() - INTERVAL '%s days';",
+        "DELETE FROM audit_log WHERE timestamp < NOW() - make_interval(days => %s);",
         (days,)
     )
     
@@ -1192,7 +1372,7 @@ class DeleteLogsRequest(BaseModel):
 
 
 @app.post("/api/admin/audit-logs/delete-all")
-def delete_all_audit_logs(request: DeleteLogsRequest, token: dict = Depends(verify_token)):
+def delete_all_audit_logs(request: DeleteLogsRequest, token: dict = Depends(require_role("admin"))):
     """Löscht ALLE Audit-Logs (Admin-Passwort erforderlich)"""
     
     # Zusätzliche Passwort-Prüfung für diese kritische Operation
@@ -1225,7 +1405,7 @@ def delete_all_audit_logs(request: DeleteLogsRequest, token: dict = Depends(veri
 # ===== Token Rotation =====
 
 @app.get("/api/admin/proxmox/token-info")
-def get_token_info(token: dict = Depends(verify_token)):
+def get_token_info(token: dict = Depends(require_role("admin"))):
     """Gibt Informationen über das Alter des aktuellen Tokens zurück"""
     conn = get_connection()
     cur = conn.cursor()
@@ -1272,7 +1452,7 @@ def get_token_info(token: dict = Depends(verify_token)):
 
 
 @app.post("/api/admin/proxmox/rotate-token")
-def rotate_token(config: ProxmoxConfig, token: dict = Depends(verify_token)):
+def rotate_token(config: ProxmoxConfig, token: dict = Depends(require_role("admin"))):
     """
     Rotiert den Proxmox-Token (speichert neuen Token und updated Zeitstempel)
     """
