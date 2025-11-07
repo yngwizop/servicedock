@@ -7,6 +7,11 @@ services:
       - "3000:4173"
     depends_on:
       - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"       # Max 5MB pro Log-Datei
+        max-file: "2"        # Maximal 2 Dateien (= 10MB total)
 
   backend:
     build:
@@ -24,6 +29,12 @@ services:
       - ENVIRONMENT=${ENVIRONMENT:-development}
     depends_on:
       - db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"      # Max 10MB pro Log-Datei
+        max-file: "3"        # Maximal 3 Dateien (= 30MB total)
+        compress: "true"     # Alte Logs komprimieren
 
   db:
     image: postgres:16
@@ -39,6 +50,11 @@ services:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"      # Max 10MB pro Log-Datei
+        max-file: "3"        # Maximal 3 Dateien (= 30MB total)
 
 volumes:
   postgres_data:
