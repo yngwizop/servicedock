@@ -1,12 +1,12 @@
 import os
 import psycopg2
+import psycopg2.pool
 from urllib.parse import urlparse
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 from typing import List, Any, Optional
-from fastapi import Body
 import json
 from proxmoxer import ProxmoxAPI
 import requests
@@ -15,7 +15,6 @@ from cryptography.fernet import Fernet
 import base64
 import hashlib
 from datetime import datetime, timedelta
-from fastapi import Request
 import json as json_lib
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -23,14 +22,53 @@ from slowapi.errors import RateLimitExceeded
 from jose import JWTError, jwt
 import bcrypt
 from starlette.middleware.base import BaseHTTPMiddleware
-from datetime import datetime, timedelta
-from fastapi import Request
-import json as json_lib
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-from jose import JWTError, jwt
-import bcrypt
+import logging
+import sys
+
+# === Logging Setup ===
+def setup_logging():
+    """Konfiguriert strukturiertes Logging mit Sensitive-Data-Filter"""
+    
+    # Erstelle Logger
+    logger = logging.getLogger("dashboard")
+    logger.setLevel(logging.INFO)
+    
+    # Console Handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.INFO)
+    console_format = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    console_handler.setFormatter(console_format)
+    
+    logger.addHandler(console_handler)
+    
+    return logger
+
+# Sensitive-Data-Filter
+class SensitiveDataFilter(logging.Filter):
+    """Filtert sensible Daten aus Logs"""
+    SENSITIVE_PATTERNS = [
+        'password', 'token', 'secret', 'key', 'authorization',
+        'api_key', 'access_token', 'refresh_token'
+    ]
+    
+    def filter(self, record):
+        # Filtere nur wenn Message sensible Patterns enthält
+        message_lower = str(record.msg).lower()
+        for pattern in self.SENSITIVE_PATTERNS:
+            if pattern in message_lower:
+                # Ersetze Args mit REDACTED
+                if record.args:
+                    record.args = tuple(['***REDACTED***'] * len(record.args))
+                # Bei Token/Secret im Message: redact
+                if 'token' in message_lower or 'secret' in message_lower:
+                    record.msg = record.msg[:50] + ' ***REDACTED***'
+        return True
+
+logger = setup_logging()
+logger.addFilter(SensitiveDataFilter())
 
 # Disable SSL warnings for self-signed certificates
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -179,7 +217,7 @@ def decrypt_value(encrypted_text: str) -> str:
         decrypted = cipher_suite.decrypt(encrypted_text.encode())
         return decrypted.decode()
     except Exception as e:
-        print(f"Decryption error: {e}")
+        logger.error("Decryption failed", exc_info=False)  # Keine Details loggen!
         return None
 
 # --- Audit Logging ---
@@ -223,9 +261,17 @@ def log_audit(
     """
     Schreibt einen Eintrag ins Audit-Log.
     Details werden automatisch sanitized (sensible Daten entfernt).
+    
+    WICHTIG: Diese Funktion holt sich die Connection selbst aus dem Pool,
+    da sie von vielen Stellen aufgerufen wird (nicht als FastAPI Dependency).
     """
+    if db_pool is None:
+        logger.error("Cannot write audit log: DB pool not initialized")
+        return
+    
+    conn = None
     try:
-        conn = get_connection()
+        conn = db_pool.getconn()
         cur = conn.cursor()
         
         # Sanitize details BEFORE logging!
@@ -240,10 +286,12 @@ def log_audit(
         )
         conn.commit()
         cur.close()
-        conn.close()
     except Exception as e:
-        print(f"Audit log error: {e}")
+        logger.error("Audit log write failed", exc_info=False)
         # Fehler beim Logging sollten nicht die Hauptfunktion blockieren
+    finally:
+        if conn is not None:
+            db_pool.putconn(conn)
 
 # X-Forwarded-For Trust Configuration
 TRUST_FORWARDED_HEADERS = os.getenv("TRUST_FORWARDED_HEADERS", "false").lower() == "true"
@@ -272,7 +320,7 @@ def get_client_ip(request: Request) -> str:
             if TRUSTED_PROXIES and request.client:
                 proxy_ip = request.client.host
                 if proxy_ip not in TRUSTED_PROXIES:
-                    print(f"⚠️  Warning: Untrusted proxy {proxy_ip} sent X-Forwarded-For: {client_ip}")
+                    logger.warning(f"Untrusted proxy {proxy_ip} sent X-Forwarded-For: {client_ip}")
                     # Fallback auf Proxy-IP (sicherer)
                     return proxy_ip
             
@@ -292,6 +340,73 @@ limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# === Enhanced Login Rate-Limiting ===
+# Memory-basierter Failed-Login-Counter pro IP
+# PRODUKTION: Verwende Redis für verteilte Systeme!
+from datetime import datetime
+from collections import defaultdict
+
+# Structure: {ip: {"count": int, "locked_until": datetime, "first_attempt": datetime}}
+failed_login_attempts = defaultdict(lambda: {"count": 0, "locked_until": None, "first_attempt": None})
+
+# Konfiguration (via ENV oder Defaults)
+MAX_FAILED_ATTEMPTS = int(os.getenv("MAX_FAILED_LOGIN_ATTEMPTS", "5"))
+LOCKOUT_DURATION_MINUTES = int(os.getenv("LOGIN_LOCKOUT_MINUTES", "15"))
+LOCKOUT_RESET_MINUTES = 60  # Nach 60min ohne Versuch → Reset Counter
+
+def check_login_rate_limit(ip: str) -> tuple[bool, str]:
+    """
+    Prüft ob IP für Login blockiert ist.
+    
+    Returns:
+        (is_allowed: bool, message: str)
+    """
+    now = datetime.utcnow()
+    attempt_data = failed_login_attempts[ip]
+    
+    # 1. Prüfe ob IP aktuell gesperrt ist
+    if attempt_data["locked_until"]:
+        if now < attempt_data["locked_until"]:
+            remaining = int((attempt_data["locked_until"] - now).total_seconds() / 60)
+            return False, f"Too many failed login attempts. Try again in {remaining} minutes."
+        else:
+            # Lock abgelaufen → Reset
+            attempt_data["count"] = 0
+            attempt_data["locked_until"] = None
+            attempt_data["first_attempt"] = None
+    
+    # 2. Reset Counter wenn letzter Versuch > 60min her
+    if attempt_data["first_attempt"]:
+        time_since_first = (now - attempt_data["first_attempt"]).total_seconds() / 60
+        if time_since_first > LOCKOUT_RESET_MINUTES:
+            attempt_data["count"] = 0
+            attempt_data["first_attempt"] = None
+    
+    # 3. IP ist nicht gesperrt
+    return True, ""
+
+def record_failed_login(ip: str):
+    """Registriert fehlgeschlagenen Login-Versuch und sperrt bei Bedarf."""
+    now = datetime.utcnow()
+    attempt_data = failed_login_attempts[ip]
+    
+    # Erster Versuch → Timestamp setzen
+    if attempt_data["first_attempt"] is None:
+        attempt_data["first_attempt"] = now
+    
+    # Counter erhöhen
+    attempt_data["count"] += 1
+    
+    # Sperre aktivieren bei MAX_FAILED_ATTEMPTS
+    if attempt_data["count"] >= MAX_FAILED_ATTEMPTS:
+        attempt_data["locked_until"] = now + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
+        logger.warning(f"IP {ip} locked out for {LOCKOUT_DURATION_MINUTES} minutes after {attempt_data['count']} failed attempts")
+
+def reset_failed_login(ip: str):
+    """Setzt Failed-Login-Counter nach erfolgreichem Login zurück."""
+    if ip in failed_login_attempts:
+        del failed_login_attempts[ip]
+
 # === CORS Configuration ===
 # Sicherer Default: production (Fail-Safe!)
 ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
@@ -305,7 +420,7 @@ if ENVIRONMENT == "production":
             "Example: FRONTEND_URL=https://dashboard.example.com"
         )
     allowed_origins = [FRONTEND_URL]
-    print(f"🔒 CORS Production mode: Only {FRONTEND_URL} allowed")
+    logger.info(f"CORS Production mode: Only {FRONTEND_URL} allowed")
 
 # In Development: Localhost-Varianten + optional FRONTEND_URL
 elif ENVIRONMENT == "development":
@@ -368,9 +483,12 @@ app.add_middleware(SecurityHeadersMiddleware)
 @app.on_event("startup")
 async def startup_event():
     """Wird beim Start der Anwendung ausgeführt"""
+    # 1. Connection Pool initialisieren
+    initialize_connection_pool()
+    
     try:
-        # Automatisches Bereinigen von Audit-Logs älter als 90 Tage
-        conn = get_connection()
+        # 2. Automatisches Bereinigen von Audit-Logs älter als 90 Tage
+        conn = db_pool.getconn()
         cur = conn.cursor()
         
         cur.execute(
@@ -380,15 +498,15 @@ async def startup_event():
         
         conn.commit()
         cur.close()
-        conn.close()
+        db_pool.putconn(conn)
         
         if deleted_count > 0:
-            print(f"✓ Startup: {deleted_count} alte Audit-Logs gelöscht (>90 Tage)")
+            logger.info(f"Startup: {deleted_count} alte Audit-Logs gelöscht (>90 Tage)")
         else:
-            print("✓ Startup: Keine alten Audit-Logs zum Löschen")
+            logger.info("Startup: Keine alten Audit-Logs zum Löschen")
             
     except Exception as e:
-        print(f"⚠ Startup cleanup error: {e}")
+        logger.error(f"Startup cleanup error: {e}")
 
 
 # --- Konfiguration & Datenbank ---
@@ -419,24 +537,56 @@ def initialize_admin_password():
         )
     
     ADMIN_PASSWORD_HASH = get_password_hash(admin_password)
-    print(f"✓ Admin password initialized (hashed, length: {len(admin_password)} chars)")
+    logger.info(f"Admin password initialized (hashed, length: {len(admin_password)} chars)")
 
 # Initialisiere beim Import
 initialize_admin_password()
 
-def get_connection():
+# --- DB Connection Pool ---
+# Connection Pool: Wiederverwendung von Connections (Performance + DoS-Schutz)
+db_pool = None
+
+def initialize_connection_pool():
+    """Initialisiert den PostgreSQL Connection Pool beim Startup."""
+    global db_pool
     try:
         result = urlparse(DATABASE_URL)
-        return psycopg2.connect(
+        db_pool = psycopg2.pool.SimpleConnectionPool(
+            minconn=2,  # Minimum 2 Connections immer offen
+            maxconn=10,  # Maximum 10 Connections (DoS-Schutz)
             dbname=result.path[1:],
             user=result.username,
             password=result.password,
             host=result.hostname,
             port=result.port
         )
+        logger.info("Database connection pool initialized (min=2, max=10)")
     except Exception as e:
-        print(f"Fehler bei der Datenbankverbindung: {e}")
-        raise HTTPException(status_code=500, detail="Datenbankverbindung fehlgeschlagen")
+        logger.error("Failed to initialize connection pool", exc_info=True)
+        raise
+
+def get_db():
+    """
+    FastAPI Dependency: Holt Connection aus Pool, gibt sie nach Request zurück.
+    Usage: db = Depends(get_db)
+    """
+    if db_pool is None:
+        logger.error("Connection pool not initialized")
+        raise HTTPException(status_code=500, detail="Database connection failed")
+    
+    conn = None
+    try:
+        conn = db_pool.getconn()
+        if conn is None:
+            logger.error("No connection available from pool")
+            raise HTTPException(status_code=503, detail="Service temporarily unavailable")
+        yield conn
+    except psycopg2.pool.PoolError as e:
+        logger.error("Connection pool error", exc_info=True)
+        raise HTTPException(status_code=503, detail="Service temporarily unavailable")
+    finally:
+        if conn is not None:
+            db_pool.putconn(conn)
 
 # --- Pydantic Modelle (Datenstruktur) ---
 
@@ -488,20 +638,16 @@ def root():
 
 # ===== Shortcuts (CRUD) =====
 @app.get("/api/shortcuts")
-def get_shortcuts():
-    conn = get_connection()
-    cur = conn.cursor()
+def get_shortcuts(db = Depends(get_db)):
+    cur = db.cursor()
     # Sortiere nach position (persistente Reihenfolge), fallback id
     cur.execute("SELECT id, name, url, icon, position FROM shortcuts ORDER BY position ASC, id ASC;")
     rows = cur.fetchall()
-    cur.close()
-    conn.close()
     return [{"id": r[0], "name": r[1], "url": r[2], "icon": r[3], "position": r[4]} for r in rows]
 
 @app.post("/api/shortcuts")
-def add_shortcut(shortcut: Shortcut, token: dict = Depends(require_role("admin"))):
-    conn = get_connection()
-    cur = conn.cursor()
+def add_shortcut(shortcut: Shortcut, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+    cur = db.cursor()
     # Position an das Ende setzen
     cur.execute(
         "INSERT INTO shortcuts (name, url, icon, position) VALUES (%s, %s, %s, (SELECT COALESCE(MAX(position),0)+1 FROM shortcuts)) RETURNING id, position;",
@@ -510,61 +656,49 @@ def add_shortcut(shortcut: Shortcut, token: dict = Depends(require_role("admin")
     row = cur.fetchone()
     new_id = row[0]
     new_pos = row[1]
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.commit()
     return {"id": new_id, "position": new_pos, **shortcut.dict()}
 
 @app.put("/api/shortcuts/{shortcut_id}")
-def update_shortcut(shortcut_id: int, shortcut: Shortcut, token: dict = Depends(require_role("admin"))):
-    conn = get_connection()
-    cur = conn.cursor()
+def update_shortcut(shortcut_id: int, shortcut: Shortcut, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+    cur = db.cursor()
     cur.execute(
         "UPDATE shortcuts SET name=%s, url=%s, icon=%s WHERE id=%s RETURNING id;",
         (shortcut.name, shortcut.url, shortcut.icon, shortcut_id)
     )
     updated = cur.fetchone()
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.commit()
     if not updated:
         raise HTTPException(status_code=404, detail="Shortcut not found")
     return {"message": "updated", "id": shortcut_id, **shortcut.dict()}
 
 @app.delete("/api/shortcuts/{shortcut_id}")
-def delete_shortcut(shortcut_id: int, token: dict = Depends(require_role("admin"))):
-    conn = get_connection()
-    cur = conn.cursor()
+def delete_shortcut(shortcut_id: int, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+    cur = db.cursor()
     cur.execute(
         "DELETE FROM shortcuts WHERE id = %s RETURNING id;", (shortcut_id,)
     )
     deleted = cur.fetchone()
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.commit()
     if not deleted:
         raise HTTPException(status_code=404, detail="Shortcut not found")
     return {"message": "deleted"}
 
 # ===== Services (CRUD) =====
 @app.get("/api/services")
-def get_services():
-    conn = get_connection()
-    cur = conn.cursor()
+def get_services(db = Depends(get_db)):
+    cur = db.cursor()
     # Sortiere nach position (persistente Reihenfolge), fallback id
     cur.execute("SELECT id, name, description, url, icon, position FROM services ORDER BY position ASC, id ASC;")
     rows = cur.fetchall()
-    cur.close()
-    conn.close()
     return [
         {"id": r[0], "name": r[1], "description": r[2], "url": r[3], "icon": r[4], "position": r[5]}
         for r in rows
     ]
 
 @app.post("/api/services")
-def add_service(service: Service, token: dict = Depends(require_role("admin"))):
-    conn = get_connection()
-    cur = conn.cursor()
+def add_service(service: Service, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+    cur = db.cursor()
     cur.execute(
         "INSERT INTO services (name, description, url, icon, position) VALUES (%s, %s, %s, %s, (SELECT COALESCE(MAX(position),0)+1 FROM services)) RETURNING id, position;",
         (service.name, service.description, service.url, service.icon)
@@ -572,38 +706,30 @@ def add_service(service: Service, token: dict = Depends(require_role("admin"))):
     row = cur.fetchone()
     new_id = row[0]
     new_pos = row[1]
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.commit()
     return {"id": new_id, "position": new_pos, **service.dict()}
 
 @app.put("/api/services/{service_id}")
-def update_service(service_id: int, service: Service, token: dict = Depends(require_role("admin"))):
-    conn = get_connection()
-    cur = conn.cursor()
+def update_service(service_id: int, service: Service, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+    cur = db.cursor()
     cur.execute(
         "UPDATE services SET name=%s, description=%s, url=%s, icon=%s WHERE id=%s RETURNING id;",
         (service.name, service.description, service.url, service.icon, service_id)
     )
     updated = cur.fetchone()
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.commit()
     if not updated:
         raise HTTPException(status_code=404, detail="Service not found")
     return {"message": "updated", "id": service_id, **service.dict()}
 
 @app.delete("/api/services/{service_id}")
-def delete_service(service_id: int, token: dict = Depends(require_role("admin"))):
-    conn = get_connection()
-    cur = conn.cursor()
+def delete_service(service_id: int, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+    cur = db.cursor()
     cur.execute(
         "DELETE FROM services WHERE id = %s RETURNING id;", (service_id,)
     )
     deleted = cur.fetchone()
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.commit()
     if not deleted:
         raise HTTPException(status_code=404, detail="Service not found")
     return {"message": "deleted"}
@@ -612,13 +738,10 @@ def delete_service(service_id: int, token: dict = Depends(require_role("admin"))
 # ===== Appearance (MIT SCHRIFTFARBEN) =====
 
 @app.get("/api/appearance")
-def get_appearance():
-    conn = get_connection()
-    cur = conn.cursor()
+def get_appearance(db = Depends(get_db)):
+    cur = db.cursor()
     cur.execute("SELECT bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields FROM appearance WHERE id = 1;")
     row = cur.fetchone()
-    cur.close()
-    conn.close()
     
     if not row:
         raise HTTPException(status_code=404, detail="Appearance settings not found")
@@ -637,9 +760,8 @@ def get_appearance():
     }
 
 @app.put("/api/appearance")
-def update_appearance(appearance: Appearance, token: dict = Depends(require_role("admin"))):
-    conn = get_connection()
-    cur = conn.cursor()
+def update_appearance(appearance: Appearance, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+    cur = db.cursor()
     
     updates = []
     params = []
@@ -687,9 +809,7 @@ def update_appearance(appearance: Appearance, token: dict = Depends(require_role
     
     cur.execute(query, tuple(params))
     updated = cur.fetchone()
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.commit()
 
     if not updated:
         raise HTTPException(status_code=404, detail="Appearance settings (id=1) not found")
@@ -703,12 +823,32 @@ def update_appearance(appearance: Appearance, token: dict = Depends(require_role
 def login(creds: AdminLogin, request: Request):
     """
     Login-Endpunkt mit JWT-Token-Generierung.
-    Verwendet bcrypt-Hashing für Passwort-Vergleich.
+    
+    Sicherheitsfeatures:
+    - Slowapi Rate-Limiting: 5 Requests/Minute
+    - Failed-Login-Tracking: 5 Fehlversuche → 15min Sperre
+    - bcrypt-Hashing für Passwort-Vergleich
+    - Audit-Logging aller Login-Versuche
     """
     client_ip = get_client_ip(request)
     
-    # Verifiziere Passwort gegen Hash
+    # 1. Prüfe IP-basierte Sperre
+    is_allowed, error_msg = check_login_rate_limit(client_ip)
+    if not is_allowed:
+        log_audit(
+            action="LOGIN_BLOCKED",
+            status="blocked",
+            user_type="admin",
+            ip_address=client_ip,
+            details={"reason": "IP locked due to too many failed attempts"}
+        )
+        raise HTTPException(status_code=429, detail=error_msg)
+    
+    # 2. Verifiziere Passwort gegen Hash
     if not verify_password(creds.password, ADMIN_PASSWORD_HASH):
+        # Registriere Fehlversuch
+        record_failed_login(client_ip)
+        
         log_audit(
             action="LOGIN_FAILED",
             status="failed",
@@ -718,7 +858,10 @@ def login(creds: AdminLogin, request: Request):
         )
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Erstelle JWT-Token
+    # 3. Login erfolgreich → Reset Counter
+    reset_failed_login(client_ip)
+    
+    # 4. Erstelle JWT-Token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": "admin", "type": "admin"},
@@ -742,7 +885,7 @@ def login(creds: AdminLogin, request: Request):
 
 # NEU: Endpunkte zum Setzen der Reihenfolge
 @app.put("/api/admin/services/reorder")
-def reorder_services(body: Any = Body(...), token: dict = Depends(require_role("admin"))):
+def reorder_services(body: Any = Body(...), token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     # akzeptiere entweder ein rohes Array oder ein Objekt { "ids": [...] }
     ids = None
     if isinstance(body, dict) and "ids" in body:
@@ -761,8 +904,7 @@ def reorder_services(body: Any = Body(...), token: dict = Depends(require_role("
     if not ids_clean:
         return {"message": "no ids provided"}
 
-    conn = get_connection()
-    cur = conn.cursor()
+    cur = db.cursor()
     try:
         # atomisches UPDATE via CASE ... END
         cases = []
@@ -775,18 +917,15 @@ def reorder_services(body: Any = Body(...), token: dict = Depends(require_role("
         params.extend(ids_clean)
         sql = f"UPDATE services SET position = CASE id {case_sql} END WHERE id IN ({in_placeholders});"
         cur.execute(sql, tuple(params))
-        conn.commit()
+        db.commit()
     except Exception as e:
-        conn.rollback()
-        cur.close()
-        conn.close()
-        raise HTTPException(status_code=500, detail=f"Failed to reorder services: {e}")
-    cur.close()
-    conn.close()
+        db.rollback()
+        logger.error("Failed to reorder services", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to reorder services")
     return {"message": "services reordered"}
 
 @app.put("/api/admin/shortcuts/reorder")
-def reorder_shortcuts(body: Any = Body(...), token: dict = Depends(require_role("admin"))):
+def reorder_shortcuts(body: Any = Body(...), token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     if isinstance(body, dict) and "ids" in body:
         ids = body["ids"]
     elif isinstance(body, list):
@@ -802,8 +941,7 @@ def reorder_shortcuts(body: Any = Body(...), token: dict = Depends(require_role(
     if not ids_clean:
         return {"message": "no ids provided"}
 
-    conn = get_connection()
-    cur = conn.cursor()
+    cur = db.cursor()
     try:
         cases = []
         params = []
@@ -815,80 +953,86 @@ def reorder_shortcuts(body: Any = Body(...), token: dict = Depends(require_role(
         params.extend(ids_clean)
         sql = f"UPDATE shortcuts SET position = CASE id {case_sql} END WHERE id IN ({in_placeholders});"
         cur.execute(sql, tuple(params))
-        conn.commit()
+        db.commit()
     except Exception as e:
-        conn.rollback()
-        cur.close()
-        conn.close()
-        raise HTTPException(status_code=500, detail=f"Failed to reorder shortcuts: {e}")
-    cur.close()
-    conn.close()
+        db.rollback()
+        logger.error("Failed to reorder shortcuts", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to reorder shortcuts")
     return {"message": "shortcuts reordered"}
 
 
 # ===== Proxmox Integration =====
 
 def get_proxmox_connection():
-    """Holt Proxmox-Konfiguration aus DB und erstellt API-Verbindung"""
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT host, port, token_name, token_value, verify_ssl, node FROM proxmox_config WHERE id = 1;"
-    )
-    row = cur.fetchone()
-    cur.close()
-    conn.close()
+    """
+    Holt Proxmox-Konfiguration aus DB und erstellt API-Verbindung.
     
-    if not row:
-        return None, None
+    WICHTIG: Diese Funktion holt sich die Connection selbst aus dem Pool,
+    da sie von mehreren Endpoints aufgerufen wird (nicht als FastAPI Dependency).
+    """
+    if db_pool is None:
+        raise HTTPException(status_code=500, detail="Database connection failed")
     
-    host, port, token_name, token_value_encrypted, verify_ssl, node = row
-    
-    # Entschlüssele den Token
-    token_value = decrypt_value(token_value_encrypted)
-    
-    if not token_value:
-        print("Failed to decrypt Proxmox token")
-        return None, None
-    
+    conn = None
     try:
-        # Token Format: "user@realm!tokenname"
-        # Proxmoxer erwartet user und token_name getrennt
-        if '!' in token_name:
-            user_part = token_name.split('!')[0]  # z.B. "root@pam"
-            token_id = token_name.split('!')[1]   # z.B. "mytoken"
-        else:
-            # Fallback wenn kein ! vorhanden
-            user_part = token_name
-            token_id = 'default'
-        
-        # Proxmox API Connection erstellen
-        proxmox = ProxmoxAPI(
-            host,
-            port=port,
-            user=user_part,
-            token_name=token_id,
-            token_value=token_value,
-            verify_ssl=verify_ssl
+        conn = db_pool.getconn()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT host, port, token_name, token_value, verify_ssl, node FROM proxmox_config WHERE id = 1;"
         )
-        return proxmox, node
-    except Exception as e:
-        # Keine Details loggen, um Token-Leaks zu vermeiden
-        print(f"Proxmox connection error (check config)")
-        return None, None
+        row = cur.fetchone()
+        cur.close()
+        
+        if not row:
+            return None, None
+        
+        host, port, token_name, token_value_encrypted, verify_ssl, node = row
+        
+        # Entschlüssele den Token
+        token_value = decrypt_value(token_value_encrypted)
+        
+        if not token_value:
+            logger.error("Failed to decrypt Proxmox token")
+            return None, None
+        
+        try:
+            # Token Format: "user@realm!tokenname"
+            # Proxmoxer erwartet user und token_name getrennt
+            if '!' in token_name:
+                user_part = token_name.split('!')[0]  # z.B. "root@pam"
+                token_id = token_name.split('!')[1]   # z.B. "mytoken"
+            else:
+                # Fallback wenn kein ! vorhanden
+                user_part = token_name
+                token_id = 'default'
+            
+            # Proxmox API Connection erstellen
+            proxmox = ProxmoxAPI(
+                host,
+                port=port,
+                user=user_part,
+                token_name=token_id,
+                token_value=token_value,
+                verify_ssl=verify_ssl
+            )
+            return proxmox, node
+        except Exception as e:
+            # Keine Details loggen, um Token-Leaks zu vermeiden
+            logger.error("Proxmox connection error")
+            return None, None
+    finally:
+        if conn is not None:
+            db_pool.putconn(conn)
 
 
 @app.get("/api/proxmox/config")
-def get_proxmox_config(token: dict = Depends(require_role("admin"))):
+def get_proxmox_config(token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Gibt Proxmox-Konfiguration zurück (ohne Secret, token_name maskiert)"""
-    conn = get_connection()
-    cur = conn.cursor()
+    cur = db.cursor()
     cur.execute(
         "SELECT id, host, port, token_name, verify_ssl, node FROM proxmox_config WHERE id = 1;"
     )
     row = cur.fetchone()
-    cur.close()
-    conn.close()
     
     if not row:
         return {
@@ -921,10 +1065,9 @@ def get_proxmox_config(token: dict = Depends(require_role("admin"))):
 
 
 @app.put("/api/proxmox/config")
-def update_proxmox_config(config: ProxmoxConfig, token: dict = Depends(require_role("admin"))):
+def update_proxmox_config(config: ProxmoxConfig, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Speichert Proxmox-Konfiguration (Token wird verschlüsselt)"""
-    conn = get_connection()
-    cur = conn.cursor()
+    cur = db.cursor()
     
     # Verschlüssele den Token-Wert
     encrypted_token = encrypt_value(config.token_value)
@@ -965,9 +1108,7 @@ def update_proxmox_config(config: ProxmoxConfig, token: dict = Depends(require_r
         )
     
     updated = cur.fetchone()
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.commit()
     
     if not updated:
         raise HTTPException(status_code=500, detail="Failed to save Proxmox configuration")
@@ -977,7 +1118,7 @@ def update_proxmox_config(config: ProxmoxConfig, token: dict = Depends(require_r
 
 @app.get("/api/proxmox/vms")
 @limiter.limit("30/minute")  # Max 30 Anfragen pro Minute
-def get_proxmox_vms(request: Request):
+def get_proxmox_vms(request: Request, db = Depends(get_db)):
     """Holt alle VMs und LXCs von Proxmox"""
     client_ip = get_client_ip(request)
     
@@ -1043,7 +1184,7 @@ def get_proxmox_vms(request: Request):
                         "node": node_name
                     })
             except Exception as e:
-                print(f"Error fetching resources from node {node_name}: {e}")
+                logger.error(f"Error fetching resources from node {node_name}", exc_info=False)
                 continue
         
         # Log erfolgreichen Zugriff
@@ -1058,15 +1199,15 @@ def get_proxmox_vms(request: Request):
         return {"resources": all_resources}
         
     except Exception as e:
-        print(f"Proxmox API error: {e}")
+        logger.error("Proxmox API error", exc_info=False)
         log_audit(
             action="VIEW_VMS",
             status="failed",
             user_type="guest",
             ip_address=client_ip,
-            details={"error": str(e)}
+            details={"error": "API error"}  # Keine Exception-Details!
         )
-        raise HTTPException(status_code=500, detail=f"Failed to fetch Proxmox resources: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch Proxmox resources")
 
 
 @app.post("/api/proxmox/vm/{vmid}/start")
@@ -1146,7 +1287,8 @@ def start_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, 
             resource_id=str(vmid),
             details={"error": str(e)}
         )
-        raise HTTPException(status_code=500, detail=f"Failed to start: {str(e)}")
+        logger.error("Proxmox VM start failed", exc_info=False)
+        raise HTTPException(status_code=500, detail="Failed to start VM")
 
 
 @app.post("/api/proxmox/vm/{vmid}/stop")
@@ -1189,7 +1331,8 @@ def stop_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, t
     except Exception as e:
         log_audit(action="STOP_VM", status="failed", user_type="admin", ip_address=client_ip,
                   resource_type=vm_type, resource_id=str(vmid), details={"error": str(e)})
-        raise HTTPException(status_code=500, detail=f"Failed to stop: {str(e)}")
+        logger.error("Proxmox VM stop failed", exc_info=False)
+        raise HTTPException(status_code=500, detail="Failed to stop VM")
 
 
 @app.post("/api/proxmox/vm/{vmid}/reboot")
@@ -1232,16 +1375,16 @@ def reboot_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None,
     except Exception as e:
         log_audit(action="REBOOT_VM", status="failed", user_type="admin", ip_address=client_ip,
                   resource_type=vm_type, resource_id=str(vmid), details={"error": str(e)})
-        raise HTTPException(status_code=500, detail=f"Failed to reboot: {str(e)}")
+        logger.error("Proxmox VM reboot failed", exc_info=False)
+        raise HTTPException(status_code=500, detail="Failed to reboot VM")
 
 
 # ===== Audit Log Endpoints =====
 
 @app.get("/api/admin/audit-logs")
-def get_audit_logs(limit: int = 100, offset: int = 0, token: dict = Depends(require_role("admin"))):
+def get_audit_logs(limit: int = 100, offset: int = 0, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Holt die neuesten Audit-Log-Einträge (Admin-only)"""
-    conn = get_connection()
-    cur = conn.cursor()
+    cur = db.cursor()
     
     cur.execute(
         """SELECT id, timestamp, user_type, ip_address, action, resource_type, 
@@ -1258,8 +1401,6 @@ def get_audit_logs(limit: int = 100, offset: int = 0, token: dict = Depends(requ
     cur.execute("SELECT COUNT(*) FROM audit_log;")
     total = cur.fetchone()[0]
     
-    cur.close()
-    conn.close()
     
     logs = []
     for row in rows:
@@ -1285,10 +1426,9 @@ def get_audit_logs(limit: int = 100, offset: int = 0, token: dict = Depends(requ
 
 
 @app.get("/api/admin/audit-stats")
-def get_audit_stats(token: dict = Depends(require_role("admin"))):
+def get_audit_stats(token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Holt Statistiken über Audit-Logs (Admin-only)"""
-    conn = get_connection()
-    cur = conn.cursor()
+    cur = db.cursor()
     
     # Aktionen der letzten 24h
     cur.execute("""
@@ -1327,8 +1467,6 @@ def get_audit_stats(token: dict = Depends(require_role("admin"))):
         "total": row[2] or 0
     }
     
-    cur.close()
-    conn.close()
     
     return {
         "actions_24h": actions_24h,
@@ -1338,10 +1476,9 @@ def get_audit_stats(token: dict = Depends(require_role("admin"))):
 
 
 @app.post("/api/admin/audit-logs/cleanup")
-def cleanup_old_audit_logs(days: int = 90, token: dict = Depends(require_role("admin"))):
+def cleanup_old_audit_logs(days: int = 90, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Löscht Audit-Logs die älter als X Tage sind (Standard: 90 Tage)"""
-    conn = get_connection()
-    cur = conn.cursor()
+    cur = db.cursor()
     
     # Zähle wie viele gelöscht werden
     cur.execute(
@@ -1356,9 +1493,7 @@ def cleanup_old_audit_logs(days: int = 90, token: dict = Depends(require_role("a
         (days,)
     )
     
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.commit()
     
     return {
         "message": f"Alte Audit-Logs gelöscht",
@@ -1372,15 +1507,14 @@ class DeleteLogsRequest(BaseModel):
 
 
 @app.post("/api/admin/audit-logs/delete-all")
-def delete_all_audit_logs(request: DeleteLogsRequest, token: dict = Depends(require_role("admin"))):
+def delete_all_audit_logs(request: DeleteLogsRequest, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Löscht ALLE Audit-Logs (Admin-Passwort erforderlich)"""
     
     # Zusätzliche Passwort-Prüfung für diese kritische Operation
     if not verify_password(request.password, ADMIN_PASSWORD_HASH):
         raise HTTPException(status_code=403, detail="Falsches Admin-Passwort")
     
-    conn = get_connection()
-    cur = conn.cursor()
+    cur = db.cursor()
     
     # Zähle wie viele gelöscht werden
     cur.execute("SELECT COUNT(*) FROM audit_log;")
@@ -1392,9 +1526,7 @@ def delete_all_audit_logs(request: DeleteLogsRequest, token: dict = Depends(requ
     # Setze Auto-Increment zurück
     cur.execute("ALTER SEQUENCE audit_log_id_seq RESTART WITH 1;")
     
-    conn.commit()
-    cur.close()
-    conn.close()
+    db.commit()
     
     return {
         "message": "Alle Audit-Logs gelöscht",
@@ -1405,10 +1537,9 @@ def delete_all_audit_logs(request: DeleteLogsRequest, token: dict = Depends(requ
 # ===== Token Rotation =====
 
 @app.get("/api/admin/proxmox/token-info")
-def get_token_info(token: dict = Depends(require_role("admin"))):
+def get_token_info(token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Gibt Informationen über das Alter des aktuellen Tokens zurück"""
-    conn = get_connection()
-    cur = conn.cursor()
+    cur = db.cursor()
     
     cur.execute("""
         SELECT token_created_at, token_last_rotated, token_name
@@ -1416,8 +1547,6 @@ def get_token_info(token: dict = Depends(require_role("admin"))):
         WHERE id = 1;
     """)
     row = cur.fetchone()
-    cur.close()
-    conn.close()
     
     if not row:
         return {"configured": False}
@@ -1452,12 +1581,11 @@ def get_token_info(token: dict = Depends(require_role("admin"))):
 
 
 @app.post("/api/admin/proxmox/rotate-token")
-def rotate_token(config: ProxmoxConfig, token: dict = Depends(require_role("admin"))):
+def rotate_token(config: ProxmoxConfig, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """
     Rotiert den Proxmox-Token (speichert neuen Token und updated Zeitstempel)
     """
-    conn = get_connection()
-    cur = conn.cursor()
+    cur = db.cursor()
     
     # Verschlüssele den neuen Token
     encrypted_token = encrypt_value(config.token_value)
@@ -1473,7 +1601,7 @@ def rotate_token(config: ProxmoxConfig, token: dict = Depends(require_role("admi
     """, (encrypted_token, config.token_name))
     
     updated = cur.fetchone()
-    conn.commit()
+    db.commit()
     
     # Log die Rotation
     log_audit(
@@ -1483,8 +1611,6 @@ def rotate_token(config: ProxmoxConfig, token: dict = Depends(require_role("admi
         details={"token_name": config.token_name}
     )
     
-    cur.close()
-    conn.close()
     
     if not updated:
         raise HTTPException(status_code=404, detail="Proxmox config not found")
