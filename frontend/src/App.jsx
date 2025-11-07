@@ -402,8 +402,8 @@ function App() {
         }}
       ></div>
 
-      {/* 3. Content-Layer */}
-  <div className="relative z-10 min-h-screen p-8 md:p-12 max-w-full overflow-x-hidden">
+      {/* 3. Content-Layer - Flexbox für sticky footer */}
+  <div className="relative z-10 flex flex-col min-h-screen pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2 max-w-full overflow-x-hidden">
         {/* Header mit Titel und Uhr */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
           {/* Titel (oben links) - mit Text-Shadow für bessere Lesbarkeit */}
@@ -480,10 +480,11 @@ function App() {
         </div>
 
         {/* === CONTENT BASED ON ACTIVE TAB === */}
-        {activeTab === "services" && (
-          <>
-            {/* === SERVICES (JETZT AUSGELAGERT) === */}
-            <ServiceGrid
+        <div className="flex-grow">
+          {activeTab === "services" && (
+            <>
+              {/* === SERVICES (JETZT AUSGELAGERT) === */}
+              <ServiceGrid
               services={services}
               setServices={setServices}
               isLoggedIn={isLoggedIn}
@@ -529,46 +530,47 @@ function App() {
             }}
           />
         )}
-      </div>
-
-      {/* 3. Admin-UI-Layer */}
-      <div className="absolute bottom-6 right-6 z-20 flex gap-4 items-center">
+        </div>
         
-        {/* Theme-Toggle-Button */}
-        <button
-          onClick={toggleTheme}
-          className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
-          title="Toggle Theme"
-        >
-          {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
-        </button>
-
-        {!isLoggedIn ? (
+        {/* === ADMIN BUTTONS AM ENDE DES CONTENTS === */}
+        <div className="mt-auto pt-8 pb-2 flex justify-end gap-4 items-center">
+          
+          {/* Theme-Toggle-Button */}
           <button
-            onClick={() => setShowLogin(true)}
+            onClick={toggleTheme}
             className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
-            title="Admin-Login"
+            title="Toggle Theme"
           >
-            <Lock size={24} />
+            {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
           </button>
-        ) : (
-          <>
+
+          {!isLoggedIn ? (
             <button
-              onClick={() => setShowSettings(!showSettings)}
+              onClick={() => setShowLogin(true)}
               className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
-              title="Einstellungen"
+              title="Admin-Login"
             >
-              <Gear size={24} />
+              <Lock size={24} />
             </button>
-            <button
-              onClick={handleLogout}
-              className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
-              title="Logout"
-            >
-              <SignOut size={24} />
-            </button>
-          </>
-        )}
+          ) : (
+            <>
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
+                title="Einstellungen"
+              >
+                <Gear size={24} />
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
+                title="Logout"
+              >
+                <SignOut size={24} />
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* 4. Login-Modal (AUSGELAGERT) */}
