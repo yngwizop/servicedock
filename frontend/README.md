@@ -1,295 +1,345 @@
-Perfekt 👍
-Hier ist deine vollständige, geprüfte **`README.md`** — exakt so formatiert, dass du sie direkt mit
+# 🎨 ServiceDock Frontend
 
-```bash
-nano /home/webdashboard/README.md
-```
+React-basiertes Frontend für ServiceDock - Ein modernes, selbst-gehostetes Dashboard mit Proxmox-Integration.
 
-einfügen und speichern kannst.
-Danach kannst du sie jederzeit per `cat README.md` oder im VS Code öffnen.
-
----
-
-```markdown
-# 🚀 Web-Dashboard — Installations- & Betriebsanleitung
-
-Dieses Projekt besteht aus einem **Backend (FastAPI)**, einem **Frontend (React / Vite)** und einer **PostgreSQL-Datenbank** — alles läuft in **Docker-Containern** auf einem Proxmox-LXC (Debian-basiert).
+**Tech Stack:** React 18, Vite, Tailwind CSS, Phosphor Icons
 
 ---
 
 ## 📁 Projektstruktur
 
 ```
-
-/home/webdashboard/
-├── backend/
-│   ├── main.py
-│   ├── requirements.txt
-│   └── Dockerfile
-├── db/
-│   └── init.sql
-├── frontend/
-│   ├── src/
-│   ├── package.json
-│   └── Dockerfile
-└── docker-compose.yml
-
-````
-
----
-
-## ⚙️ Voraussetzungen
-
-- Debian LXC mit `nesting=1` aktiviert
-- Docker & Docker Compose installiert
-- Mind. **2 vCores**, **1 GB RAM**, **10–15 GB Speicher**
-- Node.js ≥ 20 (für das Frontend)
-- Python 3.11 (wird im Container installiert)
-
----
-
-## 🧩 Inhalt der wichtigsten Dateien
-
-### `db/init.sql`
-
-Diese Datei sorgt dafür, dass beim ersten Start der Datenbank automatisch die Tabelle erstellt wird:
-
-```sql
-CREATE TABLE IF NOT EXISTS shortcuts (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    url TEXT NOT NULL
-);
-````
-
-> ⚠️ Wird **nur beim ersten Start** ausgeführt, wenn das Volume `postgres_data` leer ist.
-
----
-
-### `backend/main.py` (Kurzversion)
-
-```python
-from fastapi import FastAPI
-import psycopg2
-import os
-
-app = FastAPI()
-
-DB_HOST = os.getenv("DB_HOST", "db")
-DB_NAME = os.getenv("DB_NAME", "dashboard")
-DB_USER = os.getenv("DB_USER", "user")
-DB_PASS = os.getenv("DB_PASS", "password")
-
-@app.get("/")
-def root():
-    return {"message": "Backend läuft"}
-
-@app.get("/shortcuts")
-def get_shortcuts():
-    conn = psycopg2.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
-    cur = conn.cursor()
-    cur.execute("SELECT id, name, url FROM shortcuts;")
-    data = cur.fetchall()
-    cur.close()
-    conn.close()
-    return [{"id": d[0], "name": d[1], "url": d[2]} for d in data]
+frontend/
+├── src/
+│   ├── components/           # React-Komponenten
+│   │   ├── ServiceCard.jsx       # Service-Karte mit Icon & Beschreibung
+│   │   ├── ServiceGrid.jsx       # Grid-Layout für Services
+│   │   ├── ShortcutLink.jsx      # Kompakter Shortcut-Link
+│   │   ├── ShortcutGrid.jsx      # Grid-Layout für Shortcuts
+│   │   ├── EditModal.jsx         # Modal für Add/Edit
+│   │   ├── LoginModal.jsx        # Admin-Login
+│   │   ├── SettingsPanel.jsx     # Settings mit Tabs
+│   │   ├── ProxmoxCard.jsx       # VM/Container-Karte
+│   │   ├── ProxmoxGrid.jsx       # Proxmox Monitoring
+│   │   ├── SecurityDashboard.jsx # Audit-Logs & Stats
+│   │   ├── ClockWidget.jsx       # Uhrzeit-Widget
+│   │   └── WeatherWidget.jsx     # Wetter-Widget
+│   ├── utils/
+│   │   └── auth.js               # JWT-Token-Management
+│   ├── App.jsx                   # Haupt-App-Komponente
+│   ├── App.css                   # App-Styles
+│   ├── index.css                 # Tailwind Imports
+│   └── main.jsx                  # React Entry Point
+├── public/                   # Statische Assets
+├── index.html                # HTML-Template
+├── vite.config.js            # Vite-Konfiguration
+├── tailwind.config.js        # Tailwind-Konfiguration
+├── postcss.config.js         # PostCSS-Konfiguration
+├── eslint.config.js          # ESLint-Konfiguration
+├── package.json              # Dependencies
+├── Dockerfile                # Docker-Build
+└── README.md                 # Diese Datei
 ```
 
 ---
 
-### `frontend/vite.config.js`
+## 🚀 Development Setup
 
-```js
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+### Voraussetzungen
+- Node.js ≥ 20
+- npm oder yarn
 
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    host: "0.0.0.0",
-    port: 5173,
+### Installation
+
+```bash
+# Dependencies installieren
+npm install
+
+# Development Server starten (mit Hot-Reload)
+npm run dev
+
+# Build für Production
+npm run build
+
+# Preview Production Build
+npm run preview
+```
+
+### Verfügbare Scripts
+
+```json
+{
+  "dev": "vite",                    // Dev-Server auf http://localhost:5173
+  "build": "vite build",            // Production-Build
+  "preview": "vite preview --host", // Production-Preview
+  "lint": "eslint ."                // Code-Linting
+}
+```
+
+---
+
+## 🎨 Komponenten-Übersicht
+
+### Core Components
+
+#### `App.jsx`
+Haupt-App-Komponente mit:
+- Authentifizierungs-State-Management
+- Grid-Layout für Services & Shortcuts
+- Proxmox-Integration
+- Settings-Panel
+- Widgets (Clock, Weather)
+
+#### `ServiceCard.jsx`
+Zeigt einen Service mit:
+- Icon (URL oder Emoji)
+- Name & Beschreibung
+- Link zur Service-URL
+- Edit/Delete-Buttons (nur Admin)
+
+#### `ProxmoxCard.jsx`
+Zeigt VM/Container mit:
+- Status-Indicator (Running/Stopped)
+- Ressourcen (CPU, RAM, Disk)
+- Uptime
+- Control-Buttons (Start/Stop/Reboot)
+
+### Modal Components
+
+#### `LoginModal.jsx`
+Admin-Login mit:
+- Passwort-Input
+- JWT-Token-Verwaltung
+- Error-Handling
+- Auto-Logout bei Token-Expiration
+
+#### `EditModal.jsx`
+Add/Edit Modal für Services/Shortcuts mit:
+- Formular-Validierung
+- Icon-Preview
+- Create/Update/Delete-Actions
+
+#### `SettingsPanel.jsx`
+Tabs für:
+- **Appearance**: Farben, Hintergründe, Layout
+- **Services & Shortcuts**: Add/Edit/Delete
+- **Proxmox**: VM/Container-Monitoring
+- **Security**: Audit-Logs & Token-Rotation
+
+---
+
+## 🔧 Konfiguration
+
+### API-Endpoint
+
+In `App.jsx`:
+```javascript
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+```
+
+Environment-Variable setzen:
+```bash
+# .env.local erstellen
+VITE_API_URL=http://deine-backend-url:8000
+```
+
+### Tailwind Customization
+
+`tailwind.config.js`:
+```javascript
+export default {
+  darkMode: 'class',  // Dark Mode über CSS-Klasse
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      // Custom-Colors, Fonts, etc.
+    },
   },
-});
+}
 ```
 
 ---
 
-### `docker-compose.yml`
+## 🏗️ Docker Build
 
+### Development
+```bash
+docker build -t servicedock-frontend:dev .
+docker run -p 3000:4173 servicedock-frontend:dev
+```
+
+### Production (via docker-compose)
 ```yaml
-services:
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:4173"
-    depends_on:
-      - backend
+frontend:
+  build:
+    context: ./frontend
+    dockerfile: Dockerfile
+  ports:
+    - "3000:4173"
+  depends_on:
+    - backend
+```
 
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/dashboard
-      - DB_HOST=db
-      - DB_NAME=dashboard
-      - DB_USER=user
-      - DB_PASS=password
-    depends_on:
-      - db
+### Dockerfile-Details
 
-  db:
-    image: postgres:16
-    container_name: webdashboard-db
-    restart: always
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: dashboard
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5432:5432"
+```dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
-volumes:
-  postgres_data:
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
+RUN npm ci --only=production
+EXPOSE 4173
+CMD ["npm", "run", "preview"]
+```
+
+**Multi-Stage Build:**
+- ✅ Builder-Stage für kompakte Dependencies
+- ✅ Production-Stage nur mit nötigen Files
+- ✅ Kleineres Image (~200MB statt ~800MB)
+
+---
+
+## 📦 Dependencies
+
+### Production Dependencies
+```json
+{
+  "react": "^18.3.1",
+  "react-dom": "^18.3.1",
+  "@phosphor-icons/react": "^2.1.7"  // Icon-Library
+}
+```
+
+### Development Dependencies
+```json
+{
+  "@vitejs/plugin-react": "^4.3.3",
+  "vite": "^5.4.10",
+  "tailwindcss": "^3.4.14",
+  "postcss": "^8.4.47",
+  "autoprefixer": "^10.4.20",
+  "eslint": "^9.13.0"
+}
 ```
 
 ---
 
-## ▶️ Starten des Projekts
+## 🎯 Features
 
-1. Gehe in den Projektordner:
+### Implementiert ✅
+- ✅ Responsive Design (Mobile/Tablet/Desktop)
+- ✅ Dark Mode Support
+- ✅ JWT-basierte Authentifizierung
+- ✅ Service & Shortcut Management
+- ✅ Proxmox VM-Monitoring mit Live-Status
+- ✅ Audit-Log-Viewer
+- ✅ Settings-Panel mit Tabs
+- ✅ Clock & Weather Widgets
+- ✅ Icon-Support (URL & Emoji)
 
-   ```bash
-   cd /home/webdashboard
-   ```
-
-2. Starte alles neu (inklusive Build):
-
-   ```bash
-   DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose up -d --build
-   ```
-
-3. Prüfe, ob alles läuft:
-
-   ```bash
-   docker ps
-   ```
-
-   Du solltest 3 Container sehen:
-
-   ```
-   webdashboard-frontend-1
-   webdashboard-backend-1
-   webdashboard-db
-   ```
-
-4. Prüfe die Datenbank:
-
-   ```bash
-   docker exec -it webdashboard-db psql -U user -d dashboard -c "\d shortcuts"
-   ```
+### In Planung 🚧
+- [ ] Drag & Drop für Reordering
+- [ ] Multi-Spalten-Layout
+- [ ] Suchfunktion & Filtering
+- [ ] Benachrichtigungen (Toast/Snackbar)
+- [ ] PWA-Support (Offline-Mode)
+- [ ] Custom Themes
+- [ ] Export/Import-Funktionen
 
 ---
 
-## 🌐 Aufrufen im Browser
+## 🐛 Troubleshooting
 
-* Frontend: [http://localhost:3000](http://localhost:3000)
-* Backend API: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-Wenn du auf einem LXC arbeitest, ersetze `localhost` ggf. durch die **LXC-IP**, z. B.:
-
+### CORS-Fehler
 ```
-http://192.168.178.83:3000
+Access to fetch at 'http://localhost:8000/api/...' from origin 'http://localhost:5173' has been blocked
 ```
 
----
+**Lösung:** Backend muss `FRONTEND_URL` in `.env` konfiguriert haben:
+```env
+FRONTEND_URL=http://localhost:5173
+```
 
-## 🛠️ Nützliche Docker-Befehle
-
-| Zweck                      | Befehl                                                                   |
-| -------------------------- | ------------------------------------------------------------------------ |
-| Logs vom Backend ansehen   | `docker logs -f webdashboard-backend-1`                                  |
-| Logs vom Frontend ansehen  | `docker logs -f webdashboard-frontend-1`                                 |
-| Logs der DB ansehen        | `docker logs -f webdashboard-db`                                         |
-| DB-Shell öffnen            | `docker exec -it webdashboard-db psql -U user -d dashboard`              |
-| Manuell init.sql ausführen | `docker exec -i webdashboard-db psql -U user -d dashboard < db/init.sql` |
-
----
-
-## 💾 Backups & Restore
-
-**Backup:**
-
+### Build schlägt fehl
 ```bash
-docker exec -t webdashboard-db pg_dump -U user dashboard > /home/webdashboard/backups/dashboard_$(date +%F).sql
+# Cache löschen
+rm -rf node_modules package-lock.json
+npm install
+
+# Oder mit clean install
+npm ci
 ```
 
-**Wiederherstellen:**
-
+### Hot-Reload funktioniert nicht
 ```bash
-cat /home/webdashboard/backups/dashboard_<DATUM>.sql | docker exec -i webdashboard-db psql -U user -d dashboard
+# Vite-Cache löschen
+rm -rf node_modules/.vite
+npm run dev
 ```
 
----
-
-## ⚠️ Typische Stolperfallen
-
-1. **`init.sql` wird nicht mehr ausgeführt:**
-   Das ist normal, sobald das Volume `postgres_data` existiert.
-   → Manuell ausführen mit:
-   `docker exec -i webdashboard-db psql -U user -d dashboard < db/init.sql`
-
-2. **"no space left on device"**
-   → LXC-Disk vergrößern (`pct resize <ID> +10G`) und ggf. `df -h` prüfen.
-
-3. **`permission denied` beim Docker Build**
-   → Prüfen, ob LXC `nesting=1` aktiviert hat:
-
-   ```
-   pct set <ID> -features nesting=1
-   ```
-
-4. **Daten weg nach Neustart:**
-   → Volume `postgres_data` wurde gelöscht. Nicht mit `docker compose down -v` stoppen, wenn du Daten behalten willst.
-
----
-
-## ✅ Systemprüfung
-
-Nach erfolgreichem Start:
-
+### Production-Build ist zu groß
 ```bash
-docker ps
-```
+# Analyze Bundle
+npm run build -- --mode analyze
 
-Ergebnis:
-
-```
-CONTAINER ID   IMAGE                   PORTS
-xxxxxxx        webdashboard-frontend   0.0.0.0:3000->4173/tcp
-xxxxxxx        webdashboard-backend    0.0.0.0:8000->8000/tcp
-xxxxxxx        postgres:16             0.0.0.0:5432->5432/tcp
+# Tree-Shaking prüfen
+npm run build -- --debug
 ```
 
 ---
 
-## 💡 Tipp
+## 🔐 Security
 
-Wenn du später die Datenbank automatisch neu aufbauen willst:
+### JWT-Token-Speicherung
+- Tokens werden in `localStorage` gespeichert
+- Auto-Logout bei Expiration (120min default)
+- Token wird bei jedem API-Call im Header mitgeschickt
 
-```bash
-docker compose down -v
-docker compose up -d
+### HTTPS-Empfehlung
+Für Production immer HTTPS nutzen:
+```nginx
+# Nginx Reverse-Proxy
+location / {
+    proxy_pass http://localhost:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+}
 ```
-
-Das löscht alles, führt `init.sql` wieder aus und erstellt eine frische Tabelle.
 
 ---
 
-📦 **Letzter Stand:**
-System läuft stabil — Datenbank initialisiert, Backend erreichbar auf Port 8000, Frontend auf Port 3000, persistente Datenbank mit automatischem Tabellenerstellungsskript.
+## 📚 Weiterführende Dokumentation
 
-```
+- **Backend-API**: [API_DOCUMENTATION.md](../API_DOCUMENTATION.md)
+- **Setup**: [INITIAL_SETUP.md](../INITIAL_SETUP.md)
+- **Proxmox**: [PROXMOX_SETUP.md](../PROXMOX_SETUP.md)
+
+---
+
+## 🤝 Contributing
+
+1. Fork das Repository
+2. Feature-Branch erstellen (`git checkout -b feature/AmazingFeature`)
+3. Änderungen committen (`git commit -m 'Add AmazingFeature'`)
+4. Branch pushen (`git push origin feature/AmazingFeature`)
+5. Pull Request öffnen
+
+### Code-Style
+- ESLint-Regeln beachten (`npm run lint`)
+- Komponenten in PascalCase
+- Funktionen in camelCase
+- CSS-Klassen mit Tailwind
+
+---
+
+**Made with ⚛️ React & ❤️**

@@ -1,9 +1,10 @@
-# 📡 API Documentation - Web Dashboard v2.0
+# 📡 API Documentation - ServiceDock v2.0
 
 **Backend-Version:** 2.0 (Modular Architecture)  
 **Base URL:** `http://localhost:8000`  
 **Authentication:** JWT Bearer Token  
-**Update:** 07.11.2025
+**Update:** 08.11.2025  
+**Repository:** [github.com/yngwizop/servicedock](https://github.com/yngwizop/servicedock)
 
 ---
 

@@ -1,23 +1,34 @@
-# Token Re-Encryption Guide
+# Token Re-Encryption Guide - ServiceDock
+
+**Stand:** 08.11.2025  
+**Zweck:** Encryption Key wechseln ohne Datenverlust  
+**Repository:** [github.com/yngwizop/servicedock](https://github.com/yngwizop/servicedock)
+
+---
 
 ## 🔐 Wann ist Re-Encryption notwendig?
 
-Wenn du dein **ADMIN_PASSWORD** änderst, werden die verschlüsselten Proxmox-Tokens unbrauchbar, da der Encryption Key vom Passwort abgeleitet wird.
+Wenn du dein **ENCRYPTION_KEY** änderst, werden die verschlüsselten Proxmox-Tokens unbrauchbar, da sie mit dem alten Key verschlüsselt wurden.
 
-## ⚠️ Symptome nach Passwort-Änderung
+**Wichtig:** Nicht verwechseln mit `ADMIN_PASSWORD`! Das Admin-Passwort hat keinen Einfluss auf die Token-Verschlüsselung.
+
+## ⚠️ Symptome nach ENCRYPTION_KEY-Änderung
 
 - ❌ Proxmox Monitoring zeigt keine VMs/Container mehr
 - ❌ Backend-Log: `Decryption error: InvalidToken`
 - ❌ 401 Unauthorized bei Proxmox-Zugriff
 - ❌ Dashboard lädt, aber Proxmox-Tab ist leer
 
+**Ursache:** Token wurde mit altem Key verschlüsselt, Backend versucht mit neuem Key zu entschlüsseln.
+
 ## 🛠️ Lösung: Re-Encryption Script
 
 ### Voraussetzungen
 
-- Du kennst das **alte** ADMIN_PASSWORD
-- Du kennst das **neue** ADMIN_PASSWORD
+- Du kennst den **alten** ENCRYPTION_KEY
+- Du kennst den **neuen** ENCRYPTION_KEY
 - Backend-Container läuft
+- Du hast ein **Datenbank-Backup** erstellt (siehe unten)
 
 ### Schritt-für-Schritt Anleitung
 
@@ -25,7 +36,7 @@ Wenn du dein **ADMIN_PASSWORD** änderst, werden die verschlüsselten Proxmox-To
 
 ```bash
 # Datenbank-Backup
-docker compose exec db pg_dump -U user dashboard > backup_$(date +%Y%m%d_%H%M%S).sql
+docker compose exec db pg_dump -U dashboard_user dashboard > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Erfolgreich wenn:
 # - Datei backup_*.sql wurde erstellt
@@ -43,10 +54,12 @@ docker compose exec backend python3 /app/re_encrypt_tokens.py
 **Das Script fragt nach:**
 
 ```
-Altes ADMIN_PASSWORD: ************
-Neues ADMIN_PASSWORD: ************
-Neues ADMIN_PASSWORD bestätigen: ************
+Alter ENCRYPTION_KEY: ************
+Neuer ENCRYPTION_KEY: ************
+Neuen ENCRYPTION_KEY bestätigen: ************
 ```
+
+**Hinweis:** Das Script wurde für Passwort-basierte Re-Encryption geschrieben. Du musst es entsprechend anpassen oder manuell die Keys in `.env` wechseln und Tokens neu eingeben.
 
 **Erwartete Ausgabe bei Erfolg:**
 
@@ -64,21 +77,23 @@ Neues ADMIN_PASSWORD bestätigen: ************
 🎉 Token kann jetzt mit neuem ADMIN_PASSWORD entschlüsselt werden
 ```
 
-#### 3. docker-compose.yml anpassen
-
-```yaml
-services:
-  backend:
-    environment:
-      - ADMIN_PASSWORD=dein-neues-passwort  # ← HIER ÄNDERN
-```
-
-**Oder via .env Datei:**
+#### 3. .env Datei anpassen
 
 ```bash
-# .env
-ADMIN_PASSWORD=dein-neues-passwort
+nano .env
 ```
+
+**Ändere den ENCRYPTION_KEY:**
+
+```env
+# Alter Key (auskommentieren oder löschen)
+# ENCRYPTION_KEY=P0lkYiUSh6y-Qmsa9fQ6J9uzDZn3B1EHkRCMDSoXGL8=
+
+# Neuer Key
+ENCRYPTION_KEY=<neuer_key_aus_step_2>
+```
+
+**Wichtig:** Andere Variablen nicht ändern!
 
 #### 4. Backend neu starten
 
