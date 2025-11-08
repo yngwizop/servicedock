@@ -39,7 +39,7 @@ class Appearance(BaseModel):
     def validate_weather_fields(cls, v):
         if v is None:
             return v
-        allowed = ['temperature', 'humidity', 'pressure', 'wind', 'description']
+        allowed = ['temperature', 'humidity', 'pressure', 'wind', 'description', 'precipitation', 'cloudCover']
         for field in v:
             if field not in allowed:
                 raise ValueError(f'Invalid weather field: {field}. Allowed: {allowed}')
