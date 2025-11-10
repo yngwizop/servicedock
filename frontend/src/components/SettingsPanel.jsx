@@ -223,10 +223,11 @@ function SettingsPanel({
     }
   };
   return (
-    <div
-      className="fixed right-0 top-0 h-screen w-96 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg z-30 shadow-2xl dark:shadow-blue-900/50 p-6 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent dark:[&::-webkit-scrollbar-thumb]:bg-gray-600"
-      role="region"
-      aria-label="Dashboard Einstellungen"
+        <div
+      className="fixed right-0 top-0 h-screen w-[420px] bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg z-30 shadow-2xl dark:shadow-blue-900/50 p-6 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent dark:[&::-webkit-scrollbar-thumb]:bg-gray-600"
+      style={{
+        animation: 'slideIn 0.3s ease-out'
+      }}
     >
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard Settings</h2>
@@ -234,10 +235,10 @@ function SettingsPanel({
       </div>
 
       {/* Tab-Navigation */}
-      <div className="flex mb-6 -mx-6 px-6 overflow-x-auto">
+      <div className="flex gap-4 mb-6 -mx-6 px-6 justify-center items-center">
         <button
           onClick={() => setPanelTab("services")}
-          className={`flex-1 py-3 px-4 transition-all duration-300 relative whitespace-nowrap ${
+          className={`py-3 px-2 transition-all duration-300 relative whitespace-nowrap text-base font-medium ${
             panelTab === "services"
               ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
@@ -247,7 +248,7 @@ function SettingsPanel({
         </button>
         <button
           onClick={() => setPanelTab("appearance")}
-          className={`flex-1 py-3 px-4 transition-all duration-300 relative whitespace-nowrap ${
+          className={`py-3 px-2 transition-all duration-300 relative whitespace-nowrap text-base font-medium ${
             panelTab === "appearance"
               ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
@@ -257,7 +258,7 @@ function SettingsPanel({
         </button>
         <button
           onClick={() => setPanelTab("proxmox")}
-          className={`flex-1 py-3 px-4 transition-all duration-300 relative whitespace-nowrap ${
+          className={`py-3 px-2 transition-all duration-300 relative whitespace-nowrap text-base font-medium ${
             panelTab === "proxmox"
               ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
@@ -267,7 +268,7 @@ function SettingsPanel({
         </button>
         <button
           onClick={() => setPanelTab("addons")}
-          className={`flex-1 py-3 px-4 transition-all duration-300 relative whitespace-nowrap ${
+          className={`py-3 px-2 transition-all duration-300 relative whitespace-nowrap text-base font-medium ${
             panelTab === "addons"
               ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
@@ -344,7 +345,7 @@ function SettingsPanel({
             </h4>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Hintergrundfarbe
               </label>
               <div className="flex items-center gap-3">
@@ -365,7 +366,7 @@ function SettingsPanel({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Hintergrundbild URL
               </label>
               <input
@@ -378,7 +379,7 @@ function SettingsPanel({
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Bild-Deckkraft: <span className="font-mono text-blue-600 dark:text-blue-400">{editAppearance.bg_opacity}</span>
               </label>
               <input
@@ -398,7 +399,7 @@ function SettingsPanel({
             </h4>
             
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-700">
-              <p className="text-xs text-blue-800 dark:text-blue-300">
+              <p className="text-sm text-blue-800 dark:text-blue-300">
                 💡 Aktuell im <strong>{currentTheme === 'light' ? 'Light' : 'Dark'} Mode</strong>.{' '}
                 Wechsle den Modus mit dem{' '}
                 <span className="inline-flex items-center gap-1 whitespace-nowrap" aria-hidden="true">
@@ -413,7 +414,7 @@ function SettingsPanel({
 
             {/* Light Mode Schriftfarbe */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Light Mode
               </label>
               <div className="flex items-center gap-3">
@@ -435,7 +436,7 @@ function SettingsPanel({
 
             {/* Dark Mode Schriftfarbe */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Dark Mode
               </label>
               <div className="flex items-center gap-3">
@@ -463,7 +464,7 @@ function SettingsPanel({
             </h4>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Service-Spalten (Desktop): <span className="font-mono text-blue-600 dark:text-blue-400">{editAppearance.service_cols}</span>
               </label>
               <input
@@ -476,7 +477,7 @@ function SettingsPanel({
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Shortcut-Spalten (Desktop): <span className="font-mono text-blue-600 dark:text-blue-400">{editAppearance.shortcut_cols}</span>
               </label>
               <input
@@ -496,7 +497,7 @@ function SettingsPanel({
             </h4>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-3">
                 Zeitformat
               </label>
               <div className="flex gap-4">
@@ -511,7 +512,7 @@ function SettingsPanel({
                   />
                   <div>
                     <div className="text-sm font-medium text-gray-700 dark:text-gray-300">24-Stunden</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">14:30:45</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">14:30:45</div>
                   </div>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
@@ -525,7 +526,7 @@ function SettingsPanel({
                   />
                   <div>
                     <div className="text-sm font-medium text-gray-700 dark:text-gray-300">12-Stunden</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">2:30:45 PM</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">2:30:45 PM</div>
                   </div>
                 </label>
               </div>
@@ -539,7 +540,7 @@ function SettingsPanel({
             </h4>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Stadt
               </label>
               <input
@@ -551,7 +552,7 @@ function SettingsPanel({
               />
               {/* Geocoding Info Anzeige */}
               {weatherLocationInfo && weatherLocationInfo.name && weatherLocationInfo.country && (
-                <div className="mt-2 text-xs text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-900/30 rounded px-2 py-1">
+                <div className="mt-2 text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-900/30 rounded px-2 py-1">
                   <span className="font-semibold">Gefundener Ort:</span> {weatherLocationInfo.name}, {weatherLocationInfo.country}
                   {weatherLocationInfo.postal_code ? `, PLZ: ${weatherLocationInfo.postal_code}` : ''}
                   {typeof weatherLocationInfo.latitude === 'number' && typeof weatherLocationInfo.longitude === 'number' ?
@@ -559,7 +560,7 @@ function SettingsPanel({
                     : ''}
                 </div>
               )}
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 Wetterdaten werden alle 2 Stunden automatisch aktualisiert und zwischengespeichert (Cache).
                 Manuelle Aktualisierung ist jederzeit per Button im Widget möglich.
               </p>
@@ -567,7 +568,7 @@ function SettingsPanel({
 
             {/* Wetterdaten Felder Auswahl */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-3">
                 Angezeigte Wetterdaten
               </label>
               <div className="grid grid-cols-1 gap-3">
@@ -615,7 +616,7 @@ function SettingsPanel({
             <p className="text-sm text-blue-800 dark:text-blue-300 mb-2">
               <strong>📋 Wichtig:</strong> Du benötigst einen API Token von deinem Proxmox-Server.
             </p>
-            <p className="text-xs text-blue-700 dark:text-blue-400">
+            <p className="text-sm text-blue-700 dark:text-blue-400">
               Erstelle den Token in Proxmox unter: <strong>Datacenter → Permissions → API Tokens</strong>
             </p>
           </div>
@@ -623,7 +624,7 @@ function SettingsPanel({
           <form onSubmit={handleSaveProxmox} className="space-y-4">
             {/* Proxmox Host */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Proxmox Host/IP
               </label>
               <input
@@ -638,7 +639,7 @@ function SettingsPanel({
 
             {/* Port */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Port
               </label>
               <input
@@ -653,7 +654,7 @@ function SettingsPanel({
 
             {/* Token Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                 API Token Name
               </label>
               <input
@@ -664,7 +665,7 @@ function SettingsPanel({
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                 required
               />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 Format: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">user@realm!tokenname</code>
                 {savedTokenName && (
                   <span className="ml-2 text-blue-500">
@@ -676,7 +677,7 @@ function SettingsPanel({
 
             {/* Token Secret */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                 API Token Secret
               </label>
               <input
@@ -687,14 +688,14 @@ function SettingsPanel({
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                 required={!proxmoxConfig.host}
               />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 Der Secret wird nur beim ersten Einrichten oder beim Ändern benötigt
               </p>
             </div>
 
             {/* Node (Optional) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Node Name (optional)
               </label>
               <input
@@ -704,7 +705,7 @@ function SettingsPanel({
                 placeholder="z.B. pve oder leer für alle Nodes"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 Leer lassen, um VMs/LXCs von allen Nodes anzuzeigen
               </p>
             </div>
@@ -722,7 +723,7 @@ function SettingsPanel({
                 SSL-Zertifikat verifizieren
               </label>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2 ml-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 -mt-2 ml-1">
               ⚠️ Deaktiviere dies nur bei self-signed Zertifikaten
             </p>
 
@@ -780,15 +781,15 @@ function SettingsPanel({
               </div>
               <div>
                 {spotifyStatus.connected ? (
-                  <span className="px-3 py-1 bg-white text-green-600 text-xs font-semibold rounded-full">
+                  <span className="px-3 py-1 bg-white text-green-600 text-sm font-semibold rounded-full">
                     ✓ Verbunden
                   </span>
                 ) : spotifyStatus.configured ? (
-                  <span className="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
+                  <span className="px-3 py-1 bg-yellow-100 text-yellow-700 text-sm font-semibold rounded-full">
                     Konfiguriert
                   </span>
                 ) : (
-                  <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full">
+                  <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-semibold rounded-full">
                     Nicht installiert
                   </span>
                 )}
@@ -815,16 +816,21 @@ function SettingsPanel({
                         Hier registrieren →
                       </a>
                     </p>
-                    <ol className="text-xs text-blue-600 dark:text-blue-400 list-decimal list-inside space-y-1">
+                    <ol className="text-sm text-blue-600 dark:text-blue-400 list-decimal list-inside space-y-1">
                       <li>Erstelle eine neue App im Spotify Developer Dashboard</li>
                       <li>Kopiere Client ID und Client Secret</li>
-                      <li>Füge die Redirect URI hinzu: <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">http://127.0.0.1:8000/api/spotify/callback</code></li>
+                      <li className="break-words">
+                        Füge die Redirect URI hinzu: 
+                        <code className="bg-blue-100 dark:bg-blue-800 px-1.5 py-0.5 rounded text-[11px] block mt-1 w-fit">
+                          http://127.0.0.1:8000/api/spotify/callback
+                        </code>
+                      </li>
                       <li>Trage die Daten unten ein und speichere</li>
                     </ol>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                    <label className="block text-base font-semibold text-gray-700 dark:text-gray-200 mb-2">
                       Client ID
                     </label>
                     <input
@@ -838,7 +844,7 @@ function SettingsPanel({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                    <label className="block text-base font-semibold text-gray-700 dark:text-gray-200 mb-2">
                       Client Secret
                     </label>
                     <input
@@ -852,7 +858,7 @@ function SettingsPanel({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                    <label className="block text-base font-semibold text-gray-700 dark:text-gray-200 mb-2">
                       Redirect URI
                     </label>
                     <input
@@ -878,13 +884,13 @@ function SettingsPanel({
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Client ID</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Client ID</p>
                       <p className="text-sm font-mono text-gray-800 dark:text-gray-200 truncate">
                         {spotifyStatus.client_id}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Status</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Status</p>
                       <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                         {spotifyStatus.connected ? '✓ Verbunden' : 'Nicht verbunden'}
                       </p>
@@ -931,7 +937,7 @@ function SettingsPanel({
                 <h5 className="font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   🔒 Sicherheit
                 </h5>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Client Secret und Access Tokens werden verschlüsselt gespeichert. 
                   Spotify hat nur Lesezugriff auf deine aktuell abgespielte Musik.
                 </p>
