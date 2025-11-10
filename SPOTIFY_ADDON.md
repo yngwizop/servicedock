@@ -4,17 +4,13 @@
 
 Das Spotify AddOn integriert ein "Now Playing" Widget in dein servicedock Dashboard. Es zeigt in Echtzeit den aktuell abgespielten Song mit Album-Cover, Künstler und Fortschrittsbalken an.
 
-## ✨ Features
+### Features
 
-- **Echtzeit-Anzeige** des aktuell spielenden Songs
-- **Album-Cover** in hoher Qualität
-- **Song-Informationen**: Titel, Künstler, Album
-- **Fortschrittsbalken** mit Zeitanzeige
-- **Geräte-Info**: Zeigt an, auf welchem Gerät die Musik läuft
-- **Sicherer OAuth 2.0 Flow** mit verschlüsselten Tokens
-- **Automatisches Token-Refresh** im Hintergrund
-- **Admin-only Konfiguration** über SettingsPanel
-- **Rate Limiting** zum Schutz der API
+- Echtzeit-Anzeige des aktuell spielenden Songs
+- Album-Cover mit Song-Informationen (Titel, Künstler, Album)
+- Fortschrittsbalken mit Zeitanzeige
+- Sicherer OAuth 2.0 Flow mit verschlüsselten Tokens
+- Automatisches Token-Refresh im Hintergrund
 
 ## 📋 Voraussetzungen
 
@@ -81,349 +77,102 @@ Das Spotify AddOn integriert ein "Now Playing" Widget in dein servicedock Dashbo
 
 ### Schritt 5: Widget nutzen
 
-1. Gehe zum Tab **"🎵 Now Playing"** im Dashboard
-2. Das Widget zeigt nun deinen aktuell spielenden Song an
-3. Die Anzeige aktualisiert sich alle 5 Sekunden automatisch
+1. Das Widget erscheint automatisch auf dem Dashboard (rechts neben der Tab-Navigation)
+2. Die Anzeige aktualisiert sich alle 5 Sekunden automatisch
+3. Wenn keine Musik läuft, zeigt es "Keine Musik wird abgespielt" an
 
-## 🔧 Produktions-Setup
+## 🔒 Sicherheit & Rate Limiting
 
-Für den Einsatz auf einem Server mit eigener Domain:
+### Token-Verschlüsselung
 
-### Backend-URL anpassen
+Alle sensiblen Daten werden verschlüsselt in der Datenbank gespeichert:
+- Client Secret (Fernet AES-128 Verschlüsselung)
+- Access Token (automatisch refreshed)
+- Refresh Token
 
-1. Bearbeite die Spotify Developer App:
-   - Füge hinzu: `https://deine-domain.com/api/spotify/callback`
-   - **Wichtig**: Muss HTTPS sein (kein HTTP für öffentliche Domains)
-2. In servicedock Settings (AddOns Tab):
-   - Ändere die Redirect URI auf: `https://deine-domain.com/api/spotify/callback`
-3. Speichere die Konfiguration neu
-4. Verbinde Spotify erneut
-
-**Hinweis**: Im Produktionsmodus kannst du `http://127.0.0.1:8000` in Spotify behalten für lokale Tests und zusätzlich die HTTPS-URL hinzufügen.
-
-### Reverse Proxy (Nginx Beispiel)
-
-```nginx
-# In deiner Nginx Config
-location /api/spotify/ {
-    proxy_pass http://localhost:8000/api/spotify/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-}
-```
-
-## 🔒 Sicherheit
-
-### Was wird gespeichert?
-
-- **Client Secret**: Verschlüsselt in der Datenbank (Fernet encryption)
-- **Access Token**: Verschlüsselt in der Datenbank
-- **Refresh Token**: Verschlüsselt in der Datenbank
-- **Client ID**: Unverschlüsselt (ist public)
-- **Redirect URI**: Unverschlüsselt
-
-### Berechtigungen (Scopes)
-
-Das AddOn benötigt folgende Spotify-Berechtigungen:
-- `user-read-currently-playing`: Liest aktuell spielenden Song
-- `user-read-playback-state`: Liest Wiedergabe-Status (Gerät, Shuffle, etc.)
-- `user-modify-playback-state`: Für zukünftige Play/Pause Controls
-
-### Token-Refresh
+### Token-Management
 
 - Access Tokens laufen nach 1 Stunde ab
-- Das Backend refresht Tokens automatisch 5 Minuten vor Ablauf
+- Automatisches Refresh 5 Minuten vor Ablauf
 - Keine manuelle Intervention nötig
 
 ### Rate Limiting
 
-- `/api/spotify/now-playing`: Max. 30 Requests/Minute
-- `/api/spotify/install`: Max. 5 Requests/Minute
-- Schutz vor API-Missbrauch
+Zum Schutz vor API-Missbrauch gelten folgende Limits:
+- **Now Playing Endpunkt**: Max. 30 Requests/Minute
+- **Admin-Endpunkte** (Install/Uninstall): Max. 5 Requests/Minute
+
+### Berechtigungen
+
+Das AddOn benötigt folgende Spotify-Scopes:
+- `user-read-currently-playing` - Aktuell spielenden Song lesen
+- `user-read-playback-state` - Wiedergabe-Status lesen
 
 ## 🐛 Troubleshooting
 
-### Widget zeigt "Keine Wiedergabe aktiv"
+### Widget zeigt nichts an
 
 **Lösung**:
-- Spiele einen Song auf Spotify ab
-- Das Widget aktualisiert sich nach 5 Sekunden automatisch
+- Prüfe in Settings → AddOns ob Spotify als "✓ Verbunden" angezeigt wird
+- Falls nicht verbunden: Klicke auf "Mit Spotify verbinden"
+- Aktualisiere die Seite (Strg+F5)
 
-### "Fehler beim Laden"
-
-**Mögliche Ursachen**:
-1. **Backend nicht erreichbar**: Prüfe ob Backend läuft (`http://127.0.0.1:8000`)
-2. **Nicht verbunden**: Gehe zu Settings → AddOns → "Mit Spotify verbinden"
-3. **Token abgelaufen**: Backend refresht automatisch, warte 1 Minute
-
-### "Rate limit erreicht"
+### Widget zeigt "Keine Musik wird abgespielt"
 
 **Lösung**:
-- Warte 1 Minute
-- Das Widget pollt alle 5 Sekunden, bei vielen offenen Tabs kann das Limit erreicht werden
-- Schließe unnötige Tabs
+- Spiele einen Song in Spotify ab
+- Das Widget aktualisiert sich automatisch nach 5 Sekunden
 
-### OAuth-Fehler: "redirect_uri mismatch"
-
-**Lösung**:
-1. Gehe zu [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
-2. Öffne deine App → Settings
-3. Prüfe, ob die Redirect URI **exakt** übereinstimmt:
-   - Mit oder ohne Trailing Slash?
-   - HTTP vs HTTPS?
-   - Localhost vs 127.0.0.1?
-4. Füge alle benötigten Varianten hinzu (mehrere möglich)
-
-### "Client authentication failed"
+### OAuth-Fehler: "INVALID_CLIENT: Insecure redirect URI"
 
 **Lösung**:
-- Client Secret falsch eingegeben
-- Gehe zu Settings → AddOns
-- Lösche die Config und richte sie neu ein
+1. Verwende im Spotify Developer Dashboard **nur**: `http://127.0.0.1:8000/api/spotify/callback`
+2. **NICHT** `localhost` verwenden (funktioniert nicht mit Docker)
+3. In servicedock Settings die **exakt gleiche** URI eintragen
 
-## 📊 API-Endpunkte (für Entwickler)
+### OAuth-Fehler: "Redirect URI mismatch"
 
-### Admin-Endpunkte (Auth required)
+**Lösung**:
+1. Überprüfe im Spotify Developer Dashboard → Settings
+2. Redirect URI muss **exakt** sein: `http://127.0.0.1:8000/api/spotify/callback`
+3. Kopiere die URI **exakt** in servicedock Settings → AddOns → Spotify
 
-```bash
-# Spotify installieren/konfigurieren
-POST /api/spotify/install
-Content-Type: application/json
-Authorization: Bearer <admin_token>
+### Verbindung erneuern
 
-{
-  "client_id": "your_client_id",
-  "client_secret": "your_client_secret",
-  "redirect_uri": "http://127.0.0.1:8000/api/spotify/callback"
-}
-
-# Status abrufen
-GET /api/spotify/status
-Authorization: Bearer <admin_token>
-
-# Auth URL generieren
-GET /api/spotify/auth-url
-Authorization: Bearer <admin_token>
-
-# Spotify deinstallieren
-DELETE /api/spotify/uninstall
-Authorization: Bearer <admin_token>
-```
-
-### Öffentliche Endpunkte
-
-```bash
-# Now Playing abrufen (kein Auth nötig)
-GET /api/spotify/now-playing
-
-Response:
-{
-  "is_playing": true,
-  "track": {
-    "name": "Song Title",
-    "artist": "Artist Name",
-    "album": "Album Name",
-    "album_image": "https://...",
-    "duration_ms": 240000,
-    "progress_ms": 120000
-  },
-  "device_name": "DESKTOP-PC",
-  "progress_percent": 50.0
-}
-
-# OAuth Callback (wird von Spotify aufgerufen)
-GET /api/spotify/callback?code=...&state=...
-```
-
-## 🔄 Token-Rotation
-
-### Manuelles Neu-Verbinden
-
-Falls du dein Spotify-Konto wechseln oder die Verbindung erneuern möchtest:
+Falls die Verbindung nicht funktioniert:
 
 1. Settings → AddOns → Spotify
-2. Klicke auf **"Spotify entfernen"** (unten)
-3. Bestätige die Löschung
-4. Konfiguriere Spotify neu (Client ID/Secret bleiben erhalten)
-5. Klicke auf **"Mit Spotify verbinden"**
+2. Klicke auf **"Spotify entfernen"**
+3. Speichere neue Konfiguration
+4. Klicke auf **"Mit Spotify verbinden"**
 
-### Bei Sicherheitsbedenken
+## � Produktions-Setup (Optional)
 
-```bash
-# Rotiere das Client Secret im Spotify Developer Dashboard
-1. Gehe zu Spotify Developer Dashboard
-2. Öffne deine App → Settings
-3. Klicke auf "Rotate client secret"
-4. Kopiere das neue Secret
-5. In servicedock: Settings → AddOns → Spotify entfernen
-6. Neue Konfiguration mit neuem Secret speichern
-7. Neu verbinden
-```
+Für den Einsatz auf einem Server mit eigener Domain:
 
-## 🐛 Troubleshooting
+1. Bearbeite deine Spotify App im Developer Dashboard
+2. Füge hinzu: `https://deine-domain.com/api/spotify/callback` (muss HTTPS sein)
+3. In servicedock Settings die neue URI eintragen
+4. Verbinde Spotify erneut
 
-### ❌ Fehler: "INVALID_CLIENT: Insecure redirect URI"
+**Hinweis**: Du kannst beide URIs in Spotify eintragen (`127.0.0.1` für lokal + HTTPS für Produktion).
 
-**Problem**: Spotify lehnt die Redirect URI ab.
+## 📝 Wichtige Hinweise
 
-**Ursachen**:
-- Du verwendest HTTP mit einer nicht-erlaubten URL (z.B. `http://192.168.1.100:8000`)
-- Du verwendest `localhost` statt `127.0.0.1`
-- Spotify erlaubt HTTP **nur** für `127.0.0.1` (bei Docker-Setup)
+### Warum nur 127.0.0.1 und nicht localhost?
 
-**Lösung**:
-1. Im Spotify Developer Dashboard:
-   - Trage **exakt** ein: `http://127.0.0.1:8000/api/spotify/callback`
-   - **NICHT** `localhost:8000` verwenden!
-2. In servicedock Settings (AddOns):
-   - Verwende **exakt**: `http://127.0.0.1:8000/api/spotify/callback`
-3. Für Remote-Zugriff (Produktion):
-   - Verwende HTTPS mit gültiger Domain: `https://deine-domain.com/api/spotify/callback`
-   - **NICHT** HTTP mit IP-Adresse!
-
-### ❌ Fehler: "Redirect URI mismatch"
-
-**Problem**: Die Redirect URI in servicedock stimmt nicht mit Spotify Developer Dashboard überein.
-
-**Lösung**:
-1. Überprüfe im Spotify Developer Dashboard → Settings → Redirect URIs
-2. Es muss **exakt** sein: `http://127.0.0.1:8000/api/spotify/callback`
-3. Kopiere diese URL **exakt** in servicedock Settings → AddOns → Spotify
-4. **Wichtig**: 
-   - Kein Tippfehler (z.B. fehlendes `/callback`)
-   - Kein `localhost` statt `127.0.0.1`
-   - Keine abweichenden Ports
-
-### 🔄 Token läuft ab / "Nicht verbunden"
-
-**Lösung**:
-1. Settings → AddOns → Spotify
-2. Klicke auf "Mit Spotify verbinden" (neu)
-3. Autorisiere erneut
-
-### ⚠️ Widget zeigt "Keine Musik wird abgespielt"
-
-**Mögliche Ursachen**:
-- Spotify ist pausiert
-- Kein Gerät aktiv (starte Spotify auf irgendeinem Gerät)
-- Private Session aktiv (deaktivieren in Spotify Settings)
-
-**Lösung**:
-1. Öffne Spotify (App oder Web)
-2. Spiele einen Song ab
-3. Widget aktualisiert sich automatisch
-
-### 💡 Warum nur `127.0.0.1` und nicht `localhost`?
-
-**Technische Erklärung**:
-- Docker Port-Mapping (`8000:8000` in `docker-compose.yml`) bindet an alle Interfaces
-- Spotify erlaubt zwar beide (`localhost` und `127.0.0.1`), aber:
-- Docker-Container verwenden intern unterschiedliche Netzwerk-Interfaces
-- `127.0.0.1` ist die **garantiert funktionierende** Loopback-Adresse
-- `localhost` kann je nach Docker-Netzwerk-Konfiguration zu DNS-Problemen führen
-- **Empfehlung**: Immer `127.0.0.1` für lokales Docker-Setup verwenden!
-
-## 📝 Datenbank-Migration
-
-Falls du servicedock bereits installiert hast und das AddOn nachträglich hinzufügst:
-
-```sql
--- Führe diese SQL aus, um die Spotify-Tabelle zu erstellen
-CREATE TABLE IF NOT EXISTS spotify_config (
-    id INT PRIMARY KEY DEFAULT 1,
-    client_id VARCHAR(255) NOT NULL,
-    client_secret TEXT NOT NULL,
-    redirect_uri VARCHAR(500) NOT NULL,
-    access_token TEXT,
-    refresh_token TEXT,
-    token_expires_at TIMESTAMP,
-    scope TEXT,
-    connected BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW(),
-    CONSTRAINT spotify_single_row CHECK (id = 1)
-);
-
-CREATE INDEX IF NOT EXISTS idx_spotify_connected ON spotify_config(connected);
-```
-
-Oder nutze Docker:
-```bash
-# Neustart mit init.sql (löscht ALLE Daten!)
-docker-compose down -v
-docker-compose up -d
-
-# Oder nur Backend neu starten (Daten bleiben erhalten)
-docker-compose restart backend
-```
-
-## 🎨 Anpassungen
-
-### Polling-Intervall ändern
-
-In `frontend/src/components/SpotifyCard.jsx`:
-
-```javascript
-// Aktuell: 5 Sekunden
-const interval = setInterval(fetchNowPlaying, 5000);
-
-// Ändern auf z.B. 10 Sekunden
-const interval = setInterval(fetchNowPlaying, 10000);
-```
-
-### Widget-Position ändern
-
-Das Widget erscheint im "🎵 Now Playing" Tab. Um es stattdessen auf dem Services-Tab anzuzeigen:
-
-In `frontend/src/App.jsx`:
-
-```jsx
-{activeTab === "services" && (
-  <>
-    {/* Bestehender Content */}
-    <ServiceGrid ... />
-    <ShortcutGrid ... />
-    
-    {/* NEU: Spotify Widget am Ende */}
-    <div className="mt-8">
-      <SpotifyCard />
-    </div>
-  </>
-)}
-```
-
-## 🌟 Zukünftige Features
-
-Geplante Erweiterungen (PRs willkommen!):
-
-- [ ] **Playback Controls**: Play/Pause/Skip direkt im Widget
-- [ ] **Lautstärke-Kontrolle**
-- [ ] **Playlist-Anzeige**
-- [ ] **Kürzlich gehört**
-- [ ] **Gerät wechseln**
-- [ ] **Song zu Playlist hinzufügen**
-- [ ] **Lyrics-Anzeige** (via Genius API)
-
-## 📚 Links
-
-- [Spotify Web API Dokumentation](https://developer.spotify.com/documentation/web-api)
-- [OAuth 2.0 Authorization Code Flow](https://developer.spotify.com/documentation/web-api/tutorials/code-flow)
-- [servicedock GitHub Repository](https://github.com/yngwizop/servicedock)
+- Docker Port-Mapping bindet an alle Interfaces
+- `127.0.0.1` ist die garantiert funktionierende Loopback-Adresse
+- `localhost` kann bei Docker zu DNS-Problemen führen
+- **Empfehlung**: Immer `127.0.0.1` für lokales Docker-Setup verwenden
 
 ## 💬 Support
 
-Bei Fragen oder Problemen:
+Bei Problemen:
 
-1. Prüfe dieses Dokument und die Troubleshooting-Section
+1. Prüfe die Troubleshooting-Section oben
 2. Schaue in die Backend-Logs: `docker-compose logs backend`
-3. Schaue in die Browser-Console (F12)
-4. Öffne ein Issue im GitHub Repository
-
-## 📄 Lizenz
-
-Das Spotify AddOn ist Teil von servicedock und steht unter der gleichen Lizenz.
+3. Öffne die Browser-Console (F12) für Frontend-Fehler
 
 ---
 
