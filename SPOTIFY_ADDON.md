@@ -146,7 +146,7 @@ Falls die Verbindung nicht funktioniert:
 3. Speichere neue Konfiguration
 4. Klicke auf **"Mit Spotify verbinden"**
 
-## � Produktions-Setup (Optional)
+## 🛠️ Produktions-Setup (Optional)
 
 Für den Einsatz auf einem Server mit eigener Domain:
 
