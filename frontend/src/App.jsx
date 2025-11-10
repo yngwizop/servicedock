@@ -53,6 +53,9 @@ function App() {
   const [loginError, setLoginError] = useState("");
   const [showLogin, setShowLogin] = useState(false);
   const [activeTab, setActiveTab] = useState("services");
+  
+  // NEU: Spotify Status State
+  const [spotifyConfigured, setSpotifyConfigured] = useState(false);
 
   const [appearance, setAppearance] = useState({
     bg_color: "#f0f2f5",
@@ -120,7 +123,26 @@ function App() {
   useEffect(() => {
     fetchData();
     fetchAppearance();
-  }, []);
+    if (isLoggedIn) {
+      fetchSpotifyStatus();
+    }
+  }, [isLoggedIn]);
+
+  // NEU: Funktion zum Abrufen des Spotify-Status (braucht Auth!)
+  const fetchSpotifyStatus = async () => {
+    try {
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/spotify/status`);
+      if (res.ok) {
+        const data = await res.json();
+        setSpotifyConfigured(data.configured && data.connected);
+      } else {
+        setSpotifyConfigured(false);
+      }
+    } catch (err) {
+      console.error("Fehler beim Laden des Spotify-Status:", err);
+      setSpotifyConfigured(false);
+    }
+  };
 
   // --- Auth-Funktionen ---
   const handleLogin = async (e) => {
@@ -482,10 +504,12 @@ function App() {
             </button>
           </div>
 
-          {/* Spotify Widget - Rechts (separater Container, kein Rahmen) */}
-          <div className="flex-shrink-0">
-            <SpotifyCard />
-          </div>
+          {/* Spotify Widget - Rechts (nur anzeigen wenn konfiguriert) */}
+          {spotifyConfigured && (
+            <div className="flex-shrink-0">
+              <SpotifyCard />
+            </div>
+          )}
         </div>
 
         {/* === CONTENT BASED ON ACTIVE TAB === */}
@@ -599,7 +623,10 @@ function App() {
       {/* 5. Settings-Panel (AUSGELAGERT) */}
       {isLoggedIn && showSettings && (
         <SettingsPanel
-          onClose={() => setShowSettings(false)}
+          onClose={() => {
+            setShowSettings(false);
+            fetchSpotifyStatus(); // Spotify-Status neu laden
+          }}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           onAddService={addService}
