@@ -45,7 +45,7 @@ function SettingsPanel({
   const [spotifyConfig, setSpotifyConfig] = React.useState({
     client_id: '',
     client_secret: '',
-    redirect_uri: 'http://127.0.0.1:8000/api/spotify/callback'
+    redirect_uri: '' // Wird dynamisch gesetzt
   });
   const [spotifyStatus, setSpotifyStatus] = React.useState({
     configured: false,
@@ -54,7 +54,19 @@ function SettingsPanel({
   const [isSavingSpotify, setIsSavingSpotify] = React.useState(false);
   const [spotifySaved, setSpotifySaved] = React.useState(false);
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
+  // Backend URL: Mit Nginx kein Port nötig, ohne Nginx Port 8000
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
+    (window.location.port === '' ? 
+      `${window.location.protocol}//${window.location.hostname}` :
+      `${window.location.protocol}//${window.location.hostname}:8000`
+    );
+  
+  // Spotify Redirect URI: 
+  // - HTTPS: Nutze aktuellen Hostname ohne Port (läuft über Nginx auf 443)
+  // - HTTP: Immer 127.0.0.1:8000 (Spotify-Einschränkung)
+  const SPOTIFY_REDIRECT_URI = window.location.protocol === 'https:' 
+    ? `https://${window.location.hostname}/api/spotify/callback`
+    : 'http://127.0.0.1:8000/api/spotify/callback';
 
   // Lade Proxmox-Konfiguration beim Öffnen
   React.useEffect(() => {
@@ -96,7 +108,13 @@ function SettingsPanel({
           setSpotifyConfig(prev => ({
             ...prev,
             client_id: data.client_id,
-            redirect_uri: data.redirect_uri || prev.redirect_uri
+            redirect_uri: data.redirect_uri || SPOTIFY_REDIRECT_URI
+          }));
+        } else {
+          // Wenn nicht konfiguriert, setze default redirect_uri
+          setSpotifyConfig(prev => ({
+            ...prev,
+            redirect_uri: SPOTIFY_REDIRECT_URI
           }));
         }
       } catch (err) {
@@ -107,7 +125,7 @@ function SettingsPanel({
     if (panelTab === 'addons') {
       fetchSpotifyStatus();
     }
-  }, [panelTab]);
+  }, [panelTab, SPOTIFY_REDIRECT_URI]);
 
   // Speichere Proxmox-Konfiguration
   const handleSaveProxmox = async (e) => {
@@ -211,7 +229,7 @@ function SettingsPanel({
         setSpotifyConfig({
           client_id: '',
           client_secret: '',
-          redirect_uri: 'http://127.0.0.1:8000/api/spotify/callback'
+          redirect_uri: SPOTIFY_REDIRECT_URI
         });
         alert('Spotify erfolgreich entfernt');
       } else {
@@ -822,7 +840,7 @@ function SettingsPanel({
                       <li className="break-words">
                         Füge die Redirect URI hinzu: 
                         <code className="bg-blue-100 dark:bg-blue-800 px-1.5 py-0.5 rounded text-[11px] block mt-1 w-fit">
-                          http://127.0.0.1:8000/api/spotify/callback
+                          {SPOTIFY_REDIRECT_URI}
                         </code>
                       </li>
                       <li>Trage die Daten unten ein und speichere</li>
@@ -866,7 +884,7 @@ function SettingsPanel({
                       value={spotifyConfig.redirect_uri}
                       onChange={(e) => setSpotifyConfig({ ...spotifyConfig, redirect_uri: e.target.value })}
                       required
-                      placeholder="http://127.0.0.1:8000/api/spotify/callback"
+                      placeholder={SPOTIFY_REDIRECT_URI}
                       className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     />
                   </div>

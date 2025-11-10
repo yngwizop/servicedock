@@ -296,12 +296,17 @@ async def get_auth_url(
     
     # Generate CSRF State Token
     state = secrets.token_urlsafe(32)
-    _oauth_states[state] = datetime.utcnow()
     
     # Clean old states (älter als 10 Minuten)
     cutoff = datetime.utcnow() - timedelta(minutes=10)
     _oauth_states.clear()
-    _oauth_states[state] = datetime.utcnow()
+    
+    # Speichere State mit redirect_uri (für Token-Exchange)
+    _oauth_states[state] = {
+        "timestamp": datetime.utcnow(),
+        "redirect_uri": spotify_config["redirect_uri"]
+    }
+    logger.info(f"[SPOTIFY OAUTH] Auth-Request: redirect_uri={spotify_config['redirect_uri']}")
     
     # Build Authorization URL
     params = {
@@ -343,6 +348,11 @@ async def spotify_callback(
     if state not in _oauth_states:
         raise HTTPException(status_code=400, detail="Ungültiger State Token (CSRF)")
     
+    # Hole die beim Auth-Request verwendete redirect_uri
+    state_data = _oauth_states[state]
+    used_redirect_uri = state_data["redirect_uri"] if isinstance(state_data, dict) else spotify_config["redirect_uri"]
+    logger.info(f"[SPOTIFY OAUTH] Callback: used_redirect_uri={used_redirect_uri}")
+    
     # Remove used state
     del _oauth_states[state]
     
@@ -357,7 +367,7 @@ async def spotify_callback(
             data={
                 "grant_type": "authorization_code",
                 "code": code,
-                "redirect_uri": spotify_config["redirect_uri"]
+                "redirect_uri": used_redirect_uri  # Verwende die GLEICHE URI wie beim Auth-Request!
             },
             auth=(spotify_config["client_id"], spotify_config["client_secret"]),
             timeout=10

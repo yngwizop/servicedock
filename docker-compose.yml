@@ -1,10 +1,31 @@
 services:
+  # Nginx Reverse Proxy (HTTPS)
+  nginx:
+    image: nginx:alpine
+    container_name: webdashboard-nginx
+    ports:
+      - "80:80"      # HTTP (redirect to HTTPS)
+      - "443:443"    # HTTPS
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    ports:
-      - "3000:4173"
+    # Kein direkter Port-Expose mehr (läuft über nginx)
+    expose:
+      - "4173"
     depends_on:
       - backend
     logging:
@@ -17,8 +38,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
+    # Kein direkter Port-Expose mehr (läuft über nginx)
+    expose:
+      - "8000"
     environment:
       # Holt sich die Werte jetzt aus der .env-Datei
       - DATABASE_URL=${DATABASE_URL}
@@ -49,8 +71,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5432:5432"
+    # Keine externe Portfreigabe, nur intern im Docker-Netzwerk erreichbar
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s

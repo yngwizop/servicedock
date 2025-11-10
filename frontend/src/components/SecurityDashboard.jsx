@@ -13,7 +13,12 @@ import {
 } from 'phosphor-react';
 import { authenticatedFetch } from '../utils/auth';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
+// Backend-URL: Mit Nginx kein Port, ohne Nginx Port 8000
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
+  (window.location.port === '' ? 
+    `${window.location.protocol}//${window.location.hostname}` :
+    `${window.location.protocol}//${window.location.hostname}:8000`
+  );
 
 function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
   const [tokenInfo, setTokenInfo] = useState(null);

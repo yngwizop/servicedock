@@ -29,15 +29,15 @@ Das Spotify AddOn integriert ein "Now Playing" Widget in dein servicedock Dashbo
    - **App name**: `servicedock` (oder ein beliebiger Name)
    - **App description**: `Now Playing Widget für mein Dashboard`
    - **Redirect URIs**: 
-     - ⚠️ **WICHTIG**: Verwende **nur** `http://127.0.0.1:8000/api/spotify/callback`
-     - **NICHT** `http://localhost:8000` verwenden (funktioniert nicht mit Docker)
-     - **NICHT** `http://192.168.x.x` oder andere lokale IPs verwenden
-     - Spotify erlaubt HTTP nur für `127.0.0.1` und `localhost`, aber Docker leitet nur `127.0.0.1` korrekt weiter
-     - Für Produktion: `https://deine-domain.com/api/spotify/callback` (muss HTTPS sein)
+     - **Für HTTP (lokal)**: `http://127.0.0.1:8000/api/spotify/callback`
+     - **Für HTTPS (mit Domain)**: `https://deine-domain.com/api/spotify/callback`
+     - ⚠️ **Spotify erlaubt HTTP nur für 127.0.0.1 und localhost!**
    - **Website**: Optional (kann leer bleiben)
    - **Which API/SDKs are you planning to use?**: Wähle **Web API**
 5. Akzeptiere die Terms of Service
 6. Klicke auf **Save**
+
+**Wichtig**: Für lokale Nutzung trage nur `http://127.0.0.1:8000/api/spotify/callback` ein.
 
 ### Schritt 2: Client Credentials kopieren
 
@@ -48,22 +48,18 @@ Das Spotify AddOn integriert ein "Now Playing" Widget in dein servicedock Dashbo
 
 ### Schritt 3: servicedock konfigurieren
 
-1. Öffne dein servicedock Dashboard
+1. Öffne dein servicedock Dashboard über `http://127.0.0.1:3000`
 2. Logge dich als **Admin** ein
 3. Klicke auf das **Einstellungen-Symbol** (⚙️) oben rechts
 4. Wechsle zum Tab **"AddOns"**
 5. Finde die **Spotify-Kachel**
 6. Fülle das Formular aus:
-   ```
-   Client ID:        [Deine Client ID]
-   Client Secret:    [Dein Client Secret]
-   Redirect URI:     http://127.0.0.1:8000/api/spotify/callback
-   ```
-   ⚠️ **Wichtig**: 
-   - Verwende **nur** `http://127.0.0.1:8000/api/spotify/callback`
-   - **NICHT** `localhost:8000` (funktioniert nicht mit Docker)
-   - Die URI muss **exakt** mit der in Spotify Developer Dashboard übereinstimmen
+   - **Client ID**: Deine Client ID aus Spotify Dashboard
+   - **Client Secret**: Dein Client Secret aus Spotify Dashboard
+   - **Redirect URI**: `http://127.0.0.1:8000/api/spotify/callback` (wird automatisch ausgefüllt)
 7. Klicke auf **"Konfiguration speichern"**
+
+**Wichtig**: Du **musst** auf das Dashboard über `http://127.0.0.1:3000` zugreifen, damit der OAuth-Flow funktioniert!
 
 ### Schritt 4: Spotify-Account verbinden
 
@@ -128,16 +124,19 @@ Das AddOn benötigt folgende Spotify-Scopes:
 ### OAuth-Fehler: "INVALID_CLIENT: Insecure redirect URI"
 
 **Lösung**:
-1. Verwende im Spotify Developer Dashboard **nur**: `http://127.0.0.1:8000/api/spotify/callback`
-2. **NICHT** `localhost` verwenden (funktioniert nicht mit Docker)
-3. In servicedock Settings die **exakt gleiche** URI eintragen
+1. Spotify erlaubt HTTP nur für `127.0.0.1` und `localhost`
+2. Für andere IPs (z.B. `192.168.x.x`) **musst du HTTPS verwenden**
+3. Entweder:
+   - Greife auf das Dashboard über `http://127.0.0.1:3000` zu (nur lokal)
+   - Oder richte HTTPS mit einem Reverse Proxy ein (Nginx, Traefik, etc.)
 
 ### OAuth-Fehler: "Redirect URI mismatch"
 
 **Lösung**:
 1. Überprüfe im Spotify Developer Dashboard → Settings
-2. Redirect URI muss **exakt** sein: `http://127.0.0.1:8000/api/spotify/callback`
-3. Kopiere die URI **exakt** in servicedock Settings → AddOns → Spotify
+2. Redirect URI muss **exakt** übereinstimmen mit der in servicedock Settings
+3. Kopiere die URI aus servicedock Settings (AddOns Tab) und füge sie in Spotify ein
+4. **Wichtig**: Achte auf http vs https, Port, und trailing slash!
 
 ### Verbindung erneuern
 
@@ -148,25 +147,55 @@ Falls die Verbindung nicht funktioniert:
 3. Speichere neue Konfiguration
 4. Klicke auf **"Mit Spotify verbinden"**
 
-## 🛠️ Produktions-Setup (Optional)
+## � Produktions-Setup (Optional)
 
 Für den Einsatz auf einem Server mit eigener Domain:
 
-1. Bearbeite deine Spotify App im Developer Dashboard
-2. Füge hinzu: `https://deine-domain.com/api/spotify/callback` (muss HTTPS sein)
-3. In servicedock Settings die neue URI eintragen
-4. Verbinde Spotify erneut
+1. Richte HTTPS mit einem gültigen SSL-Zertifikat ein (z.B. mit Let's Encrypt)
+2. Bearbeite deine Spotify App im Developer Dashboard
+3. Füge hinzu: `https://deine-domain.com/api/spotify/callback`
+4. In servicedock Settings wird die URI automatisch angepasst
+5. Verbinde Spotify erneut
 
-**Hinweis**: Du kannst beide URIs in Spotify eintragen (`127.0.0.1` für lokal + HTTPS für Produktion).
+**Hinweis**: Du kannst mehrere Redirect URIs in Spotify eintragen - eine für lokal (`http://127.0.0.1:8000/...`) und eine für Produktion (`https://...`).
 
 ## 📝 Wichtige Hinweise
 
-### Warum nur 127.0.0.1 und nicht localhost?
+### Zugriff und Spotify OAuth
 
-- Docker Port-Mapping bindet an alle Interfaces
-- `127.0.0.1` ist die garantiert funktionierende Loopback-Adresse
-- `localhost` kann bei Docker zu DNS-Problemen führen
-- **Empfehlung**: Immer `127.0.0.1` für lokales Docker-Setup verwenden
+**Spotify-Einschränkung**: HTTP ist nur für `127.0.0.1` und `localhost` erlaubt!
+
+**So funktioniert es:**
+
+1. **Lokal auf dem Server-PC**: 
+   - Zugriff über: `http://127.0.0.1:3000`
+   - Spotify OAuth funktioniert ✅
+
+2. **Von einem anderen Gerät im Netzwerk**:
+   - Problem: Du greifst über `http://192.168.x.x:3000` zu
+   - Spotify OAuth funktioniert **NICHT** ❌ (HTTP nicht erlaubt für IPs)
+   - **Lösung**: 
+     - Option A: Nutze SSH Port-Forwarding zum Server und greife über `127.0.0.1` zu
+     - Option B: Richte HTTPS mit einem Reverse Proxy ein (siehe unten)
+
+3. **Mit Domain und HTTPS**:
+   - Zugriff über: `https://deine-domain.com`
+   - Spotify OAuth funktioniert ✅
+   - Redirect URI: `https://deine-domain.com:8000/api/spotify/callback`
+
+### SSH Port-Forwarding (für Netzwerk-Zugriff ohne HTTPS)
+
+Wenn du von einem anderen PC im Netzwerk zugreifen möchtest:
+
+```bash
+# Auf deinem Client-PC (z.B. Laptop)
+ssh -L 3000:localhost:3000 -L 8000:localhost:8000 user@192.168.x.x
+
+# Dann im Browser öffnen:
+http://127.0.0.1:3000
+```
+
+So wird der Traffic durch den SSH-Tunnel geleitet und Spotify sieht `127.0.0.1`!
 
 ## 💬 Support
 

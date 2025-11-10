@@ -6,9 +6,14 @@ const SpotifyCard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Backend URL: Mit Nginx kein Port, ohne Nginx Port 8000
+  const BACKEND_URL = window.location.port === '' 
+    ? `${window.location.protocol}//${window.location.hostname}`
+    : `${window.location.protocol}//${window.location.hostname}:8000`;
+
   const fetchNowPlaying = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/spotify/now-playing', {
+      const response = await fetch(`${BACKEND_URL}/api/spotify/now-playing`, {
         credentials: 'include'
       });
 
