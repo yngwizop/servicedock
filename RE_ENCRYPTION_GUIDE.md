@@ -2,7 +2,10 @@
 
 **Stand:** 08.11.2025  
 **Zweck:** Encryption Key wechseln ohne Datenverlust  
+
 **Repository:** [github.com/yngwizop/servicedock](https://github.com/yngwizop/servicedock)
+
+> **Hinweis:** Alle API-Aufrufe und OAuth-Redirects (z.B. Spotify) laufen im lokalen Netzwerk über die zentrale Nginx-Adresse `https://10.10.10.50`.
 
 ---
 

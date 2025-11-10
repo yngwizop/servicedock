@@ -1,5 +1,7 @@
 # 🌐 ServiceDock - Web Dashboard
 
+> **Hinweis:** Seit Version 2.0 läuft das Dashboard standardmäßig über einen Nginx-HTTPS-Reverse-Proxy. Alle Zugriffe (Frontend, Backend, Spotify OAuth, Proxmox, Security) erfolgen zentral über Nginx und sind im gesamten lokalen Netzwerk unter einer einheitlichen Adresse erreichbar, z.B. `https://10.10.10.50`.
+
 Ein modernes, selbst gehostetes Dashboard zum Verwalten und Organisieren deiner Web-Services, Shortcuts und Proxmox VMs. Perfekt für Homelab-Setups, Self-Hosting-Enthusiasten oder als persönliche Startseite mit integriertem VM-Management.
 
 **Version:** 2.0 | **Status:** ✅ Production Ready | **Security Score:** 10.0/10 🟢
@@ -8,10 +10,12 @@ Ein modernes, selbst gehostetes Dashboard zum Verwalten und Organisieren deiner 
 
 ## 📚 Dokumentation
 
+
 ### 🚀 Setup & Installation
-- **[INITIAL_SETUP.md](INITIAL_SETUP.md)** - Vollständige Ersteinrichtung mit Tool-Installation, Key-Generierung und Docker-Setup
-- **[PROXMOX_SETUP.md](PROXMOX_SETUP.md)** - Proxmox API Token erstellen und Integration einrichten
-- **[SPOTIFY_ADDON.md](SPOTIFY_ADDON.md)** - Spotify "Now Playing" Widget einrichten und konfigurieren
+- **[INITIAL_SETUP.md](INITIAL_SETUP.md)** – Ersteinrichtung, Docker & Nginx-HTTPS-Proxy, Key-Generierung
+- **[PROXMOX_SETUP.md](PROXMOX_SETUP.md)** – Proxmox API Token erstellen und Integration einrichten
+- **[SPOTIFY_ADDON.md](SPOTIFY_ADDON.md)** – Spotify "Now Playing" Widget (inkl. HTTPS/Nginx-Setup für Netzwerkzugriff)
+- **[HTTPS_SETUP.md](HTTPS_SETUP.md)** – Nginx Reverse Proxy, SSL-Zertifikate, Zugriff im lokalen Netz
 
 ### 🔒 Sicherheit & Verschlüsselung
 - **[ENCRYPTION.md](ENCRYPTION.md)** - Token-Verschlüsselung mit Fernet (AES-128) und Security Best Practices
@@ -88,7 +92,8 @@ Ein modernes, selbst gehostetes Dashboard zum Verwalten und Organisieren deiner 
 - Python 3.11+ (für Key-Generierung)
 - Minimum 2GB RAM, 10GB Disk Space
 
-### Schnellstart
+
+### Schnellstart (mit Nginx/HTTPS)
 
 1. **Repository klonen**
 ```bash
@@ -129,8 +134,8 @@ JWT_SECRET_KEY=<dein_generierter_key>
 # Token-Laufzeit (Minuten)
 ACCESS_TOKEN_EXPIRE_MINUTES=120
 
-# Frontend-URL für CORS
-FRONTEND_URL=http://localhost:3000
+# Frontend-URL für CORS (Nginx/HTTPS Reverse Proxy)
+FRONTEND_URL=https://10.10.10.50
 
 # Environment (development oder production)
 ENVIRONMENT=development
@@ -143,10 +148,11 @@ docker compose up -d --build
 
 5. **Dashboard öffnen**
 ```
-http://localhost:3000
+https://10.10.10.50
 ```
+Alle API-Aufrufe, OAuth-Redirects und das Frontend laufen jetzt über diese Adresse im gesamten lokalen Netzwerk.
 
-📖 **Detaillierte Anleitung:** Siehe [INITIAL_SETUP.md](INITIAL_SETUP.md)
+📖 **Detaillierte Anleitung:** Siehe [INITIAL_SETUP.md](INITIAL_SETUP.md) und [HTTPS_SETUP.md](HTTPS_SETUP.md)
 
 ## 🎯 Verwendung
 
@@ -176,7 +182,9 @@ http://localhost:3000
 - **Service Columns**: Anzahl der Spalten für Services (2-10)
 - **Shortcut Columns**: Anzahl der Spalten für Shortcuts (2-8)
 
-## 🔧 Backend-API
+
+## 🔧 Backend-API (über Nginx)
+Alle API-Endpunkte sind im Netzwerk unter `https://10.10.10.50/api/...` erreichbar. Spotify OAuth-Redirects und Proxmox-APIs funktionieren im gesamten Netz, solange die Nginx-Adresse verwendet wird.
 
 ### Architektur
 

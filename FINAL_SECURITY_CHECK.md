@@ -3,6 +3,8 @@
 **Datum:** 08.11.2025 
 **Version:** 2.0 - Modular Edition (Final)  
 **Status:** ✅ **PRODUCTION READY - VERIFIED**  
+
+> **Hinweis:** Alle externen Zugriffe (Frontend, Backend, Spotify OAuth, Proxmox, Security) laufen über den Nginx-HTTPS-Proxy (`https://10.10.10.50`). Die Datenbank ist nur intern im Docker-Netzwerk erreichbar (kein externer Port!).
 **Repository:** [github.com/yngwizop/servicedock](https://github.com/yngwizop/servicedock)
 
 ---

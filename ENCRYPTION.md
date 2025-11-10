@@ -1,6 +1,9 @@
 # 🔐 Token-Verschlüsselung - ServiceDock
 
+
 ## Übersicht
+
+> **Hinweis:** Alle API-Aufrufe und OAuth-Redirects (z.B. Spotify) laufen im lokalen Netzwerk über die zentrale Nginx-Adresse `https://10.10.10.50`.
 
 Alle sensiblen Proxmox API-Tokens werden **verschlüsselt** in der Datenbank gespeichert mit **Fernet (AES-128)** Verschlüsselung.
 

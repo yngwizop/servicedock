@@ -1,7 +1,8 @@
 # 📡 API Documentation - ServiceDock v2.0
 
 **Backend-Version:** 2.0 (Modular Architecture)  
-**Base URL:** `http://localhost:8000`  
+**Base URL:** `https://10.10.10.50/api`  
+**Hinweis:** Im lokalen Netzwerk immer die zentrale Nginx-Adresse verwenden: `https://10.10.10.50/api/...`. Alle OAuth-Redirects (z.B. Spotify) und API-Aufrufe funktionieren im gesamten Netz nur über diese Adresse.
 **Authentication:** JWT Bearer Token  
 **Update:** 08.11.2025  
 **Repository:** [github.com/yngwizop/servicedock](https://github.com/yngwizop/servicedock)

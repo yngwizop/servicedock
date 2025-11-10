@@ -2,7 +2,10 @@
 
 Dieses Dokument beschreibt den kompletten Prozess der Proxmox API Token-Erneuerung und -Überprüfung.
 
+
 ## 📋 Inhaltsverzeichnis
+
+> **Hinweis:** Alle API-Aufrufe und OAuth-Redirects (z.B. Spotify) laufen im lokalen Netzwerk über die zentrale Nginx-Adresse `https://10.10.10.50`.
 
 1. [Warum Token rotieren?](#warum-token-rotieren)
 2. [Wann rotieren?](#wann-rotieren)

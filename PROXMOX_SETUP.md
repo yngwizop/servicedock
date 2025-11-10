@@ -5,6 +5,8 @@
 ServiceDock kann deine Proxmox VMs und LXC Container monitoren und verwalten! Diese Anleitung hilft dir bei der sicheren Einrichtung mit verschlüsselter Token-Speicherung.
 
 **Features:**
+
+> **Hinweis:** Alle Proxmox-API-Aufrufe und das Dashboard sind im lokalen Netzwerk über die zentrale Nginx-Adresse `https://10.10.10.50` erreichbar. Die Datenbank ist nur intern im Docker-Netzwerk verfügbar.
 - 📊 Live-Status-Monitoring aller VMs/Container
 - 🚀 Remote-Steuerung (Start/Stop/Reboot)
 - 📈 Ressourcen-Überwachung (CPU, RAM, Disk)

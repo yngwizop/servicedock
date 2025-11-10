@@ -16,12 +16,12 @@ Dein Dashboard läuft jetzt mit HTTPS über einen Nginx Reverse Proxy!
 
 ### HTTPS (empfohlen):
 ```
-https://192.168.178.83
+https://10.10.10.50
 ```
 
 ### HTTP (redirectet automatisch zu HTTPS):
 ```
-http://192.168.178.83
+http://10.10.10.50
 ```
 
 ## 🎵 Spotify OAuth Setup
@@ -30,12 +30,12 @@ http://192.168.178.83
 
 Füge in deiner Spotify App hinzu:
 ```
-https://192.168.178.83/api/spotify/callback
+https://10.10.10.50/api/spotify/callback
 ```
 
 ### 2. servicedock Dashboard
 
-1. Öffne: `https://192.168.178.83`
+1. Öffne: `https://10.10.10.50`
 2. Akzeptiere die Zertifikats-Warnung (siehe unten)
 3. Settings → AddOns → Spotify
 4. Die Redirect URI wird automatisch korrekt angezeigt
@@ -48,7 +48,7 @@ Da es sich um ein Self-Signed Zertifikat handelt, zeigt dein Browser eine Warnun
 
 ### Chrome/Edge:
 1. Klicke auf "Erweitert"
-2. Klicke auf "Weiter zu 192.168.178.83 (unsicher)"
+2. Klicke auf "Weiter zu 10.10.10.50 (unsicher)"
 
 ### Firefox:
 1. Klicke auf "Erweitert"
@@ -90,10 +90,10 @@ Das `docker-compose.yml` wurde erweitert um den `nginx` Service.
 
 Du kannst jetzt von **allen Geräten** im Netzwerk zugreifen:
 
-- ✅ PC: `https://192.168.178.83`
-- ✅ Laptop: `https://192.168.178.83`
-- ✅ Handy: `https://192.168.178.83`
-- ✅ Tablet: `https://192.168.178.83`
+- ✅ PC: `https://10.10.10.50`
+- ✅ Laptop: `https://10.10.10.50`
+- ✅ Handy: `https://10.10.10.50`
+- ✅ Tablet: `https://10.10.10.50`
 
 **Wichtig**: Auf jedem Gerät musst du die Zertifikats-Warnung akzeptieren.
 
@@ -154,7 +154,7 @@ Option 2: **Warnung akzeptieren und weitermachen** 😎
 ### Von unterwegs zugreifen?
 
 Du brauchst:
-1. Port-Forwarding im Router (443 → 192.168.178.83:443)
+1. Port-Forwarding im Router (443 → 10.10.10.50:443)
 2. DynDNS (z.B. DuckDNS) für feste URL
 3. Zertifikat für deine DynDNS-Domain
 
@@ -169,4 +169,4 @@ Für rein lokale Nutzung: **Nicht nötig!**
 ---
 
 **Status**: ✅ HTTPS ist aktiv und funktioniert!
-**Zugriff**: `https://192.168.178.83`
+**Zugriff**: `https://10.10.10.50`

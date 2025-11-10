@@ -29,9 +29,10 @@ Das Spotify AddOn integriert ein "Now Playing" Widget in dein servicedock Dashbo
    - **App name**: `servicedock` (oder ein beliebiger Name)
    - **App description**: `Now Playing Widget für mein Dashboard`
    - **Redirect URIs**: 
-     - **Für HTTP (lokal)**: `http://127.0.0.1:8000/api/spotify/callback`
-     - **Für HTTPS (mit Domain)**: `https://deine-domain.com/api/spotify/callback`
-     - ⚠️ **Spotify erlaubt HTTP nur für 127.0.0.1 und localhost!**
+   - **Für HTTP (lokal)**: `http://127.0.0.1:8000/api/spotify/callback`
+   - **Für HTTPS (im lokalen Netz)**: `https://10.10.10.50/api/spotify/callback`
+   - **Für HTTPS (mit Domain)**: `https://deine-domain.com/api/spotify/callback`
+   - ⚠️ **Spotify erlaubt HTTP nur für 127.0.0.1 und localhost!**
    - **Website**: Optional (kann leer bleiben)
    - **Which API/SDKs are you planning to use?**: Wähle **Web API**
 5. Akzeptiere die Terms of Service
@@ -56,10 +57,10 @@ Das Spotify AddOn integriert ein "Now Playing" Widget in dein servicedock Dashbo
 6. Fülle das Formular aus:
    - **Client ID**: Deine Client ID aus Spotify Dashboard
    - **Client Secret**: Dein Client Secret aus Spotify Dashboard
-   - **Redirect URI**: `http://127.0.0.1:8000/api/spotify/callback` (wird automatisch ausgefüllt)
+   - **Redirect URI**: `https://10.10.10.50/api/spotify/callback` (wird automatisch ausgefüllt, wenn du im Netzwerk zugreifst)
 7. Klicke auf **"Konfiguration speichern"**
 
-**Wichtig**: Du **musst** auf das Dashboard über `http://127.0.0.1:3000` zugreifen, damit der OAuth-Flow funktioniert!
+**Wichtig**: Für den Zugriff im lokalen Netzwerk **musst** du das Dashboard über `https://10.10.10.50` öffnen, damit der OAuth-Flow mit Spotify funktioniert!
 
 ### Schritt 4: Spotify-Account verbinden
 
@@ -172,16 +173,16 @@ Für den Einsatz auf einem Server mit eigener Domain:
    - Spotify OAuth funktioniert ✅
 
 2. **Von einem anderen Gerät im Netzwerk**:
-   - Problem: Du greifst über `http://192.168.x.x:3000` zu
-   - Spotify OAuth funktioniert **NICHT** ❌ (HTTP nicht erlaubt für IPs)
-   - **Lösung**: 
-     - Option A: Nutze SSH Port-Forwarding zum Server und greife über `127.0.0.1` zu
-     - Option B: Richte HTTPS mit einem Reverse Proxy ein (siehe unten)
+    - Problem: Du greifst über `http://192.168.x.x:3000` zu
+    - Spotify OAuth funktioniert **NICHT** ❌ (HTTP nicht erlaubt für IPs)
+    - **Lösung**: 
+       - Option A: Nutze SSH Port-Forwarding zum Server und greife über `127.0.0.1` zu
+       - Option B: Greife über `https://10.10.10.50` zu (empfohlen, mit Nginx/HTTPS-Proxy)
 
 3. **Mit Domain und HTTPS**:
    - Zugriff über: `https://deine-domain.com`
    - Spotify OAuth funktioniert ✅
-   - Redirect URI: `https://deine-domain.com:8000/api/spotify/callback`
+   - Redirect URI: `https://deine-domain.com/api/spotify/callback`
 
 ### SSH Port-Forwarding (für Netzwerk-Zugriff ohne HTTPS)
 
