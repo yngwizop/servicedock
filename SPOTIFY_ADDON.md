@@ -33,8 +33,10 @@ Das Spotify AddOn integriert ein "Now Playing" Widget in dein servicedock Dashbo
    - **App name**: `servicedock` (oder ein beliebiger Name)
    - **App description**: `Now Playing Widget für mein Dashboard`
    - **Redirect URIs**: 
-     - Für lokales Setup: `http://127.0.0.1:8000/api/spotify/callback`
-     - Für Produktion: `https://deine-domain.com/api/spotify/callback`
+     - ⚠️ **WICHTIG**: Verwende `http://localhost:8000/api/spotify/callback` oder `http://127.0.0.1:8000/api/spotify/callback`
+     - Spotify erlaubt HTTP **nur** für `localhost` und `127.0.0.1` (Security-Regel)
+     - **NICHT** `http://192.168.x.x` oder andere lokale IPs verwenden!
+     - Für Produktion: `https://deine-domain.com/api/spotify/callback` (muss HTTPS sein)
    - **Website**: Optional (kann leer bleiben)
    - **Which API/SDKs are you planning to use?**: Wähle **Web API**
 5. Akzeptiere die Terms of Service
@@ -58,8 +60,10 @@ Das Spotify AddOn integriert ein "Now Playing" Widget in dein servicedock Dashbo
    ```
    Client ID:        [Deine Client ID]
    Client Secret:    [Dein Client Secret]
-   Redirect URI:     http://127.0.0.1:8000/api/spotify/callback
+   Redirect URI:     http://localhost:8000/api/spotify/callback
+                     oder http://127.0.0.1:8000/api/spotify/callback
    ```
+   ⚠️ **Wichtig**: Die Redirect URI muss **exakt** mit der in Spotify Developer Dashboard eingetragenen übereinstimmen!
 7. Klicke auf **"Konfiguration speichern"**
 
 ### Schritt 4: Spotify-Account verbinden
@@ -251,6 +255,54 @@ Falls du dein Spotify-Konto wechseln oder die Verbindung erneuern möchtest:
 6. Neue Konfiguration mit neuem Secret speichern
 7. Neu verbinden
 ```
+
+## 🐛 Troubleshooting
+
+### ❌ Fehler: "INVALID_CLIENT: Insecure redirect URI"
+
+**Problem**: Spotify lehnt die Redirect URI ab.
+
+**Ursachen**:
+- Du verwendest HTTP mit einer nicht-erlaubten URL (z.B. `http://192.168.1.100:8000/api/spotify/callback`)
+- Spotify erlaubt HTTP **nur** für `localhost` und `127.0.0.1`
+
+**Lösung**:
+1. Im Spotify Developer Dashboard:
+   - Trage ein: `http://localhost:8000/api/spotify/callback` oder `http://127.0.0.1:8000/api/spotify/callback`
+2. In servicedock Settings (AddOns):
+   - Verwende **exakt dieselbe URL** wie in Spotify eingetragen
+3. Für Remote-Zugriff:
+   - Verwende HTTPS mit gültiger Domain: `https://deine-domain.com/api/spotify/callback`
+   - **NICHT** HTTP mit IP-Adresse!
+
+### ❌ Fehler: "Redirect URI mismatch"
+
+**Problem**: Die Redirect URI in servicedock stimmt nicht mit Spotify Developer Dashboard überein.
+
+**Lösung**:
+1. Überprüfe im Spotify Developer Dashboard → Settings → Redirect URIs
+2. Kopiere die URL **exakt** (inkl. http/https, Port, Pfad)
+3. Füge sie in servicedock Settings → AddOns → Spotify ein
+4. Wichtig: `localhost` ≠ `127.0.0.1` für Spotify!
+
+### 🔄 Token läuft ab / "Nicht verbunden"
+
+**Lösung**:
+1. Settings → AddOns → Spotify
+2. Klicke auf "Mit Spotify verbinden" (neu)
+3. Autorisiere erneut
+
+### ⚠️ Widget zeigt "Keine Musik wird abgespielt"
+
+**Mögliche Ursachen**:
+- Spotify ist pausiert
+- Kein Gerät aktiv (starte Spotify auf irgendeinem Gerät)
+- Private Session aktiv (deaktivieren in Spotify Settings)
+
+**Lösung**:
+1. Öffne Spotify (App oder Web)
+2. Spiele einen Song ab
+3. Widget aktualisiert sich automatisch
 
 ## 📝 Datenbank-Migration
 
