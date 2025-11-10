@@ -3,6 +3,7 @@ Spotify AddOn Router
 OAuth2 Flow, Token Management, Now Playing API
 """
 from fastapi import APIRouter, Request, HTTPException, Depends
+from fastapi.responses import HTMLResponse
 from datetime import datetime, timedelta
 from typing import Optional
 import secrets
@@ -411,12 +412,77 @@ async def spotify_callback(
             
             logger.info(f"Spotify successfully connected from {ip}")
             
-            # Redirect zurück zum Dashboard (Frontend handled das)
-            return {
-                "success": True,
-                "message": "Spotify erfolgreich verbunden!",
-                "redirect": "/"
-            }
+            # Return HTML page that closes itself (works even if VS Code is closed)
+            html_content = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Spotify Verbindung erfolgreich</title>
+                <style>
+                    body {
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        min-height: 100vh;
+                        margin: 0;
+                        background: linear-gradient(135deg, #1DB954 0%, #191414 100%);
+                        color: white;
+                    }
+                    .container {
+                        text-align: center;
+                        padding: 2rem;
+                    }
+                    .success-icon {
+                        font-size: 4rem;
+                        margin-bottom: 1rem;
+                    }
+                    h1 { margin: 0 0 0.5rem 0; font-size: 2rem; }
+                    p { margin: 0.5rem 0; opacity: 0.9; }
+                    .countdown { font-size: 1.2rem; font-weight: bold; margin-top: 1rem; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="success-icon">✓</div>
+                    <h1>Spotify erfolgreich verbunden!</h1>
+                    <p>Du kannst dieses Fenster jetzt schließen.</p>
+                    <p class="countdown">Fenster schließt automatisch in <span id="timer">3</span> Sekunden...</p>
+                </div>
+                <script>
+                    let seconds = 3;
+                    const timer = document.getElementById('timer');
+                    
+                    const interval = setInterval(() => {
+                        seconds--;
+                        timer.textContent = seconds;
+                        
+                        if (seconds <= 0) {
+                            clearInterval(interval);
+                            // Try to close window (works if opened by window.open)
+                            window.close();
+                            // If still open after 500ms, redirect to dashboard
+                            setTimeout(() => {
+                                if (!window.closed) {
+                                    window.location.href = '/';
+                                }
+                            }, 500);
+                        }
+                    }, 1000);
+                    
+                    // Also try to notify parent window if opened as popup
+                    if (window.opener) {
+                        try {
+                            window.opener.postMessage({ type: 'spotify-connected' }, '*');
+                        } catch(e) {}
+                    }
+                </script>
+            </body>
+            </html>
+            """
+            
+            return HTMLResponse(content=html_content, status_code=200)
         
         finally:
             if conn is not None:

@@ -68,12 +68,14 @@ Das Spotify AddOn integriert ein "Now Playing" Widget in dein servicedock Dashbo
 ### Schritt 4: Spotify-Account verbinden
 
 1. Nach dem Speichern erscheint ein Button **"Mit Spotify verbinden"**
-2. Klicke darauf - es öffnet sich ein neues Fenster
+2. Klicke darauf - es öffnet sich ein neues Fenster/Tab
 3. Du wirst zu Spotify weitergeleitet
 4. Logge dich ein (falls nötig) und klicke auf **"Zustimmen"**
-5. Du wirst zurück zu servicedock geleitet
-6. Das Fenster schließt sich automatisch
-7. Status ändert sich zu **"✓ Verbunden"**
+5. Nach erfolgreicher Verbindung erscheint eine Erfolgsseite
+6. Das Fenster schließt sich automatisch nach 3 Sekunden (oder schließe es manuell)
+7. Gehe zurück zum Dashboard - Status zeigt **"✓ Verbunden"**
+
+**Hinweis**: Die Verbindung funktioniert auch wenn VS Code geschlossen ist - du kannst das Callback-Fenster einfach schließen nach der Erfolgsmeldung.
 
 ### Schritt 5: Widget nutzen
 
