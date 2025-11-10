@@ -11,6 +11,7 @@ Ein modernes, selbst gehostetes Dashboard zum Verwalten und Organisieren deiner 
 ### 🚀 Setup & Installation
 - **[INITIAL_SETUP.md](INITIAL_SETUP.md)** - Vollständige Ersteinrichtung mit Tool-Installation, Key-Generierung und Docker-Setup
 - **[PROXMOX_SETUP.md](PROXMOX_SETUP.md)** - Proxmox API Token erstellen und Integration einrichten
+- **[SPOTIFY_ADDON.md](SPOTIFY_ADDON.md)** - Spotify "Now Playing" Widget einrichten und konfigurieren
 
 ### 🔒 Sicherheit & Verschlüsselung
 - **[ENCRYPTION.md](ENCRYPTION.md)** - Token-Verschlüsselung mit Fernet (AES-128) und Security Best Practices
@@ -52,6 +53,14 @@ Ein modernes, selbst gehostetes Dashboard zum Verwalten und Organisieren deiner 
 - **Remote-Control**: Start, Stop, Reboot direkt aus dem Dashboard
 - **Filter & Sortierung**: 6 Sortier-Optionen + Typ/Status-Filter
 - **Token-Verschlüsselung**: API-Tokens werden mit Fernet (AES-128) verschlüsselt
+
+### 🎵 Spotify AddOn (Admin-only Setup)
+- **Now Playing Widget**: Echtzeit-Anzeige des aktuell spielenden Songs
+- **Album-Cover**: Hochauflösende Cover-Bilder
+- **Song-Info**: Titel, Künstler, Album mit Fortschrittsbalken
+- **OAuth 2.0**: Sicherer Verbindungsaufbau mit verschlüsselten Tokens
+- **Auto-Refresh**: Automatische Token-Erneuerung im Hintergrund
+- **AddOns-Verwaltung**: Einfaches Setup über SettingsPanel
 
 ### 🛡️ Security Features (Admin-only)
 - **Audit-Logging**: Alle Proxmox-Aktionen werden protokolliert

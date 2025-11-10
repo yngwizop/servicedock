@@ -3,6 +3,7 @@ import ServiceGrid from "./components/ServiceGrid";
 import ShortcutGrid from "./components/ShortcutGrid";
 import ProxmoxGrid from "./components/ProxmoxGrid";
 import SecurityDashboard from "./components/SecurityDashboard";
+import SpotifyCard from "./components/SpotifyCard";
 import LoginModal from "./components/LoginModal";
 import SettingsPanel from "./components/SettingsPanel";
 import ClockWidget from "./components/ClockWidget";
@@ -442,41 +443,49 @@ function App() {
           </div>
         </div>
 
-        {/* === TAB NAVIGATION === - Glasmorphismus-Effekt für bessere Lesbarkeit */}
-        <div className="flex gap-4 mb-8 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-xl px-4 pt-4 pb-2 border border-gray-300/50 dark:border-gray-600/50 shadow-lg">
-          <button
-            onClick={() => setActiveTab("services")}
-            className={`px-6 py-3 font-semibold transition-all rounded-lg ${
-              activeTab === "services"
-                ? "bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm"
-                : "text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30 hover:text-gray-900 dark:hover:text-gray-100"
-            }`}
-            style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
-          >
-            Services & Shortcuts
-          </button>
-          <button
-            onClick={() => setActiveTab("monitoring")}
-            className={`px-6 py-3 font-semibold transition-all rounded-lg ${
-              activeTab === "monitoring"
-                ? "bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm"
-                : "text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30 hover:text-gray-900 dark:hover:text-gray-100"
-            }`}
-            style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
-          >
-            Proxmox Monitoring
-          </button>
-          <button
-            onClick={() => setActiveTab("security")}
-            className={`px-6 py-3 font-semibold transition-all rounded-lg ${
-              activeTab === "security"
-                ? "bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm"
-                : "text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30 hover:text-gray-900 dark:hover:text-gray-100"
-            }`}
-            style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
-          >
-            Security
-          </button>
+        {/* === TAB NAVIGATION & SPOTIFY WIDGET === */}
+        <div className="flex justify-between items-start gap-4 mb-8">
+          {/* Tab Navigation - Links (eigener Container) */}
+          <div className="flex gap-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-xl px-4 pt-3 pb-2 border border-gray-300/50 dark:border-gray-600/50 shadow-lg">
+            <button
+              onClick={() => setActiveTab("services")}
+              className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
+                activeTab === "services"
+                  ? "bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30 hover:text-gray-900 dark:hover:text-gray-100"
+              }`}
+              style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
+            >
+              Services & Shortcuts
+            </button>
+            <button
+              onClick={() => setActiveTab("monitoring")}
+              className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
+                activeTab === "monitoring"
+                  ? "bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30 hover:text-gray-900 dark:hover:text-gray-100"
+              }`}
+              style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
+            >
+              Proxmox Monitoring
+            </button>
+            <button
+              onClick={() => setActiveTab("security")}
+              className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
+                activeTab === "security"
+                  ? "bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30 hover:text-gray-900 dark:hover:text-gray-100"
+              }`}
+              style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
+            >
+              Security
+            </button>
+          </div>
+
+          {/* Spotify Widget - Rechts (separater Container, kein Rahmen) */}
+          <div className="flex-shrink-0">
+            <SpotifyCard />
+          </div>
         </div>
 
         {/* === CONTENT BASED ON ACTIVE TAB === */}

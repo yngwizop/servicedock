@@ -25,6 +25,7 @@ from routers.appearance import router as appearance_router
 from routers.auth import router as auth_router
 from routers.proxmox import router as proxmox_router
 from routers.admin import router as admin_router
+from routers.spotify import router as spotify_router  # NEW: Spotify AddOn
 
 # Disable SSL warnings for Proxmox connections
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -87,6 +88,7 @@ app.include_router(appearance_router)     # /api/appearance/*
 app.include_router(auth_router)           # /api/login
 app.include_router(proxmox_router)        # /api/proxmox/*
 app.include_router(admin_router)          # /api/admin/*
+app.include_router(spotify_router)        # /api/spotify/* (AddOn)
 
 # Note: Reorder endpoints are in their respective routers:
 # - PUT /api/admin/services/reorder (in services router)
@@ -118,7 +120,8 @@ def get_api_info():
             "appearance",
             "auth",
             "proxmox",
-            "admin"
+            "admin",
+            "spotify"
         ],
         "features": [
             "JWT Authentication",

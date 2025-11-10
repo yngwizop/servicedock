@@ -78,6 +78,25 @@ CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_log(action);
 CREATE INDEX IF NOT EXISTS idx_audit_ip ON audit_log(ip_address);
 
+-- NEU: Spotify-Konfigurationstabelle für AddOn
+CREATE TABLE IF NOT EXISTS spotify_config (
+    id INT PRIMARY KEY DEFAULT 1,
+    client_id VARCHAR(255) NOT NULL,
+    client_secret TEXT NOT NULL,          -- Verschlüsselt (wie Proxmox Token)
+    redirect_uri VARCHAR(500) NOT NULL,
+    access_token TEXT,                    -- Verschlüsselt
+    refresh_token TEXT,                   -- Verschlüsselt
+    token_expires_at TIMESTAMP,           -- Wann läuft Access Token ab
+    scope TEXT,                           -- Spotify Scopes (z.B. 'user-read-currently-playing user-read-playback-state')
+    connected BOOLEAN DEFAULT FALSE,      -- Ist OAuth Flow abgeschlossen?
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT spotify_single_row CHECK (id = 1)
+);
+
+-- Index für schnelle Token-Abfrage
+CREATE INDEX IF NOT EXISTS idx_spotify_connected ON spotify_config(connected);
+
 -- HIER SIND DIE ÄNDERUNGEN (INSERT/UPDATE)
 -- Fügt die Standard-Einstellungszeile ein/aktualisiert sie.
 INSERT INTO appearance (id, bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields)
