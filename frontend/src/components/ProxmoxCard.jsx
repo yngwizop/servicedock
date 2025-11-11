@@ -83,80 +83,88 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
       {/* Abstand nach Header */}
       <div className="mb-2"></div>
       
-      {/* Ressourcen-Informationen - Modern, mehr Luft, weichere Bars */}
-      {isRunning && (
-        <div className="space-y-3 mb-4">
-          {/* CPU */}
-          <div>
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-gray-600 dark:text-gray-400 font-medium">CPU</span>
-              <span className="font-bold text-gray-800 dark:text-white">{cpuPercent}%</span>
+      {/* Ressourcen-Container mit fester Mindesthöhe */}
+      <div className="min-h-[180px] flex flex-col justify-between mb-4">
+        {/* Ressourcen-Informationen - Modern, mehr Luft, weichere Bars */}
+        {isRunning ? (
+          <div className="space-y-3">
+            {/* CPU */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-600 dark:text-gray-400 font-medium">CPU</span>
+                <span className="font-bold text-gray-800 dark:text-white">{cpuPercent}%</span>
+              </div>
+              <div className="w-full bg-gray-200/70 dark:bg-gray-700/70 rounded-full h-2 overflow-hidden shadow-inner">
+                <div 
+                  className="bg-gradient-to-r from-blue-400 to-blue-600 h-2 rounded-full transition-all duration-500 shadow-md"
+                  style={{ width: `${Math.min(cpuPercent, 100)}%` }}
+                ></div>
+              </div>
             </div>
-            <div className="w-full bg-gray-200/70 dark:bg-gray-700/70 rounded-full h-2 overflow-hidden shadow-inner">
-              <div 
-                className="bg-gradient-to-r from-blue-400 to-blue-600 h-2 rounded-full transition-all duration-500 shadow-md"
-                style={{ width: `${Math.min(cpuPercent, 100)}%` }}
-              ></div>
+            
+            {/* RAM */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-600 dark:text-gray-400 font-medium">RAM</span>
+                <span className="font-bold text-gray-800 dark:text-white">{memPercent}%</span>
+              </div>
+              <div className="w-full bg-gray-200/70 dark:bg-gray-700/70 rounded-full h-2 overflow-hidden shadow-inner">
+                <div 
+                  className="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full transition-all duration-500 shadow-md"
+                  style={{ width: `${Math.min(memPercent, 100)}%` }}
+                ></div>
+              </div>
+            </div>
+            
+            {/* Disk */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-600 dark:text-gray-400 font-medium">Disk</span>
+                <span className="font-bold text-gray-800 dark:text-white">{diskPercent}%</span>
+              </div>
+              <div className="w-full bg-gray-200/70 dark:bg-gray-700/70 rounded-full h-2 overflow-hidden shadow-inner">
+                <div 
+                  className="bg-gradient-to-r from-purple-400 to-purple-600 h-2 rounded-full transition-all duration-500 shadow-md"
+                  style={{ width: `${Math.min(diskPercent, 100)}%` }}
+                ></div>
+              </div>
+            </div>
+            
+            {/* Uptime - Kompakter */}
+            <div className="flex justify-between items-center text-xs pt-2 border-t border-gray-200/50 dark:border-gray-700/50">
+              <span className="text-gray-600 dark:text-gray-400 font-medium flex items-center gap-1">
+                <svg xmlns='http://www.w3.org/2000/svg' className='inline w-4 h-4 text-blue-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>
+                Uptime
+              </span>
+              <span className="font-bold text-gray-800 dark:text-white bg-gray-100/80 dark:bg-gray-800/80 px-2 py-0.5 rounded-full shadow-sm">
+                {formatUptime(resource.uptime)}
+              </span>
             </div>
           </div>
-          
-          {/* RAM */}
-          <div>
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-gray-600 dark:text-gray-400 font-medium">RAM</span>
-              <span className="font-bold text-gray-800 dark:text-white">{memPercent}%</span>
+        ) : (
+          <div className="space-y-3 flex flex-col justify-center h-full">
+            {/* Infozeile mit last run und Uptime */}
+            <div className="text-center text-xs text-gray-600 dark:text-gray-300 pt-2">
+              <span className="block font-semibold">Zuletzt gestartet:</span>
+              {resource.lastRun ? (
+                <span className="block font-mono text-gray-700 dark:text-gray-200 mt-0.5">{resource.lastRun}</span>
+              ) : (
+                <span className="block font-mono text-gray-400 dark:text-gray-500 italic mt-0.5">kein Zeitstempel verfügbar</span>
+              )}
+              <span className="block mt-2">Laufzeit: <span className="font-semibold">{formatUptime(resource.uptime)}</span></span>
             </div>
-            <div className="w-full bg-gray-200/70 dark:bg-gray-700/70 rounded-full h-2 overflow-hidden shadow-inner">
-              <div 
-                className="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full transition-all duration-500 shadow-md"
-                style={{ width: `${Math.min(memPercent, 100)}%` }}
-              ></div>
-            </div>
-          </div>
-          
-          {/* Disk */}
-          <div>
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-gray-600 dark:text-gray-400 font-medium">Disk</span>
-              <span className="font-bold text-gray-800 dark:text-white">{diskPercent}%</span>
-            </div>
-            <div className="w-full bg-gray-200/70 dark:bg-gray-700/70 rounded-full h-2 overflow-hidden shadow-inner">
-              <div 
-                className="bg-gradient-to-r from-purple-400 to-purple-600 h-2 rounded-full transition-all duration-500 shadow-md"
-                style={{ width: `${Math.min(diskPercent, 100)}%` }}
-              ></div>
+            {/* Warnhinweis */}
+            <div className="text-center text-xs text-orange-600 dark:text-orange-400 bg-orange-100/60 dark:bg-orange-900/30 rounded px-2 py-1.5">
+              VM ist offline
             </div>
           </div>
-          
-          {/* Uptime - Kompakter */}
-          <div className="flex justify-between items-center text-xs pt-2 border-t border-gray-200/50 dark:border-gray-700/50">
-            <span className="text-gray-600 dark:text-gray-400 font-medium flex items-center gap-1">
-              <svg xmlns='http://www.w3.org/2000/svg' className='inline w-4 h-4 text-blue-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>
-              Uptime
-            </span>
-            <span className="font-bold text-gray-800 dark:text-white bg-gray-100/80 dark:bg-gray-800/80 px-2 py-0.5 rounded-full shadow-sm">
-              {formatUptime(resource.uptime)}
-            </span>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
       
-
-      {/* Control Buttons - Modern, Clean, Pill-shaped, Outline/Ghost-Style */}
+      {/* Control Buttons */}
       {isAdmin && (
-        <div className="flex gap-2 mt-4">
-          {!isRunning ? (
-            // Gestoppt: Start-Button, Outline, Icon+Text, gleich groß wie andere
-            <button
-              onClick={() => onStart(resource.vmid, resource.type)}
-              className="flex-1 border border-green-500 text-green-600 dark:text-green-400 bg-transparent hover:bg-green-50 dark:hover:bg-green-900/20 py-1.5 px-2 rounded-full transition-all flex items-center justify-center gap-1.5 text-xs font-semibold shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 group"
-              title="VM/Container starten"
-            >
-              <Play size={16} weight="fill" className="group-hover:scale-110 transition-transform" />
-              <span className="hidden xs:inline">Start</span>
-            </button>
-          ) : (
-            // Running: Stop & Reboot, beide Outline/Ghost, Icon+Text, pill-shaped
+        <div className="flex gap-2">
+          {isRunning ? (
             <>
               <button
                 onClick={() => onStop(resource.vmid, resource.type)}
@@ -175,14 +183,26 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
                 <span className="hidden xs:inline">Reboot</span>
               </button>
             </>
+          ) : (
+            <>
+              <button
+                className="flex-1 opacity-0 pointer-events-none border border-transparent py-1.5 px-2 rounded-full"
+                tabIndex={-1}
+                aria-hidden="true"
+                disabled
+              >
+                <span className="hidden xs:inline">Placeholder</span>
+              </button>
+              <button
+                onClick={() => onStart(resource.vmid, resource.type)}
+                className="flex-1 border border-green-500 text-green-600 dark:text-green-400 bg-transparent hover:bg-green-50 dark:hover:bg-green-900/20 py-1.5 px-2 rounded-full transition-all flex items-center justify-center gap-1.5 text-xs font-semibold shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 group"
+                title="VM/Container starten"
+              >
+                <Play size={16} weight="fill" className="group-hover:scale-110 transition-transform" />
+                <span className="hidden xs:inline">Start</span>
+              </button>
+            </>
           )}
-        </div>
-      )}
-      
-      {/* Info wenn gestoppt - Kompakter */}
-      {!isRunning && (
-        <div className="mt-4 text-center text-xs text-gray-500 dark:text-gray-400 italic">
-          Offline
         </div>
       )}
     </div>
