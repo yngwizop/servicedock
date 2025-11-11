@@ -302,23 +302,30 @@ function App() {
 
   // NEU: Reihenfolge persistieren (warte auf Response, rollback nur bei Fehler)
   const reorderServices = async (orderedIds) => {
-    try {
-      const res = await authenticatedFetch(`${BACKEND_URL}/api/services/reorder`, {
-        method: "PUT",
-        body: JSON.stringify(orderedIds),
-      });
-      if (!res.ok) {
-        console.error("Failed to reorder services, reloading data");
-        await fetchData();
-      }
-    } catch (err) {
-      console.error("Failed to reorder services", err);
-      if (err.message.includes('Session expired')) {
-        setIsLoggedIn(false);
-      }
-      await fetchData();
+  console.log('[App] reorderServices called with:', orderedIds);
+  try {
+    const res = await authenticatedFetch(`${BACKEND_URL}/api/services/reorder`, {
+      method: "PUT",
+      body: JSON.stringify({ newOrder: orderedIds }),  // ✅ CORRECT - wrap in object
+    });
+    
+    console.log('[App] Reorder response status:', res.status);
+    
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      console.error("Failed to reorder services:", errorData);
+      await fetchData(); // Reload to get correct order from backend
+    } else {
+      console.log('[App] Reorder successful');
     }
-  };
+  } catch (err) {
+    console.error("Failed to reorder services", err);
+    if (err.message.includes('Session expired')) {
+      setIsLoggedIn(false);
+    }
+    await fetchData(); // Reload to get correct order from backend
+  }
+};
 
   const reorderShortcuts = async (orderedIds) => {
     try {

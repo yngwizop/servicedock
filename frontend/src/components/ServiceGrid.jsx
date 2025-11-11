@@ -36,7 +36,6 @@ function ServiceGrid({
       // Rollback on error
       console.error('Failed to update service:', err);
       setServices(previousServices);
-      // TODO: Replace alert with a nicer notification mechanism
       alert('Fehler beim Speichern. Bitte versuche es erneut.');
     }
   };
@@ -88,6 +87,7 @@ function ServiceGrid({
 
   const onDragOverItem = (e, targetId) => {
     e.preventDefault();
+    e.stopPropagation();
     const el = e.currentTarget;
     const side = computeSide(e, el);
     if (dragOver.id !== targetId || dragOver.side !== side) {
@@ -97,6 +97,8 @@ function ServiceGrid({
 
   const onDropOnItem = (e, targetId) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     const draggedIdStr = e.dataTransfer.getData('text/plain');
     if (!draggedIdStr) {
       setDragOver({ id: null, side: null });
@@ -112,134 +114,158 @@ function ServiceGrid({
     }
 
     const srcIndex = services.findIndex(s => String(s.id) === String(draggedIdStr));
-    if (srcIndex === -1) return;
+    if (srcIndex === -1) {
+      setDragOver({ id: null, side: null });
+      setDraggingId(null);
+      return;
+    }
 
     const targetIndex = services.findIndex(s => String(s.id) === String(targetId));
-    if (targetIndex === -1) return;
+    if (targetIndex === -1) {
+      setDragOver({ id: null, side: null });
+      setDraggingId(null);
+      return;
+    }
 
     const el = e.currentTarget;
     const side = computeSide(e, el);
-    const before = (side === 'left');
-
-    let desiredIndex = before ? targetIndex : targetIndex + 1;
-
-    const newServices = [...services];
-    const [moved] = newServices.splice(srcIndex, 1);
-
-    // Adjust insertion index if we removed an element before the target
-    let finalIndex = desiredIndex;
-    if (srcIndex < desiredIndex) {
-      finalIndex = desiredIndex - 1;
+    
+    // Calculate new position
+    // If dropping on the left side, insert before target
+    // If dropping on the right side, insert after target
+    let newIndex = side === 'left' ? targetIndex : targetIndex + 1;
+    
+    // If we're moving an item from before the target to after it,
+    // we need to account for the removal
+    if (srcIndex < targetIndex) {
+      newIndex--;
     }
 
-    finalIndex = Math.max(0, Math.min(newServices.length, finalIndex));
-    newServices.splice(finalIndex, 0, moved);
+    // Create new array with item moved
+    const newServices = [...services];
+    const [movedItem] = newServices.splice(srcIndex, 1);
+    newServices.splice(newIndex, 0, movedItem);
 
     setServices(newServices);
     setDragOver({ id: null, side: null });
     setDraggingId(null);
-    if (onReorder) onReorder(newServices.map(s => s.id));
+    
+    if (onReorder) {
+      onReorder(newServices.map(s => s.id));
+    }
   };
 
-  // Handle drops on the grid (gaps, end, etc.)
+  // Simplified grid drop handler
   const onDropGrid = (e) => {
     e.preventDefault();
+    
     const draggedIdStr = e.dataTransfer.getData('text/plain');
-    if (!draggedIdStr) return;
+    if (!draggedIdStr) {
+      setDraggingId(null);
+      setDragOver({ id: null, side: null });
+      return;
+    }
 
     const srcIndex = services.findIndex(s => String(s.id) === String(draggedIdStr));
-    if (srcIndex === -1) return;
+    if (srcIndex === -1) {
+      setDraggingId(null);
+      setDragOver({ id: null, side: null });
+      return;
+    }
 
-    let desiredIndexInServices = services.length; // default append
-    if (gridRef && gridRef.current) {
-      const domChildren = Array.from(gridRef.current.children);
-      const visual = domChildren
-        .filter(ch => ch && ch.dataset && ch.dataset.id && String(ch.dataset.id) !== String(draggedIdStr))
-        .map(ch => ({ id: String(ch.dataset.id), rect: ch.getBoundingClientRect() }));
+    // Get all visible card elements
+    if (!gridRef.current) {
+      setDraggingId(null);
+      setDragOver({ id: null, side: null });
+      return;
+    }
 
-      if (visual.length === 0) {
-        desiredIndexInServices = services.length;
-      } else {
-        // group visual items into rows (tolerance)
-        const rows = [];
-        visual.forEach(item => {
-          const topKey = Math.round(item.rect.top);
-          let row = rows.find(r => Math.abs(Math.round(r.top) - topKey) <= 8);
-          if (!row) { row = { top: item.rect.top, items: [] }; rows.push(row); }
-          row.items.push(item);
-        });
+    const gridRect = gridRef.current.getBoundingClientRect();
+    const cards = Array.from(gridRef.current.children)
+      .filter(child => child.dataset && child.dataset.id)
+      .map(child => ({
+        id: String(child.dataset.id),
+        rect: child.getBoundingClientRect()
+      }))
+      .filter(card => String(card.id) !== String(draggedIdStr));
 
-        rows.sort((a,b) => a.top - b.top);
-        rows.forEach(r => r.items.sort((a,b) => a.rect.left - b.rect.left));
+    if (cards.length === 0) {
+      // If no other cards, just move to end
+      const newServices = [...services];
+      const [movedItem] = newServices.splice(srcIndex, 1);
+      newServices.push(movedItem);
+      setServices(newServices);
+      setDraggingId(null);
+      setDragOver({ id: null, side: null });
+      if (onReorder) onReorder(newServices.map(s => s.id));
+      return;
+    }
 
-        // determine target row by Y
-        const y = e.clientY;
-        let targetRow = rows.find(r => r.items.some(it => y >= it.rect.top && y <= it.rect.bottom));
-        if (!targetRow) {
-          let best = null; let bestDist = Infinity;
-          for (const r of rows) { const dist = Math.abs(y - r.top); if (dist < bestDist) { bestDist = dist; best = r; } }
-          targetRow = best || rows[rows.length-1];
-        }
+    const mouseX = e.clientX;
+    const mouseY = e.clientY;
 
-        // find column in row by X midpoint
-        const x = e.clientX;
-        let insertInRow = targetRow.items.length;
-        for (let i = 0; i < targetRow.items.length; i++) {
-          const it = targetRow.items[i];
-          const mid = it.rect.left + it.rect.width/2;
-          if (x < mid) { insertInRow = i; break; }
-        }
+    // Find the closest card to drop position
+    let targetCard = null;
+    let minDistance = Infinity;
+    let insertBefore = false;
 
-        // compute visual position in the filtered array (index where we want to insert in visual order)
-        let countBefore = 0;
-        for (const r of rows) {
-          if (r === targetRow) break;
-          countBefore += r.items.length;
-        }
-        const visualPos = countBefore + insertInRow; // position in visual array (0..visual.length)
+    cards.forEach(card => {
+      const centerX = card.rect.left + card.rect.width / 2;
+      const centerY = card.rect.top + card.rect.height / 2;
+      const distance = Math.sqrt(
+        Math.pow(mouseX - centerX, 2) + Math.pow(mouseY - centerY, 2)
+      );
 
-        if (visualPos >= visual.length) {
-          // Append at end
-          desiredIndexInServices = services.length;
-        } else {
-          const targetId = visual[visualPos].id;
-          const targetIndexInServices = services.findIndex(s => String(s.id) === String(targetId));
-          desiredIndexInServices = targetIndexInServices;
-        }
-
-        if (process.env.NODE_ENV !== 'production') {
-          try {
-            console.debug('[dnd-debug] drop candidate', {
-              draggedId: draggedIdStr,
-              srcIndex,
-              mouse: { x: e.clientX, y: e.clientY },
-              visual: visual.map(v => ({ id: v.id, left: Math.round(v.rect.left), top: Math.round(v.rect.top), w: Math.round(v.rect.width) })),
-              rows: rows.map(r => ({ top: Math.round(r.top), len: r.items.length })),
-              visualPos,
-              desiredIndexInServices
-            });
-          } catch (err) { /* ignore debug failures */ }
-        }
+      if (distance < minDistance) {
+        minDistance = distance;
+        targetCard = card;
+        // Determine if we should insert before or after
+        insertBefore = mouseX < centerX;
       }
-    } else {
-      desiredIndexInServices = services.length;
+    });
+
+    if (!targetCard) {
+      setDraggingId(null);
+      setDragOver({ id: null, side: null });
+      return;
     }
 
-    // Now remove the dragged element and insert at the correct position
+    // Find target index in services array
+    const targetIndex = services.findIndex(s => String(s.id) === String(targetCard.id));
+    if (targetIndex === -1) {
+      setDraggingId(null);
+      setDragOver({ id: null, side: null });
+      return;
+    }
+
+    // Calculate insertion index
+    let newIndex = insertBefore ? targetIndex : targetIndex + 1;
+    
+    // Adjust if moving from before target
+    if (srcIndex < targetIndex) {
+      newIndex--;
+    }
+
+    // Perform the move
     const newServices = [...services];
-    const [moved] = newServices.splice(srcIndex, 1);
-
-    let finalIndex = desiredIndexInServices;
-    if (srcIndex < desiredIndexInServices) {
-      finalIndex = desiredIndexInServices - 1;
-    }
-    finalIndex = Math.max(0, Math.min(newServices.length, finalIndex));
-    newServices.splice(finalIndex, 0, moved);
+    const [movedItem] = newServices.splice(srcIndex, 1);
+    newServices.splice(newIndex, 0, movedItem);
 
     setServices(newServices);
     setDragOver({ id: null, side: null });
     setDraggingId(null);
-    if (onReorder) onReorder(newServices.map(s => s.id));
+    
+    if (onReorder) {
+      onReorder(newServices.map(s => s.id));
+    }
+  };
+
+  const onDragOverGrid = (e) => {
+    e.preventDefault();
+    // Clear item-specific drag over state when dragging over grid gaps
+    if (dragOver.id !== null) {
+      setDragOver({ id: null, side: null });
+    }
   };
 
   return (
@@ -247,7 +273,7 @@ function ServiceGrid({
       <h2 className="text-2xl font-semibold mb-4" style={{ color: textColor }}>Services</h2>
       <div
         ref={gridRef}
-        onDragOver={(e) => e.preventDefault()}
+        onDragOver={onDragOverGrid}
         onDrop={onDropGrid}
         className={`grid grid-cols-2 md:grid-cols-3 ${colsClass} gap-5`}
         role="list"
@@ -257,7 +283,7 @@ function ServiceGrid({
           <div
             key={s.id}
             data-id={s.id}
-            className={`relative group ${isLoggedIn ? (String(draggingId) === String(s.id) ? 'cursor-grabbing' : 'cursor-grab') : ''}`}
+            className={`relative group ${isLoggedIn ? (String(draggingId) === String(s.id) ? 'cursor-grabbing opacity-50' : 'cursor-grab') : ''}`}
             draggable={isLoggedIn}
             onDragStart={(e) => onDragStart(e, s.id)}
             onDragEnd={onDragEnd}
@@ -267,12 +293,12 @@ function ServiceGrid({
             aria-grabbed={String(draggingId) === String(s.id)}
           >
             {/* Linke Einfügelinie (vertikal) */}
-            {dragOver.id === s.id && dragOver.side === 'left' && draggingId && (
+            {dragOver.id === s.id && dragOver.side === 'left' && draggingId && String(draggingId) !== String(s.id) && (
               <div className="absolute left-0 top-2 bottom-2 w-1 rounded bg-blue-600 z-20 transform -translate-x-1 transition-all"></div>
             )}
 
             {/* Rechte Einfügelinie (vertikal) */}
-            {dragOver.id === s.id && dragOver.side === 'right' && draggingId && (
+            {dragOver.id === s.id && dragOver.side === 'right' && draggingId && String(draggingId) !== String(s.id) && (
               <div className="absolute right-0 top-2 bottom-2 w-1 rounded bg-blue-600 z-20 transform translate-x-1 transition-all"></div>
             )}
 

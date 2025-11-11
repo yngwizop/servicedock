@@ -464,7 +464,8 @@ docker compose logs backend | grep "LOGIN"
 - [x] Re-Encryption Tools bei Key-Wechsel
 
 ### 🚧 In Planung
-- [ ] Drag & Drop für Service/Shortcut-Reihenfolge
+- [x] Drag & Drop für Service-Reihenfolge
+- [ ] Drag & Drop für Shortcut-Reihenfolge
 - [ ] Multi-Spalten-Layout mit anpassbaren Grid-Bereichen
 - [ ] Export/Import von Konfigurationen (JSON/YAML)
 - [ ] Multi-User-Support mit Rollen (Admin/User/Guest)

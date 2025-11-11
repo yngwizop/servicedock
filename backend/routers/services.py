@@ -33,6 +33,24 @@ def add_service(service: Service, token: dict = Depends(require_role("admin")), 
     db.commit()
     return {"id": new_id, "position": new_pos, **service.dict()}
 
+# ✅ MOVE THIS BEFORE THE /{service_id} ROUTES!
+@router.put("/reorder", tags=["admin"])
+def reorder_services(request: ReorderRequest, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+    """Reorder services"""
+    cur = db.cursor()
+    try:
+        for idx, service_id in enumerate(request.newOrder):
+            cur.execute(
+                "UPDATE services SET position = %s WHERE id = %s;",
+                (idx, service_id)
+            )
+        db.commit()
+        return {"message": "Services reordered successfully"}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Reorder services failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reorder services")
+
 @router.put("/{service_id}")
 def update_service(service_id: int, service: Service, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     cur = db.cursor()
@@ -57,20 +75,3 @@ def delete_service(service_id: int, token: dict = Depends(require_role("admin"))
     if not deleted:
         raise HTTPException(status_code=404, detail="Service not found")
     return {"message": "deleted"}
-
-@router.put("/reorder", tags=["admin"])
-def reorder_services(request: ReorderRequest, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
-    """Reorder services"""
-    cur = db.cursor()
-    try:
-        for idx, service_id in enumerate(request.newOrder):
-            cur.execute(
-                "UPDATE services SET position = %s WHERE id = %s;",
-                (idx, service_id)
-            )
-        db.commit()
-        return {"message": "Services reordered successfully"}
-    except Exception as e:
-        db.rollback()
-        logger.error(f"Reorder services failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to reorder services")
