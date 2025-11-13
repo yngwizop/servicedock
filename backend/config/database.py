@@ -1,7 +1,7 @@
 """Database connection pool and dependency injection"""
 import psycopg2
 import psycopg2.pool
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 from fastapi import HTTPException
 import logging
 
@@ -17,14 +17,25 @@ def initialize_connection_pool():
     global db_pool
     try:
         result = urlparse(DATABASE_URL)
-        db_pool = psycopg2.pool.SimpleConnectionPool(
-            minconn=2,  # Minimum 2 Connections immer offen
-            maxconn=10,  # Maximum 10 Connections (DoS-Schutz)
+        # Extrahiere optionale SSL-Parameter aus der URL (z.B. sslmode)
+        query = parse_qs(result.query)
+        conn_kwargs = dict(
             dbname=result.path[1:],
             user=result.username,
             password=result.password,
             host=result.hostname,
             port=result.port
+        )
+        # Übernehme alle Query-Parameter (z.B. sslmode, sslrootcert, sslcert, sslkey)
+        for k, v in query.items():
+            if len(v) == 1:
+                conn_kwargs[k] = v[0]
+            else:
+                conn_kwargs[k] = v
+        db_pool = psycopg2.pool.SimpleConnectionPool(
+            minconn=2,
+            maxconn=10,
+            **conn_kwargs
         )
         logger.info("Database connection pool initialized (min=2, max=10)")
     except Exception as e:
