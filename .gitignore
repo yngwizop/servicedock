@@ -1,5 +1,15 @@
+# Nginx SSL-Zertifikate und Schlüssel (niemals ins Repo!)
+nginx/ssl/
+nginx/ssl/key.pem
+nginx/ssl/cert.pem
+
 # SEHR WICHTIG: Deine geheime Konfiguration
 .env
+
+# SSL-Zertifikate und Schlüssel (niemals ins Repo!)
+db/ssl/
+db/ssl/server.key
+db/ssl/server.crt
 
 # Datenbank-Volume-Daten (falls es lokal erstellt wird)
 postgres_data/
