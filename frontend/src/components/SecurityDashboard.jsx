@@ -109,6 +109,10 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
         setDeletePassword('');
         setShowDeleteModal(false);
         fetchSecurityData();
+      } else if (res.status === 429) {
+        alert(`⏱️ Rate Limit erreicht!\n\nDu kannst nur 3x pro Stunde alle Logs löschen.\nBitte warte eine Stunde oder starte das Backend neu.`);
+      } else if (res.status === 403) {
+        alert(`❌ Falsches Admin-Passwort`);
       } else {
         const errorData = await res.json();
         alert(`❌ Fehler: ${errorData.detail || 'Failed to delete logs'}`);
