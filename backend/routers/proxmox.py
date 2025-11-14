@@ -185,6 +185,7 @@ def list_proxmox_vms(request: Request, token: dict = Depends(require_role("admin
     
     try:
         all_resources = []
+        node_stats = []
         
         # Hole alle Nodes
         nodes = proxmox.nodes.get()
@@ -195,6 +196,20 @@ def list_proxmox_vms(request: Request, token: dict = Depends(require_role("admin
             # Wenn ein spezifischer Node konfiguriert ist, nur diesen abfragen
             if configured_node and node_name != configured_node:
                 continue
+            
+            # Hole Node-Statistiken (CPU Cores des Hosts)
+            try:
+                node_status = proxmox.nodes(node_name).status.get()
+                node_stats.append({
+                    "node": node_name,
+                    "cpus": node_status.get('cpuinfo', {}).get('cpus', 0),
+                    "cpu_usage": node_status.get('cpu', 0),
+                    "memory_total": node_status.get('memory', {}).get('total', 0),
+                    "memory_used": node_status.get('memory', {}).get('used', 0),
+                    "uptime": node_status.get('uptime', 0)
+                })
+            except Exception as e:
+                logger.error(f"Error fetching node stats from {node_name}", exc_info=False)
             
             try:
                 # Hole QEMUs (VMs)
@@ -242,10 +257,13 @@ def list_proxmox_vms(request: Request, token: dict = Depends(require_role("admin
             status="success",
             user_type="guest",
             ip_address=client_ip,
-            details={"count": len(all_resources)}
+            details={"count": len(all_resources), "nodes": len(node_stats)}
         )
         
-        return {"resources": all_resources}
+        return {
+            "resources": all_resources,
+            "nodes": node_stats
+        }
         
     except Exception as e:
         logger.error("Proxmox API error", exc_info=False)

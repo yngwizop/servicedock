@@ -13,6 +13,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
 
 function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
   const [resources, setResources] = useState([]);
+  const [nodes, setNodes] = useState([]); // NEU: Node-Informationen
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isConfigured, setIsConfigured] = useState(false);
@@ -50,6 +51,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
       
       const data = await res.json();
       setResources(data.resources || []);
+      setNodes(data.nodes || []); // NEU: Speichere Node-Daten
     } catch (err) {
       console.error('Error fetching Proxmox data:', err);
       setError(err.message || 'Failed to connect to Proxmox');
@@ -304,7 +306,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
       </div>
 
       {/* System Stats Cards - NACH der Überschrift */}
-      <ProxmoxStatsCards resources={resources} />
+      <ProxmoxStatsCards resources={resources} nodes={nodes} />
 
       {/* Filter & Sort Bar */}
       <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl shadow-lg p-4 mb-6 border border-gray-200 dark:border-gray-700">

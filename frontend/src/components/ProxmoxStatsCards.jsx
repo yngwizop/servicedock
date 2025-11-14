@@ -3,18 +3,16 @@ import { Desktop, PlayCircle, StopCircle, Cpu } from 'phosphor-react';
 
 /**
  * ProxmoxStatsCards - Zeigt System-Übersicht wie im Screenshot
- * Inspiriert von modernen Dashboards (Gesamt, Laufend, Gestoppt, CPU Cores)
+ * Inspiriert von modernen Dashboards (Total, Running, Stopped, CPU Cores)
  */
-function ProxmoxStatsCards({ resources }) {
+function ProxmoxStatsCards({ resources, nodes }) {
   // Statistiken berechnen
   const total = resources.length;
   const running = resources.filter(r => r.status === 'running').length;
   const stopped = resources.filter(r => r.status === 'stopped').length;
   
-  // CPU Cores summieren (nur von running VMs/Containers)
-  const totalCpuCores = resources
-    .filter(r => r.status === 'running')
-    .reduce((sum, r) => sum + (r.cpus || 0), 0);
+  // CPU Cores von allen Nodes summieren (physische CPU Cores des Hosts)
+  const totalCpuCores = nodes?.reduce((sum, node) => sum + (node.cpus || 0), 0) || 0;
 
   // Card-Komponente für Wiederverwendbarkeit
   const StatCard = ({ title, value, icon: Icon, gradient, iconColor }) => (
@@ -39,39 +37,39 @@ function ProxmoxStatsCards({ resources }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {/* Gesamt */}
+      {/* Total */}
       <StatCard
-        title="Gesamt"
+        title="Total"
         value={total}
         icon={Desktop}
-        gradient="bg-gradient-to-br from-blue-500/90 to-blue-700/90"
+        gradient="bg-gradient-to-br from-slate-600/90 to-slate-800/90"
         iconColor="text-white"
       />
 
-      {/* Laufend (Running) */}
+      {/* Running */}
       <StatCard
-        title="Laufend"
+        title="Running"
         value={running}
         icon={PlayCircle}
-        gradient="bg-gradient-to-br from-green-500/90 to-green-700/90"
+        gradient="bg-gradient-to-br from-emerald-700/90 to-emerald-900/90"
         iconColor="text-white"
       />
 
-      {/* Gestoppt (Stopped) */}
+      {/* Stopped */}
       <StatCard
-        title="Gestoppt"
+        title="Stopped"
         value={stopped}
         icon={StopCircle}
-        gradient="bg-gradient-to-br from-red-500/90 to-red-700/90"
+        gradient="bg-gradient-to-br from-rose-700/90 to-rose-900/90"
         iconColor="text-white"
       />
 
-      {/* CPU Cores (nur running) */}
+      {/* CPU Cores (all VMs/Containers) */}
       <StatCard
         title="CPU Cores"
         value={totalCpuCores}
         icon={Cpu}
-        gradient="bg-gradient-to-br from-yellow-500/90 to-yellow-700/90"
+        gradient="bg-gradient-to-br from-amber-700/90 to-amber-900/90"
         iconColor="text-white"
       />
     </div>

@@ -96,7 +96,7 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
               </div>
               <div className="w-full bg-gray-200/70 dark:bg-gray-700/70 rounded-full h-2 overflow-hidden shadow-inner">
                 <div 
-                  className="bg-gradient-to-r from-blue-400 to-blue-600 h-2 rounded-full transition-all duration-500 shadow-md"
+                  className="bg-gradient-to-r from-slate-500 to-slate-700 h-2 rounded-full transition-all duration-500 shadow-md"
                   style={{ width: `${Math.min(cpuPercent, 100)}%` }}
                 ></div>
               </div>
@@ -110,7 +110,7 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
               </div>
               <div className="w-full bg-gray-200/70 dark:bg-gray-700/70 rounded-full h-2 overflow-hidden shadow-inner">
                 <div 
-                  className="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full transition-all duration-500 shadow-md"
+                  className="bg-gradient-to-r from-emerald-600 to-emerald-800 h-2 rounded-full transition-all duration-500 shadow-md"
                   style={{ width: `${Math.min(memPercent, 100)}%` }}
                 ></div>
               </div>
@@ -124,7 +124,7 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
               </div>
               <div className="w-full bg-gray-200/70 dark:bg-gray-700/70 rounded-full h-2 overflow-hidden shadow-inner">
                 <div 
-                  className="bg-gradient-to-r from-purple-400 to-purple-600 h-2 rounded-full transition-all duration-500 shadow-md"
+                  className="bg-gradient-to-r from-amber-600 to-amber-800 h-2 rounded-full transition-all duration-500 shadow-md"
                   style={{ width: `${Math.min(diskPercent, 100)}%` }}
                 ></div>
               </div>
@@ -168,7 +168,7 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
             <>
               <button
                 onClick={() => onStop(resource.vmid, resource.type)}
-                className="flex-1 border border-red-500 text-red-600 dark:text-red-400 bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 py-1.5 px-2 rounded-full transition-all flex items-center justify-center gap-1 text-xs font-semibold shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 group"
+                className="flex-1 border border-rose-700 text-rose-700 dark:text-rose-400 bg-transparent hover:bg-rose-50 dark:hover:bg-rose-900/20 py-1.5 px-2 rounded-full transition-all flex items-center justify-center gap-1 text-xs font-semibold shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-rose-400 group"
                 title="Stoppen"
               >
                 <Stop size={16} weight="fill" className="group-hover:scale-110 transition-transform" />
@@ -176,7 +176,7 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
               </button>
               <button
                 onClick={() => onReboot(resource.vmid, resource.type)}
-                className="flex-1 border border-yellow-500 text-yellow-600 dark:text-yellow-400 bg-transparent hover:bg-yellow-50 dark:hover:bg-yellow-900/20 py-1.5 px-2 rounded-full transition-all flex items-center justify-center gap-1 text-xs font-semibold shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-400 group"
+                className="flex-1 border border-amber-700 text-amber-700 dark:text-amber-400 bg-transparent hover:bg-amber-50 dark:hover:bg-amber-900/20 py-1.5 px-2 rounded-full transition-all flex items-center justify-center gap-1 text-xs font-semibold shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-400 group"
                 title="Neustarten"
               >
                 <ArrowsClockwise size={16} weight="bold" className="group-hover:rotate-180 transition-transform duration-500" />
@@ -184,24 +184,14 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
               </button>
             </>
           ) : (
-            <>
-              <button
-                className="flex-1 opacity-0 pointer-events-none border border-transparent py-1.5 px-2 rounded-full"
-                tabIndex={-1}
-                aria-hidden="true"
-                disabled
-              >
-                <span className="hidden xs:inline">Placeholder</span>
-              </button>
-              <button
-                onClick={() => onStart(resource.vmid, resource.type)}
-                className="flex-1 border border-green-500 text-green-600 dark:text-green-400 bg-transparent hover:bg-green-50 dark:hover:bg-green-900/20 py-1.5 px-2 rounded-full transition-all flex items-center justify-center gap-1.5 text-xs font-semibold shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 group"
-                title="VM/Container starten"
-              >
-                <Play size={16} weight="fill" className="group-hover:scale-110 transition-transform" />
-                <span className="hidden xs:inline">Start</span>
-              </button>
-            </>
+            <button
+              onClick={() => onStart(resource.vmid, resource.type)}
+              className="w-full border border-emerald-700 text-emerald-700 dark:text-emerald-400 bg-transparent hover:bg-emerald-50 dark:hover:bg-emerald-900/20 py-1.5 px-2 rounded-full transition-all flex items-center justify-center gap-1.5 text-xs font-semibold shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-400 group"
+              title="VM/Container starten"
+            >
+              <Play size={16} weight="fill" className="group-hover:scale-110 transition-transform" />
+              <span className="hidden xs:inline">Start</span>
+            </button>
           )}
         </div>
       )}
