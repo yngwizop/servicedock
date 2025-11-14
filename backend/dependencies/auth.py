@@ -1,6 +1,7 @@
 """Authentication dependencies and helpers"""
 import os
-from fastapi import HTTPException, Depends, Request
+from typing import Optional
+from fastapi import HTTPException, Depends, Request, Cookie
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 
@@ -9,7 +10,7 @@ from core.security import get_password_hash
 from core.logging import logger
 
 # HTTP Bearer token scheme
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)  # auto_error=False to check cookie fallback
 
 # Global admin password hash
 ADMIN_PASSWORD_HASH = None
@@ -18,13 +19,30 @@ ADMIN_PASSWORD_HASH = None
 TRUST_FORWARDED_HEADERS = os.getenv("TRUST_FORWARDED_HEADERS", "false").lower() == "true"
 TRUSTED_PROXIES = [ip.strip() for ip in os.getenv("TRUSTED_PROXIES", "").split(",") if ip.strip()]
 
-def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+def verify_token(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    access_token: Optional[str] = Cookie(None)
+) -> dict:
     """
-    Verifiziert das JWT-Token aus dem Authorization Header.
-    Wird als Dependency für geschützte Endpunkte verwendet.
+    Verifiziert das JWT-Token aus Cookie (bevorzugt) oder Authorization Header (Fallback).
+    Cookie-basierte Auth bietet besseren XSS-Schutz.
     """
-    try:
+    token = None
+    
+    # Priorität 1: httpOnly Cookie (sicherer)
+    if access_token:
+        token = access_token
+    # Fallback: Authorization Header (für API-Clients)
+    elif credentials:
         token = credentials.credentials
+    
+    if not token:
+        raise HTTPException(
+            status_code=401, 
+            detail="Authentication required"
+        )
+    
+    try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
@@ -37,15 +55,33 @@ def require_role(required_role: str):
     """
     Dependency für Rollen-basierte Zugriffskontrolle.
     Prüft ob der Token die erforderliche Rolle hat.
+    Unterstützt Cookie und Header-basierte Auth.
     
     Usage:
         @app.get("/api/admin/something")
         def admin_only(token: dict = Depends(require_role("admin"))):
             ...
     """
-    def role_checker(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
-        try:
+    def role_checker(
+        credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+        access_token: Optional[str] = Cookie(None)
+    ) -> dict:
+        token = None
+        
+        # Priorität 1: httpOnly Cookie
+        if access_token:
+            token = access_token
+        # Fallback: Authorization Header
+        elif credentials:
             token = credentials.credentials
+        
+        if not token:
+            raise HTTPException(
+                status_code=401,
+                detail="Authentication required"
+            )
+        
+        try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             
             # Prüfe Username

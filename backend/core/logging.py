@@ -1,6 +1,7 @@
 """Logging setup with sensitive data filtering"""
 import logging
 import sys
+import re
 
 def setup_logging():
     """Konfiguriert strukturiertes Logging mit Sensitive-Data-Filter"""
@@ -23,24 +24,75 @@ def setup_logging():
     return logger
 
 class SensitiveDataFilter(logging.Filter):
-    """Filtert sensible Daten aus Logs"""
-    SENSITIVE_PATTERNS = [
-        'password', 'token', 'secret', 'key', 'authorization',
-        'api_key', 'access_token', 'refresh_token'
+    """
+    Enhanced filter for sensitive data in logs
+    Masks passwords, tokens, secrets, API keys, and other sensitive information
+    """
+    # Patterns to detect sensitive field names
+    SENSITIVE_FIELD_PATTERNS = [
+        'password', 'passwd', 'pwd',
+        'token', 'access_token', 'refresh_token', 'jwt',
+        'secret', 'api_key', 'apikey',
+        'authorization', 'auth',
+        'key', 'private', 'credential',
+        'encryption_key', 'signing_key'
+    ]
+    
+    # Regex patterns to mask sensitive values
+    SENSITIVE_VALUE_PATTERNS = [
+        (re.compile(r'(password["\']?\s*[:=]\s*["\']?)([^"\'}\s,]+)', re.IGNORECASE), r'\1***REDACTED***'),
+        (re.compile(r'(token["\']?\s*[:=]\s*["\']?)([^"\'}\s,]+)', re.IGNORECASE), r'\1***REDACTED***'),
+        (re.compile(r'(Bearer\s+)([A-Za-z0-9\-._~+/]+=*)', re.IGNORECASE), r'\1***REDACTED***'),
+        (re.compile(r'([A-Za-z0-9]{32,})', re.IGNORECASE), r'***HASH_REDACTED***'),  # Long hashes
     ]
     
     def filter(self, record):
-        # Filtere nur wenn Message sensible Patterns enthält
-        message_lower = str(record.msg).lower()
-        for pattern in self.SENSITIVE_PATTERNS:
-            if pattern in message_lower:
-                # Ersetze Args mit REDACTED
-                if record.args:
-                    record.args = tuple(['***REDACTED***'] * len(record.args))
-                # Bei Token/Secret im Message: redact
-                if 'token' in message_lower or 'secret' in message_lower:
-                    record.msg = record.msg[:50] + ' ***REDACTED***'
+        """Filter and mask sensitive data in log records"""
+        # Mask message string
+        if isinstance(record.msg, str):
+            record.msg = self._mask_sensitive_data(record.msg)
+        
+        # Mask args
+        if record.args:
+            if isinstance(record.args, dict):
+                record.args = self._mask_dict(record.args)
+            elif isinstance(record.args, (list, tuple)):
+                record.args = tuple(self._mask_value(arg) for arg in record.args)
+        
         return True
+    
+    def _mask_sensitive_data(self, text):
+        """Apply regex patterns to mask sensitive data"""
+        for pattern, replacement in self.SENSITIVE_VALUE_PATTERNS:
+            text = pattern.sub(replacement, text)
+        return text
+    
+    def _mask_dict(self, data):
+        """Recursively mask sensitive fields in dictionaries"""
+        if not isinstance(data, dict):
+            return data
+        
+        masked = {}
+        for key, value in data.items():
+            key_lower = str(key).lower()
+            
+            # Check if key is sensitive
+            if any(pattern in key_lower for pattern in self.SENSITIVE_FIELD_PATTERNS):
+                masked[key] = '***REDACTED***'
+            elif isinstance(value, dict):
+                masked[key] = self._mask_dict(value)
+            elif isinstance(value, (list, tuple)):
+                masked[key] = [self._mask_dict(v) if isinstance(v, dict) else v for v in value]
+            else:
+                masked[key] = self._mask_value(value)
+        
+        return masked
+    
+    def _mask_value(self, value):
+        """Mask individual values if they look sensitive"""
+        if isinstance(value, str):
+            return self._mask_sensitive_data(value)
+        return value
 
 # Initialize logger
 logger = setup_logging()

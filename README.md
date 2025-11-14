@@ -4,7 +4,7 @@
 
 Ein modernes, selbst gehostetes Dashboard zum Verwalten und Organisieren deiner Web-Services, Shortcuts und Proxmox VMs. Perfekt für Homelab-Setups, Self-Hosting-Enthusiasten oder als persönliche Startseite mit integriertem VM-Management.
 
-**Version:** 2.0 | **Status:** ✅ Production Ready | **Security Score:** 10.0/10 🟢
+**Version:** 3.0 | **Status:** ✅ Production Ready | **Security Score:** 10.0/10 🟢
 
 ---
 
@@ -20,6 +20,7 @@ Ein modernes, selbst gehostetes Dashboard zum Verwalten und Organisieren deiner 
 ### 🔒 Sicherheit & Verschlüsselung
 - **[ENCRYPTION.md](ENCRYPTION.md)** - Token-Verschlüsselung mit Fernet (AES-128) und Security Best Practices
 - **[FINAL_SECURITY_CHECK.md](FINAL_SECURITY_CHECK.md)** - Umfassende Sicherheitsanalyse und Production-Readiness
+- **[RATE_LIMITS.md](RATE_LIMITS.md)** - **NEU in v3.0!** Comprehensive Rate Limits Reference - ALL Endpoints (Complete Documentation)
 
 ### 🔄 Wartung & Token-Management
 - **[TOKEN_ROTATION_GUIDE.md](TOKEN_ROTATION_GUIDE.md)** - Proxmox API Tokens regelmäßig erneuern (alle 60 Tage)
@@ -70,9 +71,17 @@ Ein modernes, selbst gehostetes Dashboard zum Verwalten und Organisieren deiner 
 - **Audit-Logging**: Alle Proxmox-Aktionen werden protokolliert
   - Automatische Bereinigung alter Logs (>90 Tage) beim Start
   - Manuelles Löschen via Security Dashboard (Passwort erforderlich)
-- **Rate-Limiting**: Schutz vor API-Missbrauch (30/min View, 10/min Control)
+  - **NEU:** 6-Wege-Filterung (all/failed/failed_logins/permission_errors/vm_operations/success)
+- **Rate-Limiting**: Schutz vor API-Missbrauch 
+  - **NEU:** Umfassende Rate Limits auf ALLEN Endpoints (siehe [RATE_LIMITS.md](RATE_LIMITS.md))
+  - Auth: 5/min (Login), Proxmox: 30/min (Batch-Operationen)
+  - Services/Shortcuts/Appearance: 10-60/min (neu hinzugefügt)
+  - **NEU:** Live Rate Limit Usage Monitoring im Dashboard
 - **Token-Rotation**: Automatische Warnung nach 60 Tagen, Tracking von Token-Alter
 - **Security Dashboard**: Übersicht über Audit-Logs, Statistiken und Token-Status
+  - **NEU:** Live Rate Limit Usage mit Fortschrittsbalken (🟢🟠🔴)
+  - **NEU:** Security Threats Card (Failed Logins, Blocked IPs, Permission Errors)
+  - **NEU:** Backend-seitige Log-Filterung für schnellere Analysen
 
 ### 🚀 Technologie-Stack
 - **Frontend**: React 18 + Tailwind CSS + Vite
@@ -256,22 +265,24 @@ backend/
 - `GET /config` - Proxmox-Konfiguration abrufen (Token maskiert)
 - `PUT /config` - Proxmox-Konfiguration speichern (Token verschlüsselt)
 - `GET /vms` - Alle VMs/Container abrufen
-  - Rate Limit: 30 Anfragen/Minute
+  - Rate Limit: 30 Anfragen/Minute (erhöht für Batch-Operationen)
 - `POST /vm/{vmid}/start` - VM/Container starten
-  - Rate Limit: 10 Anfragen/Minute
+  - Rate Limit: 30 Anfragen/Minute (erhöht für Batch-Operationen)
   - Query-Parameter: `vm_type` (qemu/lxc)
 - `POST /vm/{vmid}/stop` - VM/Container stoppen
-  - Rate Limit: 10 Anfragen/Minute
+  - Rate Limit: 30 Anfragen/Minute (erhöht für Batch-Operationen)
 - `POST /vm/{vmid}/reboot` - VM/Container neustarten
-  - Rate Limit: 10 Anfragen/Minute
+  - Rate Limit: 30 Anfragen/Minute (erhöht für Batch-Operationen)
 
 **Admin Security** (`/api/admin`) - Admin-only
 - `GET /audit-logs` - Audit-Logs abrufen (paginiert)
-  - Query-Parameter: `limit` (default: 100), `offset` (default: 0)
+  - Query-Parameter: `limit` (default: 100), `offset` (default: 0), `filter_type` (all/failed/failed_logins/permission_errors/vm_operations/success)
 - `GET /audit-stats` - Audit-Statistiken abrufen
   - Aktionen (24h), Top-IPs (7d), Fehlerrate (24h)
+  - **NEU:** Security Threats (Failed Logins, Blocked IPs, Permission Errors)
+- `GET /rate-limit-usage` - **NEU!** Live Rate Limit Usage Monitoring
 - `POST /audit-logs/cleanup` - Alte Logs löschen
-  - Query-Parameter: `days` (default: 90)
+  - Query-Parameter: `days` (1-365, default: 90)
 - `POST /audit-logs/delete-all` - Alle Logs löschen
   - Body: `{"password": "admin-password"}`
 - `GET /proxmox/token-info` - Token-Alter und Rotation-Status
@@ -462,9 +473,15 @@ docker compose logs backend | grep "LOGIN"
 - [x] Modulare Backend-Architektur (92% Code-Reduktion)
 - [x] Clock & Weather Widgets
 - [x] Re-Encryption Tools bei Key-Wechsel
+- [x] Drag & Drop für Service-Reihenfolge
+- [x] **NEU v3.0:** Live Rate Limit Usage Monitoring
+- [x] **NEU v3.0:** Security Threats Tracking (Failed Logins, Blocked IPs, Permission Errors)
+- [x] **NEU v3.0:** Audit Logs Backend-Filterung (6 Filter-Typen)
+- [x] **NEU v3.0:** Comprehensive Rate Limiting (Services, Shortcuts, Appearance)
+- [x] **NEU v3.0:** Erhöhte Proxmox Rate Limits für Batch-Operationen (30/min)
+- [x] **NEU v3.0:** Content Security Policy Update (Weather Widget Support)
 
 ### 🚧 In Planung
-- [x] Drag & Drop für Service-Reihenfolge
 - [ ] Drag & Drop für Shortcut-Reihenfolge
 - [ ] Multi-Spalten-Layout mit anpassbaren Grid-Bereichen
 - [ ] Export/Import von Konfigurationen (JSON/YAML)

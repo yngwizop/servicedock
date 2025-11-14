@@ -1,15 +1,17 @@
 """Appearance settings router"""
 import json
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 
 from models.appearance import Appearance
 from dependencies.auth import require_role
 from config.database import get_db
+from core.limiter import limiter
 
 router = APIRouter(prefix="/api/appearance", tags=["appearance"])
 
 @router.get("")
-def get_appearance(db = Depends(get_db)):
+@limiter.limit("60/minute")  # Read operations - generous limit
+def get_appearance(request: Request, db = Depends(get_db)):
     cur = db.cursor()
     cur.execute("SELECT bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields FROM appearance WHERE id = 1;")
     row = cur.fetchone()
@@ -31,7 +33,8 @@ def get_appearance(db = Depends(get_db)):
     }
 
 @router.put("")
-def update_appearance(appearance: Appearance, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+@limiter.limit("20/minute")  # Update operations - moderate limit (prevent UI spam)
+def update_appearance(request: Request, appearance: Appearance, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     cur = db.cursor()
     
     updates = []

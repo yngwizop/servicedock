@@ -48,26 +48,22 @@ if ENVIRONMENT == "production":
     allowed_origins = [FRONTEND_URL]
     logger.info(f"🔒 CORS Production mode: Only {FRONTEND_URL} allowed")
 else:
-    # Development mode - allow common dev ports
+    # Development mode - minimal necessary origins
     allowed_origins = [
-        "http://localhost:3000",
-        "http://localhost:4173",
-        "http://localhost:5173",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:4173",
+        "http://localhost:5173",  # Vite default
         "http://127.0.0.1:5173",
     ]
     if FRONTEND_URL:
         allowed_origins.append(FRONTEND_URL)
     
-    logger.info(f"⚠️ CORS Development mode: {len(allowed_origins)} origins allowed")
+    logger.warning(f"⚠️ CORS Development mode: {len(allowed_origins)} origins allowed")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],  # Explicit methods only
+    allow_headers=["Content-Type", "Authorization"],  # Explicit headers only
 )
 
 # Add security headers middleware

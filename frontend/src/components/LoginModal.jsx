@@ -1,7 +1,7 @@
 import React from 'react';
 import { LockKey } from 'phosphor-react';
 
-function LoginModal({ onSubmit, password, setPassword, error, onClose }) {
+function LoginModal({ onSubmit, password, setPassword, error, onClose, disabled = false }) {
   return (
     // Hintergrund-Overlay
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="loginmodal-title">
@@ -50,7 +50,12 @@ function LoginModal({ onSubmit, password, setPassword, error, onClose }) {
           </button>
           <button
             type="submit"
-            className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+            disabled={disabled}
+            className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+              disabled 
+                ? 'bg-gray-400 dark:bg-gray-600 text-gray-200 cursor-not-allowed'
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
           >
             Login
           </button>

@@ -9,7 +9,9 @@ import {
   ListBullets,
   ChartBar,
   Eye,
-  LockKey
+  LockKey,
+  ProhibitInset,
+  ShieldWarning
 } from 'phosphor-react';
 import { authenticatedFetch } from '../utils/auth';
 
@@ -23,9 +25,12 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
 function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
   const [tokenInfo, setTokenInfo] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [filteredLogs, setFilteredLogs] = useState([]);
   const [auditStats, setAuditStats] = useState(null);
+  const [rateLimitUsage, setRateLimitUsage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState('overview'); // overview, logs, stats
+  const [logFilter, setLogFilter] = useState('all'); // all, failed, failed_logins, permission_errors
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
@@ -37,14 +42,21 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
       const interval = setInterval(fetchSecurityData, 30000); // Refresh every 30s
       return () => clearInterval(interval);
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, logFilter]); // Re-fetch when filter changes
+
+  // Filter logs when filter changes (now handled by backend, but keep for immediate UI update)
+  useEffect(() => {
+    // Filtering now done on backend, just update display
+    setFilteredLogs(auditLogs);
+  }, [auditLogs]);
 
   const fetchSecurityData = async () => {
     try {
-      const [tokenRes, logsRes, statsRes] = await Promise.all([
+      const [tokenRes, logsRes, statsRes, rateLimitRes] = await Promise.all([
         authenticatedFetch(`${BACKEND_URL}/api/admin/proxmox/token-info`),
-        authenticatedFetch(`${BACKEND_URL}/api/admin/audit-logs?limit=10`),
-        authenticatedFetch(`${BACKEND_URL}/api/admin/audit-stats`)
+        authenticatedFetch(`${BACKEND_URL}/api/admin/audit-logs?limit=100&filter_type=${logFilter}`),
+        authenticatedFetch(`${BACKEND_URL}/api/admin/audit-stats`),
+        authenticatedFetch(`${BACKEND_URL}/api/admin/rate-limit-usage`)
       ]);
 
       if (tokenRes.ok) {
@@ -55,11 +67,17 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
       if (logsRes.ok) {
         const logsData = await logsRes.json();
         setAuditLogs(logsData.logs || []);
+        setFilteredLogs(logsData.logs || []);
       }
 
       if (statsRes.ok) {
         const statsData = await statsRes.json();
         setAuditStats(statsData);
+      }
+
+      if (rateLimitRes.ok) {
+        const rateLimitData = await rateLimitRes.json();
+        setRateLimitUsage(rateLimitData);
       }
 
       setLoading(false);
@@ -319,30 +337,199 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
             )}
           </div>
 
+          {/* Security Threats Card */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3 mb-4">
+              <Warning size={28} className="text-orange-500" weight="bold" />
+              <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                Security Threats (24h)
+              </h3>
+            </div>
+            
+            {auditStats?.security_threats ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                  <div className="flex items-center gap-2">
+                    <XCircle 
+                      size={24} 
+                      weight="fill" 
+                      className="text-red-500 dark:text-red-400" 
+                    />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Fehlgeschlagene Logins
+                    </span>
+                  </div>
+                  <span className={`text-lg font-bold ${
+                    auditStats.security_threats.failed_logins > 10 
+                      ? 'text-red-600 dark:text-red-400' 
+                      : 'text-gray-800 dark:text-gray-100'
+                  }`}>
+                    {auditStats.security_threats.failed_logins}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                  <div className="flex items-center gap-2">
+                    <ProhibitInset 
+                      size={24} 
+                      weight="fill" 
+                      className="text-orange-500 dark:text-orange-400" 
+                    />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      IPs mit Fehlern
+                    </span>
+                  </div>
+                  <span className={`text-lg font-bold ${
+                    auditStats.security_threats.blocked_ips > 5 
+                      ? 'text-orange-600 dark:text-orange-400' 
+                      : 'text-gray-800 dark:text-gray-100'
+                  }`}>
+                    {auditStats.security_threats.blocked_ips}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                  <div className="flex items-center gap-2">
+                    <ShieldWarning 
+                      size={24} 
+                      weight="fill" 
+                      className="text-yellow-500 dark:text-yellow-400" 
+                    />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Permission Denied
+                    </span>
+                  </div>
+                  <span className={`text-lg font-bold ${
+                    auditStats.security_threats.permission_errors > 5 
+                      ? 'text-yellow-600 dark:text-yellow-400' 
+                      : 'text-gray-800 dark:text-gray-100'
+                  }`}>
+                    {auditStats.security_threats.permission_errors}
+                  </span>
+                </div>
+                
+                {auditStats.security_threats.suspicious_activity ? (
+                  <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center gap-2">
+                    <Warning size={20} weight="fill" className="text-red-600 dark:text-red-400" />
+                    <p className="text-sm font-semibold text-red-800 dark:text-red-300">
+                      Erhöhte Sicherheitsaktivität erkannt
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center gap-2">
+                    <CheckCircle size={20} weight="fill" className="text-green-600 dark:text-green-400" />
+                    <p className="text-sm font-semibold text-green-800 dark:text-green-300">
+                      Keine Bedrohungen erkannt
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-gray-600 dark:text-gray-400">Lade Daten...</p>
+            )}
+          </div>
+
           {/* Rate Limiting Info */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-3 mb-4">
               <Clock size={28} className="text-purple-500" weight="bold" />
               <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
-                Rate Limiting
+                Rate Limit Usage
               </h3>
             </div>
             
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">View Operations</span>
-                <span className="text-sm font-bold text-gray-800 dark:text-gray-100">30/min</span>
+            {rateLimitUsage ? (
+              <div className="space-y-4">
+                {/* Login Endpoint */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Login</span>
+                    <span className="text-sm font-bold text-gray-800 dark:text-gray-100">
+                      {rateLimitUsage.login.current}/{rateLimitUsage.login.limit}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full transition-all ${
+                        rateLimitUsage.login.percentage >= 80 
+                          ? 'bg-red-500' 
+                          : rateLimitUsage.login.percentage >= 50 
+                          ? 'bg-orange-500' 
+                          : 'bg-green-500'
+                      }`}
+                      style={{ width: `${rateLimitUsage.login.percentage}%` }}
+                    />
+                  </div>
+                </div>
+                
+                {/* Proxmox View */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Proxmox View</span>
+                    <span className="text-sm font-bold text-gray-800 dark:text-gray-100">
+                      {rateLimitUsage.proxmox_view.current}/{rateLimitUsage.proxmox_view.limit}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full transition-all ${
+                        rateLimitUsage.proxmox_view.percentage >= 80 
+                          ? 'bg-red-500' 
+                          : rateLimitUsage.proxmox_view.percentage >= 50 
+                          ? 'bg-orange-500' 
+                          : 'bg-green-500'
+                      }`}
+                      style={{ width: `${rateLimitUsage.proxmox_view.percentage}%` }}
+                    />
+                  </div>
+                </div>
+                
+                {/* Proxmox Control */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Proxmox Control</span>
+                    <span className="text-sm font-bold text-gray-800 dark:text-gray-100">
+                      {rateLimitUsage.proxmox_control.current}/{rateLimitUsage.proxmox_control.limit}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full transition-all ${
+                        rateLimitUsage.proxmox_control.percentage >= 80 
+                          ? 'bg-red-500' 
+                          : rateLimitUsage.proxmox_control.percentage >= 50 
+                          ? 'bg-orange-500' 
+                          : 'bg-green-500'
+                      }`}
+                      style={{ width: `${rateLimitUsage.proxmox_control.percentage}%` }}
+                    />
+                  </div>
+                </div>
+                
+                <div className="mt-4 p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center gap-2">
+                  <Clock size={16} weight="bold" className="text-blue-600 dark:text-blue-400" />
+                  <p className="text-xs text-blue-800 dark:text-blue-300">
+                    Live-Daten der letzten Minute
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Control Operations</span>
-                <span className="text-sm font-bold text-gray-800 dark:text-gray-100">10/min</span>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Login</span>
+                  <span className="text-sm font-bold text-gray-800 dark:text-gray-100">5/min</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Proxmox Control</span>
+                  <span className="text-sm font-bold text-gray-800 dark:text-gray-100">30/min</span>
+                </div>
+                <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <p className="text-sm font-semibold text-green-800 dark:text-green-300">
+                    ✓ Rate Limiting aktiv
+                  </p>
+                </div>
               </div>
-              <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <p className="text-sm font-semibold text-green-800 dark:text-green-300">
-                  ✓ Rate Limiting aktiv
-                </p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -350,17 +537,43 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
       {/* Logs View */}
       {activeView === 'logs' && (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-              Letzte 10 Audit-Einträge
-            </h3>
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center gap-2 transition-colors"
-            >
-              <XCircle size={20} weight="fill" />
-              Alle Logs löschen
-            </button>
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+                  Audit Logs
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  {filteredLogs.length} Einträge geladen (max. 100)
+                </p>
+              </div>
+              
+              <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                {/* Filter Dropdown */}
+                <select
+                  value={logFilter}
+                  onChange={(e) => setLogFilter(e.target.value)}
+                  className="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                >
+                  <option value="all">🔍 Alle Logs</option>
+                  <option value="failed">❌ Alle Fehler</option>
+                  <option value="failed_logins">🔐 Failed Logins</option>
+                  <option value="permission_errors">⚠️ Permission Denied</option>
+                  <option value="vm_operations">🖥️ VM Operationen</option>
+                  <option value="success">✅ Erfolgreich</option>
+                </select>
+
+                {/* Delete Button */}
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
+                >
+                  <XCircle size={20} weight="fill" />
+                  <span className="hidden md:inline">Alle Logs löschen</span>
+                  <span className="md:hidden">Löschen</span>
+                </button>
+              </div>
+            </div>
           </div>
           
           <div className="overflow-x-auto">
@@ -385,14 +598,16 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {auditLogs.length === 0 ? (
+                {filteredLogs.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                      Keine Audit-Logs vorhanden
+                      {auditLogs.length === 0 
+                        ? 'Keine Audit-Logs vorhanden' 
+                        : 'Keine Logs entsprechen dem Filter'}
                     </td>
                   </tr>
                 ) : (
-                  auditLogs.map((log) => (
+                  filteredLogs.map((log) => (
                     <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">
                         {formatTimestamp(log.timestamp)}

@@ -75,7 +75,8 @@ def get_proxmox_connection():
             config.database.db_pool.putconn(conn)
 
 @router.get("/api/proxmox/config")
-def get_proxmox_config(token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+@limiter.limit("30/minute")  # Rate limit for config reads
+def get_proxmox_config(request: Request, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Gibt Proxmox-Konfiguration zurück (ohne Secret, token_name maskiert)"""
     cur = db.cursor()
     cur.execute(
@@ -113,7 +114,8 @@ def get_proxmox_config(token: dict = Depends(require_role("admin")), db = Depend
     }
 
 @router.put("/api/proxmox/config")
-def update_proxmox_config(config: ProxmoxConfig, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+@limiter.limit("5/minute")  # Stricter limit for config changes
+def update_proxmox_config(config: ProxmoxConfig, request: Request, token: dict = Depends(require_role("admin"))):
     """Speichert Proxmox-Konfiguration (Token wird verschlüsselt)"""
     cur = db.cursor()
     
@@ -164,8 +166,8 @@ def update_proxmox_config(config: ProxmoxConfig, token: dict = Depends(require_r
     return {"message": "Proxmox configuration saved"}
 
 @router.get("/api/proxmox/vms")
-@limiter.limit("30/minute")
-def get_proxmox_vms(request: Request, db = Depends(get_db)):
+@limiter.limit("20/minute")  # Rate limit for VM list
+def list_proxmox_vms(request: Request, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Holt alle VMs und LXCs von Proxmox"""
     client_ip = get_client_ip(request)
     
@@ -257,7 +259,7 @@ def get_proxmox_vms(request: Request, db = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Failed to fetch Proxmox resources")
 
 @router.post("/api/proxmox/vm/{vmid}/start")
-@limiter.limit("10/minute")
+@limiter.limit("30/minute")  # Allow batch operations (10+ VMs)
 def start_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, token: dict = Depends(require_role("admin"))):
     """Startet eine VM oder LXC"""
     client_ip = get_client_ip(request) if request else "unknown"
@@ -343,7 +345,7 @@ def start_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, 
         raise HTTPException(status_code=500, detail=detail)
 
 @router.post("/api/proxmox/vm/{vmid}/stop")
-@limiter.limit("10/minute")
+@limiter.limit("30/minute")  # Allow batch operations (10+ VMs)
 def stop_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, token: dict = Depends(require_role("admin"))):
     """Stoppt eine VM oder LXC"""
     client_ip = get_client_ip(request) if request else "unknown"
@@ -393,7 +395,7 @@ def stop_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, t
         raise HTTPException(status_code=500, detail=detail)
 
 @router.post("/api/proxmox/vm/{vmid}/reboot")
-@limiter.limit("10/minute")
+@limiter.limit("30/minute")  # Allow batch operations (10+ VMs)
 def reboot_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, token: dict = Depends(require_role("admin"))):
     """Startet eine VM oder LXC neu"""
     client_ip = get_client_ip(request) if request else "unknown"

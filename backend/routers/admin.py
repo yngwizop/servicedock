@@ -1,25 +1,48 @@
 """Admin router - Audit logs and token management"""
 import json as json_lib
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 
 from models import DeleteLogsRequest, ProxmoxConfig
 from core.security import verify_password, encrypt_value
 from core.audit import log_audit
+from core.limiter import limiter
 from dependencies.auth import require_role, ADMIN_PASSWORD_HASH
 from config.database import get_db
 
 router = APIRouter()
 
 @router.get("/api/admin/audit-logs")
-def get_audit_logs(limit: int = 100, offset: int = 0, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
-    """Holt die neuesten Audit-Log-Einträge (Admin-only)"""
+@limiter.limit("30/minute")  # Rate limit for audit log access
+def get_audit_logs(
+    request: Request, 
+    limit: int = 100, 
+    offset: int = 0, 
+    filter_type: str = "all",  # all, failed, failed_logins, permission_errors, vm_operations, success
+    token: dict = Depends(require_role("admin")), 
+    db = Depends(get_db)
+):
+    """Holt die neuesten Audit-Log-Einträge mit optionaler Filterung (Admin-only)"""
     cur = db.cursor()
     
+    # Build WHERE clause based on filter
+    where_clause = ""
+    if filter_type == "failed":
+        where_clause = "WHERE status = 'failed'"
+    elif filter_type == "failed_logins":
+        where_clause = "WHERE action = 'LOGIN' AND status = 'failed'"
+    elif filter_type == "permission_errors":
+        where_clause = "WHERE status = 'failed' AND (details::text ILIKE '%permission%' OR details::text ILIKE '%forbidden%' OR details::text ILIKE '%403%')"
+    elif filter_type == "vm_operations":
+        where_clause = "WHERE action IN ('START_VM', 'STOP_VM', 'REBOOT_VM', 'START_LXC', 'STOP_LXC', 'REBOOT_LXC')"
+    elif filter_type == "success":
+        where_clause = "WHERE status = 'success'"
+    
     cur.execute(
-        """SELECT id, timestamp, user_type, ip_address, action, resource_type, 
+        f"""SELECT id, timestamp, user_type, ip_address, action, resource_type, 
                   resource_id, status, details, user_agent
            FROM audit_log
+           {where_clause}
            ORDER BY timestamp DESC
            LIMIT %s OFFSET %s;""",
         (limit, offset)
@@ -27,7 +50,11 @@ def get_audit_logs(limit: int = 100, offset: int = 0, token: dict = Depends(requ
     
     rows = cur.fetchall()
     
-    # Zähle total Einträge
+    # Zähle total Einträge (mit Filter)
+    cur.execute(f"SELECT COUNT(*) FROM audit_log {where_clause};")
+    filtered_total = cur.fetchone()[0]
+    
+    # Zähle alle Einträge (ohne Filter)
     cur.execute("SELECT COUNT(*) FROM audit_log;")
     total = cur.fetchone()[0]
     
@@ -49,12 +76,14 @@ def get_audit_logs(limit: int = 100, offset: int = 0, token: dict = Depends(requ
     return {
         "logs": logs,
         "total": total,
+        "filtered_total": filtered_total,
         "limit": limit,
         "offset": offset
     }
 
 @router.get("/api/admin/audit-stats")
-def get_audit_stats(token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+@limiter.limit("30/minute")
+def get_audit_stats(request: Request, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Holt Statistiken über Audit-Logs (Admin-only)"""
     cur = db.cursor()
     
@@ -95,16 +124,59 @@ def get_audit_stats(token: dict = Depends(require_role("admin")), db = Depends(g
         "total": row[2] or 0
     }
     
+    # Security Threats (24h)
+    # Failed Logins (Login-Versuche mit status=failed)
+    cur.execute("""
+        SELECT COUNT(*) 
+        FROM audit_log
+        WHERE action = 'LOGIN' 
+          AND status = 'failed'
+          AND timestamp > NOW() - INTERVAL '24 hours';
+    """)
+    failed_logins = cur.fetchone()[0] or 0
+    
+    # Permission Denied Errors (aus details JSON)
+    cur.execute("""
+        SELECT COUNT(*) 
+        FROM audit_log
+        WHERE status = 'failed'
+          AND (details::text ILIKE '%permission%' OR details::text ILIKE '%forbidden%' OR details::text ILIKE '%403%')
+          AND timestamp > NOW() - INTERVAL '24 hours';
+    """)
+    permission_errors = cur.fetchone()[0] or 0
+    
+    # Unique IPs mit fehlgeschlagenen Anfragen (potenzielle Angreifer)
+    cur.execute("""
+        SELECT COUNT(DISTINCT ip_address)
+        FROM audit_log
+        WHERE status = 'failed'
+          AND timestamp > NOW() - INTERVAL '24 hours';
+    """)
+    failed_ips = cur.fetchone()[0] or 0
+    
     return {
         "actions_24h": actions_24h,
         "top_ips": top_ips,
-        "error_stats": error_stats
+        "error_stats": error_stats,
+        "security_threats": {
+            "failed_logins": failed_logins,
+            "permission_errors": permission_errors,
+            "blocked_ips": failed_ips,  # IPs mit failed requests
+            "suspicious_activity": failed_logins > 10 or permission_errors > 5
+        }
     }
 
 @router.post("/api/admin/audit-logs/cleanup")
-def cleanup_old_audit_logs(days: int = 90, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+@limiter.limit("10/hour")  # Very strict limit for cleanup operations
+def cleanup_audit_logs(request: Request, days: int = 90, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Löscht Audit-Logs die älter als X Tage sind (Standard: 90 Tage)"""
     cur = db.cursor()
+    
+    # Validiere days Parameter
+    if days < 1:
+        raise HTTPException(status_code=400, detail="Days must be at least 1")
+    if days > 365:
+        raise HTTPException(status_code=400, detail="Days cannot exceed 365")
     
     # Zähle wie viele gelöscht werden
     cur.execute(
@@ -128,11 +200,12 @@ def cleanup_old_audit_logs(days: int = 90, token: dict = Depends(require_role("a
     }
 
 @router.post("/api/admin/audit-logs/delete-all")
-def delete_all_audit_logs(request: DeleteLogsRequest, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+@limiter.limit("3/hour")  # Extremely strict limit for delete all
+def delete_all_audit_logs(request: Request, delete_request: DeleteLogsRequest, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Löscht ALLE Audit-Logs (Admin-Passwort erforderlich)"""
     
     # Zusätzliche Passwort-Prüfung für diese kritische Operation
-    if not verify_password(request.password, ADMIN_PASSWORD_HASH):
+    if not verify_password(delete_request.password, ADMIN_PASSWORD_HASH):
         raise HTTPException(status_code=403, detail="Falsches Admin-Passwort")
     
     cur = db.cursor()
@@ -196,6 +269,74 @@ def get_token_info(token: dict = Depends(require_role("admin")), db = Depends(ge
         "last_rotated": last_rotated_str,
         "age_days": age_days,
         "rotation_recommended": rotation_recommended
+    }
+
+@router.get("/api/admin/rate-limit-usage")
+@limiter.limit("30/minute")
+def get_rate_limit_usage(request: Request, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+    """
+    Gibt aktuellen Rate Limit Verbrauch der letzten Minute zurück.
+    Basiert auf Audit-Logs (da SlowAPI In-Memory storage hat).
+    """
+    cur = db.cursor()
+    
+    # Login-Requests letzte Minute
+    cur.execute("""
+        SELECT COUNT(*) 
+        FROM audit_log
+        WHERE action = 'LOGIN'
+          AND timestamp > NOW() - INTERVAL '1 minute';
+    """)
+    login_count = cur.fetchone()[0] or 0
+    
+    # Proxmox View Operations (GET requests) letzte Minute
+    cur.execute("""
+        SELECT COUNT(*) 
+        FROM audit_log
+        WHERE action = 'VIEW_VMS'
+          AND timestamp > NOW() - INTERVAL '1 minute';
+    """)
+    view_count = cur.fetchone()[0] or 0
+    
+    # Proxmox Control Operations (START/STOP/REBOOT) letzte Minute
+    cur.execute("""
+        SELECT COUNT(*) 
+        FROM audit_log
+        WHERE action IN ('START_VM', 'STOP_VM', 'REBOOT_VM', 'START_LXC', 'STOP_LXC', 'REBOOT_LXC')
+          AND timestamp > NOW() - INTERVAL '1 minute';
+    """)
+    control_count = cur.fetchone()[0] or 0
+    
+    # Admin Operations (Audit Logs Access) letzte Minute
+    cur.execute("""
+        SELECT COUNT(*) 
+        FROM audit_log
+        WHERE action ILIKE '%AUDIT%'
+          AND timestamp > NOW() - INTERVAL '1 minute';
+    """)
+    admin_count = cur.fetchone()[0] or 0
+    
+    return {
+        "login": {
+            "current": login_count,
+            "limit": 5,
+            "percentage": min(100, int((login_count / 5) * 100))
+        },
+        "proxmox_view": {
+            "current": view_count,
+            "limit": 20,
+            "percentage": min(100, int((view_count / 20) * 100))
+        },
+        "proxmox_control": {
+            "current": control_count,
+            "limit": 30,
+            "percentage": min(100, int((control_count / 30) * 100))
+        },
+        "admin": {
+            "current": admin_count,
+            "limit": 30,
+            "percentage": min(100, int((admin_count / 30) * 100))
+        }
     }
 
 @router.post("/api/admin/proxmox/rotate-token")

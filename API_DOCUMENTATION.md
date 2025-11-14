@@ -1,11 +1,19 @@
-# 📡 API Documentation - ServiceDock v2.0
+# 📡 API Documentation - ServiceDock v3.0
 
-**Backend-Version:** 2.0 (Modular Architecture)  
+**Backend-Version:** 3.0 (Enhanced Security & Monitoring)  
 **Base URL:** `https://10.10.10.50/api`  
 **Hinweis:** Im lokalen Netzwerk immer die zentrale Nginx-Adresse verwenden: `https://10.10.10.50/api/...`. Alle OAuth-Redirects (z.B. Spotify) und API-Aufrufe funktionieren im gesamten Netz nur über diese Adresse.
 **Authentication:** JWT Bearer Token  
-**Update:** 08.11.2025  
+**Update:** 14.11.2025  
 **Repository:** [github.com/yngwizop/servicedock](https://github.com/yngwizop/servicedock)
+
+**What's New in v3.0:**
+- ✅ Live rate limit usage monitoring (`/api/admin/rate-limit-usage`)
+- ✅ Enhanced security threats tracking in audit stats
+- ✅ Audit logs filtering (6 filter types: all/failed/failed_logins/permission_errors/vm_operations/success)
+- ✅ Comprehensive rate limiting across ALL endpoints (Services, Shortcuts, Appearance)
+- ✅ Validated cleanup operations with configurable retention (1-365 days)
+- ✅ Updated Proxmox rate limits (30/min for batch operations)
 
 ---
 
@@ -428,8 +436,24 @@ routers/
 ### GET /audit-logs - Audit-Logs abrufen
 
 **Query Parameters:**
-- `limit` (optional, default: 100)
-- `offset` (optional, default: 0)
+- `limit` (optional, default: 100) - Maximum number of logs to return
+- `offset` (optional, default: 0) - Pagination offset
+- `filter_type` (optional, default: "all") - Filter logs by event type:
+  - `all` - All audit events
+  - `failed` - Only failed operations
+  - `failed_logins` - Only failed authentication attempts
+  - `permission_errors` - Only authorization failures (403 errors)
+  - `vm_operations` - Only Proxmox VM/LXC operations
+  - `success` - Only successful operations
+
+**Examples:**
+```bash
+# Get all failed login attempts
+GET /api/admin/audit-logs?filter_type=failed_logins&limit=50
+
+# Get VM operations only
+GET /api/admin/audit-logs?filter_type=vm_operations&limit=100
+```
 
 **Response:**
 ```json
@@ -454,7 +478,8 @@ routers/
   ],
   "total": 1523,
   "limit": 100,
-  "offset": 0
+  "offset": 0,
+  "filter_type": "all"
 }
 ```
 
@@ -476,13 +501,76 @@ routers/
     "success": 123,
     "failed": 5,
     "total": 128
+  },
+  "security_threats": {
+    "failed_logins": 12,
+    "blocked_ips": 3,
+    "permission_errors": 5,
+    "suspicious_activity": 20
   }
 }
 ```
 
+**New in v3.0:** Added `security_threats` object with:
+- `failed_logins` - Count of failed login attempts (last 24h)
+- `blocked_ips` - Number of distinct IPs with failed attempts (last 24h)
+- `permission_errors` - Count of 403/permission-denied errors (last 24h)
+- `suspicious_activity` - Combined threat score (sum of above)
+
+### GET /rate-limit-usage - Live Rate Limit Monitoring
+
+**New in v3.0** - Real-time rate limit usage tracking
+
+**Response:**
+```json
+{
+  "login": {
+    "used": 2,
+    "limit": 5,
+    "percentage": 40
+  },
+  "proxmox_view": {
+    "used": 15,
+    "limit": 30,
+    "percentage": 50
+  },
+  "proxmox_control": {
+    "used": 1,
+    "limit": 30,
+    "percentage": 3
+  },
+  "admin": {
+    "used": 8,
+    "limit": 30,
+    "percentage": 27
+  }
+}
+```
+
+**Usage Indicators:**
+- 🟢 **0-60%** - Safe usage level
+- 🟠 **61-80%** - Warning - approaching limit
+- 🔴 **81-100%** - Critical - rate limit close
+
+**Note:** Rate limits reset every minute/hour depending on endpoint configuration. See [RATE_LIMITS.md](RATE_LIMITS.md) for complete reference.
+
 ### POST /audit-logs/cleanup - Alte Logs löschen
 
-**Query Parameter:** `days` (default: 90)
+**Query Parameter:** `days` (Integer, 1-365, default: 90)
+
+**Example:**
+```bash
+# Logs älter als 30 Tage löschen
+POST /api/admin/audit-logs/cleanup?days=30
+
+# Logs älter als 180 Tage löschen
+POST /api/admin/audit-logs/cleanup?days=180
+```
+
+**Validation:**
+- Minimum: 1 Tag
+- Maximum: 365 Tage
+- Default: 90 Tage
 
 **Response:**
 ```json
@@ -490,6 +578,13 @@ routers/
   "message": "Alte Audit-Logs gelöscht",
   "deleted_count": 523,
   "older_than_days": 90
+}
+```
+
+**Error Response (400):**
+```json
+{
+  "detail": "Days parameter must be between 1 and 365"
 }
 ```
 
@@ -633,13 +728,14 @@ curl -X GET http://localhost:8000/api/admin/audit-logs?limit=10 \
 ## 📚 Weitere Dokumentation
 
 - **[README.md](README.md)** - Hauptdokumentation
-- **[SECURITY_IMPLEMENTATION.md](SECURITY_IMPLEMENTATION.md)** - Security-Details
+- **[RATE_LIMITS.md](RATE_LIMITS.md)** - Comprehensive Rate Limits Reference (NEW in v3.0)
+- **[FINAL_SECURITY_CHECK.md](FINAL_SECURITY_CHECK.md)** - Security-Details
 - **[PROXMOX_SETUP.md](PROXMOX_SETUP.md)** - Proxmox-Integration
 - **[TOKEN_ROTATION_GUIDE.md](TOKEN_ROTATION_GUIDE.md)** - Token-Rotation
 - **[ENCRYPTION.md](ENCRYPTION.md)** - Verschlüsselung
 
 ---
 
-**Version:** 2.0 - Modular Edition  
-**Last Updated:** 07.11.2025  
+**Version:** 3.0 - Enhanced Security & Monitoring Edition  
+**Last Updated:** 14.11.2025  
 **Maintained by:** ServiceDock Team

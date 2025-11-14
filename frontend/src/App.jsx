@@ -9,7 +9,7 @@ import SettingsPanel from "./components/SettingsPanel";
 import ClockWidget from "./components/ClockWidget";
 import WeatherWidget from "./components/WeatherWidget";
 import { Moon, Sun, Lock, Gear, SignOut } from 'phosphor-react';
-import { setAuthToken, getAuthToken, clearAuthToken, isAuthenticated, authenticatedFetch, getAuthHeaders } from './utils/auth';
+import { setAuthSession, clearAuthSession, isAuthenticated, authenticatedFetch, getAuthHeaders } from './utils/auth';
 
 // 🛠 Backend-URL anpassen je nach Setup
 // Mit Nginx Reverse Proxy: Backend läuft über gleichen Host (kein Port nötig)
@@ -59,6 +59,11 @@ function App() {
   const [loginError, setLoginError] = useState("");
   const [showLogin, setShowLogin] = useState(false);
   const [activeTab, setActiveTab] = useState("services");
+  
+  // Login rate limiting state
+  const [failedLoginAttempts, setFailedLoginAttempts] = useState(0);
+  const [loginDisabled, setLoginDisabled] = useState(false);
+  const [loginDisabledUntil, setLoginDisabledUntil] = useState(null);
   
   // NEU: Spotify Status State
   const [spotifyConfigured, setSpotifyConfigured] = useState(false);
@@ -154,9 +159,18 @@ function App() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError("");
+    
+    // Check if login is disabled
+    if (loginDisabled) {
+      const remainingTime = Math.ceil((loginDisabledUntil - Date.now()) / 1000);
+      setLoginError(`Zu viele Fehlversuche. Bitte warte ${remainingTime} Sekunden.`);
+      return;
+    }
+    
     try {
       const res = await fetch(`${BACKEND_URL}/api/login`, {
         method: "POST",
+        credentials: "include", // Important: Allow cookies
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: password }),
       });
@@ -164,16 +178,35 @@ function App() {
       if (res.ok) {
         const data = await res.json();
         
-        // Speichere JWT-Token
-        setAuthToken(data.access_token, data.expires_in);
+        // Set session flag (token is in httpOnly cookie)
+        setAuthSession();
         
         setIsLoggedIn(true);
         setPassword("");
         setShowLogin(false);
         setLoginError("");
+        setFailedLoginAttempts(0); // Reset counter on success
       } else {
         const errorData = await res.json().catch(() => ({}));
-        setLoginError(errorData.detail || "Falsches Passwort.");
+        const newAttempts = failedLoginAttempts + 1;
+        setFailedLoginAttempts(newAttempts);
+        
+        // Disable login after 3 failed attempts
+        if (newAttempts >= 3) {
+          const disabledUntil = Date.now() + 30000; // 30 seconds
+          setLoginDisabled(true);
+          setLoginDisabledUntil(disabledUntil);
+          setLoginError("Zu viele Fehlversuche. Login für 30 Sekunden gesperrt.");
+          
+          // Re-enable after 30 seconds
+          setTimeout(() => {
+            setLoginDisabled(false);
+            setLoginDisabledUntil(null);
+            setFailedLoginAttempts(0);
+          }, 30000);
+        } else {
+          setLoginError(errorData.detail || `Falsches Passwort. (${newAttempts}/3 Versuche)`);
+        }
       }
     } catch (err) {
       console.error("Login error:", err);
@@ -181,8 +214,19 @@ function App() {
     }
   };
 
-  const handleLogout = () => {
-    clearAuthToken(); // Lösche JWT-Token
+  const handleLogout = async () => {
+    try {
+      // Call backend logout to clear cookie
+      await fetch(`${BACKEND_URL}/api/logout`, {
+        method: "POST",
+        credentials: "include"
+      });
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+    
+    // Clear local session flag
+    clearAuthSession(); // Lösche JWT-Token
     setIsLoggedIn(false);
     setShowSettings(false);
   };
@@ -626,6 +670,7 @@ function App() {
           password={password}
           setPassword={setPassword}
           error={loginError}
+          disabled={loginDisabled}
           onClose={() => {
             setShowLogin(false);
             setLoginError("");

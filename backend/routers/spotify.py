@@ -177,7 +177,7 @@ def get_valid_access_token() -> Optional[str]:
 # ========================
 
 @router.post("/api/spotify/install")
-@limiter.limit("5/minute")
+@limiter.limit("5/hour")  # Strict limit for install operations
 async def install_spotify(
     request: Request,
     payload: SpotifyInstallRequest,

@@ -12,8 +12,9 @@ if not SECRET_KEY:
 
 ALGORITHM = "HS256"
 
-# Token-Laufzeit - von ENV laden mit sicherem Default (2 Stunden)
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "120"))
+# Token-Laufzeit - von ENV laden mit sicherem Default (15 Minuten für Access, 7 Tage für Refresh)
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
+REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
 
 # --- Encryption Configuration ---
 ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
