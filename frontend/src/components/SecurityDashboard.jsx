@@ -107,7 +107,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
         alert(`✅ ${data.deleted_count} Logs erfolgreich gelöscht`);
         setAuditLogs([]);
         setDeletePassword('');
-        setShowDeleteConfirm(false);
+        setShowDeleteModal(false);
         fetchSecurityData();
       } else {
         const errorData = await res.json();
