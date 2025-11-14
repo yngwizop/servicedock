@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ProxmoxCard from './ProxmoxCard';
-import { ArrowsClockwise, WarningCircle, GearSix, LockKey, FunnelSimple, SortAscending, MagnifyingGlass } from 'phosphor-react';
+import ProxmoxStatsCards from './ProxmoxStatsCards';
+import { ArrowsClockwise, WarningCircle, GearSix, LockKey, FunnelSimple, SortAscending, MagnifyingGlass, MonitorPlay } from 'phosphor-react';
 import { authenticatedFetch } from '../utils/auth';
 
 // Backend-URL: Mit Nginx kein Port, ohne Nginx Port 8000
@@ -262,11 +263,12 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
 
   return (
     <div>
-      {/* Header mit Resource Count */}
+      {/* Header - ÜBER den Stats Cards */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <MonitorPlay size={40} weight="duotone" style={{ color: textColor }} />
           <h2 
-            className="text-2xl font-bold transition-colors duration-300"
+            className="text-3xl font-bold transition-colors duration-300"
             style={{ 
               color: textColor,
               textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
@@ -274,9 +276,6 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
           >
             Proxmox Monitoring
           </h2>
-          <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-3 py-1 rounded-full text-sm font-semibold">
-            {filteredResources.length} / {resources.length}
-          </span>
         </div>
         
         <div className="flex items-center gap-3">
@@ -303,6 +302,9 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
           </button>
         </div>
       </div>
+
+      {/* System Stats Cards - NACH der Überschrift */}
+      <ProxmoxStatsCards resources={resources} />
 
       {/* Filter & Sort Bar */}
       <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl shadow-lg p-4 mb-6 border border-gray-200 dark:border-gray-700">

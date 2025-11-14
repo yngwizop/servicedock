@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Shield, 
+  Detective, 
   Clock, 
   Warning, 
   CheckCircle, 
@@ -175,7 +175,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Shield size={32} className="text-blue-600 dark:text-blue-400" weight="fill" />
+        <Detective size={40} weight="duotone" style={{ color: textColor }} />
         <h2 
           className="text-3xl font-bold transition-colors duration-300"
           style={{ 
