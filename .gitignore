@@ -34,6 +34,5 @@ frontend/dist/
 *.pem
 *.key
 *.crt
-.env.*
 .env.local
 
