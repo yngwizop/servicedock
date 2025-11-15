@@ -1,4 +1,5 @@
 # Nginx SSL-Zertifikate und Schlüssel (niemals ins Repo!)
+# Nginx SSL-Zertifikate und Schlüssel (niemals ins Repo!)
 nginx/ssl/
 nginx/ssl/key.pem
 nginx/ssl/cert.pem
@@ -25,3 +26,6 @@ frontend/dist/
 # OS- und IDE-Dateien
 .DS_Store
 .vscode/
+
+# Claude.md file for instructions (ignore repo-root file)
+/CLAUDE.md
