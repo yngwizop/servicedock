@@ -29,3 +29,11 @@ frontend/dist/
 
 # Claude.md file for instructions (ignore repo-root file)
 /CLAUDE.md
+
+# Generic secret file patterns - catch future accidental commits
+*.pem
+*.key
+*.crt
+.env.*
+.env.local
+
