@@ -115,7 +115,7 @@ def get_proxmox_config(request: Request, token: dict = Depends(require_role("adm
 
 @router.put("/api/proxmox/config")
 @limiter.limit("5/minute")  # Stricter limit for config changes
-def update_proxmox_config(config: ProxmoxConfig, request: Request, token: dict = Depends(require_role("admin"))):
+def update_proxmox_config(config: ProxmoxConfig, request: Request, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Speichert Proxmox-Konfiguration (Token wird verschlüsselt)"""
     cur = db.cursor()
     

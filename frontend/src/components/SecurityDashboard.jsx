@@ -11,7 +11,8 @@ import {
   Eye,
   LockKey,
   ProhibitInset,
-  ShieldWarning
+  ShieldWarning,
+  Shield
 } from 'phosphor-react';
 import { authenticatedFetch } from '../utils/auth';
 
