@@ -72,7 +72,54 @@ app.add_middleware(SecurityHeadersMiddleware)
 # ===== Startup Event =====
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database connection pool and other resources on startup"""
+    """Initialize database connection pool and validate environment on startup"""
+    # Validate critical environment variables
+    from config.settings import (
+        SECRET_KEY, ENCRYPTION_KEY, ADMIN_PASSWORD, DATABASE_URL, 
+        FRONTEND_URL, ENVIRONMENT, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
+    )
+    
+    missing_vars = []
+    warnings = []
+    
+    # Check critical variables (already validated in settings.py, but log for visibility)
+    critical_vars = {
+        "JWT_SECRET_KEY": SECRET_KEY,
+        "ENCRYPTION_KEY": ENCRYPTION_KEY,
+        "ADMIN_PASSWORD": ADMIN_PASSWORD,
+        "DATABASE_URL": DATABASE_URL,
+    }
+    
+    for var_name, var_value in critical_vars.items():
+        if not var_value:
+            missing_vars.append(var_name)
+    
+    if missing_vars:
+        logger.error(f"❌ Missing critical environment variables: {', '.join(missing_vars)}")
+        raise ValueError(f"Missing required environment variables: {missing_vars}")
+    
+    # Log configuration (without secrets)
+    logger.info("🔧 Configuration loaded:")
+    logger.info(f"  - Environment: {ENVIRONMENT}")
+    logger.info(f"  - Frontend URL: {FRONTEND_URL}")
+    logger.info(f"  - Access Token Expiry: {ACCESS_TOKEN_EXPIRE_MINUTES} minutes")
+    logger.info(f"  - Refresh Token Expiry: {REFRESH_TOKEN_EXPIRE_DAYS} days")
+    
+    # Security warnings
+    if REFRESH_TOKEN_EXPIRE_DAYS > 7:
+        warnings.append(f"REFRESH_TOKEN_EXPIRE_DAYS is {REFRESH_TOKEN_EXPIRE_DAYS} days (recommended: ≤7)")
+    
+    if ACCESS_TOKEN_EXPIRE_MINUTES > 120:
+        warnings.append(f"ACCESS_TOKEN_EXPIRE_MINUTES is {ACCESS_TOKEN_EXPIRE_MINUTES} min (recommended: ≤120)")
+    
+    if len(ADMIN_PASSWORD) < 12:
+        warnings.append(f"ADMIN_PASSWORD length is {len(ADMIN_PASSWORD)} chars (recommended: ≥12)")
+    
+    if warnings:
+        for warning in warnings:
+            logger.warning(f"⚠️  {warning}")
+    
+    # Initialize database
     initialize_connection_pool()
     logger.info("✅ Application startup complete")
 
