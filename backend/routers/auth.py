@@ -74,7 +74,7 @@ def login(creds: AdminLogin, request: Request, response: Response):
         value=access_token,
         httponly=True,  # Prevents JavaScript access (XSS protection)
         secure=ENVIRONMENT == "production",  # HTTPS only in production
-        samesite="lax",  # CSRF protection
+        samesite="strict",  # ✅ CSRF protection - verhindert Cross-Site Requests
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         path="/"
     )
@@ -84,7 +84,7 @@ def login(creds: AdminLogin, request: Request, response: Response):
         value=refresh_token,
         httponly=True,
         secure=ENVIRONMENT == "production",
-        samesite="lax",
+        samesite="strict",  # ✅ CSRF protection
         max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
         path="/"
     )
@@ -140,7 +140,7 @@ def refresh_token(
             value=new_access_token,
             httponly=True,
             secure=ENVIRONMENT == "production",
-            samesite="lax",
+            samesite="strict",  # ✅ CSRF protection
             max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             path="/"
         )

@@ -1,5 +1,6 @@
 """Proxmox router - VM and container management"""
 from fastapi import APIRouter, Request, HTTPException, Depends
+from fastapi.concurrency import run_in_threadpool
 from proxmoxer import ProxmoxAPI
 
 import config.database
@@ -24,6 +25,7 @@ def get_proxmox_connection():
         raise HTTPException(status_code=500, detail="Database connection failed")
     
     conn = None
+    cur = None
     try:
         conn = config.database.db_pool.getconn()
         cur = conn.cursor()
@@ -31,7 +33,8 @@ def get_proxmox_connection():
             "SELECT host, port, token_name, token_value, verify_ssl, node FROM proxmox_config WHERE id = 1;"
         )
         row = cur.fetchone()
-        cur.close()
+        cur.close()  # ✅ Explizit schließen
+        cur = None
         
         if not row:
             return None, None
@@ -70,100 +73,119 @@ def get_proxmox_connection():
             # Keine Details loggen, um Token-Leaks zu vermeiden
             logger.error("Proxmox connection error")
             return None, None
+    except Exception as e:
+        logger.error(f"Database error in get_proxmox_connection: {e}")
+        return None, None
     finally:
+        if cur is not None:
+            try:
+                cur.close()  # ✅ Auch im Error-Fall schließen
+            except:
+                pass
         if conn is not None:
             config.database.db_pool.putconn(conn)
 
 @router.get("/api/proxmox/config")
 @limiter.limit("30/minute")  # Rate limit for config reads
-def get_proxmox_config(request: Request, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+async def get_proxmox_config(request: Request, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Gibt Proxmox-Konfiguration zurück (ohne Secret, token_name maskiert)"""
-    cur = db.cursor()
-    cur.execute(
-        "SELECT id, host, port, token_name, verify_ssl, node FROM proxmox_config WHERE id = 1;"
-    )
-    row = cur.fetchone()
+    def _get_config_sync():
+        cur = db.cursor()
+        try:
+            cur.execute(
+                "SELECT id, host, port, token_name, verify_ssl, node FROM proxmox_config WHERE id = 1;"
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                return {
+                    "configured": False,
+                    "host": None,
+                    "port": 8006,
+                    "token_name": None,
+                    "verify_ssl": False,
+                    "node": None
+                }
+            
+            # Maskiere token_name: zeige nur user@realm!*** statt vollem Token-Namen
+            token_name = row[3]
+            masked_token_name = None
+            if token_name and '!' in token_name:
+                user_realm = token_name.split('!')[0]  # z.B. "lxc-creator@pve"
+                masked_token_name = f"{user_realm}!***"
+            elif token_name:
+                masked_token_name = "***"
+            
+            return {
+                "configured": True,
+                "id": row[0],
+                "host": row[1],
+                "port": row[2],
+                "token_name": masked_token_name,
+                "verify_ssl": row[4],
+                "node": row[5]
+            }
+        finally:
+            cur.close()
     
-    if not row:
-        return {
-            "configured": False,
-            "host": None,
-            "port": 8006,
-            "token_name": None,
-            "verify_ssl": False,
-            "node": None
-        }
-    
-    # Maskiere token_name: zeige nur user@realm!*** statt vollem Token-Namen
-    token_name = row[3]
-    masked_token_name = None
-    if token_name and '!' in token_name:
-        user_realm = token_name.split('!')[0]  # z.B. "lxc-creator@pve"
-        masked_token_name = f"{user_realm}!***"
-    elif token_name:
-        masked_token_name = "***"
-    
-    return {
-        "configured": True,
-        "id": row[0],
-        "host": row[1],
-        "port": row[2],
-        "token_name": masked_token_name,
-        "verify_ssl": row[4],
-        "node": row[5]
-    }
+    return await run_in_threadpool(_get_config_sync)
 
 @router.put("/api/proxmox/config")
 @limiter.limit("5/minute")  # Stricter limit for config changes
-def update_proxmox_config(config: ProxmoxConfig, request: Request, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+async def update_proxmox_config(config: ProxmoxConfig, request: Request, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Speichert Proxmox-Konfiguration (Token wird verschlüsselt)"""
-    cur = db.cursor()
+    def _update_config_sync():
+        cur = db.cursor()
+        try:
+            # Verschlüssele den Token-Wert
+            encrypted_token = encrypt_value(config.token_value)
+            
+            # Prüfe ob Eintrag existiert
+            cur.execute("SELECT id, token_value FROM proxmox_config WHERE id = 1;")
+            existing = cur.fetchone()
+            
+            # Wenn kein neuer Token angegeben wurde, behalte den alten
+            token_was_updated = bool(config.token_value)
+            if not config.token_value and existing:
+                encrypted_token = existing[1]  # Behalte den alten verschlüsselten Token
+            
+            if existing:
+                # Wenn ein neuer Token gesetzt wurde, aktualisiere token_created_at
+                if token_was_updated:
+                    cur.execute(
+                        """UPDATE proxmox_config 
+                           SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s, token_created_at=NOW() 
+                           WHERE id=1 
+                           RETURNING id;""",
+                        (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node)
+                    )
+                else:
+                    cur.execute(
+                        """UPDATE proxmox_config 
+                           SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s 
+                           WHERE id=1 
+                           RETURNING id;""",
+                        (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node)
+                    )
+            else:
+                cur.execute(
+                    """INSERT INTO proxmox_config (id, host, port, token_name, token_value, verify_ssl, node) 
+                       VALUES (1, %s, %s, %s, %s, %s, %s) 
+                       RETURNING id;""",
+                    (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node)
+                )
+            
+            updated = cur.fetchone()
+            db.commit()
+            
+            if not updated:
+                raise HTTPException(status_code=500, detail="Failed to save Proxmox configuration")
+            
+            return {"message": "Proxmox configuration saved"}
+        finally:
+            cur.close()
     
-    # Verschlüssele den Token-Wert
-    encrypted_token = encrypt_value(config.token_value)
-    
-    # Prüfe ob Eintrag existiert
-    cur.execute("SELECT id, token_value FROM proxmox_config WHERE id = 1;")
-    existing = cur.fetchone()
-    
-    # Wenn kein neuer Token angegeben wurde, behalte den alten
-    token_was_updated = bool(config.token_value)
-    if not config.token_value and existing:
-        encrypted_token = existing[1]  # Behalte den alten verschlüsselten Token
-    
-    if existing:
-        # Wenn ein neuer Token gesetzt wurde, aktualisiere token_created_at
-        if token_was_updated:
-            cur.execute(
-                """UPDATE proxmox_config 
-                   SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s, token_created_at=NOW() 
-                   WHERE id=1 
-                   RETURNING id;""",
-                (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node)
-            )
-        else:
-            cur.execute(
-                """UPDATE proxmox_config 
-                   SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s 
-                   WHERE id=1 
-                   RETURNING id;""",
-                (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node)
-            )
-    else:
-        cur.execute(
-            """INSERT INTO proxmox_config (id, host, port, token_name, token_value, verify_ssl, node) 
-               VALUES (1, %s, %s, %s, %s, %s, %s) 
-               RETURNING id;""",
-            (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node)
-        )
-    
-    updated = cur.fetchone()
-    db.commit()
-    
-    if not updated:
-        raise HTTPException(status_code=500, detail="Failed to save Proxmox configuration")
-    
-    return {"message": "Proxmox configuration saved"}
+    return await run_in_threadpool(_update_config_sync)
 
 @router.get("/api/proxmox/vms")
 @limiter.limit("20/minute")  # Rate limit for VM list

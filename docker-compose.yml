@@ -32,6 +32,14 @@ services:
     # Kein direkter Port-Expose mehr (läuft über nginx)
     expose:
       - "80"
+    # ✅ Security Hardening
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:uid=101,gid=101
+      - /var/run:uid=101,gid=101
+      - /tmp
     depends_on:
       - backend
     healthcheck:
@@ -65,6 +73,13 @@ services:
       - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-7}
       - MAX_FAILED_LOGIN_ATTEMPTS=${MAX_FAILED_LOGIN_ATTEMPTS:-5}
       - LOGIN_LOCKOUT_MINUTES=${LOGIN_LOCKOUT_MINUTES:-15}
+    # ✅ Security Hardening
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/__pycache__:uid=1000,gid=1000
     depends_on:
       db:
         condition: service_healthy

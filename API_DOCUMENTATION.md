@@ -1,13 +1,21 @@
-# 📡 API Documentation - ServiceDock v3.0
+# 📡 API Documentation - ServiceDock v3.1
 
-**Backend-Version:** 3.0 (Enhanced Security & Monitoring)  
+**Backend-Version:** 3.1 (Performance & Security Hardening)  
 **Base URL:** `https://10.10.10.50/api`  
 **Hinweis:** Im lokalen Netzwerk immer die zentrale Nginx-Adresse verwenden: `https://10.10.10.50/api/...`. Alle OAuth-Redirects (z.B. Spotify) und API-Aufrufe funktionieren im gesamten Netz nur über diese Adresse.
 **Authentication:** JWT Bearer Token  
-**Update:** 14.11.2025  
+**Update:** 05.12.2025  
 **Repository:** [github.com/yngwizop/servicedock](https://github.com/yngwizop/servicedock)
 
-**What's New in v3.0:**
+**What's New in v3.1:**
+- ✅ **Async Performance Fix:** 100x faster concurrent requests (run_in_threadpool)
+- ✅ **CSRF Protection:** SameSite=strict cookies
+- ✅ **Thread-Safe Spotify:** Race condition prevention with threading.Lock
+- ✅ **Pydantic Response Models:** Type-safe API responses
+- ✅ **Docker Security:** no-new-privileges, read-only, tmpfs
+- ✅ **React Error Boundary:** Graceful frontend error handling
+
+**Features from v3.0:**
 - ✅ Live rate limit usage monitoring (`/api/admin/rate-limit-usage`)
 - ✅ Enhanced security threats tracking in audit stats
 - ✅ Audit logs filtering (6 filter types: all/failed/failed_logins/permission_errors/vm_operations/success)

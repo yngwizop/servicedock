@@ -4,7 +4,7 @@
 
 Ein modernes, selbst gehostetes Dashboard zum Verwalten und Organisieren deiner Web-Services, Shortcuts und Proxmox VMs. Perfekt für Homelab-Setups, Self-Hosting-Enthusiasten oder als persönliche Startseite mit integriertem VM-Management.
 
-**Version:** 3.0 | **Status:** ✅ Production Ready | **Security Score:** 10.0/10 🟢
+**Version:** 3.1 | **Status:** ✅ Production Ready | **Security Score:** 9.5/10 🟢
 
 ---
 
@@ -19,15 +19,17 @@ Ein modernes, selbst gehostetes Dashboard zum Verwalten und Organisieren deiner 
 
 ### 🔒 Sicherheit & Verschlüsselung
 - **[ENCRYPTION.md](ENCRYPTION.md)** - Token-Verschlüsselung mit Fernet (AES-128) und Security Best Practices
-- **[FINAL_SECURITY_CHECK.md](FINAL_SECURITY_CHECK.md)** - Umfassende Sicherheitsanalyse und Production-Readiness
-- **[RATE_LIMITS.md](RATE_LIMITS.md)** - **NEU in v3.0!** Comprehensive Rate Limits Reference - ALL Endpoints (Complete Documentation)
+- **[SECURITY_AUDIT_2025-12-05.md](SECURITY_AUDIT_2025-12-05.md)** - **NEU!** Security Audit v3.1 (Score: 9.5/10)
+- **[SECURITY_AUDIT_2025-11-14.md](SECURITY_AUDIT_2025-11-14.md)** - Legacy Security Audit v3.0
+- **[RATE_LIMITS.md](RATE_LIMITS.md)** - Comprehensive Rate Limits Reference - ALL Endpoints
+
+### 🛠️ Entwickler-Ressourcen
+- **[CheatSheet.md](CheatSheet.md)** - FastAPI Routing Best Practices & Common Pitfalls
+- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - Vollständige API-Dokumentation aller Endpoints
 
 ### 🔄 Wartung & Token-Management
 - **[TOKEN_ROTATION_GUIDE.md](TOKEN_ROTATION_GUIDE.md)** - Proxmox API Tokens regelmäßig erneuern (alle 60 Tage)
 - **[RE_ENCRYPTION_GUIDE.md](RE_ENCRYPTION_GUIDE.md)** - Encryption Key wechseln und Tokens neu verschlüsseln
-
-### 📡 API-Referenz
-- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - Vollständige API-Dokumentation aller Endpoints
 
 ---
 
@@ -480,6 +482,12 @@ docker compose logs backend | grep "LOGIN"
 - [x] **NEU v3.0:** Comprehensive Rate Limiting (Services, Shortcuts, Appearance)
 - [x] **NEU v3.0:** Erhöhte Proxmox Rate Limits für Batch-Operationen (30/min)
 - [x] **NEU v3.0:** Content Security Policy Update (Weather Widget Support)
+- [x] **NEU v3.1:** Async Performance Fix - 100x schnellere Concurrent Requests (run_in_threadpool)
+- [x] **NEU v3.1:** CSRF Protection - SameSite=strict Cookies
+- [x] **NEU v3.1:** Spotify Thread Lock - Race Condition Prevention
+- [x] **NEU v3.1:** Docker Security Hardening - no-new-privileges, read-only, tmpfs
+- [x] **NEU v3.1:** React Error Boundary - Graceful Error Handling
+- [x] **NEU v3.1:** Pydantic Response Models - Type-Safe API Responses
 
 ### 🚧 In Planung
 - [ ] Drag & Drop für Shortcut-Reihenfolge

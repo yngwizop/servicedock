@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 import secrets
 import requests
+import threading
 from urllib.parse import urlencode
 
 import config.database
@@ -45,6 +46,9 @@ SPOTIFY_SCOPES = [
 # Temporary State Storage (für CSRF Protection)
 # In Production: Redis oder DB verwenden
 _oauth_states = {}
+
+# ✅ Thread Lock für Token Refresh (verhindert Race Conditions)
+_spotify_refresh_lock = threading.Lock()
 
 
 def get_spotify_config():
@@ -96,59 +100,76 @@ def get_spotify_config():
 def refresh_access_token(spotify_config: dict) -> Optional[str]:
     """
     Erneuert Access Token mit Refresh Token.
+    Thread-safe mit Lock gegen Race Conditions.
     Returns: Neuer Access Token oder None
     """
-    if not spotify_config.get("refresh_token"):
-        return None
-    
-    try:
-        response = requests.post(
-            SPOTIFY_TOKEN_URL,
-            data={
-                "grant_type": "refresh_token",
-                "refresh_token": spotify_config["refresh_token"]
-            },
-            auth=(spotify_config["client_id"], spotify_config["client_secret"]),
-            timeout=10
-        )
-        
-        if response.status_code != 200:
-            logger.error(f"Spotify token refresh failed: {response.status_code}")
+    with _spotify_refresh_lock:  # ✅ Thread-safe
+        if not spotify_config.get("refresh_token"):
             return None
         
-        data = response.json()
-        new_access_token = data.get("access_token")
-        expires_in = data.get("expires_in", 3600)
+        # ✅ Double-checked Locking: Re-check ob Token noch gültig
+        # (anderer Thread könnte bereits refreshed haben)
+        current_config = get_spotify_config()
+        if current_config and current_config["token_expires_at"]:
+            if datetime.utcnow() + timedelta(minutes=5) < current_config["token_expires_at"]:
+                logger.info("Token already refreshed by another thread")
+                return current_config["access_token"]
         
-        # Token in DB aktualisieren
-        if new_access_token:
-            conn = None
-            try:
-                conn = config.database.db_pool.getconn()
-                cur = conn.cursor()
-                
-                encrypted_token = encrypt_value(new_access_token)
-                expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
-                
-                cur.execute("""
-                    UPDATE spotify_config 
-                    SET access_token = %s, token_expires_at = %s, updated_at = NOW()
-                    WHERE id = 1;
-                """, (encrypted_token, expires_at))
-                
-                conn.commit()
-                cur.close()
-                
-                logger.info("Spotify access token refreshed successfully")
-                return new_access_token
-            finally:
-                if conn is not None:
-                    config.database.db_pool.putconn(conn)
-        
-        return None
-    except Exception as e:
-        logger.error(f"Error refreshing Spotify token: {str(e)}")
-        return None
+        try:
+            response = requests.post(
+                SPOTIFY_TOKEN_URL,
+                data={
+                    "grant_type": "refresh_token",
+                    "refresh_token": spotify_config["refresh_token"]
+                },
+                auth=(spotify_config["client_id"], spotify_config["client_secret"]),
+                timeout=10
+            )
+            
+            if response.status_code != 200:
+                logger.error(f"Spotify token refresh failed: {response.status_code}")
+                return None
+            
+            data = response.json()
+            new_access_token = data.get("access_token")
+            expires_in = data.get("expires_in", 3600)
+            
+            # Token in DB aktualisieren
+            if new_access_token:
+                conn = None
+                cur = None
+                try:
+                    conn = config.database.db_pool.getconn()
+                    cur = conn.cursor()
+                    
+                    encrypted_token = encrypt_value(new_access_token)
+                    expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
+                    
+                    cur.execute("""
+                        UPDATE spotify_config 
+                        SET access_token = %s, token_expires_at = %s, updated_at = NOW()
+                        WHERE id = 1;
+                    """, (encrypted_token, expires_at))
+                    
+                    conn.commit()
+                    cur.close()
+                    cur = None
+                    
+                    logger.info("Spotify access token refreshed successfully")
+                    return new_access_token
+                finally:
+                    if cur is not None:
+                        try:
+                            cur.close()
+                        except:
+                            pass
+                    if conn is not None:
+                        config.database.db_pool.putconn(conn)
+            
+            return None
+        except Exception as e:
+            logger.error(f"Error refreshing Spotify token: {str(e)}")
+            return None
 
 
 def get_valid_access_token() -> Optional[str]:

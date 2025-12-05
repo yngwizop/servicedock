@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import ErrorBoundary from "./components/ErrorBoundary";
 import ServiceGrid from "./components/ServiceGrid";
 import ShortcutGrid from "./components/ShortcutGrid";
 import ProxmoxGrid from "./components/ProxmoxGrid";
@@ -464,7 +465,8 @@ function App() {
 
   // --- RENDER ---
   return (
-    // Outer Container
+    <ErrorBoundary>
+    {/* Outer Container */}
     <div className="relative min-h-screen">
       {/* 1. Hintergrundfarbe-Layer - FIXED */}
       <div
@@ -713,6 +715,7 @@ function App() {
         />
       )}
     </div>
+    </ErrorBoundary>
   );
 }
 
