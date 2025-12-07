@@ -159,7 +159,7 @@ function ShortcutGrid({
             )}
 
             {/* ACTUAL SHORTCUT CONTENT */}
-            <ShortcutLink shortcut={s} />
+            <ShortcutLink shortcut={s} textColor={textColor} />
 
             {/* Edit-Button (nur im eingeloggten Modus) */}
             {isLoggedIn && (

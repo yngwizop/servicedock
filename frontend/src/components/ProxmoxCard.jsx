@@ -52,7 +52,7 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
   };
 
   return (
-    <div className="group relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-md rounded-3xl border border-white/10 dark:border-gray-200/10 shadow-xl hover:shadow-2xl transition-all duration-200 p-6 flex flex-col gap-2 will-change-auto hover:border-blue-400 dark:hover:border-blue-500 hover:scale-[1.025]">
+    <div className="group relative bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-3xl border border-gray-300/50 dark:border-white/10 shadow-xl hover:shadow-2xl transition-all duration-200 p-6 flex flex-col gap-2 will-change-auto hover:border-blue-400/60 dark:hover:border-blue-500/60 hover:scale-[1.025]">
       {/* Header - Modern, mehr Luft, Status-Badge */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -65,10 +65,10 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-extrabold text-base text-gray-900 dark:text-white truncate">
+            <h3 className="font-extrabold text-base text-gray-950 dark:text-white truncate">
               {resource.name}
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-light">
+            <p className="text-xs text-gray-700 dark:text-gray-400 font-light">
               {resource.type === 'qemu' ? 'VM' : 'CT'} #{resource.vmid}
             </p>
           </div>
@@ -91,8 +91,8 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
             {/* CPU */}
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-600 dark:text-gray-400 font-medium">CPU</span>
-                <span className="font-bold text-gray-800 dark:text-white">{cpuPercent}%</span>
+                <span className="text-gray-700 dark:text-gray-400 font-medium">CPU</span>
+                <span className="font-bold text-gray-950 dark:text-white">{cpuPercent}%</span>
               </div>
               <div className="w-full bg-gray-200/70 dark:bg-gray-700/70 rounded-full h-2 overflow-hidden shadow-inner">
                 <div 
@@ -105,8 +105,8 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
             {/* RAM */}
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-600 dark:text-gray-400 font-medium">RAM</span>
-                <span className="font-bold text-gray-800 dark:text-white">{memPercent}%</span>
+                <span className="text-gray-700 dark:text-gray-400 font-medium">RAM</span>
+                <span className="font-bold text-gray-950 dark:text-white">{memPercent}%</span>
               </div>
               <div className="w-full bg-gray-200/70 dark:bg-gray-700/70 rounded-full h-2 overflow-hidden shadow-inner">
                 <div 
@@ -119,8 +119,8 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
             {/* Disk */}
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-600 dark:text-gray-400 font-medium">Disk</span>
-                <span className="font-bold text-gray-800 dark:text-white">{diskPercent}%</span>
+                <span className="text-gray-700 dark:text-gray-400 font-medium">Disk</span>
+                <span className="font-bold text-gray-950 dark:text-white">{diskPercent}%</span>
               </div>
               <div className="w-full bg-gray-200/70 dark:bg-gray-700/70 rounded-full h-2 overflow-hidden shadow-inner">
                 <div 
@@ -131,12 +131,12 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
             </div>
             
             {/* Uptime - Kompakter */}
-            <div className="flex justify-between items-center text-xs pt-2 border-t border-gray-200/50 dark:border-gray-700/50">
-              <span className="text-gray-600 dark:text-gray-400 font-medium flex items-center gap-1">
+            <div className="flex justify-between items-center text-xs pt-2 border-t border-gray-300/50 dark:border-gray-700/50">
+              <span className="text-gray-700 dark:text-gray-400 font-medium flex items-center gap-1">
                 <svg xmlns='http://www.w3.org/2000/svg' className='inline w-4 h-4 text-blue-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>
                 Uptime
               </span>
-              <span className="font-bold text-gray-800 dark:text-white bg-gray-100/80 dark:bg-gray-800/80 px-2 py-0.5 rounded-full shadow-sm">
+              <span className="font-bold text-gray-950 dark:text-white bg-gray-200/80 dark:bg-gray-800/80 px-2 py-0.5 rounded-full shadow-sm">
                 {formatUptime(resource.uptime)}
               </span>
             </div>
@@ -144,10 +144,10 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
         ) : (
           <div className="space-y-3 flex flex-col justify-center h-full">
             {/* Infozeile mit last run und Uptime */}
-            <div className="text-center text-xs text-gray-600 dark:text-gray-300 pt-2">
+            <div className="text-center text-xs text-gray-700 dark:text-gray-300 pt-2">
               <span className="block font-semibold">Zuletzt gestartet:</span>
               {resource.lastRun ? (
-                <span className="block font-mono text-gray-700 dark:text-gray-200 mt-0.5">{resource.lastRun}</span>
+                <span className="block font-mono text-gray-900 dark:text-gray-200 mt-0.5">{resource.lastRun}</span>
               ) : (
                 <span className="block font-mono text-gray-400 dark:text-gray-500 italic mt-0.5">kein Zeitstempel verfügbar</span>
               )}

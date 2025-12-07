@@ -302,7 +302,7 @@ function ServiceGrid({
               <div className="absolute right-0 top-2 bottom-2 w-1 rounded bg-blue-600 z-20 transform translate-x-1 transition-all"></div>
             )}
 
-            <ServiceCard service={s} />
+            <ServiceCard service={s} textColor={textColor} />
 
             {/* Edit-Button mit Accessibility-Verbesserungen */}
             {isLoggedIn && (

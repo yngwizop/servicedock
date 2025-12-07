@@ -15,13 +15,13 @@ function ProxmoxStatsCards({ resources, nodes }) {
   const totalCpuCores = nodes?.reduce((sum, node) => sum + (node.cpus || 0), 0) || 0;
 
   // Card-Komponente für Wiederverwendbarkeit
-  const StatCard = ({ title, value, icon: Icon, gradient, iconColor }) => (
+  const StatCard = ({ title, value, icon: Icon, gradient, iconColor, bgColor }) => (
     <div 
-      className={`${gradient} rounded-xl shadow-lg p-6 backdrop-blur-sm border border-white/20 hover:scale-105 transition-transform duration-300`}
+      className={`${bgColor} backdrop-blur-md rounded-xl shadow-lg p-6 border border-white/20 hover:scale-105 transition-transform duration-300`}
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-white/80 uppercase tracking-wide mb-2">
+          <p className="text-sm font-medium text-white/90 uppercase tracking-wide mb-2">
             {title}
           </p>
           <p className="text-4xl font-bold text-white">
@@ -42,7 +42,7 @@ function ProxmoxStatsCards({ resources, nodes }) {
         title="Total"
         value={total}
         icon={Desktop}
-        gradient="bg-gradient-to-br from-slate-600/90 to-slate-800/90"
+        bgColor="bg-gradient-to-br from-slate-600/70 to-slate-800/70"
         iconColor="text-white"
       />
 
@@ -51,7 +51,7 @@ function ProxmoxStatsCards({ resources, nodes }) {
         title="Running"
         value={running}
         icon={PlayCircle}
-        gradient="bg-gradient-to-br from-emerald-700/90 to-emerald-900/90"
+        bgColor="bg-gradient-to-br from-emerald-600/70 to-emerald-800/70"
         iconColor="text-white"
       />
 
@@ -60,7 +60,7 @@ function ProxmoxStatsCards({ resources, nodes }) {
         title="Stopped"
         value={stopped}
         icon={StopCircle}
-        gradient="bg-gradient-to-br from-rose-700/90 to-rose-900/90"
+        bgColor="bg-gradient-to-br from-rose-600/70 to-rose-800/70"
         iconColor="text-white"
       />
 
@@ -69,7 +69,7 @@ function ProxmoxStatsCards({ resources, nodes }) {
         title="CPU Cores"
         value={totalCpuCores}
         icon={Cpu}
-        gradient="bg-gradient-to-br from-amber-700/90 to-amber-900/90"
+        bgColor="bg-gradient-to-br from-amber-600/70 to-amber-800/70"
         iconColor="text-white"
       />
     </div>

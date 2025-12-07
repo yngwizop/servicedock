@@ -413,8 +413,8 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
       <div 
         className="flex flex-row items-center gap-3 text-base md:text-lg font-medium group flex-wrap"
         style={{ 
-          color: textColor || '#1f2937',
-          textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
+          color: textColor,
+          textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)'
         }}
         aria-label={`Wetter in ${weather.cityName}: ${weatherFields.map(f => {
           if (f === 'temperature') return `${temp} Grad Celsius`;
@@ -429,7 +429,7 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
         {/* Manual refresh button with cache indicator */}
         <button
           onClick={handleManualRefresh}
-          className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors opacity-60 group-hover:opacity-100 focus:opacity-100 hover:opacity-100"
           style={{ color: textColor }}
           title={isFromCache ? `Aktualisiert ${cacheAgeText}\nKlicken zum Neuladen` : 'Gerade aktualisiert\nKlicken zum Neuladen'}
           aria-label="Wetter manuell aktualisieren"

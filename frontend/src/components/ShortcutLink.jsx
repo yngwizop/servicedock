@@ -1,7 +1,7 @@
 import React from 'react';
 import { sanitizeText, sanitizeUrl } from '../utils/sanitize';
 
-function ShortcutLink({ shortcut }) {
+function ShortcutLink({ shortcut, textColor }) {
   const isUrl = shortcut.icon && (
     shortcut.icon.includes('.') || shortcut.icon.includes('/')
   );
@@ -26,21 +26,31 @@ function ShortcutLink({ shortcut }) {
       target="_blank"
       rel="noopener noreferrer"
       draggable={false}
-      className="flex items-center gap-3 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md shadow-lg rounded-lg p-3 transition-all duration-300 hover:shadow-xl dark:hover:shadow-blue-900/30 hover:scale-[1.03]"
+      className="group relative flex items-center gap-3 bg-white/40 dark:bg-white/5 backdrop-blur-md border border-gray-300/50 dark:border-white/10 rounded-xl p-3.5 transition-all duration-300 hover:bg-white/60 dark:hover:bg-white/10 hover:border-gray-400/60 dark:hover:border-white/20 hover:scale-[1.02] shadow-md hover:shadow-lg hover:shadow-cyan-500/10 dark:hover:shadow-cyan-400/10"
       aria-label={`Shortcut: ${safeName}, ${displayUrl(safeUrl)}`}
     >
-      {shortcut.icon && (
-        <div className={`flex-shrink-0 rounded-md p-1.5 w-9 h-9 flex items-center justify-center ${isUrl ? 'bg-white/80 dark:bg-gray-700' : 'bg-gray-200/80 dark:bg-gray-600'}`}>
-          {isUrl ? (
-            <img src={safeIcon} alt={safeName} className="w-full h-full object-contain" draggable={false}/>
-          ) : (
-            <span className="text-lg">{safeIcon}</span>
-          )}
+      {/* Subtle Glow */}
+      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 to-blue-500/0 group-hover:from-cyan-500/5 group-hover:to-blue-500/5 rounded-xl transition-all duration-500 pointer-events-none"></div>
+      
+      {/* Content */}
+      <div className="relative z-10 flex items-center gap-3 w-full">
+        {shortcut.icon && (
+          <div className={`flex-shrink-0 rounded-lg p-2 w-10 h-10 flex items-center justify-center transition-all duration-300 ${
+            isUrl 
+              ? 'bg-white/35 dark:bg-white/10 backdrop-blur-sm border border-gray-300/60 dark:border-white/20 group-hover:bg-white/55 dark:group-hover:bg-white/20 group-hover:border-gray-400/70 dark:group-hover:border-white/30' 
+              : 'bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-gray-300/60 dark:border-white/20 group-hover:from-cyan-500/30 group-hover:to-blue-500/30 group-hover:border-gray-400/70 dark:group-hover:border-white/30'
+          }`}>
+            {isUrl ? (
+              <img src={safeIcon} alt={safeName} className="w-full h-full object-contain" draggable={false}/>
+            ) : (
+              <span className="text-xl">{safeIcon}</span>
+            )}
+          </div>
+        )}
+        <div className="flex-grow min-w-0">
+          <h3 className="font-medium text-sm text-gray-950 dark:text-white/90 group-hover:text-black dark:group-hover:text-white truncate transition-colors duration-300">{safeName}</h3>
+          <p className="text-xs text-gray-900 dark:text-white/50 group-hover:text-black dark:group-hover:text-white/60 truncate transition-colors duration-300">{displayUrl(safeUrl)}</p>
         </div>
-      )}
-      <div className="flex-grow min-w-0">
-        <h3 className="font-medium text-sm text-gray-800 dark:text-gray-100 truncate">{safeName}</h3>
-        <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{displayUrl(safeUrl)}</p>
       </div>
     </a>
   );

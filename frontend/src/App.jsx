@@ -38,10 +38,39 @@ function App() {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
+      
+      // Gradient Background für Dark Mode
+      document.body.style.backgroundColor = '#020617'; // Slate 950
+      document.body.style.backgroundImage = `
+        radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0px, transparent 50%),
+        radial-gradient(at 50% 0%, hsla(225, 39%, 25%, 1) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, hsla(217, 71%, 35%, 1) 0px, transparent 50%),
+        radial-gradient(at 100% 50%, hsla(291, 44%, 28%, 1) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(261, 48%, 32%, 1) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, hsla(228, 35%, 22%, 1) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(203, 45%, 28%, 1) 0px, transparent 50%)
+      `;
     } else {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
+      
+      // Gradient Background für Light Mode - Heller und freundlicher
+      document.body.style.backgroundColor = '#e2e8f0'; // Slate 200
+      document.body.style.backgroundImage = `
+        radial-gradient(at 0% 0%, hsla(210, 40%, 85%, 1) 0px, transparent 50%),
+        radial-gradient(at 50% 0%, hsla(215, 50%, 90%, 1) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(280, 45%, 88%, 1) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, hsla(195, 60%, 82%, 1) 0px, transparent 50%),
+        radial-gradient(at 100% 50%, hsla(270, 50%, 85%, 1) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(230, 55%, 86%, 1) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, hsla(210, 50%, 88%, 1) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(185, 55%, 84%, 1) 0px, transparent 50%)
+      `;
     }
+    document.body.style.minHeight = '100vh';
+    document.body.style.margin = '0';
+    document.body.style.padding = '0';
   }, [theme]);
 
   // NEU: Funktion zum Umschalten des Themes
@@ -468,33 +497,39 @@ function App() {
     <ErrorBoundary>
     {/* Outer Container */}
     <div className="relative min-h-screen">
-      {/* 1. Hintergrundfarbe-Layer - FIXED */}
-      <div
-        className="fixed inset-0 w-full h-full -z-10 pointer-events-none"
-        style={{ backgroundColor: getBackgroundColor() }}
-      ></div>
+      {/* 1. Gradient Background - managed by useEffect (body) */}
+      
+      {/* 2. User-Custom Background Color Layer (optional) */}
+      {appearance.bg_color && appearance.bg_color !== 'transparent' && (
+        <div
+          className="fixed inset-0 w-full h-full -z-10 pointer-events-none"
+          style={{ 
+            backgroundColor: appearance.bg_color,
+            opacity: appearance.bg_opacity || 0.3 // Default 30% wenn kein Wert
+          }}
+        ></div>
+      )}
 
-      {/* 2. Hintergrundbild-Layer - FIXED damit es nicht scrollt */}
-      <div
-        className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat pointer-events-none"
-        style={{
-          ...bgImageStyle,
-          backgroundAttachment: 'fixed',
-          willChange: 'auto'
-        }}
-      ></div>
+      {/* 3. User-Custom Background Image Layer (optional) */}
+      {appearance.bg_image_url && (
+        <div
+          className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat pointer-events-none -z-10"
+          style={{
+            backgroundImage: `url(${appearance.bg_image_url})`,
+            opacity: appearance.bg_opacity,
+            backgroundAttachment: 'fixed'
+          }}
+        ></div>
+      )}
 
-      {/* 3. Content-Layer - Flexbox für sticky footer */}
-  <div className="relative z-10 flex flex-col min-h-screen pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2 max-w-full overflow-x-hidden">
-        {/* Header mit Titel und Uhr */}
+      {/* 4. Content-Layer */}
+      <div className="relative z-10 flex flex-col min-h-screen pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2 max-w-full overflow-x-hidden">
+        {/* Header mit Titel und Widgets */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
-          {/* Titel (oben links) - mit Text-Shadow für bessere Lesbarkeit */}
+          {/* Titel (oben links) */}
           <h1 
-            className="text-4xl font-bold transition-colors duration-300"
-            style={{ 
-              color: getTextColor(),
-              textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
-            }}
+            className="text-4xl font-bold drop-shadow-lg"
+            style={{ color: getTextColor() }}
           >
             Web Dashboard
           </h1>
@@ -527,15 +562,14 @@ function App() {
         {/* === TAB NAVIGATION & SPOTIFY WIDGET === */}
         <div className="flex justify-between items-start gap-4 mb-8">
           {/* Tab Navigation - Links (eigener Container) */}
-          <div className="flex gap-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-xl px-4 pt-3 pb-2 border border-gray-300/50 dark:border-gray-600/50 shadow-lg">
+          <div className="flex gap-4 bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl px-4 pt-3 pb-2 border border-gray-300/50 dark:border-white/10 shadow-lg">
             <button
               onClick={() => setActiveTab("services")}
               className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
                 activeTab === "services"
                   ? "bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30 hover:text-gray-900 dark:hover:text-gray-100"
+                  : "text-gray-800 dark:text-white/90 hover:bg-white/50 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
               }`}
-              style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
             >
               Services & Shortcuts
             </button>
@@ -544,9 +578,8 @@ function App() {
               className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
                 activeTab === "monitoring"
                   ? "bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30 hover:text-gray-900 dark:hover:text-gray-100"
+                  : "text-gray-800 dark:text-white/90 hover:bg-white/50 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
               }`}
-              style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
             >
               Proxmox Monitoring
             </button>
@@ -555,9 +588,8 @@ function App() {
               className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
                 activeTab === "security"
                   ? "bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30 hover:text-gray-900 dark:hover:text-gray-100"
+                  : "text-gray-800 dark:text-white/90 hover:bg-white/50 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
               }`}
-              style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
             >
               Security
             </button>
@@ -630,7 +662,7 @@ function App() {
           {/* Theme-Toggle-Button */}
           <button
             onClick={toggleTheme}
-            className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
+            className="bg-white/5 backdrop-blur-md border border-white/10 p-3 rounded-full shadow-lg hover:shadow-xl hover:bg-white/10 hover:border-white/20 transition-all hover:scale-110 text-white/90 hover:text-white"
             title="Toggle Theme"
           >
             {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
@@ -639,7 +671,7 @@ function App() {
           {!isLoggedIn ? (
             <button
               onClick={() => setShowLogin(true)}
-              className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
+              className="bg-white/5 backdrop-blur-md border border-white/10 p-3 rounded-full shadow-lg hover:shadow-xl hover:bg-white/10 hover:border-white/20 transition-all hover:scale-110 text-white/90 hover:text-white"
               title="Admin-Login"
             >
               <Lock size={24} />
@@ -648,14 +680,14 @@ function App() {
             <>
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
+                className="bg-white/5 backdrop-blur-md border border-white/10 p-3 rounded-full shadow-lg hover:shadow-xl hover:bg-white/10 hover:border-white/20 transition-all hover:scale-110 text-white/90 hover:text-white"
                 title="Einstellungen"
               >
                 <Gear size={24} />
               </button>
               <button
                 onClick={handleLogout}
-                className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
+                className="bg-white/5 backdrop-blur-md border border-white/10 p-3 rounded-full shadow-lg hover:shadow-xl hover:bg-white/10 hover:border-white/20 transition-all hover:scale-110 text-white/90 hover:text-white"
                 title="Logout"
               >
                 <SignOut size={24} />

@@ -95,11 +95,11 @@ function ClockWidget({ textColor, locale = (typeof navigator !== 'undefined' && 
   const formatDate = () => dateFormatterRef.current.format(time);
 
   return (
-    <div
-      className="flex flex-col items-start md:items-end space-y-1"
+    <div 
+      className="text-right select-none"
       style={{ 
         color: textColor,
-        textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
+        textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)'
       }}
       role="group"
       aria-label="Uhrzeit und Datum"

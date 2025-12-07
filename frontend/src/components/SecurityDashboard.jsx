@@ -193,15 +193,14 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
       </div>
 
       {/* View Toggle */}
-      <div className="flex gap-2 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-xl px-4 pt-3 pb-2 border border-gray-300/50 dark:border-gray-600/50 shadow-lg">
+      <div className="flex gap-2 bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl px-4 pt-3 pb-2 border border-gray-300/50 dark:border-white/10 shadow-lg">
         <button
           onClick={() => setActiveView('overview')}
           className={`px-4 py-2 font-semibold transition-all rounded-lg ${
             activeView === 'overview'
               ? 'bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30'
+              : 'text-gray-950 dark:text-white/90 hover:bg-white/30 dark:hover:bg-white/10'
           }`}
-          style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
         >
           <div className="flex items-center gap-2">
             <Eye size={20} />
@@ -213,9 +212,8 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
           className={`px-4 py-2 font-semibold transition-all rounded-lg ${
             activeView === 'logs'
               ? 'bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30'
+              : 'text-gray-950 dark:text-white/90 hover:bg-white/30 dark:hover:bg-white/10'
           }`}
-          style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
         >
           <div className="flex items-center gap-2">
             <ListBullets size={20} />
@@ -227,9 +225,8 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
           className={`px-4 py-2 font-semibold transition-all rounded-lg ${
             activeView === 'stats'
               ? 'bg-blue-500/20 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/30 dark:hover:bg-gray-700/30'
+              : 'text-gray-950 dark:text-white/90 hover:bg-white/30 dark:hover:bg-white/10'
           }`}
-          style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
         >
           <div className="flex items-center gap-2">
             <ChartBar size={20} />
@@ -243,7 +240,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
           {/* Token Rotation Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/10">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <ArrowsClockwise 
@@ -251,7 +248,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
                   className={tokenInfo?.rotation_recommended ? 'text-red-500' : 'text-green-500'} 
                   weight="bold"
                 />
-                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                <h3 className="text-lg font-bold text-gray-950 dark:text-gray-100">
                   Token Rotation
                 </h3>
               </div>
@@ -263,21 +260,21 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
             {tokenInfo?.configured ? (
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Token Alter</p>
-                  <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                  <p className="text-sm text-gray-700 dark:text-gray-400">Token Alter</p>
+                  <p className="text-2xl font-bold text-gray-950 dark:text-gray-100">
                     {tokenInfo.age_days} Tage
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Erstellt am</p>
-                  <p className="text-sm text-gray-800 dark:text-gray-100">
+                  <p className="text-sm text-gray-700 dark:text-gray-400">Erstellt am</p>
+                  <p className="text-sm text-gray-900 dark:text-gray-100">
                     {formatTimestamp(tokenInfo.created_at)}
                   </p>
                 </div>
                 {tokenInfo.last_rotated && (
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Letzte Rotation</p>
-                    <p className="text-sm text-gray-800 dark:text-gray-100">
+                    <p className="text-sm text-gray-700 dark:text-gray-400">Letzte Rotation</p>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">
                       {formatTimestamp(tokenInfo.last_rotated)}
                     </p>
                   </div>
@@ -306,10 +303,10 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
           </div>
 
           {/* Audit Stats Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/10">
             <div className="flex items-center gap-3 mb-4">
               <ChartBar size={28} className="text-blue-500" weight="bold" />
-              <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+              <h3 className="text-lg font-bold text-gray-950 dark:text-gray-100">
                 Aktivität (24h)
               </h3>
             </div>
@@ -318,13 +315,13 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Gesamt</p>
-                    <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">
+                    <p className="text-sm text-gray-700 dark:text-gray-400">Gesamt</p>
+                    <p className="text-3xl font-bold text-gray-950 dark:text-gray-100">
                       {auditStats.error_stats.total}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Erfolgreich</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-400">Erfolgreich</p>
                     <p className="text-3xl font-bold text-green-600 dark:text-green-400">
                       {auditStats.error_stats.success}
                     </p>
@@ -343,71 +340,71 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
           </div>
 
           {/* Security Threats Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/10">
             <div className="flex items-center gap-3 mb-4">
-              <Warning size={28} className="text-orange-500" weight="bold" />
-              <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+              <Detective size={28} className="text-red-500" weight="bold" />
+              <h3 className="text-lg font-bold text-gray-950 dark:text-gray-100">
                 Security Threats (24h)
               </h3>
             </div>
             
             {auditStats?.security_threats ? (
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-white/30 dark:hover:bg-gray-700/30">
                   <div className="flex items-center gap-2">
                     <XCircle 
                       size={24} 
                       weight="fill" 
                       className="text-red-500 dark:text-red-400" 
                     />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm text-gray-700 dark:text-gray-400">
                       Fehlgeschlagene Logins
                     </span>
                   </div>
                   <span className={`text-lg font-bold ${
                     auditStats.security_threats.failed_logins > 10 
                       ? 'text-red-600 dark:text-red-400' 
-                      : 'text-gray-800 dark:text-gray-100'
+                      : 'text-gray-950 dark:text-gray-100'
                   }`}>
                     {auditStats.security_threats.failed_logins}
                   </span>
                 </div>
                 
-                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-white/30 dark:hover:bg-gray-700/30">
                   <div className="flex items-center gap-2">
                     <ProhibitInset 
                       size={24} 
                       weight="fill" 
                       className="text-orange-500 dark:text-orange-400" 
                     />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm text-gray-700 dark:text-gray-400">
                       IPs mit Fehlern
                     </span>
                   </div>
                   <span className={`text-lg font-bold ${
                     auditStats.security_threats.blocked_ips > 5 
                       ? 'text-orange-600 dark:text-orange-400' 
-                      : 'text-gray-800 dark:text-gray-100'
+                      : 'text-gray-950 dark:text-gray-100'
                   }`}>
                     {auditStats.security_threats.blocked_ips}
                   </span>
                 </div>
                 
-                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-white/30 dark:hover:bg-gray-700/30">
                   <div className="flex items-center gap-2">
                     <ShieldWarning 
                       size={24} 
                       weight="fill" 
                       className="text-yellow-500 dark:text-yellow-400" 
                     />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm text-gray-700 dark:text-gray-400">
                       Permission Denied
                     </span>
                   </div>
                   <span className={`text-lg font-bold ${
                     auditStats.security_threats.permission_errors > 5 
                       ? 'text-yellow-600 dark:text-yellow-400' 
-                      : 'text-gray-800 dark:text-gray-100'
+                      : 'text-gray-950 dark:text-gray-100'
                   }`}>
                     {auditStats.security_threats.permission_errors}
                   </span>
@@ -435,10 +432,10 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
           </div>
 
           {/* Rate Limiting Info */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/10">
             <div className="flex items-center gap-3 mb-4">
               <Clock size={28} className="text-purple-500" weight="bold" />
-              <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+              <h3 className="text-lg font-bold text-gray-950 dark:text-gray-100">
                 Rate Limit Usage
               </h3>
             </div>
@@ -448,12 +445,12 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
                 {/* Login Endpoint */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Login</span>
-                    <span className="text-sm font-bold text-gray-800 dark:text-gray-100">
+                    <span className="text-sm text-gray-700 dark:text-gray-400">Login</span>
+                    <span className="text-sm font-bold text-gray-950 dark:text-gray-100">
                       {rateLimitUsage.login.current}/{rateLimitUsage.login.limit}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div className="w-full bg-gray-300/60 dark:bg-gray-700 rounded-full h-2">
                     <div 
                       className={`h-2 rounded-full transition-all ${
                         rateLimitUsage.login.percentage >= 80 
@@ -470,12 +467,12 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
                 {/* Proxmox View */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Proxmox View</span>
-                    <span className="text-sm font-bold text-gray-800 dark:text-gray-100">
+                    <span className="text-sm text-gray-700 dark:text-gray-400">Proxmox View</span>
+                    <span className="text-sm font-bold text-gray-950 dark:text-gray-100">
                       {rateLimitUsage.proxmox_view.current}/{rateLimitUsage.proxmox_view.limit}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div className="w-full bg-gray-300/60 dark:bg-gray-700 rounded-full h-2">
                     <div 
                       className={`h-2 rounded-full transition-all ${
                         rateLimitUsage.proxmox_view.percentage >= 80 
@@ -492,12 +489,12 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
                 {/* Proxmox Control */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Proxmox Control</span>
-                    <span className="text-sm font-bold text-gray-800 dark:text-gray-100">
+                    <span className="text-sm text-gray-700 dark:text-gray-400">Proxmox Control</span>
+                    <span className="text-sm font-bold text-gray-950 dark:text-gray-100">
                       {rateLimitUsage.proxmox_control.current}/{rateLimitUsage.proxmox_control.limit}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div className="w-full bg-gray-300/60 dark:bg-gray-700 rounded-full h-2">
                     <div 
                       className={`h-2 rounded-full transition-all ${
                         rateLimitUsage.proxmox_control.percentage >= 80 
@@ -541,14 +538,14 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
 
       {/* Logs View */}
       {activeView === 'logs' && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg border border-gray-300/50 dark:border-white/10 overflow-hidden">
+          <div className="p-6 border-b border-gray-300/50 dark:border-white/10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+                <h3 className="text-xl font-bold text-gray-950 dark:text-gray-100">
                   Audit Logs
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-sm text-gray-700 dark:text-gray-400 mt-1">
                   {filteredLogs.length} Einträge geladen (max. 100)
                 </p>
               </div>
@@ -558,7 +555,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
                 <select
                   value={logFilter}
                   onChange={(e) => setLogFilter(e.target.value)}
-                  className="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="px-4 py-2 bg-white/40 dark:bg-white/10 backdrop-blur-md border border-gray-300/50 dark:border-white/10 rounded-lg text-gray-950 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 >
                   <option value="all">🔍 Alle Logs</option>
                   <option value="failed">❌ Alle Fehler</option>
@@ -583,29 +580,29 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
           
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-900/50">
+              <thead className="bg-white/20 dark:bg-white/5">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                     Zeitstempel
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                     Aktion
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                     IP-Adresse
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                     Details
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-gray-300/30 dark:divide-white/10">
                 {filteredLogs.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan="5" className="px-6 py-8 text-center text-gray-700 dark:text-gray-400">
                       {auditLogs.length === 0 
                         ? 'Keine Audit-Logs vorhanden' 
                         : 'Keine Logs entsprechen dem Filter'}
@@ -613,8 +610,8 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
                   </tr>
                 ) : (
                   filteredLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">
+                    <tr key={log.id} className="hover:bg-white/20 dark:hover:bg-white/5">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-950 dark:text-gray-200">
                         {formatTimestamp(log.timestamp)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -622,13 +619,13 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
                           {log.action}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-950 dark:text-gray-200">
                         {log.ip_address}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusIcon(log.status)}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-400">
                         {log.details && typeof log.details === 'object' 
                           ? JSON.stringify(log.details) 
                           : log.details || '-'}
@@ -647,20 +644,20 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* Top Actions */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+          <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/10">
+            <h3 className="text-xl font-bold text-gray-950 dark:text-gray-100 mb-4">
               Top Aktionen (24h)
             </h3>
             <div className="space-y-3">
               {auditStats.actions_24h.length === 0 ? (
-                <p className="text-gray-500 dark:text-gray-400">Keine Aktivitäten</p>
+                <p className="text-gray-700 dark:text-gray-400">Keine Aktivitäten</p>
               ) : (
                 auditStats.actions_24h.map((action, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <div key={index} className="flex items-center justify-between p-3 bg-white/30 dark:bg-white/5 rounded-lg">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getActionColor(action.action)}`}>
                       {action.action}
                     </span>
-                    <span className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                    <span className="text-lg font-bold text-gray-950 dark:text-gray-100">
                       {action.count}
                     </span>
                   </div>
@@ -670,20 +667,20 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
           </div>
 
           {/* Top IPs */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+          <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/10">
+            <h3 className="text-xl font-bold text-gray-950 dark:text-gray-100 mb-4">
               Top IP-Adressen (24h)
             </h3>
             <div className="space-y-3">
               {auditStats.top_ips.length === 0 ? (
-                <p className="text-gray-500 dark:text-gray-400">Keine Zugriffe</p>
+                <p className="text-gray-700 dark:text-gray-400">Keine Zugriffe</p>
               ) : (
                 auditStats.top_ips.map((ip, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                    <span className="text-sm font-mono text-gray-800 dark:text-gray-100">
+                  <div key={index} className="flex items-center justify-between p-3 bg-white/30 dark:bg-white/5 rounded-lg">
+                    <span className="text-sm font-mono text-gray-950 dark:text-gray-100">
                       {ip.ip}
                     </span>
-                    <span className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                    <span className="text-lg font-bold text-gray-950 dark:text-gray-100">
                       {ip.count} Requests
                     </span>
                   </div>

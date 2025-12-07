@@ -309,28 +309,28 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
       <ProxmoxStatsCards resources={resources} nodes={nodes} />
 
       {/* Filter & Sort Bar */}
-      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl shadow-lg p-4 mb-6 border border-gray-200 dark:border-gray-700">
+      <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg p-4 mb-6 border border-gray-300/50 dark:border-white/10">
         <div className="flex flex-wrap items-center gap-4">
           {/* Sort Icon */}
           <div className="flex items-center gap-2">
-            <SortAscending size={20} className="text-gray-600 dark:text-gray-400" />
-            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Filter & Sort:</span>
+            <SortAscending size={20} className="text-gray-950 dark:text-white/90" />
+            <span className="text-sm font-semibold text-gray-950 dark:text-white/90">Filter & Sort:</span>
           </div>
 
           {/* Suchfeld - NEU */}
           <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <MagnifyingGlass size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+            <MagnifyingGlass size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Suche nach Name, ID oder Node..."
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300/50 dark:border-white/10 bg-white/40 dark:bg-white/10 backdrop-blur-md text-gray-950 dark:text-white/90 text-sm placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white text-xl"
                 title="Suche löschen"
               >
                 ×
@@ -342,36 +342,36 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            className="px-3 py-2 rounded-lg border border-gray-300/50 dark:border-white/10 bg-white/40 dark:bg-gray-800 backdrop-blur-md text-gray-950 dark:text-white/90 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
           >
-            <option value="name-asc">Name A-Z</option>
-            <option value="name-desc">Name Z-A</option>
-            <option value="vmid-asc">VM-ID aufsteigend</option>
-            <option value="vmid-desc">VM-ID absteigend</option>
-            <option value="status">Status (Running zuerst)</option>
-            <option value="type">Typ (VM zuerst)</option>
+            <option value="name-asc" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Name A-Z</option>
+            <option value="name-desc" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Name Z-A</option>
+            <option value="vmid-asc" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">VM-ID aufsteigend</option>
+            <option value="vmid-desc" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">VM-ID absteigend</option>
+            <option value="status" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Status (Running zuerst)</option>
+            <option value="type" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Typ (VM zuerst)</option>
           </select>
 
           {/* Typ Filter */}
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            className="px-3 py-2 rounded-lg border border-gray-300/50 dark:border-white/10 bg-white/40 dark:bg-gray-800 backdrop-blur-md text-gray-950 dark:text-white/90 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
           >
-            <option value="all">Alle Typen</option>
-            <option value="qemu">Nur VMs</option>
-            <option value="lxc">Nur Container</option>
+            <option value="all" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Alle Typen</option>
+            <option value="qemu" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Nur VMs</option>
+            <option value="lxc" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Nur Container</option>
           </select>
 
           {/* Status Filter */}
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            className="px-3 py-2 rounded-lg border border-gray-300/50 dark:border-white/10 bg-white/40 dark:bg-gray-800 backdrop-blur-md text-gray-950 dark:text-white/90 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
           >
-            <option value="all">Alle Status</option>
-            <option value="running">Nur Running</option>
-            <option value="stopped">Nur Stopped</option>
+            <option value="all" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Alle Status</option>
+            <option value="running" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Nur Running</option>
+            <option value="stopped" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Nur Stopped</option>
           </select>
 
           {/* Reset Button */}
@@ -383,7 +383,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
                 setFilterType('all');
                 setFilterStatus('all');
               }}
-              className="px-3 py-2 text-sm bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded-lg transition-all"
+              className="px-3 py-2 text-sm bg-white/40 dark:bg-white/10 backdrop-blur-md hover:bg-white/60 dark:hover:bg-white/20 text-gray-950 dark:text-white/90 rounded-lg transition-all border border-gray-300/50 dark:border-white/10"
             >
               Reset
             </button>
