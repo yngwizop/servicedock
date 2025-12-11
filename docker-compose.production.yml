@@ -4,7 +4,7 @@
 services:
   # Nginx Reverse Proxy (HTTPS)
   nginx:
-    image: yngwizop/servicedock-nginx:latest
+    image: ghcr.io/yngwizop/servicedock-nginx:latest
     container_name: servicedock-nginx
     ports:
       - "80:80"
@@ -28,7 +28,7 @@ services:
         max-file: "2"
 
   frontend:
-    image: yngwizop/servicedock-frontend:latest
+    image: ghcr.io/yngwizop/servicedock-frontend:latest
     container_name: servicedock-frontend
     expose:
       - "80"
@@ -55,7 +55,7 @@ services:
         max-file: "2"
 
   backend:
-    image: yngwizop/servicedock-backend:latest
+    image: ghcr.io/yngwizop/servicedock-backend:latest
     container_name: servicedock-backend
     expose:
       - "8000"
