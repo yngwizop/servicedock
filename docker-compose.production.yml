@@ -1,14 +1,16 @@
+# Production Docker Compose - Nutzer laden nur diese Datei
+# Verwendung: docker compose -f docker-compose.production.yml up -d
+
 services:
   # Nginx Reverse Proxy (HTTPS)
   nginx:
-    image: nginx:alpine
-    container_name: webdashboard-nginx
+    image: yngwizop/servicedock-nginx:latest
+    container_name: servicedock-nginx
     ports:
-      - "80:80"      # HTTP (redirect to HTTPS)
-      - "443:443"    # HTTPS
+      - "80:80"
+      - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./ssl:/etc/nginx/ssl:ro
     depends_on:
       - frontend
       - backend
@@ -26,13 +28,10 @@ services:
         max-file: "2"
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    # Kein direkter Port-Expose mehr (läuft über nginx)
+    image: yngwizop/servicedock-frontend:latest
+    container_name: servicedock-frontend
     expose:
       - "80"
-    # ✅ Security Hardening
     security_opt:
       - no-new-privileges:true
     read_only: true
@@ -52,29 +51,25 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "5m"       # Max 5MB pro Log-Datei
-        max-file: "2"        # Maximal 2 Dateien (= 10MB total)
+        max-size: "5m"
+        max-file: "2"
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    # Kein direkter Port-Expose mehr (läuft über nginx)
+    image: yngwizop/servicedock-backend:latest
+    container_name: servicedock-backend
     expose:
       - "8000"
     environment:
-      # Holt sich die Werte jetzt aus der .env-Datei
       - DATABASE_URL=${DATABASE_URL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
-      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
       - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-7}
       - MAX_FAILED_LOGIN_ATTEMPTS=${MAX_FAILED_LOGIN_ATTEMPTS:-5}
       - LOGIN_LOCKOUT_MINUTES=${LOGIN_LOCKOUT_MINUTES:-15}
-    # ✅ Security Hardening
     security_opt:
       - no-new-privileges:true
     read_only: true
@@ -94,29 +89,27 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"      # Max 10MB pro Log-Datei
-        max-file: "3"        # Maximal 3 Dateien (= 30MB total)
-        compress: "true"     # Alte Logs komprimieren
+        max-size: "10m"
+        max-file: "3"
+        compress: "true"
 
   db:
     image: postgres:16
-    container_name: webdashboard-db
+    container_name: servicedock-db
     restart: always
     environment:
-      # Holt sich die Werte jetzt aus der .env-Datei
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./db/ssl/server.crt:/var/lib/postgresql/server.crt:ro
-      - ./db/ssl/server.key:/var/lib/postgresql/server.key:ro
+      - ./db-init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db-ssl:/var/lib/postgresql/ssl:ro
     command: [
       "postgres",
       "-c", "ssl=on",
-      "-c", "ssl_cert_file=/var/lib/postgresql/server.crt",
-      "-c", "ssl_key_file=/var/lib/postgresql/server.key"
+      "-c", "ssl_cert_file=/var/lib/postgresql/ssl/server.crt",
+      "-c", "ssl_key_file=/var/lib/postgresql/ssl/server.key"
     ]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
@@ -124,12 +117,11 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    # Keine externe Portfreigabe, nur intern im Docker-Netzwerk erreichbar
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"      # Max 10MB pro Log-Datei
-        max-file: "3"        # Maximal 3 Dateien (= 30MB total)
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   postgres_data:

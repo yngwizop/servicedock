@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS services (
 -- HIER SIND DIE ÄNDERUNGEN (CREATE TABLE)
 CREATE TABLE IF NOT EXISTS appearance (
     id INT PRIMARY KEY DEFAULT 1,
-    bg_color VARCHAR(20) DEFAULT '#f0f2f5',
+    bg_color VARCHAR(20) DEFAULT '#4e575f',
     bg_image_url TEXT,
     bg_opacity NUMERIC(3, 2) DEFAULT 1.0,
     shortcut_cols INT DEFAULT 6,
@@ -100,7 +100,7 @@ CREATE INDEX IF NOT EXISTS idx_spotify_connected ON spotify_config(connected);
 -- HIER SIND DIE ÄNDERUNGEN (INSERT/UPDATE)
 -- Fügt die Standard-Einstellungszeile ein/aktualisiert sie.
 INSERT INTO appearance (id, bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields)
-VALUES (1, '#f0f2f5', NULL, 1.0, 6, 6, '#1f2937', '#e5e7eb', '24h', 'Berlin', '["temperature", "humidity"]')
+VALUES (1, '#4e575f', NULL, 1.0, 6, 6, '#1f2937', '#e5e7eb', '24h', 'Berlin', '["temperature", "humidity"]')
 ON CONFLICT (id) DO UPDATE
 SET
     bg_color = COALESCE(EXCLUDED.bg_color, appearance.bg_color),

@@ -429,7 +429,7 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
         {/* Manual refresh button with cache indicator */}
         <button
           onClick={handleManualRefresh}
-          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors opacity-60 group-hover:opacity-100 focus:opacity-100 hover:opacity-100"
+          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 hover:opacity-100"
           style={{ color: textColor }}
           title={isFromCache ? `Aktualisiert ${cacheAgeText}\nKlicken zum Neuladen` : 'Gerade aktualisiert\nKlicken zum Neuladen'}
           aria-label="Wetter manuell aktualisieren"
