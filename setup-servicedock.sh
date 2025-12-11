@@ -53,15 +53,15 @@ echo "📁 Erstelle Verzeichnisstruktur..."
 
 # Docker Compose herunterladen
 echo "📦 Lade Docker Compose Konfiguration..."
-curl -sS -o docker-compose.yml https://raw.githubusercontent.com/yngwizop/servicedock/main/docker-compose.production.yml
+curl -sS -o docker-compose.yml https://raw.githubusercontent.com/yngwizop/servicedock/test/docker-compose.production.yml
 
 # .env Vorlage herunterladen
 echo "🔧 Lade Environment Template..."
-curl -sS -o .env.example https://raw.githubusercontent.com/yngwizop/servicedock/main/.env.example
+curl -sS -o .env.example https://raw.githubusercontent.com/yngwizop/servicedock/test/.env.example
 
 # init.sql herunterladen
 echo "🗄️  Lade Datenbank Schema..."
-curl -sS -o db-init.sql https://raw.githubusercontent.com/yngwizop/servicedock/main/db/init.sql
+curl -sS -o db-init.sql https://raw.githubusercontent.com/yngwizop/servicedock/test/db/init.sql
 
 # SSL Verzeichnisse erstellen
 mkdir -p ssl db-ssl
