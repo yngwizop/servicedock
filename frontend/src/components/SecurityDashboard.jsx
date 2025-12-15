@@ -193,7 +193,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
       </div>
 
       {/* View Toggle */}
-      <div className="flex gap-2 bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl px-4 pt-3 pb-2 border border-gray-300/50 dark:border-white/10 shadow-lg">
+      <div className="flex gap-2 bg-white/60 dark:bg-gray-900/70 backdrop-blur-md rounded-xl px-4 pt-3 pb-2 border border-gray-300/50 dark:border-white/20 shadow-lg">
         <button
           onClick={() => setActiveView('overview')}
           className={`px-4 py-2 font-semibold transition-all rounded-lg ${
@@ -240,7 +240,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
           {/* Token Rotation Card */}
-          <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/10">
+          <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/20">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <ArrowsClockwise 
@@ -303,7 +303,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
           </div>
 
           {/* Audit Stats Card */}
-          <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/10">
+          <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/20">
             <div className="flex items-center gap-3 mb-4">
               <ChartBar size={28} className="text-blue-500" weight="bold" />
               <h3 className="text-lg font-bold text-gray-950 dark:text-gray-100">
@@ -340,7 +340,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
           </div>
 
           {/* Security Threats Card */}
-          <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/10">
+          <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/20">
             <div className="flex items-center gap-3 mb-4">
               <Detective size={28} className="text-red-500" weight="bold" />
               <h3 className="text-lg font-bold text-gray-950 dark:text-gray-100">
@@ -432,7 +432,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
           </div>
 
           {/* Rate Limiting Info */}
-          <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/10">
+          <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/20">
             <div className="flex items-center gap-3 mb-4">
               <Clock size={28} className="text-purple-500" weight="bold" />
               <h3 className="text-lg font-bold text-gray-950 dark:text-gray-100">
@@ -538,7 +538,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
 
       {/* Logs View */}
       {activeView === 'logs' && (
-        <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg border border-gray-300/50 dark:border-white/10 overflow-hidden">
+        <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg border border-gray-300/50 dark:border-white/20 overflow-hidden">
           <div className="p-6 border-b border-gray-300/50 dark:border-white/10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
@@ -644,7 +644,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* Top Actions */}
-          <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/10">
+          <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/20">
             <h3 className="text-xl font-bold text-gray-950 dark:text-gray-100 mb-4">
               Top Aktionen (24h)
             </h3>
@@ -667,7 +667,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
           </div>
 
           {/* Top IPs */}
-          <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/10">
+          <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/20">
             <h3 className="text-xl font-bold text-gray-950 dark:text-gray-100 mb-4">
               Top IP-Adressen (24h)
             </h3>
