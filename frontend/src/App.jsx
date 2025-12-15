@@ -9,7 +9,7 @@ import LoginModal from "./components/LoginModal";
 import SettingsPanel from "./components/SettingsPanel";
 import ClockWidget from "./components/ClockWidget";
 import WeatherWidget from "./components/WeatherWidget";
-import { Moon, Sun, Lock, Gear, SignOut } from 'phosphor-react';
+import { Moon, Sun, Lock, Gear, SignOut, CaretDown } from 'phosphor-react';
 import { setAuthSession, clearAuthSession, isAuthenticated, authenticatedFetch, getAuthHeaders } from './utils/auth';
 
 // 🛠 Backend-URL anpassen je nach Setup
@@ -104,6 +104,7 @@ function App() {
     const saved = localStorage.getItem('activeDashboard');
     return saved ? parseInt(saved, 10) : 1; // Default: Dashboard 1
   });
+  const [dashboardDropdownOpen, setDashboardDropdownOpen] = useState(false);
 
   const [appearance, setAppearance] = useState({
     bg_color: "#f0f2f5",
@@ -572,46 +573,71 @@ function App() {
       <div className="relative z-10 flex flex-col min-h-screen pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2 max-w-full overflow-x-hidden">
         {/* Header mit Titel und Widgets */}
         <div className="flex flex-col md:flex-row md:items-center mb-8 gap-4">
-          {/* Titel (oben links) */}
-          <h1 
-            className="text-4xl font-bold drop-shadow-lg"
-            style={{ color: getTextColor() }}
-          >
-            Web Dashboard
-          </h1>
+          {/* Titel mit Custom Dashboard Dropdown */}
+          {activeTab === "services" && dashboards.length > 1 ? (
+            <div className="relative">
+              <button
+                onClick={() => setDashboardDropdownOpen(!dashboardDropdownOpen)}
+                className="flex items-center gap-3 text-4xl font-bold cursor-pointer focus:outline-none hover:opacity-90 transition-opacity"
+                style={{ 
+                  color: getTextColor(),
+                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
+                }}
+              >
+                {dashboards.find(d => d.id === activeDashboard)?.name || 'Dashboard'}
+                <CaretDown 
+                  size={32} 
+                  weight="bold"
+                  className={`transition-transform duration-200 ${dashboardDropdownOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              
+              {/* Custom Glassmorphism Dropdown */}
+              {dashboardDropdownOpen && (
+                <>
+                  {/* Backdrop zum Schließen */}
+                  <div 
+                    className="fixed inset-0 z-40"
+                    onClick={() => setDashboardDropdownOpen(false)}
+                  />
+                  
+                  {/* Dropdown Menu */}
+                  <div className="absolute left-0 top-full mt-2 z-50 min-w-[250px] bg-white/10 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+                    {dashboards.map((dashboard) => (
+                      <button
+                        key={dashboard.id}
+                        onClick={() => {
+                          switchDashboard(dashboard.id);
+                          setDashboardDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-6 py-4 transition-all duration-150 ${
+                          dashboard.id === activeDashboard
+                            ? 'bg-white/20 dark:bg-white/15'
+                            : 'hover:bg-white/10 dark:hover:bg-white/8'
+                        }`}
+                        style={{ color: getTextColor() }}
+                      >
+                        <div className="font-semibold text-lg">{dashboard.name}</div>
+                        {dashboard.description && (
+                          <div className="text-sm opacity-70 mt-1">{dashboard.description}</div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <h1 
+              className="text-4xl font-bold drop-shadow-lg"
+              style={{ color: getTextColor() }}
+            >
+              Web Dashboard
+            </h1>
+          )}
           
           {/* Widgets - Dynamisch nebeneinander */}
           <div className="flex flex-wrap items-center gap-4 md:gap-6 md:ml-auto">
-            {/* Dashboard Switcher - Nur bei Services/Shortcuts Tab */}
-            {activeTab === "services" && dashboards.length > 1 && (
-              <>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={activeDashboard}
-                    onChange={(e) => switchDashboard(parseInt(e.target.value, 10))}
-                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 dark:text-white shadow-md hover:bg-white/90 dark:hover:bg-gray-800/90 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}
-                  >
-                    {dashboards.map(dashboard => (
-                      <option key={dashboard.id} value={dashboard.id}>
-                        {dashboard.name} {dashboard.service_count + dashboard.shortcut_count > 0 ? `(${dashboard.service_count + dashboard.shortcut_count})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                {/* Trenner nach Dashboard Switcher */}
-                {(appearance.show_weather || appearance.show_clock || (appearance.show_spotify && spotifyConfigured)) && (
-                  <div className="hidden md:flex items-center">
-                    <div 
-                      className="w-px h-16 bg-gradient-to-b from-transparent via-current to-transparent opacity-30"
-                      style={{ color: getTextColor() }}
-                      aria-hidden="true"
-                    />
-                  </div>
-                )}
-              </>
-            )}
             
             {/* Weather Widget */}
             {appearance.show_weather && (
