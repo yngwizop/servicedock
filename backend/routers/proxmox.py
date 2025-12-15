@@ -14,9 +14,9 @@ from config.database import get_db
 
 router = APIRouter()
 
-def get_proxmox_connection():
+def get_proxmox_connection(dashboard_id: int = 1):
     """
-    Holt Proxmox-Konfiguration aus DB und erstellt API-Verbindung.
+    Holt Proxmox-Konfiguration aus DB und erstellt API-Verbindung für spezifisches Dashboard.
     
     WICHTIG: Diese Funktion holt sich die Connection selbst aus dem Pool,
     da sie von mehreren Endpoints aufgerufen wird (nicht als FastAPI Dependency).
@@ -30,11 +30,10 @@ def get_proxmox_connection():
         conn = config.database.db_pool.getconn()
         cur = conn.cursor()
         cur.execute(
-            "SELECT host, port, token_name, token_value, verify_ssl, node FROM proxmox_config WHERE id = 1;"
+            "SELECT host, port, token_name, token_value, verify_ssl, node FROM proxmox_config WHERE dashboard_id = %s;",
+            (dashboard_id,)
         )
         row = cur.fetchone()
-        cur.close()  # ✅ Explizit schließen
-        cur = None
         
         if not row:
             return None, None
@@ -85,15 +84,23 @@ def get_proxmox_connection():
         if conn is not None:
             config.database.db_pool.putconn(conn)
 
+def _get_permission_error_message(e: Exception) -> str:
+    """Helper: Gibt passende Error-Message für Permission-Fehler zurück"""
+    error_msg = str(e)
+    if "Permission" in error_msg or "403" in error_msg or "authorization" in error_msg.lower():
+        return "Permission denied. API token needs 'PVEVMAdmin' role."
+    return "Operation failed"
+
 @router.get("/api/proxmox/config")
 @limiter.limit("30/minute")  # Rate limit for config reads
-async def get_proxmox_config(request: Request, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+async def get_proxmox_config(request: Request, dashboard_id: int = 1, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Gibt Proxmox-Konfiguration zurück (ohne Secret, token_name maskiert)"""
     def _get_config_sync():
         cur = db.cursor()
         try:
             cur.execute(
-                "SELECT id, host, port, token_name, verify_ssl, node FROM proxmox_config WHERE id = 1;"
+                "SELECT id, host, port, token_name, verify_ssl, node FROM proxmox_config WHERE dashboard_id = %s;",
+                (dashboard_id,)
             )
             row = cur.fetchone()
             
@@ -132,7 +139,7 @@ async def get_proxmox_config(request: Request, token: dict = Depends(require_rol
 
 @router.put("/api/proxmox/config")
 @limiter.limit("5/minute")  # Stricter limit for config changes
-async def update_proxmox_config(config: ProxmoxConfig, request: Request, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+async def update_proxmox_config(config: ProxmoxConfig, request: Request, dashboard_id: int = 1, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Speichert Proxmox-Konfiguration (Token wird verschlüsselt)"""
     def _update_config_sync():
         cur = db.cursor()
@@ -141,7 +148,7 @@ async def update_proxmox_config(config: ProxmoxConfig, request: Request, token: 
             encrypted_token = encrypt_value(config.token_value)
             
             # Prüfe ob Eintrag existiert
-            cur.execute("SELECT id, token_value FROM proxmox_config WHERE id = 1;")
+            cur.execute("SELECT id, token_value FROM proxmox_config WHERE dashboard_id = %s;", (dashboard_id,))
             existing = cur.fetchone()
             
             # Wenn kein neuer Token angegeben wurde, behalte den alten
@@ -155,24 +162,24 @@ async def update_proxmox_config(config: ProxmoxConfig, request: Request, token: 
                     cur.execute(
                         """UPDATE proxmox_config 
                            SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s, token_created_at=NOW() 
-                           WHERE id=1 
+                           WHERE dashboard_id=%s 
                            RETURNING id;""",
-                        (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node)
+                        (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node, dashboard_id)
                     )
                 else:
                     cur.execute(
                         """UPDATE proxmox_config 
                            SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s 
-                           WHERE id=1 
+                           WHERE dashboard_id=%s 
                            RETURNING id;""",
-                        (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node)
+                        (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node, dashboard_id)
                     )
             else:
                 cur.execute(
-                    """INSERT INTO proxmox_config (id, host, port, token_name, token_value, verify_ssl, node) 
-                       VALUES (1, %s, %s, %s, %s, %s, %s) 
+                    """INSERT INTO proxmox_config (host, port, token_name, token_value, verify_ssl, node, dashboard_id) 
+                       VALUES (%s, %s, %s, %s, %s, %s, %s) 
                        RETURNING id;""",
-                    (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node)
+                    (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node, dashboard_id)
                 )
             
             updated = cur.fetchone()
@@ -189,17 +196,17 @@ async def update_proxmox_config(config: ProxmoxConfig, request: Request, token: 
 
 @router.get("/api/proxmox/vms")
 @limiter.limit("20/minute")  # Rate limit for VM list
-def list_proxmox_vms(request: Request, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
-    """Holt alle VMs und LXCs von Proxmox"""
+def list_proxmox_vms(request: Request, dashboard_id: int = 1, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+    """Holt alle VMs und LXCs von Proxmox für spezifisches Dashboard"""
     client_ip = get_client_ip(request)
     
-    proxmox, configured_node = get_proxmox_connection()
+    proxmox, configured_node = get_proxmox_connection(dashboard_id)
     
     if not proxmox:
         log_audit(
             action="VIEW_VMS",
             status="failed",
-            user_type="guest",
+            user_type="admin",
             ip_address=client_ip,
             details={"error": "Proxmox not configured"}
         )
@@ -277,7 +284,7 @@ def list_proxmox_vms(request: Request, token: dict = Depends(require_role("admin
         log_audit(
             action="VIEW_VMS",
             status="success",
-            user_type="guest",
+            user_type="admin",
             ip_address=client_ip,
             details={"count": len(all_resources), "nodes": len(node_stats)}
         )
@@ -292,7 +299,7 @@ def list_proxmox_vms(request: Request, token: dict = Depends(require_role("admin
         log_audit(
             action="VIEW_VMS",
             status="failed",
-            user_type="guest",
+            user_type="admin",
             ip_address=client_ip,
             details={"error": "API error"}
         )
@@ -300,11 +307,11 @@ def list_proxmox_vms(request: Request, token: dict = Depends(require_role("admin
 
 @router.post("/api/proxmox/vm/{vmid}/start")
 @limiter.limit("30/minute")  # Allow batch operations (10+ VMs)
-def start_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, token: dict = Depends(require_role("admin"))):
+def start_proxmox_vm(vmid: int, vm_type: str = "qemu", dashboard_id: int = 1, request: Request = None, token: dict = Depends(require_role("admin"))):
     """Startet eine VM oder LXC"""
     client_ip = get_client_ip(request) if request else "unknown"
     
-    proxmox, _ = get_proxmox_connection()
+    proxmox, _ = get_proxmox_connection(dashboard_id)
     
     if not proxmox:
         log_audit(
@@ -365,13 +372,6 @@ def start_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, 
         raise HTTPException(status_code=404, detail=f"VM/Container {vmid} not found")
         
     except Exception as e:
-        error_msg = str(e)
-        # Nur Permission-Fehler mit Details, sonst generische Message
-        if "Permission" in error_msg or "403" in error_msg or "authorization" in error_msg.lower():
-            detail = "Permission denied. API token needs 'PVEVMAdmin' role."
-        else:
-            detail = "Failed to start VM/Container"
-        
         log_audit(
             action="START_VM",
             status="failed",
@@ -379,17 +379,17 @@ def start_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, 
             ip_address=client_ip,
             resource_type=vm_type,
             resource_id=str(vmid),
-            details={"error": error_msg}  # Voller Fehler nur im Log
+            details={"error": str(e)}
         )
-        logger.error(f"Proxmox VM start failed: {error_msg}", exc_info=False)
+        raise HTTPException(status_code=500, detail=_get_permission_error_message(e))
         raise HTTPException(status_code=500, detail=detail)
 
 @router.post("/api/proxmox/vm/{vmid}/stop")
 @limiter.limit("30/minute")  # Allow batch operations (10+ VMs)
-def stop_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, token: dict = Depends(require_role("admin"))):
+def stop_proxmox_vm(vmid: int, vm_type: str = "qemu", dashboard_id: int = 1, request: Request = None, token: dict = Depends(require_role("admin"))):
     """Stoppt eine VM oder LXC"""
     client_ip = get_client_ip(request) if request else "unknown"
-    proxmox, _ = get_proxmox_connection()
+    proxmox, _ = get_proxmox_connection(dashboard_id)
     
     if not proxmox:
         log_audit(action="STOP_VM", status="failed", user_type="admin", ip_address=client_ip,
@@ -422,24 +422,17 @@ def stop_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, t
         raise HTTPException(status_code=404, detail=f"VM/Container {vmid} not found")
         
     except Exception as e:
-        error_msg = str(e)
-        # Nur Permission-Fehler mit Details, sonst generische Message
-        if "Permission" in error_msg or "403" in error_msg or "authorization" in error_msg.lower():
-            detail = "Permission denied. API token needs 'PVEVMAdmin' role."
-        else:
-            detail = "Failed to stop VM/Container"
-        
         log_audit(action="STOP_VM", status="failed", user_type="admin", ip_address=client_ip,
-                  resource_type=vm_type, resource_id=str(vmid), details={"error": error_msg})  # Voller Fehler nur im Log
-        logger.error(f"Proxmox VM stop failed: {error_msg}", exc_info=False)
-        raise HTTPException(status_code=500, detail=detail)
+                  resource_type=vm_type, resource_id=str(vmid), details={"error": str(e)})
+        logger.error(f"Proxmox VM stop failed: {str(e)}", exc_info=False)
+        raise HTTPException(status_code=500, detail=_get_permission_error_message(e))
 
 @router.post("/api/proxmox/vm/{vmid}/reboot")
 @limiter.limit("30/minute")  # Allow batch operations (10+ VMs)
-def reboot_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None, token: dict = Depends(require_role("admin"))):
+def reboot_proxmox_vm(vmid: int, vm_type: str = "qemu", dashboard_id: int = 1, request: Request = None, token: dict = Depends(require_role("admin"))):
     """Startet eine VM oder LXC neu"""
     client_ip = get_client_ip(request) if request else "unknown"
-    proxmox, _ = get_proxmox_connection()
+    proxmox, _ = get_proxmox_connection(dashboard_id)
     
     if not proxmox:
         log_audit(action="REBOOT_VM", status="failed", user_type="admin", ip_address=client_ip,
@@ -472,14 +465,7 @@ def reboot_proxmox_vm(vmid: int, vm_type: str = "qemu", request: Request = None,
         raise HTTPException(status_code=404, detail=f"VM/Container {vmid} not found")
         
     except Exception as e:
-        error_msg = str(e)
-        # Nur Permission-Fehler mit Details, sonst generische Message
-        if "Permission" in error_msg or "403" in error_msg or "authorization" in error_msg.lower():
-            detail = "Permission denied. API token needs 'PVEVMAdmin' role."
-        else:
-            detail = "Failed to reboot VM/Container"
-        
         log_audit(action="REBOOT_VM", status="failed", user_type="admin", ip_address=client_ip,
-                  resource_type=vm_type, resource_id=str(vmid), details={"error": error_msg})  # Voller Fehler nur im Log
-        logger.error(f"Proxmox VM reboot failed: {error_msg}", exc_info=False)
-        raise HTTPException(status_code=500, detail=detail)
+                  resource_type=vm_type, resource_id=str(vmid), details={"error": str(e)})
+        logger.error(f"Proxmox VM reboot failed: {str(e)}", exc_info=False)
+        raise HTTPException(status_code=500, detail=_get_permission_error_message(e))

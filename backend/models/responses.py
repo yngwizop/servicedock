@@ -10,6 +10,7 @@ class ServiceResponse(BaseModel):
     url: str
     icon: Optional[str]
     position: int
+    is_favorite: Optional[bool] = False
     
     class Config:
         from_attributes = True  # Pydantic v2
@@ -37,6 +38,9 @@ class AppearanceResponse(BaseModel):
     clock_format: str
     weather_city: str
     weather_fields: List[str]
+    show_spotify: bool = True
+    show_weather: bool = True
+    show_clock: bool = True
     
     class Config:
         from_attributes = True

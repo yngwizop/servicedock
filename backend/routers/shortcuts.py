@@ -15,11 +15,15 @@ router = APIRouter(prefix="/api/shortcuts", tags=["shortcuts"])
 
 @router.get("", response_model=List[ShortcutResponse])
 @limiter.limit("60/minute")  # Read operations - generous limit
-async def get_shortcuts(request: Request, db = Depends(get_db)) -> List[ShortcutResponse]:
+async def get_shortcuts(request: Request, dashboard_id: int = 1, db = Depends(get_db)) -> List[ShortcutResponse]:
+    """Get all shortcuts for a specific dashboard (default: 1)"""
     def _get_shortcuts_sync():
         cur = db.cursor()
         try:
-            cur.execute("SELECT id, name, url, icon, position FROM shortcuts ORDER BY position ASC, id ASC;")
+            cur.execute(
+                "SELECT id, name, url, icon, position FROM shortcuts WHERE dashboard_id = %s ORDER BY position ASC, id ASC;",
+                (dashboard_id,)
+            )
             rows = cur.fetchall()
             return [{"id": r[0], "name": r[1], "url": r[2], "icon": r[3], "position": r[4]} for r in rows]
         finally:
@@ -33,9 +37,10 @@ async def add_shortcut(request: Request, shortcut: Shortcut, token: dict = Depen
     def _add_shortcut_sync():
         cur = db.cursor()
         try:
+            dashboard_id = shortcut.dashboard_id or 1
             cur.execute(
-                "INSERT INTO shortcuts (name, url, icon, position) VALUES (%s, %s, %s, (SELECT COALESCE(MAX(position),0)+1 FROM shortcuts)) RETURNING id, position;",
-                (shortcut.name, shortcut.url, shortcut.icon)
+                "INSERT INTO shortcuts (name, url, icon, position, dashboard_id) VALUES (%s, %s, %s, (SELECT COALESCE(MAX(position),0)+1 FROM shortcuts WHERE dashboard_id = %s), %s) RETURNING id, position;",
+                (shortcut.name, shortcut.url, shortcut.icon, dashboard_id, dashboard_id)
             )
             row = cur.fetchone()
             new_id = row[0]

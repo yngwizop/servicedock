@@ -98,6 +98,13 @@ function App() {
   // NEU: Spotify Status State
   const [spotifyConfigured, setSpotifyConfigured] = useState(false);
 
+  // NEU: Multi-Dashboard State
+  const [dashboards, setDashboards] = useState([]);
+  const [activeDashboard, setActiveDashboard] = useState(() => {
+    const saved = localStorage.getItem('activeDashboard');
+    return saved ? parseInt(saved, 10) : 1; // Default: Dashboard 1
+  });
+
   const [appearance, setAppearance] = useState({
     bg_color: "#f0f2f5",
     bg_image_url: null,
@@ -123,13 +130,37 @@ function App() {
   const [shortcutIcon, setShortcutIcon] = useState("");
 
   // --- (DEINE BESTEHENDEN FUNKTIONEN) ---
+  
+  // NEU: Fetch Dashboards
+  const fetchDashboards = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/dashboards`);
+      const data = await res.json();
+      setDashboards(data);
+      
+      // Validate active dashboard still exists
+      if (activeDashboard && !data.find(d => d.id === activeDashboard)) {
+        setActiveDashboard(1); // Fallback to default
+        localStorage.setItem('activeDashboard', '1');
+      }
+    } catch (err) {
+      console.error("Fehler beim Laden der Dashboards:", err);
+    }
+  };
+
+  // NEU: Switch Dashboard
+  const switchDashboard = (dashboardId) => {
+    setActiveDashboard(dashboardId);
+    localStorage.setItem('activeDashboard', dashboardId.toString());
+  };
+
   const fetchData = async () => { 
     try {
-      const sRes = await fetch(`${BACKEND_URL}/api/services`);
+      const sRes = await fetch(`${BACKEND_URL}/api/services?dashboard_id=${activeDashboard}`);
       const servicesData = await sRes.json();
       setServices(servicesData);
 
-      const scRes = await fetch(`${BACKEND_URL}/api/shortcuts`);
+      const scRes = await fetch(`${BACKEND_URL}/api/shortcuts?dashboard_id=${activeDashboard}`);
       const shortcutsData = await scRes.json();
       setShortcuts(shortcutsData);
     } catch (err) {
@@ -151,7 +182,10 @@ function App() {
         text_color_dark: data.text_color_dark || "#e5e7eb",   // NEU
         clock_format: data.clock_format || "24h",             // NEU
         weather_city: data.weather_city || "Berlin",          // NEU
-        weather_fields: data.weather_fields || ['temperature', 'humidity'] // NEU: Direkt aus Backend
+        weather_fields: data.weather_fields || ['temperature', 'humidity'], // NEU: Direkt aus Backend
+        show_spotify: data.show_spotify !== undefined ? data.show_spotify : true,
+        show_weather: data.show_weather !== undefined ? data.show_weather : true,
+        show_clock: data.show_clock !== undefined ? data.show_clock : true
       };
 
       setAppearance(safeData);
@@ -162,12 +196,18 @@ function App() {
   };
 
   useEffect(() => {
+    fetchDashboards();
     fetchData();
     fetchAppearance();
     if (isLoggedIn) {
       fetchSpotifyStatus();
     }
   }, [isLoggedIn]);
+
+  // NEU: Re-fetch data when active dashboard changes
+  useEffect(() => {
+    fetchData();
+  }, [activeDashboard]);
 
   // NEU: Funktion zum Abrufen des Spotify-Status (braucht Auth!)
   const fetchSpotifyStatus = async () => {
@@ -274,6 +314,7 @@ function App() {
           description: serviceDesc,
           url: serviceUrl,
           icon: serviceIcon,
+          dashboard_id: activeDashboard, // NEU: Füge aktuelles Dashboard hinzu
         }),
       });
       setServiceName("");
@@ -298,7 +339,12 @@ function App() {
     try {
       await authenticatedFetch(`${BACKEND_URL}/api/shortcuts`, {
         method: "POST",
-        body: JSON.stringify({ name: shortcutName, url: shortcutUrl, icon: shortcutIcon }),
+        body: JSON.stringify({ 
+          name: shortcutName, 
+          url: shortcutUrl, 
+          icon: shortcutIcon,
+          dashboard_id: activeDashboard // NEU: Füge aktuelles Dashboard hinzu
+        }),
       });
       setShortcutName("");
       setShortcutUrl("");
@@ -525,7 +571,7 @@ function App() {
       {/* 4. Content-Layer */}
       <div className="relative z-10 flex flex-col min-h-screen pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2 max-w-full overflow-x-hidden">
         {/* Header mit Titel und Widgets */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div className="flex flex-col md:flex-row md:items-center mb-8 gap-4">
           {/* Titel (oben links) */}
           <h1 
             className="text-4xl font-bold drop-shadow-lg"
@@ -534,39 +580,92 @@ function App() {
             Web Dashboard
           </h1>
           
-          {/* Widgets (oben rechts auf Desktop) */}
-          <div className="flex items-center gap-6 max-w-full overflow-x-hidden">
-            <WeatherWidget 
-              city={appearance.weather_city} 
-              textColor={getTextColor()}
-              weatherFields={appearance.weather_fields || ['temperature','humidity']}
-              onLocationChange={setWeatherLocationInfo}
-            />
+          {/* Widgets - Dynamisch nebeneinander */}
+          <div className="flex flex-wrap items-center gap-4 md:gap-6 md:ml-auto">
+            {/* Dashboard Switcher - Nur bei Services/Shortcuts Tab */}
+            {activeTab === "services" && dashboards.length > 1 && (
+              <>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={activeDashboard}
+                    onChange={(e) => switchDashboard(parseInt(e.target.value, 10))}
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 dark:text-white shadow-md hover:bg-white/90 dark:hover:bg-gray-800/90 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}
+                  >
+                    {dashboards.map(dashboard => (
+                      <option key={dashboard.id} value={dashboard.id}>
+                        {dashboard.name} {dashboard.service_count + dashboard.shortcut_count > 0 ? `(${dashboard.service_count + dashboard.shortcut_count})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Trenner nach Dashboard Switcher */}
+                {(appearance.show_weather || appearance.show_clock || (appearance.show_spotify && spotifyConfigured)) && (
+                  <div className="hidden md:flex items-center">
+                    <div 
+                      className="w-px h-16 bg-gradient-to-b from-transparent via-current to-transparent opacity-30"
+                      style={{ color: getTextColor() }}
+                      aria-hidden="true"
+                    />
+                  </div>
+                )}
+              </>
+            )}
             
-            {/* Moderner vertikaler Trenner */}
-            <div className="hidden md:flex items-center">
-              <div 
-                className="w-px h-16 bg-gradient-to-b from-transparent via-current to-transparent opacity-30"
-                style={{ color: getTextColor() }}
-                aria-hidden="true"
+            {/* Weather Widget */}
+            {appearance.show_weather && (
+              <WeatherWidget 
+                city={appearance.weather_city} 
+                textColor={getTextColor()}
+                weatherFields={appearance.weather_fields || ['temperature','humidity']}
+                onLocationChange={setWeatherLocationInfo}
               />
-            </div>
+            )}
             
-            <ClockWidget 
-              textColor={getTextColor()} 
-              use24Hour={appearance.clock_format === '24h'}
-            />
+            {/* Trenner nur wenn beide (Weather UND Clock) aktiv sind */}
+            {appearance.show_weather && appearance.show_clock && (
+              <div className="hidden md:flex items-center">
+                <div 
+                  className="w-px h-16 bg-gradient-to-b from-transparent via-current to-transparent opacity-30"
+                  style={{ color: getTextColor() }}
+                  aria-hidden="true"
+                />
+              </div>
+            )}
+            
+            {/* Clock Widget */}
+            {appearance.show_clock && (
+              <ClockWidget 
+                textColor={getTextColor()} 
+                use24Hour={appearance.clock_format === '24h'}
+              />
+            )}
+            
+            {/* Trenner nur wenn (Weather ODER Clock) UND Spotify aktiv sind */}
+            {(appearance.show_weather || appearance.show_clock) && appearance.show_spotify && spotifyConfigured && activeTab === "services" && (
+              <div className="hidden md:flex items-center">
+                <div 
+                  className="w-px h-16 bg-gradient-to-b from-transparent via-current to-transparent opacity-30"
+                  style={{ color: getTextColor() }}
+                  aria-hidden="true"
+                />
+              </div>
+            )}
+            
+            {/* Spotify Widget - Jetzt auch im Header */}
+            {appearance.show_spotify && spotifyConfigured && activeTab === "services" && (
+              <SpotifyCard />
+            )}
           </div>
         </div>
 
-        {/* === TAB NAVIGATION & SPOTIFY WIDGET === */}
-        <div className="flex justify-between items-start gap-4 mb-8">
-          {/* Tab Navigation - Links (eigener Container) */}
-          <div className="flex gap-4 bg-white/70 dark:bg-white/5 backdrop-blur-md rounded-xl px-4 pt-3 pb-2 border border-gray-400/60 dark:border-white/10 shadow-lg">
-            <button
-              onClick={() => setActiveTab("services")}
-              className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
-                activeTab === "services"
+        {/* === TAB NAVIGATION === */}
+        <div className="flex gap-4 bg-white/70 dark:bg-white/5 backdrop-blur-md rounded-xl px-4 pt-3 pb-2 border border-gray-400/60 dark:border-white/10 shadow-lg mb-8 w-fit">
+          <button
+            onClick={() => setActiveTab("services")}
+            className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
+              activeTab === "services"
                   ? "bg-blue-500/30 dark:bg-blue-500/20 border-b-2 border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400 shadow-sm"
                   : "text-gray-800 dark:text-white/90 hover:bg-white/70 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
               }`}
@@ -594,14 +693,6 @@ function App() {
               Security
             </button>
           </div>
-
-          {/* Spotify Widget - Rechts (nur anzeigen wenn konfiguriert und im Services Tab) */}
-          {spotifyConfigured && activeTab === "services" && (
-            <div className="flex-shrink-0">
-              <SpotifyCard />
-            </div>
-          )}
-        </div>
 
         {/* === CONTENT BASED ON ACTIVE TAB === */}
         <div className="flex-grow">
@@ -637,6 +728,7 @@ function App() {
           <ProxmoxGrid 
             isLoggedIn={isLoggedIn}
             textColor={getTextColor()}
+            activeDashboard={activeDashboard}
             onOpenSettings={() => {
               setShowSettings(true);
               setActiveTab("services"); // Wechsle zurück zu Services/Settings
@@ -718,6 +810,7 @@ function App() {
           onClose={() => {
             setShowSettings(false);
             fetchSpotifyStatus(); // Spotify-Status neu laden
+            fetchDashboards(); // NEU: Dashboards neu laden nach Änderungen
           }}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -744,6 +837,9 @@ function App() {
           showSaved={showSaved}
           currentTheme={theme}
           weatherLocationInfo={weatherLocationInfo}
+          dashboards={dashboards}
+          activeDashboard={activeDashboard}
+          onDashboardsChange={fetchDashboards}
         />
       )}
     </div>

@@ -15,6 +15,9 @@ class Appearance(BaseModel):
     clock_format: Optional[str] = Field(None, max_length=10)
     weather_city: Optional[str] = Field(None, max_length=100)
     weather_fields: Optional[List[str]] = None
+    show_spotify: Optional[bool] = True
+    show_weather: Optional[bool] = True
+    show_clock: Optional[bool] = True
     
     @validator('bg_color', 'text_color_light', 'text_color_dark')
     def validate_color(cls, v):

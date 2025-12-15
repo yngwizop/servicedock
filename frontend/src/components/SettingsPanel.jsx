@@ -23,7 +23,10 @@ function SettingsPanel({
   editAppearance, setEditAppearance, onSaveAppearance,
   isSavingAppearance, showSaved,
   currentTheme, // NEU: Aktuelles Theme
-  weatherLocationInfo // NEU: Geocoding Info Objekt { name, country, latitude, longitude, postal_code }
+  weatherLocationInfo, // NEU: Geocoding Info Objekt { name, country, latitude, longitude, postal_code }
+  dashboards, // NEU: Dashboard Liste
+  activeDashboard, // NEU: Aktuelles Dashboard
+  onDashboardsChange // NEU: Callback für Dashboard-Änderungen
 }) {
   // NEU: Eigener Tab-State für Settings-Panel (unabhängig von Haupt-App!)
   const [panelTab, setPanelTab] = React.useState('services');
@@ -54,6 +57,14 @@ function SettingsPanel({
   const [isSavingSpotify, setIsSavingSpotify] = React.useState(false);
   const [spotifySaved, setSpotifySaved] = React.useState(false);
 
+  // NEU: State für Dashboard Management
+  const [dashboardName, setDashboardName] = React.useState('');
+  const [dashboardDesc, setDashboardDesc] = React.useState('');
+  const [dashboardType, setDashboardType] = React.useState('default');
+  const [editingDashboard, setEditingDashboard] = React.useState(null);
+  const [isSavingDashboard, setIsSavingDashboard] = React.useState(false);
+  const [dashboardSaved, setDashboardSaved] = React.useState(false);
+
   // Backend URL: Mit Nginx kein Port nötig, ohne Nginx Port 8000
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
     (window.location.port === '' ? 
@@ -72,7 +83,7 @@ function SettingsPanel({
   React.useEffect(() => {
     const fetchProxmoxConfig = async () => {
       try {
-        const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/config`);
+        const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/config?dashboard_id=${activeDashboard}`);
         const data = await res.json();
         if (data.configured) {
           // Speichere den maskierten Token-Namen separat
@@ -95,7 +106,7 @@ function SettingsPanel({
     if (panelTab === 'proxmox') {
       fetchProxmoxConfig();
     }
-  }, [panelTab]);
+  }, [panelTab, activeDashboard]);
 
   // NEU: Lade Spotify Status beim Öffnen des AddOns Tab
   React.useEffect(() => {
@@ -133,7 +144,7 @@ function SettingsPanel({
     setIsSavingProxmox(true);
 
     try {
-      const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/config`, {
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/config?dashboard_id=${activeDashboard}`, {
         method: 'PUT',
         body: JSON.stringify(proxmoxConfig)
       });
@@ -300,6 +311,16 @@ function SettingsPanel({
               Services
             </button>
             <button
+              onClick={() => setPanelTab("dashboards")}
+              className={`flex-1 py-2.5 px-2.5 transition-all duration-300 rounded-xl text-base font-semibold ${
+                panelTab === "dashboards"
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10"
+              }`}
+            >
+              Dashboards
+            </button>
+            <button
               onClick={() => setPanelTab("appearance")}
               className={`flex-1 py-2.5 px-2.5 transition-all duration-300 rounded-xl text-base font-semibold ${
                 panelTab === "appearance"
@@ -425,6 +446,243 @@ function SettingsPanel({
                 selfh.st/icons
               </a>
               {' '}bezogen werden.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* === Tab-Inhalt: Dashboards === */}
+      {panelTab === "dashboards" && (
+        <div className="space-y-6">
+          {/* Dashboard erstellen/bearbeiten */}
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setIsSavingDashboard(true);
+              
+              try {
+                const payload = {
+                  name: dashboardName.trim(),
+                  description: dashboardDesc.trim() || null,
+                  type: dashboardType
+                };
+                
+                if (editingDashboard) {
+                  // Update existing
+                  const res = await authenticatedFetch(
+                    `${BACKEND_URL}/api/dashboards/${editingDashboard.id}`,
+                    {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ ...payload, is_active: editingDashboard.is_active })
+                    }
+                  );
+                  
+                  if (!res.ok) throw new Error('Update failed');
+                } else {
+                  // Create new
+                  const res = await authenticatedFetch(
+                    `${BACKEND_URL}/api/dashboards`,
+                    {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(payload)
+                    }
+                  );
+                  
+                  if (!res.ok) throw new Error('Create failed');
+                }
+                
+                // Success
+                setDashboardName('');
+                setDashboardDesc('');
+                setDashboardType('default');
+                setEditingDashboard(null);
+                setDashboardSaved(true);
+                setTimeout(() => setDashboardSaved(false), 2000);
+                onDashboardsChange(); // Refresh dashboard list
+              } catch (err) {
+                console.error('Dashboard save error:', err);
+                alert('Fehler beim Speichern des Dashboards');
+              } finally {
+                setIsSavingDashboard(false);
+              }
+            }}
+            className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-gray-400/60 dark:border-white/10"
+          >
+            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span className="text-2xl">{editingDashboard ? '✏️' : '➕'}</span>
+              {editingDashboard ? 'Dashboard bearbeiten' : 'Neues Dashboard erstellen'}
+            </h3>
+            <div className="space-y-4">
+              <input
+                placeholder="Dashboard Name (z.B. Work, Home, Gaming)"
+                value={dashboardName}
+                onChange={(e) => setDashboardName(e.target.value)}
+                required
+                maxLength={100}
+                className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+              />
+              <textarea
+                placeholder="Beschreibung (optional)"
+                value={dashboardDesc}
+                onChange={(e) => setDashboardDesc(e.target.value)}
+                maxLength={500}
+                rows={2}
+                className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all resize-none"
+              />
+              <select
+                value={dashboardType}
+                onChange={(e) => setDashboardType(e.target.value)}
+                className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+              >
+                <option value="default">Standard</option>
+                <option value="work">Arbeit</option>
+                <option value="home">Zuhause</option>
+                <option value="gaming">Gaming</option>
+                <option value="media">Media</option>
+                <option value="dev">Development</option>
+              </select>
+              
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={isSavingDashboard || !dashboardName.trim()}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white p-3 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-[1.02]"
+                >
+                  {isSavingDashboard ? 'Speichere...' : (editingDashboard ? 'Aktualisieren' : 'Erstellen')}
+                </button>
+                
+                {editingDashboard && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingDashboard(null);
+                      setDashboardName('');
+                      setDashboardDesc('');
+                      setDashboardType('default');
+                    }}
+                    className="px-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-xl font-semibold transition-all"
+                  >
+                    Abbrechen
+                  </button>
+                )}
+              </div>
+              
+              {dashboardSaved && (
+                <div className="text-green-600 dark:text-green-400 font-medium text-center">
+                  ✓ Dashboard gespeichert!
+                </div>
+              )}
+            </div>
+          </form>
+
+          {/* Dashboard Liste */}
+          <div className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-gray-400/60 dark:border-white/10">
+            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span className="text-2xl">📋</span>
+              Meine Dashboards
+            </h3>
+            
+            {dashboards && dashboards.length > 0 ? (
+              <div className="space-y-3">
+                {dashboards.map(dashboard => (
+                  <div
+                    key={dashboard.id}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      dashboard.id === activeDashboard
+                        ? 'bg-blue-100/70 dark:bg-blue-900/30 border-blue-500'
+                        : 'bg-white/50 dark:bg-white/5 border-gray-300 dark:border-white/10'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold text-gray-900 dark:text-white">
+                            {dashboard.name}
+                          </h4>
+                          {dashboard.id === activeDashboard && (
+                            <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium">
+                              Aktiv
+                            </span>
+                          )}
+                          {dashboard.id === 1 && (
+                            <span className="text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full font-medium">
+                              Standard
+                            </span>
+                          )}
+                        </div>
+                        {dashboard.description && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                            {dashboard.description}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                          <span>📦 {dashboard.service_count} Services</span>
+                          <span>🔗 {dashboard.shortcut_count} Shortcuts</span>
+                          <span className="capitalize">🏷️ {dashboard.type}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 ml-4">
+                        <button
+                          onClick={() => {
+                            setEditingDashboard(dashboard);
+                            setDashboardName(dashboard.name);
+                            setDashboardDesc(dashboard.description || '');
+                            setDashboardType(dashboard.type || 'default');
+                          }}
+                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                          title="Bearbeiten"
+                        >
+                          <Pencil className="w-5 h-5" weight="bold" />
+                        </button>
+                        
+                        {dashboard.id !== 1 && ( // Cannot delete default dashboard
+                          <button
+                            onClick={async () => {
+                              if (!confirm(`Dashboard "${dashboard.name}" wirklich löschen?\n\nAlle Services und Shortcuts in diesem Dashboard werden ebenfalls gelöscht!`)) {
+                                return;
+                              }
+                              
+                              try {
+                                const res = await authenticatedFetch(
+                                  `${BACKEND_URL}/api/dashboards/${dashboard.id}`,
+                                  { method: 'DELETE' }
+                                );
+                                
+                                if (!res.ok) throw new Error('Delete failed');
+                                
+                                onDashboardsChange(); // Refresh
+                              } catch (err) {
+                                console.error('Dashboard delete error:', err);
+                                alert('Fehler beim Löschen des Dashboards');
+                              }
+                            }}
+                            className="p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                            title="Löschen"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600 dark:text-gray-400 text-center py-4">
+                Noch keine Dashboards vorhanden.
+              </p>
+            )}
+          </div>
+
+          {/* Info-Hinweis */}
+          <div className="p-4 bg-blue-100/70 dark:bg-blue-900/30 backdrop-blur-sm border border-blue-300/60 dark:border-blue-700/50 rounded-2xl shadow-lg">
+            <p className="text-sm text-blue-900 dark:text-blue-200">
+              💡 <strong>Tipp:</strong> Erstelle verschiedene Dashboards für unterschiedliche Kontexte (Arbeit, Privat, Projekte). Services und Shortcuts können dann spezifisch einem Dashboard zugeordnet werden.
             </p>
           </div>
         </div>
@@ -626,6 +884,63 @@ function SettingsPanel({
                   </div>
                 </label>
               </div>
+            </div>
+          </div>
+
+          {/* NEU: Sektion: Widget Sichtbarkeit */}
+          <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+              🎛️ Widget Sichtbarkeit
+            </h4>
+            
+            <div className="space-y-3">
+              <label className="flex items-center justify-between cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 border-gray-300 dark:border-gray-600">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🎵</span>
+                  <div>
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Spotify Widget</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Zeige aktuell abgespielte Musik</div>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={editAppearance.show_spotify ?? true}
+                  onChange={(e) => setEditAppearance({ ...editAppearance, show_spotify: e.target.checked })}
+                  className="w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500 rounded"
+                />
+              </label>
+
+              <label className="flex items-center justify-between cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 border-gray-300 dark:border-gray-600">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🌤️</span>
+                  <div>
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Wetter Widget</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Zeige Wetterinformationen</div>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={editAppearance.show_weather ?? true}
+                  onChange={(e) => setEditAppearance({ ...editAppearance, show_weather: e.target.checked })}
+                  className="w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500 rounded"
+                />
+              </label>
+
+              <label className="flex items-center justify-between cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 border-gray-300 dark:border-gray-600">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🕐</span>
+                  <div>
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Uhr Widget</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Zeige aktuelle Uhrzeit und Datum</div>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={editAppearance.show_clock ?? true}
+                  onChange={(e) => setEditAppearance({ ...editAppearance, show_clock: e.target.checked })}
+                  className="w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500 rounded"
+                />
+              </label>
             </div>
           </div>
 

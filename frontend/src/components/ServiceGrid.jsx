@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import ServiceCard from './ServiceCard';
 import EditModal from './EditModal';
-import { Pencil } from 'phosphor-react';
+import { Pencil, Star } from 'phosphor-react';
 
 function ServiceGrid({ 
   services = [], 
@@ -302,16 +302,40 @@ function ServiceGrid({
               <div className="absolute right-0 top-2 bottom-2 w-1 rounded bg-blue-600 z-20 transform translate-x-1 transition-all"></div>
             )}
 
-            <ServiceCard service={s} textColor={textColor} />
+            <ServiceCard service={s} textColor={textColor} isFavorite={s.is_favorite} />
 
-            {/* Edit-Button mit Accessibility-Verbesserungen */}
+            {/* Action Buttons - Rechts oben */}
             {isLoggedIn && (
-              <button
-                onClick={() => setEditingServiceId(s.id)}
-                className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-200 hover:scale-110"
-                aria-label={`Service ${s.name || s.id} bearbeiten`}
-                title="Bearbeiten"
-              ><Pencil size={16} /></button>
+              <div className="absolute top-2 right-2 flex gap-2">
+                {/* Favorite Star Button */}
+                <button
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const updatedService = { ...s, is_favorite: !s.is_favorite };
+                    await handleSave(updatedService);
+                  }}
+                  className={`p-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-200 hover:scale-110 z-30 ${
+                    s.is_favorite 
+                      ? 'bg-yellow-500 hover:bg-yellow-600 text-white' 
+                      : 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300'
+                  }`}
+                  aria-label={s.is_favorite ? `${s.name || s.id} von Favoriten entfernen` : `${s.name || s.id} zu Favoriten hinzufügen`}
+                  title={s.is_favorite ? "Von Favoriten entfernen" : "Zu Favoriten hinzufügen"}
+                >
+                  <Star size={16} weight={s.is_favorite ? "fill" : "regular"} />
+                </button>
+
+                {/* Edit-Button */}
+                <button
+                  onClick={() => setEditingServiceId(s.id)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-200 hover:scale-110"
+                  aria-label={`Service ${s.name || s.id} bearbeiten`}
+                  title="Bearbeiten"
+                >
+                  <Pencil size={16} />
+                </button>
+              </div>
             )}
           </div>
         ))}

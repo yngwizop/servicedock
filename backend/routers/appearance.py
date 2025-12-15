@@ -17,7 +17,7 @@ async def get_appearance(request: Request, db = Depends(get_db)) -> AppearanceRe
     def _get_appearance_sync():
         cur = db.cursor()
         try:
-            cur.execute("SELECT bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields FROM appearance WHERE id = 1;")
+            cur.execute("SELECT bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields, show_spotify, show_weather, show_clock FROM appearance WHERE id = 1;")
             row = cur.fetchone()
             
             if not row:
@@ -33,7 +33,10 @@ async def get_appearance(request: Request, db = Depends(get_db)) -> AppearanceRe
                 "text_color_dark": row[6] if row[6] else "#e5e7eb",
                 "clock_format": row[7] if row[7] else "24h",
                 "weather_city": row[8] if row[8] else "Berlin",
-                "weather_fields": row[9] if row[9] else ["temperature", "humidity"]
+                "weather_fields": row[9] if row[9] else ["temperature", "humidity"],
+                "show_spotify": bool(row[10]) if row[10] is not None else True,
+                "show_weather": bool(row[11]) if row[11] is not None else True,
+                "show_clock": bool(row[12]) if row[12] is not None else True
             }
         finally:
             cur.close()
@@ -79,6 +82,15 @@ async def update_appearance(request: Request, appearance: Appearance, token: dic
             if appearance.weather_fields is not None:
                 updates.append("weather_fields = %s")
                 params.append(json.dumps(appearance.weather_fields))
+            if appearance.show_spotify is not None:
+                updates.append("show_spotify = %s")
+                params.append(appearance.show_spotify)
+            if appearance.show_weather is not None:
+                updates.append("show_weather = %s")
+                params.append(appearance.show_weather)
+            if appearance.show_clock is not None:
+                updates.append("show_clock = %s")
+                params.append(appearance.show_clock)
 
             if not updates:
                 return {"message": "No changes provided"}

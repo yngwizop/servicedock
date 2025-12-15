@@ -54,11 +54,9 @@ const SpotifyCard = () => {
   // Loading State
   if (loading) {
     return (
-      <div className="bg-white/70 dark:bg-white/5 backdrop-blur-md rounded-lg shadow-lg p-3 border border-gray-400/60 dark:border-white/10">
-        <div className="flex items-center space-x-3">
-          <CircleNotch className="w-5 h-5 text-green-500 dark:text-green-400 animate-spin" />
-          <span className="text-sm text-gray-900 dark:text-white/90">Lädt...</span>
-        </div>
+      <div className="flex items-center space-x-3">
+        <CircleNotch className="w-5 h-5 text-green-500 dark:text-green-400 animate-spin" />
+        <span className="text-sm text-gray-900 dark:text-white/90" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>Lädt...</span>
       </div>
     );
   }
@@ -66,11 +64,9 @@ const SpotifyCard = () => {
   // Error State
   if (error) {
     return (
-      <div className="bg-white/70 dark:bg-white/5 backdrop-blur-md rounded-lg shadow-lg p-3 border border-gray-400/60 dark:border-white/10">
-        <div className="flex items-center space-x-3">
-          <MusicNote className="w-5 h-5 text-gray-600 dark:text-white/40" />
-          <span className="text-sm text-gray-800 dark:text-white/60">Fehler</span>
-        </div>
+      <div className="flex items-center space-x-3">
+        <MusicNote className="w-5 h-5 text-gray-600 dark:text-white/40" />
+        <span className="text-sm text-gray-800 dark:text-white/60" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>Fehler</span>
       </div>
     );
   }
@@ -83,7 +79,7 @@ const SpotifyCard = () => {
   const { track, progress_percent } = nowPlaying;
 
   return (
-    <div className="bg-white/70 dark:bg-white/5 backdrop-blur-md rounded-xl p-3 border border-gray-400/60 dark:border-white/10 shadow-lg hover:bg-white/90 dark:hover:bg-white/10 hover:border-gray-500/70 dark:hover:border-white/20 transition-all">
+    <div className="flex items-center gap-3 group">
       <div className="flex items-center gap-3">
         {/* Album Cover */}
         {track.album_image && (
@@ -91,44 +87,44 @@ const SpotifyCard = () => {
             <img
               src={track.album_image}
               alt={track.album}
-              className="w-14 h-14 rounded-lg shadow-md object-cover"
+              className="w-12 h-12 rounded-lg shadow-lg object-cover"
             />
           </div>
         )}
 
         {/* Track Info */}
-        <div className="flex-1 min-w-0" style={{ minWidth: '220px', maxWidth: '280px' }}>
+        <div className="flex-1 min-w-0" style={{ minWidth: '200px', maxWidth: '260px' }}>
           {/* Now Playing Badge */}
-          <div className="flex items-center gap-1.5 mb-1.5">
+          <div className="flex items-center gap-1.5 mb-1">
             <MusicNote className="w-3.5 h-3.5 text-green-500 dark:text-green-400" weight="fill" />
             {nowPlaying.is_playing && (
               <span className="w-1.5 h-1.5 bg-green-500 dark:bg-green-400 rounded-full animate-pulse"></span>
             )}
-            <span className="text-[11px] font-semibold text-green-600 dark:text-green-300">
+            <span className="text-[11px] font-semibold text-green-600 dark:text-green-300" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>
               Now Playing
             </span>
           </div>
 
           {/* Song Title */}
-          <h3 className="text-sm font-bold text-gray-900 dark:text-white/90 truncate mb-0.5">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white/90 truncate mb-0.5" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>
             {track.name}
           </h3>
 
           {/* Artist */}
-          <p className="text-xs text-gray-700 dark:text-white/60 truncate mb-2">
+          <p className="text-xs text-gray-700 dark:text-white/60 truncate mb-2" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>
             {track.artist}
           </p>
 
           {/* Progress Bar */}
           {track.progress_ms !== undefined && (
             <div className="space-y-1">
-              <div className="bg-gray-300/60 dark:bg-white/20 rounded-full h-1.5">
+              <div className="bg-gray-300/60 dark:bg-white/20 rounded-full h-1.5 shadow-md">
                 <div
                   className="bg-green-500 dark:bg-green-400 h-1.5 rounded-full transition-all duration-300"
                   style={{ width: `${progress_percent || 0}%` }}
                 ></div>
               </div>
-              <div className="flex justify-between text-[10px] text-gray-600 dark:text-white/50">
+              <div className="flex justify-between text-[10px] text-gray-600 dark:text-white/50" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>
                 <span>{formatTime(track.progress_ms)}</span>
                 <span>{formatTime(track.duration_ms)}</span>
               </div>
@@ -142,7 +138,7 @@ const SpotifyCard = () => {
             href={track.external_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-green-600 dark:text-green-400 hover:text-green-500 dark:hover:text-green-300 flex-shrink-0 transition-colors"
+            className="text-green-600 dark:text-green-400 hover:text-green-500 dark:hover:text-green-300 flex-shrink-0 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 hover:opacity-100"
             title="In Spotify öffnen"
           >
             <ArrowSquareOut className="w-5 h-5" weight="bold" />

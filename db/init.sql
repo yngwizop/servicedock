@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS services (
     description TEXT,
     url TEXT NOT NULL,
     icon TEXT,
-    position INT DEFAULT 0 -- NEU: Reihenfolge/Priorität für Drag & Drop
+    position INT DEFAULT 0, -- NEU: Reihenfolge/Priorität für Drag & Drop
+    is_favorite BOOLEAN DEFAULT FALSE
 );
 
 -- HIER SIND DIE ÄNDERUNGEN (CREATE TABLE)
@@ -34,6 +35,10 @@ CREATE TABLE IF NOT EXISTS appearance (
     weather_city VARCHAR(100) DEFAULT 'Berlin',
     -- NEU: Auswahl der Wetterfelder als JSON-Array
     weather_fields JSONB DEFAULT '["temperature", "humidity"]',
+    -- NEU: Widget Visibility Toggles
+    show_spotify BOOLEAN DEFAULT TRUE,
+    show_weather BOOLEAN DEFAULT TRUE,
+    show_clock BOOLEAN DEFAULT TRUE,
     -- Constraints mit Namen für bessere Fehlermeldungen
     CONSTRAINT appearance_single_row CHECK (id = 1),
     CONSTRAINT appearance_opacity_range CHECK (bg_opacity >= 0 AND bg_opacity <= 1),
@@ -45,9 +50,9 @@ CREATE TABLE IF NOT EXISTS appearance (
 CREATE INDEX IF NOT EXISTS idx_services_position ON services(position);
 CREATE INDEX IF NOT EXISTS idx_shortcuts_position ON shortcuts(position);
 
--- NEU: Proxmox-Konfigurationstabelle
+-- NEU: Proxmox-Konfigurationstabelle (Multi-Dashboard Support)
 CREATE TABLE IF NOT EXISTS proxmox_config (
-    id INT PRIMARY KEY DEFAULT 1,
+    id SERIAL PRIMARY KEY,
     host VARCHAR(255) NOT NULL,
     port INT DEFAULT 8006,
     token_name VARCHAR(255) NOT NULL,  -- z.B. "root@pam!mytoken"
@@ -56,7 +61,8 @@ CREATE TABLE IF NOT EXISTS proxmox_config (
     node VARCHAR(100),                 -- Optional: spezifischer Node-Name
     token_created_at TIMESTAMP DEFAULT NOW(),  -- NEU: Wann wurde Token erstellt
     token_last_rotated TIMESTAMP,               -- NEU: Letzte Rotation
-    CONSTRAINT proxmox_single_row CHECK (id = 1)
+    dashboard_id INT DEFAULT 1,                 -- Multi-Dashboard Support
+    UNIQUE(dashboard_id)                        -- Pro Dashboard nur eine Proxmox-Config
 );
 
 -- NEU: Audit-Log Tabelle für API-Zugriffe
@@ -97,10 +103,39 @@ CREATE TABLE IF NOT EXISTS spotify_config (
 -- Index für schnelle Token-Abfrage
 CREATE INDEX IF NOT EXISTS idx_spotify_connected ON spotify_config(connected);
 
+-- NEU: Multi-Dashboard Support
+CREATE TABLE IF NOT EXISTS dashboards (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    type TEXT DEFAULT 'dashboard',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- NEU: Dashboard-Zuordnung für Services, Shortcuts, Proxmox
+-- Services und Shortcuts brauchen dashboard_id
+ALTER TABLE services ADD COLUMN IF NOT EXISTS dashboard_id INT DEFAULT 1 REFERENCES dashboards(id) ON DELETE CASCADE;
+ALTER TABLE shortcuts ADD COLUMN IF NOT EXISTS dashboard_id INT DEFAULT 1 REFERENCES dashboards(id) ON DELETE CASCADE;
+ALTER TABLE proxmox_config ADD COLUMN IF NOT EXISTS dashboard_id INT DEFAULT 1 REFERENCES dashboards(id) ON DELETE CASCADE;
+
+-- Indizes für bessere Performance
+CREATE INDEX IF NOT EXISTS idx_services_dashboard ON services(dashboard_id);
+CREATE INDEX IF NOT EXISTS idx_shortcuts_dashboard ON shortcuts(dashboard_id);
+CREATE INDEX IF NOT EXISTS idx_proxmox_dashboard ON proxmox_config(dashboard_id);
+
+-- Default Dashboard erstellen (WICHTIG: Nutzt SERIAL, damit Sequence automatisch mitzählt!)
+INSERT INTO dashboards (id, name, description, type, is_active)
+VALUES (1, 'Main Dashboard', 'Default Dashboard', 'dashboard', TRUE)
+ON CONFLICT (id) DO NOTHING;
+
+-- ✅ WICHTIG: Sequence auf den nächsten Wert setzen (falls Dashboard 1 manuell inserted wurde)
+SELECT setval('dashboards_id_seq', (SELECT COALESCE(MAX(id), 1) FROM dashboards), true);
+
 -- HIER SIND DIE ÄNDERUNGEN (INSERT/UPDATE)
 -- Fügt die Standard-Einstellungszeile ein/aktualisiert sie.
-INSERT INTO appearance (id, bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields)
-VALUES (1, '#4e575f', NULL, 1.0, 6, 6, '#1f2937', '#e5e7eb', '24h', 'Berlin', '["temperature", "humidity"]')
+INSERT INTO appearance (id, bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields, show_spotify, show_weather, show_clock)
+VALUES (1, '#4e575f', NULL, 1.0, 6, 6, '#1f2937', '#e5e7eb', '24h', 'Berlin', '["temperature", "humidity"]'::jsonb, TRUE, TRUE, TRUE)
 ON CONFLICT (id) DO UPDATE
 SET
     bg_color = COALESCE(EXCLUDED.bg_color, appearance.bg_color),
@@ -112,7 +147,10 @@ SET
     text_color_dark = COALESCE(EXCLUDED.text_color_dark, appearance.text_color_dark),
     clock_format = COALESCE(EXCLUDED.clock_format, appearance.clock_format),
     weather_city = COALESCE(EXCLUDED.weather_city, appearance.weather_city),
-    weather_fields = COALESCE(EXCLUDED.weather_fields, appearance.weather_fields);
+    weather_fields = COALESCE(EXCLUDED.weather_fields, appearance.weather_fields),
+    show_spotify = COALESCE(EXCLUDED.show_spotify, appearance.show_spotify),
+    show_weather = COALESCE(EXCLUDED.show_weather, appearance.show_weather),
+    show_clock = COALESCE(EXCLUDED.show_clock, appearance.show_clock);
 
 
 -- (Optional) Dummy-Daten (Unverändert)

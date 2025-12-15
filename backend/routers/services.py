@@ -15,14 +15,18 @@ router = APIRouter(prefix="/api/services", tags=["services"])
 
 @router.get("", response_model=List[ServiceResponse])
 @limiter.limit("60/minute")  # Read operations - generous limit
-async def get_services(request: Request, db = Depends(get_db)) -> List[ServiceResponse]:
+async def get_services(request: Request, dashboard_id: int = 1, db = Depends(get_db)) -> List[ServiceResponse]:
+    """Get all services for a specific dashboard (default: 1)"""
     def _get_services_sync():
         cur = db.cursor()
         try:
-            cur.execute("SELECT id, name, description, url, icon, position FROM services ORDER BY position ASC, id ASC;")
+            cur.execute(
+                "SELECT id, name, description, url, icon, position, COALESCE(is_favorite, FALSE) FROM services WHERE dashboard_id = %s ORDER BY position ASC, id ASC;",
+                (dashboard_id,)
+            )
             rows = cur.fetchall()
             return [
-                {"id": r[0], "name": r[1], "description": r[2], "url": r[3], "icon": r[4], "position": r[5]}
+                {"id": r[0], "name": r[1], "description": r[2], "url": r[3], "icon": r[4], "position": r[5], "is_favorite": r[6]}
                 for r in rows
             ]
         finally:
@@ -36,9 +40,10 @@ async def add_service(request: Request, service: Service, token: dict = Depends(
     def _add_service_sync():
         cur = db.cursor()
         try:
+            dashboard_id = service.dashboard_id or 1
             cur.execute(
-                "INSERT INTO services (name, description, url, icon, position) VALUES (%s, %s, %s, %s, (SELECT COALESCE(MAX(position),0)+1 FROM services)) RETURNING id, position;",
-                (service.name, service.description, service.url, service.icon)
+                "INSERT INTO services (name, description, url, icon, position, is_favorite, dashboard_id) VALUES (%s, %s, %s, %s, (SELECT COALESCE(MAX(position),0)+1 FROM services WHERE dashboard_id = %s), %s, %s) RETURNING id, position;",
+                (service.name, service.description, service.url, service.icon, dashboard_id, service.is_favorite or False, dashboard_id)
             )
             row = cur.fetchone()
             new_id = row[0]
@@ -81,8 +86,8 @@ async def update_service(request: Request, service_id: int, service: Service, to
         cur = db.cursor()
         try:
             cur.execute(
-                "UPDATE services SET name=%s, description=%s, url=%s, icon=%s WHERE id=%s RETURNING id;",
-                (service.name, service.description, service.url, service.icon, service_id)
+                "UPDATE services SET name=%s, description=%s, url=%s, icon=%s, is_favorite=%s WHERE id=%s RETURNING id;",
+                (service.name, service.description, service.url, service.icon, service.is_favorite or False, service_id)
             )
             updated = cur.fetchone()
             db.commit()

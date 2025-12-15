@@ -11,7 +11,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
     `${window.location.protocol}//${window.location.hostname}:8000`
   );
 
-function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
+function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard }) {
   const [resources, setResources] = useState([]);
   const [nodes, setNodes] = useState([]); // NEU: Node-Informationen
   const [loading, setLoading] = useState(true);
@@ -26,16 +26,21 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
   const [filterStatus, setFilterStatus] = useState('all'); // all, running, stopped
 
   // Lade Proxmox-Daten
-  const fetchProxmoxData = async () => {
+  const fetchProxmoxData = async (dashboardId) => {
+    // dashboardId als Parameter, um stale closure zu vermeiden
+    const currentDashboard = dashboardId ?? activeDashboard;
+    
     try {
       setError(null);
       
       // Prüfe erst, ob Proxmox konfiguriert ist
-      const configRes = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/config`);
+      const configRes = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/config?dashboard_id=${currentDashboard}`);
       const configData = await configRes.json();
       
       if (!configData.configured) {
         setIsConfigured(false);
+        setResources([]); // ✅ Leere die alten Daten
+        setNodes([]); // ✅ Leere die alten Node-Daten
         setLoading(false);
         return;
       }
@@ -43,7 +48,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
       setIsConfigured(true);
       
       // Hole VM/LXC Daten
-      const res = await fetch(`${BACKEND_URL}/api/proxmox/vms`); // Read-only endpoint ohne Auth
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vms?dashboard_id=${currentDashboard}`);
       
       if (!res.ok) {
         throw new Error('Failed to fetch Proxmox data');
@@ -63,20 +68,24 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
   // Initial load
   useEffect(() => {
     if (isLoggedIn) {
-      fetchProxmoxData();
+      // ✅ Beim Dashboard-Wechsel sofort Daten zurücksetzen
+      setLoading(true);
+      setResources([]);
+      setNodes([]);
+      fetchProxmoxData(activeDashboard); // Explizit dashboard_id übergeben
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, activeDashboard]);
 
   // Auto-refresh alle 30 Sekunden
   useEffect(() => {
     if (!autoRefresh || !isConfigured || !isLoggedIn) return;
     
     const interval = setInterval(() => {
-      fetchProxmoxData();
+      fetchProxmoxData(activeDashboard); // Explizit dashboard_id übergeben
     }, 30000); // 30 Sekunden
 
     return () => clearInterval(interval);
-  }, [autoRefresh, isConfigured, isLoggedIn]);
+  }, [autoRefresh, isConfigured, isLoggedIn, activeDashboard]);
 
   // Login-Check: Nur für Admins (NACH allen Hooks!)
   if (!isLoggedIn) {
@@ -99,7 +108,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
   // VM/Container Aktionen
   const handleStart = async (vmid, type) => {
     try {
-      const response = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/start?vm_type=${type}`, {
+      const response = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/start?vm_type=${type}&dashboard_id=${activeDashboard}`, {
         method: 'POST'
       });
       
@@ -109,7 +118,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
       }
       
       // Reload nach kurzer Verzögerung, damit Proxmox den Status aktualisiert hat
-      setTimeout(fetchProxmoxData, 2000);
+      setTimeout(() => fetchProxmoxData(activeDashboard), 2000);
     } catch (err) {
       console.error('Failed to start VM:', err);
       alert(`Failed to start VM/Container: ${err.message}`);
@@ -118,7 +127,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
 
   const handleStop = async (vmid, type) => {
     try {
-      const response = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/stop?vm_type=${type}`, {
+      const response = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/stop?vm_type=${type}&dashboard_id=${activeDashboard}`, {
         method: 'POST'
       });
       
@@ -127,7 +136,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
         throw new Error(errorData.detail || 'Failed to stop VM/Container');
       }
       
-      setTimeout(fetchProxmoxData, 2000);
+      setTimeout(() => fetchProxmoxData(activeDashboard), 2000);
     } catch (err) {
       console.error('Failed to stop VM:', err);
       alert(`Failed to stop VM/Container: ${err.message}`);
@@ -136,7 +145,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
 
   const handleReboot = async (vmid, type) => {
     try {
-      const response = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/reboot?vm_type=${type}`, {
+      const response = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vm/${vmid}/reboot?vm_type=${type}&dashboard_id=${activeDashboard}`, {
         method: 'POST'
       });
       
@@ -145,7 +154,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
         throw new Error(errorData.detail || 'Failed to reboot VM/Container');
       }
       
-      setTimeout(fetchProxmoxData, 2000);
+      setTimeout(() => fetchProxmoxData(activeDashboard), 2000);
     } catch (err) {
       console.error('Failed to reboot VM:', err);
       alert(`Failed to reboot VM/Container: ${err.message}`);
@@ -253,7 +262,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
           </div>
           <p className="text-red-700 dark:text-red-400 mb-4">{error}</p>
           <button
-            onClick={fetchProxmoxData}
+            onClick={() => fetchProxmoxData(activeDashboard)}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-all"
           >
             Erneut versuchen
@@ -296,7 +305,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings }) {
           
           {/* Manual Refresh Button */}
           <button
-            onClick={fetchProxmoxData}
+            onClick={() => fetchProxmoxData(activeDashboard)}
             className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-2 rounded-lg shadow hover:shadow-lg transition-all hover:scale-105"
             title="Aktualisieren"
           >

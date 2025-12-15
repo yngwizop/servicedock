@@ -7,6 +7,7 @@ class Shortcut(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     url: str = Field(..., min_length=1, max_length=500)
     icon: Optional[str] = Field(None, max_length=500)
+    dashboard_id: Optional[int] = 1
     
     @validator('name')
     def name_not_empty(cls, v):
