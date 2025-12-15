@@ -527,8 +527,8 @@ A: Fernet ist fest codiert. Für andere Algorithmen wäre Code-Anpassung nötig.
 **Q: Wie kann ich mir den vollständigen Fernet Key von Spotify/Proxmo anzeigen lassen?**
 A: Den vollständigen Fernet Key kann man mit folgendem Befehl ausgeben lassen:
 
-´´´docker compose exec db psql -U postgres_user -d postgres_db -c "SELECT id, length(access_token) as token_length, access_token FROM spotify_config LIMIT 1;"
-´´´
+```docker compose exec db psql -U postgres_user -d postgres_db -c "SELECT id, length(access_token) as token_length, access_token FROM spotify_config LIMIT 1;"
+```
 dabei einfach spotify_config durch proxmox_config ersetzen, für das jeweilige Szenario
 
 ---
