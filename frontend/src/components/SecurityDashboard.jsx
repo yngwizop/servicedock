@@ -555,7 +555,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
                 <select
                   value={logFilter}
                   onChange={(e) => setLogFilter(e.target.value)}
-                  className="px-4 py-2 bg-white/40 dark:bg-white/10 backdrop-blur-md border border-gray-300/50 dark:border-white/10 rounded-lg text-gray-950 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="px-4 py-2 bg-white/70 dark:bg-gray-900/80 backdrop-blur-md border border-gray-300/50 dark:border-white/20 rounded-lg text-gray-950 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-all"
                 >
                   <option value="all">🔍 Alle Logs</option>
                   <option value="failed">❌ Alle Fehler</option>

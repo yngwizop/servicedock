@@ -443,7 +443,7 @@ async def spotify_callback(
             
             logger.info(f"Spotify successfully connected from {ip}")
             
-            # Return HTML page that closes itself (works even if VS Code is closed)
+            # Return HTML page with success message
             html_content = """
             <!DOCTYPE html>
             <html>
@@ -468,10 +468,14 @@ async def spotify_callback(
                     .success-icon {
                         font-size: 4rem;
                         margin-bottom: 1rem;
+                        animation: scaleIn 0.5s ease-out;
+                    }
+                    @keyframes scaleIn {
+                        from { transform: scale(0); }
+                        to { transform: scale(1); }
                     }
                     h1 { margin: 0 0 0.5rem 0; font-size: 2rem; }
-                    p { margin: 0.5rem 0; opacity: 0.9; }
-                    .countdown { font-size: 1.2rem; font-weight: bold; margin-top: 1rem; }
+                    p { margin: 0.5rem 0; opacity: 0.9; font-size: 1.1rem; }
                 </style>
             </head>
             <body>
@@ -479,34 +483,15 @@ async def spotify_callback(
                     <div class="success-icon">✓</div>
                     <h1>Spotify erfolgreich verbunden!</h1>
                     <p>Du kannst dieses Fenster jetzt schließen.</p>
-                    <p class="countdown">Fenster schließt automatisch in <span id="timer">3</span> Sekunden...</p>
                 </div>
                 <script>
-                    let seconds = 3;
-                    const timer = document.getElementById('timer');
-                    
-                    const interval = setInterval(() => {
-                        seconds--;
-                        timer.textContent = seconds;
-                        
-                        if (seconds <= 0) {
-                            clearInterval(interval);
-                            // Try to close window (works if opened by window.open)
-                            window.close();
-                            // If still open after 500ms, redirect to dashboard
-                            setTimeout(() => {
-                                if (!window.closed) {
-                                    window.location.href = '/';
-                                }
-                            }, 500);
-                        }
-                    }, 1000);
-                    
-                    // Also try to notify parent window if opened as popup
+                    // Notify parent window if opened as popup
                     if (window.opener) {
                         try {
                             window.opener.postMessage({ type: 'spotify-connected' }, '*');
-                        } catch(e) {}
+                        } catch(e) {
+                            console.log('postMessage failed:', e);
+                        }
                     }
                 </script>
             </body>
