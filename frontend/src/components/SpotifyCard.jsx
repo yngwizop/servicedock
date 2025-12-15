@@ -75,16 +75,9 @@ const SpotifyCard = () => {
     );
   }
 
-  // Not Playing State
+  // Not Playing State - nicht anzeigen
   if (!nowPlaying || !nowPlaying.is_playing || !nowPlaying.track) {
-    return (
-      <div className="bg-white/70 dark:bg-white/5 backdrop-blur-md rounded-lg shadow-lg p-3 border border-gray-400/60 dark:border-white/10" style={{ minWidth: '250px' }}>
-        <div className="flex items-center space-x-3">
-          <MusicNote className="w-5 h-5 text-gray-600 dark:text-white/40" />
-          <span className="text-sm text-gray-800 dark:text-white/60">Keine Wiedergabe</span>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const { track, progress_percent } = nowPlaying;

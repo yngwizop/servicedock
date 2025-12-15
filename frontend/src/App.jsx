@@ -595,8 +595,8 @@ function App() {
             </button>
           </div>
 
-          {/* Spotify Widget - Rechts (nur anzeigen wenn konfiguriert) */}
-          {spotifyConfigured && (
+          {/* Spotify Widget - Rechts (nur anzeigen wenn konfiguriert und im Services Tab) */}
+          {spotifyConfigured && activeTab === "services" && (
             <div className="flex-shrink-0">
               <SpotifyCard />
             </div>
