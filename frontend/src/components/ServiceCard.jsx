@@ -18,7 +18,7 @@ function ServiceCard({ service, textColor }) {
       target="_blank"
       rel="noopener noreferrer"
       draggable={false}
-      className="group relative flex items-start gap-4 bg-white/40 dark:bg-white/5 backdrop-blur-md border border-gray-300/50 dark:border-white/10 rounded-2xl p-5 transition-all duration-300 hover:bg-white/60 dark:hover:bg-white/10 hover:border-gray-400/60 dark:hover:border-white/20 hover:scale-[1.02] shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 dark:hover:shadow-purple-500/20"
+      className="group relative flex items-start gap-4 bg-white/70 dark:bg-white/5 backdrop-blur-md border border-gray-400/60 dark:border-white/10 rounded-2xl p-5 transition-all duration-300 hover:bg-white/90 dark:hover:bg-white/10 hover:border-gray-500/70 dark:hover:border-white/20 hover:scale-[1.02] shadow-xl hover:shadow-2xl hover:shadow-blue-500/30 dark:hover:shadow-purple-500/20"
       aria-label={`Service: ${safeName}${safeDescription ? ', ' + safeDescription : ''}`}
     >
       {/* Hover Glow Overlay */}
@@ -28,7 +28,7 @@ function ServiceCard({ service, textColor }) {
       <div className="relative z-10 flex items-start gap-4 w-full">
         {service.icon && (
           isUrl ? (
-            <div className="flex-shrink-0 bg-white/35 dark:bg-white/10 backdrop-blur-sm border border-gray-300/60 dark:border-white/20 rounded-xl p-3 w-14 h-14 flex items-center justify-center group-hover:bg-white/55 dark:group-hover:bg-white/20 group-hover:border-gray-400/70 dark:group-hover:border-white/30 transition-all duration-300">
+            <div className="flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/10 backdrop-blur-sm border border-gray-400 dark:border-white/20 rounded-xl p-3 w-14 h-14 flex items-center justify-center group-hover:from-white group-hover:to-gray-100 dark:group-hover:from-white/20 dark:group-hover:to-white/20 group-hover:border-gray-500 dark:group-hover:border-white/30 transition-all duration-300 shadow-md">
               <img 
                 src={safeIcon} 
                 alt={safeName} 
@@ -37,16 +37,16 @@ function ServiceCard({ service, textColor }) {
               />
             </div>
           ) : (
-            <div className="flex-shrink-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm border border-white/20 rounded-xl p-3 w-14 h-14 flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-purple-500/30 group-hover:border-white/30 transition-all duration-300">
-              <span className="text-3xl">
+            <div className="flex-shrink-0 bg-gradient-to-br from-blue-200 to-purple-200 dark:from-blue-500/20 dark:to-purple-500/20 backdrop-blur-sm border border-blue-300 dark:border-white/20 rounded-xl p-3 w-14 h-14 flex items-center justify-center group-hover:from-blue-300 group-hover:to-purple-300 dark:group-hover:from-blue-500/30 dark:group-hover:to-purple-500/30 group-hover:border-blue-400 dark:group-hover:border-white/30 transition-all duration-300 shadow-md">
+              <span className="text-3xl drop-shadow-sm">
                 {safeIcon}
               </span>
             </div>
           )
         )}
         <div className="flex-grow">
-          <h3 className="font-semibold text-lg mb-1 text-gray-950 dark:text-white/90 group-hover:text-black dark:group-hover:text-white transition-colors duration-300">{safeName}</h3>
-          <p className="text-sm text-gray-950 dark:text-white/60 group-hover:text-black dark:group-hover:text-white/70 transition-colors duration-300">{safeDescription}</p>
+          <h3 className="font-semibold text-lg mb-1 text-gray-900 dark:text-white/90 group-hover:text-black dark:group-hover:text-white transition-colors duration-300">{safeName}</h3>
+          <p className="text-sm text-gray-700 dark:text-white/60 group-hover:text-gray-900 dark:group-hover:text-white/70 transition-colors duration-300">{safeDescription}</p>
         </div>
       </div>
     </a>

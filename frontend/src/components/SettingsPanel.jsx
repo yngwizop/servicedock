@@ -240,108 +240,187 @@ function SettingsPanel({
       alert('Fehler beim Entfernen von Spotify');
     }
   };
+  
+  // Verhindere Body-Scroll wenn Panel offen ist
+  React.useEffect(() => {
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.documentElement.style.overflow = 'unset';
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+  
   return (
-        <div
-      className="fixed right-0 top-0 h-screen w-[420px] bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg z-30 shadow-2xl dark:shadow-blue-900/50 p-6 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent dark:[&::-webkit-scrollbar-thumb]:bg-gray-600"
-      style={{
-        animation: 'slideIn 0.3s ease-out'
-      }}
-    >
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard Settings</h2>
-        <button onClick={onClose} className="text-3xl text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 transition-colors" aria-label="Panel schließen">&times;</button>
-      </div>
+    <>
+      {/* Backdrop with blur */}
+      <div 
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity duration-300"
+        onClick={onClose}
+      />
+      
+      {/* Sidebar */}
+      <div
+        className="fixed right-0 top-0 h-screen w-full md:w-[500px] bg-white/55 dark:bg-gray-900/60 backdrop-blur-2xl z-50 shadow-2xl border-l border-gray-300/50 dark:border-white/20 overflow-y-auto animate-slideInRight [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent dark:[&::-webkit-scrollbar-thumb]:bg-gray-600"
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-white/60 dark:bg-gray-900/65 backdrop-blur-xl border-b border-gray-300/50 dark:border-white/20 px-6 py-5">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Pencil size={24} weight="duotone" className="text-blue-600 dark:text-blue-400" />
+                Settings
+              </h2>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Verwalte dein Dashboard</p>
+            </div>
+            <button 
+              onClick={onClose} 
+              className="bg-white/70 dark:bg-white/5 backdrop-blur-md border border-gray-400/60 dark:border-white/10 p-2.5 rounded-full shadow-lg hover:shadow-xl hover:bg-white/90 dark:hover:bg-white/10 hover:border-gray-500/70 dark:hover:border-white/20 transition-all hover:scale-110 text-gray-800 dark:text-white/90 hover:text-gray-900 dark:hover:text-white"
+              aria-label="Panel schließen"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
 
-      {/* Tab-Navigation */}
-      <div className="flex gap-4 mb-6 -mx-6 px-6 justify-center items-center">
-        <button
-          onClick={() => setPanelTab("services")}
-          className={`py-3 px-2 transition-all duration-300 relative whitespace-nowrap text-base font-medium ${
-            panelTab === "services"
-              ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
-              : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
-          }`}
-        >
-          Services
-        </button>
-        <button
-          onClick={() => setPanelTab("appearance")}
-          className={`py-3 px-2 transition-all duration-300 relative whitespace-nowrap text-base font-medium ${
-            panelTab === "appearance"
-              ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
-              : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
-          }`}
-        >
-          Appearance
-        </button>
-        <button
-          onClick={() => setPanelTab("proxmox")}
-          className={`py-3 px-2 transition-all duration-300 relative whitespace-nowrap text-base font-medium ${
-            panelTab === "proxmox"
-              ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
-              : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
-          }`}
-        >
-          Proxmox
-        </button>
-        <button
-          onClick={() => setPanelTab("addons")}
-          className={`py-3 px-2 transition-all duration-300 relative whitespace-nowrap text-base font-medium ${
-            panelTab === "addons"
-              ? "text-blue-600 dark:text-blue-400 font-semibold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
-              : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
-          }`}
-        >
-          AddOns
-        </button>
-      </div>
+        {/* Content Container with padding */}
+        <div className="px-6 py-5">
+          {/* Tab-Navigation */}
+          <div className="flex gap-1.5 mb-8 bg-white/70 dark:bg-white/10 backdrop-blur-xl rounded-2xl p-2 border border-gray-400/60 dark:border-white/20 shadow-lg">
+            <button
+              onClick={() => setPanelTab("services")}
+              className={`flex-1 py-2.5 px-2.5 transition-all duration-300 rounded-xl text-base font-semibold ${
+                panelTab === "services"
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10"
+              }`}
+            >
+              Services
+            </button>
+            <button
+              onClick={() => setPanelTab("appearance")}
+              className={`flex-1 py-2.5 px-2.5 transition-all duration-300 rounded-xl text-base font-semibold ${
+                panelTab === "appearance"
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10"
+              }`}
+            >
+              Appearance
+            </button>
+            <button
+              onClick={() => setPanelTab("proxmox")}
+              className={`flex-1 py-2.5 px-2.5 transition-all duration-300 rounded-xl text-base font-semibold ${
+                panelTab === "proxmox"
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10"
+              }`}
+            >
+              Proxmox
+            </button>
+            <button
+              onClick={() => setPanelTab("addons")}
+              className={`flex-1 py-2.5 px-2.5 transition-all duration-300 rounded-xl text-base font-semibold ${
+                panelTab === "addons"
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10"
+              }`}
+            >
+              AddOns
+            </button>
+          </div>
 
       {/* === Tab-Inhalt: Services === */}
       {panelTab === "services" && (
         <div className="space-y-6">
           <form
             onSubmit={onAddService}
-            className="p-4 bg-white dark:bg-gray-700/50 shadow-inner rounded-lg border border-gray-200 dark:border-gray-600"
+            className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-gray-400/60 dark:border-white/10"
           >
-            <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Neuen Service hinzufügen</h3>
-            <div className="space-y-3">
-              <input placeholder="Name" value={serviceName} onChange={(e) => setServiceName(e.target.value)} className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 p-2 w-full rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"/>
-              <input placeholder="Beschreibung" value={serviceDesc} onChange={(e) => setServiceDesc(e.target.value)} className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 p-2 w-full rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"/>
-              <input placeholder="URL" value={serviceUrl} onChange={(e) => setServiceUrl(e.target.value)} className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 p-2 w-full rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"/>
+            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span className="text-2xl">➕</span>
+              Neuen Service hinzufügen
+            </h3>
+            <div className="space-y-4">
+              <input 
+                placeholder="Name" 
+                value={serviceName} 
+                onChange={(e) => setServiceName(e.target.value)} 
+                className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+              />
+              <input 
+                placeholder="Beschreibung" 
+                value={serviceDesc} 
+                onChange={(e) => setServiceDesc(e.target.value)} 
+                className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+              />
+              <input 
+                placeholder="URL" 
+                value={serviceUrl} 
+                onChange={(e) => setServiceUrl(e.target.value)} 
+                className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+              />
               <input
                 placeholder="Icon URL oder Emoji ✉️"
-                value={serviceIcon} onChange={(e) => setServiceIcon(e.target.value)} className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 p-2 w-full rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"/>
-              <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-md font-medium w-full transition-colors">Hinzufügen</button>
+                value={serviceIcon} 
+                onChange={(e) => setServiceIcon(e.target.value)} 
+                className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+              />
+              <button 
+                type="submit" 
+                className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-semibold w-full transition-all shadow-lg hover:shadow-xl hover:scale-[1.02]"
+              >
+                Hinzufügen
+              </button>
             </div>
           </form>
 
           <form
             onSubmit={onAddShortcut}
-            className="p-4 bg-white dark:bg-gray-700/50 shadow-inner rounded-lg border border-gray-200 dark:border-gray-600"
+            className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-gray-400/60 dark:border-white/10"
           >
-            <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Neuen Shortcut hinzufügen</h3>
-            <div className="space-y-3">
-              <input placeholder="Name" value={shortcutName} onChange={(e) => setShortcutName(e.target.value)} className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 p-2 w-full rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"/>
-              <input placeholder="URL" value={shortcutUrl} onChange={(e) => setShortcutUrl(e.target.value)} className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 p-2 w-full rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"/>
+            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span className="text-2xl">🔗</span>
+              Neuen Shortcut hinzufügen
+            </h3>
+            <div className="space-y-4">
+              <input 
+                placeholder="Name" 
+                value={shortcutName} 
+                onChange={(e) => setShortcutName(e.target.value)} 
+                className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+              />
+              <input 
+                placeholder="URL" 
+                value={shortcutUrl} 
+                onChange={(e) => setShortcutUrl(e.target.value)} 
+                className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+              />
               <input
                 placeholder="Icon URL oder Emoji 🔗"
                 value={shortcutIcon}
                 onChange={(e) => setShortcutIcon(e.target.value)}
-                className="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 p-2 w-full rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
               />
-              <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-md font-medium w-full transition-colors">Hinzufügen</button>
+              <button 
+                type="submit" 
+                className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-semibold w-full transition-all shadow-lg hover:shadow-xl hover:scale-[1.02]"
+              >
+                Hinzufügen
+              </button>
             </div>
           </form>
 
           {/* Info-Hinweis für Icons */}
-          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <p className="text-sm text-blue-800 dark:text-blue-300">
+          <div className="p-4 bg-blue-100/70 dark:bg-blue-900/30 backdrop-blur-sm border border-blue-300/60 dark:border-blue-700/50 rounded-2xl shadow-lg">
+            <p className="text-sm text-blue-900 dark:text-blue-200">
               💡 <strong>Tipp:</strong> Icons können von{' '}
               <a
                 href="https://selfh.st/icons/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline hover:text-blue-600 dark:hover:text-blue-200 font-medium"
+                className="underline hover:text-blue-700 dark:hover:text-blue-100 font-semibold transition-colors"
               >
                 selfh.st/icons
               </a>
@@ -354,16 +433,15 @@ function SettingsPanel({
       {/* === Tab-Inhalt: Appearance === */}
       {panelTab === "appearance" && (
         <div className="space-y-6">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Aussehen anpassen</h3>
           
           {/* Sektion: Hintergrund */}
-          <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-            <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+          <div className="space-y-4 p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-gray-400/60 dark:border-white/10">
+            <h4 className="font-semibold text-lg text-gray-900 dark:text-white flex items-center gap-2 mb-4">
               🎨 Hintergrund
             </h4>
             
             <div>
-              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Hintergrundfarbe
               </label>
               <div className="flex items-center gap-3">
@@ -371,20 +449,20 @@ function SettingsPanel({
                   type="color"
                   value={editAppearance.bg_color || "#ffffff"}
                   onChange={(e) => setEditAppearance({ ...editAppearance, bg_color: e.target.value })}
-                  className="w-16 h-10 p-1 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer"
+                  className="w-16 h-12 p-1 border border-gray-300 dark:border-white/20 rounded-xl cursor-pointer bg-white/50 dark:bg-white/5 backdrop-blur-sm"
                 />
                 <input
                   type="text"
                   value={editAppearance.bg_color || "#ffffff"}
                   onChange={(e) => setEditAppearance({ ...editAppearance, bg_color: e.target.value })}
-                  className="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white p-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono"
+                  className="flex-1 border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono backdrop-blur-sm transition-all"
                   placeholder="#ffffff"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Hintergrundbild URL
               </label>
               <input
@@ -392,7 +470,7 @@ function SettingsPanel({
                 placeholder="https://..."
                 value={editAppearance.bg_image_url || ""}
                 onChange={(e) => setEditAppearance({ ...editAppearance, bg_image_url: e.target.value })}
-                className="border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 p-2 w-full rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
               />
             </div>
             
@@ -951,11 +1029,11 @@ function SettingsPanel({
               )}
 
               {/* Security Info */}
-              <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg">
-                <h5 className="font-semibold text-gray-700 dark:text-gray-200 mb-2">
+              <div className="mt-6 p-4 bg-white/70 dark:bg-white/5 backdrop-blur-sm border border-gray-300/60 dark:border-white/10 rounded-2xl shadow-lg">
+                <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
                   🔒 Sicherheit
                 </h5>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
                   Client Secret und Access Tokens werden verschlüsselt gespeichert. 
                   Spotify hat nur Lesezugriff auf deine aktuell abgespielte Musik.
                 </p>
@@ -964,7 +1042,9 @@ function SettingsPanel({
           </div>
         </div>
       )}
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
 

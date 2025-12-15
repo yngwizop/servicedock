@@ -54,10 +54,10 @@ const SpotifyCard = () => {
   // Loading State
   if (loading) {
     return (
-      <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-lg shadow-lg p-3 border border-gray-300/50 dark:border-white/10">
+      <div className="bg-white/70 dark:bg-white/5 backdrop-blur-md rounded-lg shadow-lg p-3 border border-gray-400/60 dark:border-white/10">
         <div className="flex items-center space-x-3">
           <CircleNotch className="w-5 h-5 text-green-500 dark:text-green-400 animate-spin" />
-          <span className="text-sm text-gray-950 dark:text-white/90">Lädt...</span>
+          <span className="text-sm text-gray-900 dark:text-white/90">Lädt...</span>
         </div>
       </div>
     );
@@ -66,7 +66,7 @@ const SpotifyCard = () => {
   // Error State
   if (error) {
     return (
-      <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-lg shadow-lg p-3 border border-gray-300/50 dark:border-white/10">
+      <div className="bg-white/70 dark:bg-white/5 backdrop-blur-md rounded-lg shadow-lg p-3 border border-gray-400/60 dark:border-white/10">
         <div className="flex items-center space-x-3">
           <MusicNote className="w-5 h-5 text-gray-600 dark:text-white/40" />
           <span className="text-sm text-gray-800 dark:text-white/60">Fehler</span>
@@ -78,7 +78,7 @@ const SpotifyCard = () => {
   // Not Playing State
   if (!nowPlaying || !nowPlaying.is_playing || !nowPlaying.track) {
     return (
-      <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-lg shadow-lg p-3 border border-gray-300/50 dark:border-white/10" style={{ minWidth: '250px' }}>
+      <div className="bg-white/70 dark:bg-white/5 backdrop-blur-md rounded-lg shadow-lg p-3 border border-gray-400/60 dark:border-white/10" style={{ minWidth: '250px' }}>
         <div className="flex items-center space-x-3">
           <MusicNote className="w-5 h-5 text-gray-600 dark:text-white/40" />
           <span className="text-sm text-gray-800 dark:text-white/60">Keine Wiedergabe</span>
@@ -90,7 +90,7 @@ const SpotifyCard = () => {
   const { track, progress_percent } = nowPlaying;
 
   return (
-    <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl p-3 border border-gray-300/50 dark:border-white/10 shadow-lg hover:bg-white/60 dark:hover:bg-white/10 hover:border-gray-400/60 dark:hover:border-white/20 transition-all">
+    <div className="bg-white/70 dark:bg-white/5 backdrop-blur-md rounded-xl p-3 border border-gray-400/60 dark:border-white/10 shadow-lg hover:bg-white/90 dark:hover:bg-white/10 hover:border-gray-500/70 dark:hover:border-white/20 transition-all">
       <div className="flex items-center gap-3">
         {/* Album Cover */}
         {track.album_image && (
@@ -117,12 +117,12 @@ const SpotifyCard = () => {
           </div>
 
           {/* Song Title */}
-          <h3 className="text-sm font-bold text-gray-950 dark:text-white/90 truncate mb-0.5">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white/90 truncate mb-0.5">
             {track.name}
           </h3>
 
           {/* Artist */}
-          <p className="text-xs text-gray-800 dark:text-white/60 truncate mb-2">
+          <p className="text-xs text-gray-700 dark:text-white/60 truncate mb-2">
             {track.artist}
           </p>
 

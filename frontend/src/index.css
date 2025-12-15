@@ -9,6 +9,22 @@
   }
 }
 
+/* Slide-In Animation für Settings Sidebar */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Custom range slider styling */
 @layer components {
   input[type="range"]::-webkit-slider-thumb {
