@@ -135,8 +135,8 @@ SELECT setval('dashboards_id_seq', (SELECT COALESCE(MAX(id), 1) FROM dashboards)
 
 -- HIER SIND DIE ÄNDERUNGEN (INSERT/UPDATE)
 -- Fügt die Standard-Einstellungszeile ein/aktualisiert sie.
-INSERT INTO appearance (id, bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields, show_spotify, show_weather, show_clock, show_proxmox)
-VALUES (1, '#4e575f', NULL, 1.0, 6, 6, '#1f2937', '#e5e7eb', '24h', 'Berlin', '["temperature", "humidity"]'::jsonb, TRUE, TRUE, TRUE, TRUE)
+INSERT INTO appearance (id, bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields, show_spotify, show_weather, show_clock)
+VALUES (1, '#f0f2f5', NULL, 1.0, 6, 6, '#1f2937', '#e5e7eb', '24h', 'Berlin', '["temperature", "humidity"]'::jsonb, TRUE, TRUE, TRUE)
 ON CONFLICT (id) DO UPDATE
 SET
     bg_color = COALESCE(EXCLUDED.bg_color, appearance.bg_color),
@@ -151,8 +151,7 @@ SET
     weather_fields = COALESCE(EXCLUDED.weather_fields, appearance.weather_fields),
     show_spotify = COALESCE(EXCLUDED.show_spotify, appearance.show_spotify),
     show_weather = COALESCE(EXCLUDED.show_weather, appearance.show_weather),
-    show_clock = COALESCE(EXCLUDED.show_clock, appearance.show_clock),
-    show_proxmox = COALESCE(EXCLUDED.show_proxmox, appearance.show_proxmox);
+    show_clock = COALESCE(EXCLUDED.show_clock, appearance.show_clock);
 
 
 -- (Optional) Dummy-Daten (Unverändert)
