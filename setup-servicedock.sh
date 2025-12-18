@@ -51,6 +51,11 @@ cd "$INSTALL_DIR"
 
 echo "📁 Erstelle Verzeichnisstruktur..."
 
+# Version festlegen
+VERSION="v1.0.0"
+GITHUB_REPO="yngwizop/servicedock"
+RELEASE_URL="https://github.com/${GITHUB_REPO}/releases/download/${VERSION}"
+
 # Check ob Images private oder public sind
 echo "🔐 Prüfe GHCR Zugriff..."
 if ! docker pull ghcr.io/yngwizop/servicedock-frontend:latest &>/dev/null; then
@@ -68,15 +73,15 @@ fi
 
 # Docker Compose herunterladen
 echo "📦 Lade Docker Compose Konfiguration..."
-curl -sS -o docker-compose.yml https://raw.githubusercontent.com/yngwizop/servicedock/main/docker-compose.production.yml
+curl -sS -L -o docker-compose.yml "${RELEASE_URL}/docker-compose.production.yml"
 
 # .env Vorlage herunterladen
 echo "🔧 Lade Environment Template..."
-curl -sS -o .env.template https://raw.githubusercontent.com/yngwizop/servicedock/main/.env.template
+curl -sS -L -o .env.template "${RELEASE_URL}/.env.template"
 
 # init.sql herunterladen
 echo "🗄️  Lade Datenbank Schema..."
-curl -sS -o db-init.sql https://raw.githubusercontent.com/yngwizop/servicedock/main/db/init.sql
+curl -sS -L -o db-init.sql "${RELEASE_URL}/init.sql"
 
 # SSL Verzeichnisse erstellen
 mkdir -p ssl db-ssl
