@@ -52,7 +52,7 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
   };
 
   return (
-    <div className="group relative bg-white/80 dark:bg-gray-900/85 backdrop-blur-md rounded-3xl border border-gray-400/60 dark:border-white/20 shadow-xl hover:shadow-2xl transition-all duration-200 p-6 flex flex-col gap-2 will-change-auto hover:border-blue-500/70 dark:hover:border-blue-500/60 hover:scale-[1.025]">
+    <div className="group relative bg-white/50 dark:bg-gray-900/85 backdrop-blur-md rounded-3xl border border-gray-400/60 dark:border-white/20 shadow-xl hover:shadow-2xl transition-all duration-200 p-6 flex flex-col gap-2 will-change-auto hover:border-blue-500/70 dark:hover:border-blue-500/60 hover:scale-[1.025]">
       {/* Header - Modern, mehr Luft, Status-Badge */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3 flex-1 min-w-0">
