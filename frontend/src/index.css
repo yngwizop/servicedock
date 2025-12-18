@@ -2,6 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Moderne Scrollbar-Gestaltung */
+/* Scrollbar-Größe */
+::-webkit-scrollbar {
+  width: 8px; /* Vertikale Scrollbar */
+  height: 8px; /* Horizontale Scrollbar */
+}
+
+/* Transparenter Hintergrund (Track) */
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Scrollbar-Thumb (der bewegliche Teil) - Light Mode */
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* Helles Grau (slate-300) */
+  border-radius: 4px; /* Abgerundete Ecken */
+}
+
+/* Scrollbar-Thumb - Dark Mode */
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569; /* Dunkles Grau (slate-600) */
+}
+
+/* Hover-Effekt - Light Mode */
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; /* Mittleres Grau (slate-400) */
+}
+
+/* Hover-Effekt - Dark Mode */
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b; /* Slate-500 */
+}
+
 /* Verhindert Layout-Shift durch Scrollbar */
 @layer base {
   html {
