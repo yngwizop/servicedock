@@ -254,11 +254,9 @@ function SettingsPanel({
   
   // Verhindere Body-Scroll wenn Panel offen ist
   React.useEffect(() => {
-    document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
     return () => {
-      document.documentElement.style.overflow = 'unset';
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
     };
   }, []);
   
@@ -299,10 +297,10 @@ function SettingsPanel({
         {/* Content Container with padding */}
         <div className="px-6 py-5">
           {/* Tab-Navigation */}
-          <div className="flex gap-1.5 mb-8 bg-white/70 dark:bg-white/10 backdrop-blur-xl rounded-2xl p-2 border border-gray-400/60 dark:border-white/20 shadow-lg">
+          <div className="flex gap-1 mb-8 bg-white/70 dark:bg-white/10 backdrop-blur-xl rounded-2xl p-1.5 border border-gray-400/60 dark:border-white/20 shadow-lg">
             <button
               onClick={() => setPanelTab("services")}
-              className={`flex-1 py-2.5 px-2.5 transition-all duration-300 rounded-xl text-base font-semibold ${
+              className={`flex-1 py-2 px-2 transition-all duration-300 rounded-xl text-sm font-semibold ${
                 panelTab === "services"
                   ? "bg-blue-600 text-white shadow-md"
                   : "text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10"
@@ -312,7 +310,7 @@ function SettingsPanel({
             </button>
             <button
               onClick={() => setPanelTab("dashboards")}
-              className={`flex-1 py-2.5 px-2.5 transition-all duration-300 rounded-xl text-base font-semibold ${
+              className={`flex-1 py-2 px-2 transition-all duration-300 rounded-xl text-sm font-semibold ${
                 panelTab === "dashboards"
                   ? "bg-blue-600 text-white shadow-md"
                   : "text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10"
@@ -322,7 +320,7 @@ function SettingsPanel({
             </button>
             <button
               onClick={() => setPanelTab("appearance")}
-              className={`flex-1 py-2.5 px-2.5 transition-all duration-300 rounded-xl text-base font-semibold ${
+              className={`flex-1 py-2 px-2 transition-all duration-300 rounded-xl text-sm font-semibold ${
                 panelTab === "appearance"
                   ? "bg-blue-600 text-white shadow-md"
                   : "text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10"
@@ -332,7 +330,7 @@ function SettingsPanel({
             </button>
             <button
               onClick={() => setPanelTab("proxmox")}
-              className={`flex-1 py-2.5 px-2.5 transition-all duration-300 rounded-xl text-base font-semibold ${
+              className={`flex-1 py-2 px-2 transition-all duration-300 rounded-xl text-sm font-semibold ${
                 panelTab === "proxmox"
                   ? "bg-blue-600 text-white shadow-md"
                   : "text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10"
@@ -342,7 +340,7 @@ function SettingsPanel({
             </button>
             <button
               onClick={() => setPanelTab("addons")}
-              className={`flex-1 py-2.5 px-2.5 transition-all duration-300 rounded-xl text-base font-semibold ${
+              className={`flex-1 py-2 px-2 transition-all duration-300 rounded-xl text-sm font-semibold ${
                 panelTab === "addons"
                   ? "bg-blue-600 text-white shadow-md"
                   : "text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10"
@@ -534,7 +532,7 @@ function SettingsPanel({
               <select
                 value={dashboardType}
                 onChange={(e) => setDashboardType(e.target.value)}
-                className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+                className="border border-gray-400/70 dark:border-white/30 bg-white/70 dark:bg-slate-700/80 text-gray-900 dark:text-white p-3.5 w-full rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-md transition-all shadow-lg hover:shadow-xl cursor-pointer font-medium [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-gray-900 [&>option]:dark:text-white [&>option]:py-2"
               >
                 <option value="default">Standard</option>
                 <option value="work">Arbeit</option>
