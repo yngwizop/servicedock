@@ -668,8 +668,8 @@ function App() {
               />
             )}
             
-            {/* Trenner nur wenn (Weather ODER Clock) UND Spotify aktiv sind */}
-            {(appearance.show_weather || appearance.show_clock) && appearance.show_spotify && spotifyConfigured && activeTab === "services" && (
+            {/* Trenner nur wenn (Weather ODER Clock) UND Spotify aktiv/konfiguriert sind */}
+            {(appearance.show_weather || appearance.show_clock) && appearance.show_spotify && spotifyConfigured && (
               <div className="hidden md:flex items-center">
                 <div 
                   className="w-px h-16 bg-gradient-to-b from-transparent via-current to-transparent opacity-30"
@@ -679,9 +679,11 @@ function App() {
               </div>
             )}
             
-            {/* Spotify Widget - Jetzt auch im Header */}
-            {appearance.show_spotify && spotifyConfigured && activeTab === "services" && (
-              <SpotifyCard />
+            {/* Spotify Widget - Zeige nur auf Services Tab, aber reserviere Platz immer */}
+            {appearance.show_spotify && spotifyConfigured && (
+              <div className={activeTab === "services" ? "" : "invisible"}>
+                <SpotifyCard />
+              </div>
             )}
           </div>
         </div>
