@@ -51,17 +51,32 @@ cd "$INSTALL_DIR"
 
 echo "📁 Erstelle Verzeichnisstruktur..."
 
+# Check ob Images private oder public sind
+echo "🔐 Prüfe GHCR Zugriff..."
+if ! docker pull ghcr.io/yngwizop/servicedock-frontend:latest &>/dev/null; then
+    echo -e "${YELLOW}⚠️  Images sind private - Docker Login erforderlich${NC}"
+    echo "Erstelle einen GitHub Token mit 'read:packages' Scope:"
+    echo "https://github.com/settings/tokens"
+    echo ""
+    read -p "GitHub Username (yngwizop): " GH_USER
+    GH_USER=${GH_USER:-yngwizop}
+    read -sp "GitHub Token: " GH_TOKEN
+    echo ""
+    echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_USER" --password-stdin
+    echo ""
+fi
+
 # Docker Compose herunterladen
 echo "📦 Lade Docker Compose Konfiguration..."
-curl -sS -o docker-compose.yml https://raw.githubusercontent.com/yngwizop/servicedock/test/docker-compose.production.yml
+curl -sS -o docker-compose.yml https://raw.githubusercontent.com/yngwizop/servicedock/main/docker-compose.production.yml
 
 # .env Vorlage herunterladen
 echo "🔧 Lade Environment Template..."
-curl -sS -o .env.example https://raw.githubusercontent.com/yngwizop/servicedock/test/.env.example
+curl -sS -o .env.template https://raw.githubusercontent.com/yngwizop/servicedock/main/.env.template
 
 # init.sql herunterladen
 echo "🗄️  Lade Datenbank Schema..."
-curl -sS -o db-init.sql https://raw.githubusercontent.com/yngwizop/servicedock/test/db/init.sql
+curl -sS -o db-init.sql https://raw.githubusercontent.com/yngwizop/servicedock/main/db/init.sql
 
 # SSL Verzeichnisse erstellen
 mkdir -p ssl db-ssl
