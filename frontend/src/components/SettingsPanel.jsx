@@ -61,9 +61,23 @@ function SettingsPanel({
   const [dashboardName, setDashboardName] = React.useState('');
   const [dashboardDesc, setDashboardDesc] = React.useState('');
   const [dashboardType, setDashboardType] = React.useState('default');
+  const [dashboardShowProxmox, setDashboardShowProxmox] = React.useState(true);
   const [editingDashboard, setEditingDashboard] = React.useState(null);
   const [isSavingDashboard, setIsSavingDashboard] = React.useState(false);
   const [dashboardSaved, setDashboardSaved] = React.useState(false);
+
+  // Sync editingDashboard state when dashboard is being edited
+  React.useEffect(() => {
+    if (editingDashboard) {
+      const currentDash = dashboards.find(d => d.id === editingDashboard.id);
+      if (currentDash) {
+        setDashboardName(currentDash.name);
+        setDashboardDesc(currentDash.description || '');
+        setDashboardType(currentDash.type || 'default');
+        setDashboardShowProxmox(currentDash.show_proxmox === true); // Explicit true check
+      }
+    }
+  }, [editingDashboard, dashboards]);
 
   // Backend URL: Mit Nginx kein Port nötig, ohne Nginx Port 8000
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
@@ -462,7 +476,8 @@ function SettingsPanel({
                 const payload = {
                   name: dashboardName.trim(),
                   description: dashboardDesc.trim() || null,
-                  type: dashboardType
+                  type: dashboardType,
+                  show_proxmox: dashboardShowProxmox
                 };
                 
                 if (editingDashboard) {
@@ -491,14 +506,17 @@ function SettingsPanel({
                   if (!res.ok) throw new Error('Create failed');
                 }
                 
-                // Success
+                // Refresh dashboard list FIRST
+                await onDashboardsChange();
+                
+                // Then success cleanup
                 setDashboardName('');
                 setDashboardDesc('');
                 setDashboardType('default');
+                setDashboardShowProxmox(true);
                 setEditingDashboard(null);
                 setDashboardSaved(true);
                 setTimeout(() => setDashboardSaved(false), 2000);
-                onDashboardsChange(); // Refresh dashboard list
               } catch (err) {
                 console.error('Dashboard save error:', err);
                 alert('Fehler beim Speichern des Dashboards');
@@ -541,6 +559,20 @@ function SettingsPanel({
                 <option value="media">Media</option>
                 <option value="dev">Development</option>
               </select>
+
+              <label className="flex items-center gap-3 cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
+                <input
+                  type="checkbox"
+                  checked={dashboardShowProxmox}
+                  onChange={(e) => setDashboardShowProxmox(e.target.checked)}
+                  className="appearance-none w-4 h-4 border-2 border-gray-300 dark:border-gray-600 rounded-full bg-transparent checked:bg-transparent checked:border-gray-300 dark:checked:border-gray-600 relative checked:before:content-[''] checked:before:absolute checked:before:top-1/2 checked:before:left-1/2 checked:before:transform checked:before:-translate-x-1/2 checked:before:-translate-y-1/2 checked:before:w-2 checked:before:h-2 checked:before:bg-blue-600 checked:before:rounded-full focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-2xl flex-shrink-0">🖥️</span>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Proxmox Monitoring Tab</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Zeige Proxmox Monitoring in der Navigation</div>
+                </div>
+              </label>
               
               <div className="flex gap-3">
                 <button
@@ -559,6 +591,7 @@ function SettingsPanel({
                       setDashboardName('');
                       setDashboardDesc('');
                       setDashboardType('default');
+                      setDashboardShowProxmox(true);
                     }}
                     className="px-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-xl font-semibold transition-all"
                   >
@@ -629,6 +662,7 @@ function SettingsPanel({
                             setDashboardName(dashboard.name);
                             setDashboardDesc(dashboard.description || '');
                             setDashboardType(dashboard.type || 'default');
+                            setDashboardShowProxmox(dashboard.show_proxmox !== undefined ? dashboard.show_proxmox : true);
                           }}
                           className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                           title="Bearbeiten"
@@ -925,7 +959,7 @@ function SettingsPanel({
                   type="checkbox"
                   checked={editAppearance.show_clock ?? true}
                   onChange={(e) => setEditAppearance({ ...editAppearance, show_clock: e.target.checked })}
-                  className="appearance-none w-4 h-4 border-2 border-gray-300 dark:border-gray-600 rounded-full bg-transparent checked:bg-transparent checked:border-gray-300 dark:checked:border-gray-600 relative checked:before:content-[''] checked:before:absolute checked:before:top-1/2 checked:before:left-1/2 checked:before:transform checked:before:-translate-x-1/2 checked:before:-translate-y-1/2 checked:before:w-2 checked:before:h-2 checked:before:bg-blue-600 checked:before:rounded-full focus:ring-2 focus:ring-blue-500"
+                  className="appearance-none w-4 h-4 border-2 border-gray-300 dark:border-gray-600 rounded-full bg-transparent checked:bg-transparent checked:border-gray-300 dark:checked:border-gray-600 relative checked:before:content-[''] checked:before:absolute checked:before:top-1/2 checked:before:left-1/2 checked:before:transform checked:before:-translate-x-1/2 checked:before:-translate-y-1/2 checked:before:w-2 checked:before:h-2 checked:before:bg-blue-600 checked:before:rounded-full focus:ring-2 focus:ring-2 focus:ring-blue-500"
                 />
                 <span className="text-2xl flex-shrink-0">🕐</span>
                 <div className="flex-1">

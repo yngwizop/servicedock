@@ -52,6 +52,61 @@ Jetzt funktioniert `/reorder` wie gewünscht.
 
 ---
 
+## Dashboard-spezifische vs. Globale Features
+
+### Wichtig: Wo gehört ein Feature hin?
+
+**Global (für ALLE Dashboards gleich):**
+- Tabelle: `appearance`
+- Beispiele: `show_spotify`, `show_weather`, `show_clock`, Farbschema, Spaltenanzahl
+- UI: Settings → Appearance Tab
+
+**Pro Dashboard (individuell je Dashboard):**
+- Tabelle: `dashboards`
+- Beispiele: `show_proxmox`, Services, Shortcuts, Proxmox-Config
+- UI: Settings → Dashboards Tab → Dashboard bearbeiten
+
+### Implementierungs-Checkliste für Dashboard-spezifische Features:
+
+**1. Database (db/init.sql):**
+```sql
+ALTER TABLE dashboards ADD COLUMN IF NOT EXISTS feature_name BOOLEAN DEFAULT TRUE;
+-- NICHT in appearance Tabelle!
+```
+
+**2. Backend Models (backend/models/dashboard.py):**
+```python
+class Dashboard(BaseModel):
+    feature_name: Optional[bool] = True
+
+class DashboardResponse(BaseModel):
+    feature_name: bool = True
+```
+
+**3. Backend Router (backend/routers/dashboards.py):**
+- SELECT: `d.feature_name` in Query und Response-Mapping
+- UPDATE: `feature_name = %s` in UPDATE Statement
+
+**4. Frontend State (frontend/src/App.jsx):**
+```javascript
+// Zugriff via dashboards Array, NICHT appearance:
+{dashboards.find(d => d.id === activeDashboard)?.feature_name && (
+  <Component />
+)}
+```
+
+**5. Frontend Settings (frontend/src/components/SettingsPanel.jsx):**
+- Checkbox im **Dashboards Tab** (Dashboard-Bearbeitungsformular)
+- State: `dashboardFeatureName` 
+- useEffect zum Sync mit aktuellem Dashboard
+- NICHT im Appearance Tab!
+
+**Typischer Fehler:**
+❌ Feature in `appearance` Tabelle → gilt global für alle Dashboards
+✅ Feature in `dashboards` Tabelle → individuell pro Dashboard
+
+---
+
 ## Häufige Fehler & Lösungen
 
 - **422 Unprocessable Entity:**

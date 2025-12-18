@@ -110,6 +110,7 @@ CREATE TABLE IF NOT EXISTS dashboards (
     description TEXT,
     type TEXT DEFAULT 'dashboard',
     is_active BOOLEAN DEFAULT TRUE,
+    show_proxmox BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -125,8 +126,8 @@ CREATE INDEX IF NOT EXISTS idx_shortcuts_dashboard ON shortcuts(dashboard_id);
 CREATE INDEX IF NOT EXISTS idx_proxmox_dashboard ON proxmox_config(dashboard_id);
 
 -- Default Dashboard erstellen (WICHTIG: Nutzt SERIAL, damit Sequence automatisch mitzählt!)
-INSERT INTO dashboards (id, name, description, type, is_active)
-VALUES (1, 'Main Dashboard', 'Default Dashboard', 'dashboard', TRUE)
+INSERT INTO dashboards (id, name, description, type, is_active, show_proxmox)
+VALUES (1, 'Main Dashboard', 'Default Dashboard', 'dashboard', TRUE, TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 -- ✅ WICHTIG: Sequence auf den nächsten Wert setzen (falls Dashboard 1 manuell inserted wurde)
@@ -134,8 +135,8 @@ SELECT setval('dashboards_id_seq', (SELECT COALESCE(MAX(id), 1) FROM dashboards)
 
 -- HIER SIND DIE ÄNDERUNGEN (INSERT/UPDATE)
 -- Fügt die Standard-Einstellungszeile ein/aktualisiert sie.
-INSERT INTO appearance (id, bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields, show_spotify, show_weather, show_clock)
-VALUES (1, '#4e575f', NULL, 1.0, 6, 6, '#1f2937', '#e5e7eb', '24h', 'Berlin', '["temperature", "humidity"]'::jsonb, TRUE, TRUE, TRUE)
+INSERT INTO appearance (id, bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields, show_spotify, show_weather, show_clock, show_proxmox)
+VALUES (1, '#4e575f', NULL, 1.0, 6, 6, '#1f2937', '#e5e7eb', '24h', 'Berlin', '["temperature", "humidity"]'::jsonb, TRUE, TRUE, TRUE, TRUE)
 ON CONFLICT (id) DO UPDATE
 SET
     bg_color = COALESCE(EXCLUDED.bg_color, appearance.bg_color),
@@ -150,7 +151,8 @@ SET
     weather_fields = COALESCE(EXCLUDED.weather_fields, appearance.weather_fields),
     show_spotify = COALESCE(EXCLUDED.show_spotify, appearance.show_spotify),
     show_weather = COALESCE(EXCLUDED.show_weather, appearance.show_weather),
-    show_clock = COALESCE(EXCLUDED.show_clock, appearance.show_clock);
+    show_clock = COALESCE(EXCLUDED.show_clock, appearance.show_clock),
+    show_proxmox = COALESCE(EXCLUDED.show_proxmox, appearance.show_proxmox);
 
 
 -- (Optional) Dummy-Daten (Unverändert)

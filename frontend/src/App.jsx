@@ -700,16 +700,18 @@ function App() {
             >
               Services & Shortcuts
             </button>
-            <button
-              onClick={() => setActiveTab("monitoring")}
-              className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
-                activeTab === "monitoring"
-                  ? "bg-blue-500/30 dark:bg-blue-500/20 border-b-2 border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400 shadow-sm"
-                  : "text-gray-800 dark:text-white/90 hover:bg-white/50 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              Proxmox Monitoring
-            </button>
+            {dashboards.find(d => d.id === activeDashboard)?.show_proxmox === true && (
+              <button
+                onClick={() => setActiveTab("monitoring")}
+                className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
+                  activeTab === "monitoring"
+                    ? "bg-blue-500/30 dark:bg-blue-500/20 border-b-2 border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400 shadow-sm"
+                    : "text-gray-800 dark:text-white/90 hover:bg-white/50 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                Proxmox Monitoring
+              </button>
+            )}
             <button
               onClick={() => setActiveTab("security")}
               className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${

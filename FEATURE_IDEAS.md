@@ -13,10 +13,9 @@ Diese Datei enthält Ideen für zukünftige Features und Verbesserungen für Ser
 ## 🎯 Dashboard & Personalisierung
 - **Drag & Drop Reordering** - Services/Shortcuts per Drag & Drop neu anordnen (DB-Model bereits vorhanden)
 - **Custom Widgets** - Benutzer kann Widgets individuell ein/ausschalten (Spotify, Weather, Clock)
-- **Grid Layout Optionen** - Verschiedene Spaltenanzahlen wählbar (2, 3, 4, 6 Spalten)
 - **Favoriten System** - Services als Favoriten markieren, eigener Tab oder Highlighting
-- **Dashboard Presets** - Vordefinierte Layouts für verschiedene Use Cases (Dev, Media Center, Admin)
 - **Multi-Dashboard Support** - Mehrere Dashboards für verschiedene Zwecke (Work, Home, etc.)
+- **Nav-Bar** - Proxmox Monitoring, genauso wie Widgets nicht anzeigen lassen zu können, wenn man Proxmox Monitoring nicht eingerichtet hat
 
 ## 📊 Monitoring & Stats
 - **System Status Widget** - Docker Container Status anzeigen, CPU/RAM vom Host-System
