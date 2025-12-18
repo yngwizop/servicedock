@@ -75,9 +75,45 @@ fi
 echo "📦 Lade Docker Compose Konfiguration..."
 curl -sS -L -o docker-compose.yml "${RELEASE_URL}/docker-compose.production.yml"
 
-# .env Vorlage herunterladen
-echo "🔧 Lade Environment Template..."
-curl -sS -L -o .env.template "${RELEASE_URL}/.env.template"
+# .env Vorlage herunterladen (mit Fallback falls nicht verfügbar)
+echo "🔧 Erstelle Environment Template..."
+cat > .env.template << 'ENVTEMPLATE'
+# ========================================
+# ServiceDock - Environment Configuration
+# ========================================
+# WICHTIG: Kopiere diese Datei zu ".env" und passe die Werte an!
+
+# ADMIN-ZUGANGSDATEN (PFLICHTFELD!)
+ADMIN_PASSWORD=dein-sicheres-passwort-hier
+
+# DATENBANK
+POSTGRES_USER=servicedock
+POSTGRES_PASSWORD=dein-db-passwort-hier
+POSTGRES_DB=servicedock
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=require
+
+# VERSCHLÜSSELUNG (PFLICHTFELD!)
+# Generieren: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+ENCRYPTION_KEY=your-secure-encryption-key-here
+
+# JWT AUTHENTIFIZIERUNG (PFLICHTFELD!)
+# Generieren: openssl rand -hex 32
+JWT_SECRET_KEY=your-jwt-secret-key-here
+
+# FRONTEND-URL (für CORS)
+FRONTEND_URL=https://192.168.178.11
+
+# ENVIRONMENT
+ENVIRONMENT=production
+
+# TOKEN CONFIGURATION
+ACCESS_TOKEN_EXPIRE_MINUTES=15
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# RATE-LIMITING
+MAX_FAILED_LOGIN_ATTEMPTS=5
+LOGIN_LOCKOUT_MINUTES=15
+ENVTEMPLATE
 
 # init.sql herunterladen
 echo "🗄️  Lade Datenbank Schema..."
