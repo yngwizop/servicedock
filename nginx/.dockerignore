@@ -1,0 +1,21 @@
+# SSL Zertifikate - NIEMALS ins Image!
+ssl/
+*.key
+*.crt
+*.pem
+*.cert
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+Dockerfile
+.dockerignore

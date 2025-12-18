@@ -1,0 +1,70 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Environment files - NIEMALS ins Image!
+.env
+.env.*
+*.env
+!.env.template
+
+# Dokumentation
+*.md
+README.md
+QUICKSTART.md
+API_DOCUMENTATION.md
+DEPLOY.md
+docs/
+
+# Development files
+.vscode
+.idea
+*.log
+*.swp
+*.swo
+*~
+
+# Docker
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+.dockerignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Security
+ssl/
+*.key
+*.crt
+*.pem
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Database
+postgres_data/
+*.sql
+db/
+db-init.sql
+db-ssl/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
