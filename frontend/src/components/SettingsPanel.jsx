@@ -892,52 +892,46 @@ function SettingsPanel({
             </h4>
             
             <div className="space-y-3">
-              <label className="flex items-center justify-between cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 border-gray-300 dark:border-gray-600">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">🎵</span>
-                  <div>
-                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Spotify Widget</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Zeige aktuell abgespielte Musik</div>
-                  </div>
-                </div>
+              <label className="flex items-center gap-3 cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
                 <input
                   type="checkbox"
                   checked={editAppearance.show_spotify ?? true}
                   onChange={(e) => setEditAppearance({ ...editAppearance, show_spotify: e.target.checked })}
-                  className="w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500 rounded"
+                  className="appearance-none w-4 h-4 border-2 border-gray-300 dark:border-gray-600 rounded-full bg-transparent checked:bg-transparent checked:border-gray-300 dark:checked:border-gray-600 relative checked:before:content-[''] checked:before:absolute checked:before:top-1/2 checked:before:left-1/2 checked:before:transform checked:before:-translate-x-1/2 checked:before:-translate-y-1/2 checked:before:w-2 checked:before:h-2 checked:before:bg-blue-600 checked:before:rounded-full focus:ring-2 focus:ring-blue-500"
                 />
+                <span className="text-2xl flex-shrink-0">🎵</span>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Spotify Widget</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Zeige aktuell abgespielte Musik</div>
+                </div>
               </label>
 
-              <label className="flex items-center justify-between cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 border-gray-300 dark:border-gray-600">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">🌤️</span>
-                  <div>
-                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Wetter Widget</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Zeige Wetterinformationen</div>
-                  </div>
-                </div>
+              <label className="flex items-center gap-3 cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
                 <input
                   type="checkbox"
                   checked={editAppearance.show_weather ?? true}
                   onChange={(e) => setEditAppearance({ ...editAppearance, show_weather: e.target.checked })}
-                  className="w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500 rounded"
+                  className="appearance-none w-4 h-4 border-2 border-gray-300 dark:border-gray-600 rounded-full bg-transparent checked:bg-transparent checked:border-gray-300 dark:checked:border-gray-600 relative checked:before:content-[''] checked:before:absolute checked:before:top-1/2 checked:before:left-1/2 checked:before:transform checked:before:-translate-x-1/2 checked:before:-translate-y-1/2 checked:before:w-2 checked:before:h-2 checked:before:bg-blue-600 checked:before:rounded-full focus:ring-2 focus:ring-blue-500"
                 />
+                <span className="text-2xl flex-shrink-0">🌤️</span>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Wetter Widget</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Zeige Wetterinformationen</div>
+                </div>
               </label>
 
-              <label className="flex items-center justify-between cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 border-gray-300 dark:border-gray-600">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">🕐</span>
-                  <div>
-                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Uhr Widget</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Zeige aktuelle Uhrzeit und Datum</div>
-                  </div>
-                </div>
+              <label className="flex items-center gap-3 cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
                 <input
                   type="checkbox"
                   checked={editAppearance.show_clock ?? true}
                   onChange={(e) => setEditAppearance({ ...editAppearance, show_clock: e.target.checked })}
-                  className="w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500 rounded"
+                  className="appearance-none w-4 h-4 border-2 border-gray-300 dark:border-gray-600 rounded-full bg-transparent checked:bg-transparent checked:border-gray-300 dark:checked:border-gray-600 relative checked:before:content-[''] checked:before:absolute checked:before:top-1/2 checked:before:left-1/2 checked:before:transform checked:before:-translate-x-1/2 checked:before:-translate-y-1/2 checked:before:w-2 checked:before:h-2 checked:before:bg-blue-600 checked:before:rounded-full focus:ring-2 focus:ring-blue-500"
                 />
+                <span className="text-2xl flex-shrink-0">🕐</span>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Uhr Widget</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Zeige aktuelle Uhrzeit und Datum</div>
+                </div>
               </label>
             </div>
           </div>
