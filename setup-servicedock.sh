@@ -115,9 +115,136 @@ MAX_FAILED_LOGIN_ATTEMPTS=5
 LOGIN_LOCKOUT_MINUTES=15
 ENVTEMPLATE
 
-# init.sql herunterladen
-echo "🗄️  Lade Datenbank Schema..."
-curl -sS -L -o db-init.sql "${RELEASE_URL}/init.sql"
+# init.sql erstellen (vollständiges Schema)
+echo "🗄️  Erstelle Datenbank Schema..."
+cat > db-init.sql << 'INITSQL'
+-- ServiceDock Database Schema
+
+CREATE TABLE IF NOT EXISTS shortcuts (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    url TEXT NOT NULL,
+    icon TEXT,
+    position INT DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS services (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    url TEXT NOT NULL,
+    icon TEXT,
+    position INT DEFAULT 0,
+    is_favorite BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS appearance (
+    id INT PRIMARY KEY DEFAULT 1,
+    bg_color VARCHAR(20) DEFAULT '#4e575f',
+    bg_image_url TEXT,
+    bg_opacity NUMERIC(3, 2) DEFAULT 1.0,
+    shortcut_cols INT DEFAULT 6,
+    service_cols INT DEFAULT 6,
+    text_color_light VARCHAR(20) DEFAULT '#1f2937',
+    text_color_dark VARCHAR(20) DEFAULT '#e5e7eb',
+    clock_format VARCHAR(3) DEFAULT '24h',
+    weather_city VARCHAR(100) DEFAULT 'Berlin',
+    weather_fields JSONB DEFAULT '["temperature", "humidity"]',
+    show_spotify BOOLEAN DEFAULT TRUE,
+    show_weather BOOLEAN DEFAULT TRUE,
+    show_clock BOOLEAN DEFAULT TRUE,
+    CONSTRAINT appearance_single_row CHECK (id = 1),
+    CONSTRAINT appearance_opacity_range CHECK (bg_opacity >= 0 AND bg_opacity <= 1),
+    CONSTRAINT appearance_clock_format_valid CHECK (clock_format IN ('12h', '24h')),
+    CONSTRAINT appearance_cols_range CHECK (shortcut_cols >= 1 AND shortcut_cols <= 12 AND service_cols >= 1 AND service_cols <= 12)
+);
+
+CREATE INDEX IF NOT EXISTS idx_services_position ON services(position);
+CREATE INDEX IF NOT EXISTS idx_shortcuts_position ON shortcuts(position);
+
+CREATE TABLE IF NOT EXISTS proxmox_config (
+    id SERIAL PRIMARY KEY,
+    host VARCHAR(255) NOT NULL,
+    port INT DEFAULT 8006,
+    token_name VARCHAR(255) NOT NULL,
+    token_value TEXT NOT NULL,
+    verify_ssl BOOLEAN DEFAULT FALSE,
+    node VARCHAR(100),
+    token_created_at TIMESTAMP DEFAULT NOW(),
+    token_last_rotated TIMESTAMP,
+    dashboard_id INT DEFAULT 1,
+    UNIQUE(dashboard_id)
+);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP DEFAULT NOW(),
+    user_type VARCHAR(50),
+    ip_address VARCHAR(45),
+    action VARCHAR(100) NOT NULL,
+    resource_type VARCHAR(50),
+    resource_id VARCHAR(100),
+    status VARCHAR(20),
+    details TEXT,
+    user_agent TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_log(action);
+CREATE INDEX IF NOT EXISTS idx_audit_ip ON audit_log(ip_address);
+
+CREATE TABLE IF NOT EXISTS spotify_config (
+    id INT PRIMARY KEY DEFAULT 1,
+    client_id VARCHAR(255) NOT NULL,
+    client_secret TEXT NOT NULL,
+    redirect_uri VARCHAR(500) NOT NULL,
+    access_token TEXT,
+    refresh_token TEXT,
+    token_expires_at TIMESTAMP,
+    scope TEXT,
+    connected BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT spotify_single_row CHECK (id = 1)
+);
+
+CREATE INDEX IF NOT EXISTS idx_spotify_connected ON spotify_config(connected);
+
+CREATE TABLE IF NOT EXISTS dashboards (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    type TEXT DEFAULT 'dashboard',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+ALTER TABLE services ADD COLUMN IF NOT EXISTS dashboard_id INT DEFAULT 1 REFERENCES dashboards(id) ON DELETE CASCADE;
+ALTER TABLE shortcuts ADD COLUMN IF NOT EXISTS dashboard_id INT DEFAULT 1 REFERENCES dashboards(id) ON DELETE CASCADE;
+ALTER TABLE proxmox_config ADD COLUMN IF NOT EXISTS dashboard_id INT DEFAULT 1 REFERENCES dashboards(id) ON DELETE CASCADE;
+
+CREATE INDEX IF NOT EXISTS idx_services_dashboard ON services(dashboard_id);
+CREATE INDEX IF NOT EXISTS idx_shortcuts_dashboard ON shortcuts(dashboard_id);
+CREATE INDEX IF NOT EXISTS idx_proxmox_dashboard ON proxmox_config(dashboard_id);
+
+INSERT INTO dashboards (id, name, description, type, is_active)
+VALUES (1, 'Main Dashboard', 'Default Dashboard', 'dashboard', TRUE)
+ON CONFLICT (id) DO NOTHING;
+
+SELECT setval('dashboards_id_seq', (SELECT COALESCE(MAX(id), 1) FROM dashboards), true);
+
+INSERT INTO appearance (id, bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields, show_spotify, show_weather, show_clock)
+VALUES (1, '#4e575f', NULL, 1.0, 6, 6, '#1f2937', '#e5e7eb', '24h', 'Berlin', '["temperature", "humidity"]'::jsonb, TRUE, TRUE, TRUE)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO services (name, description, url, icon, position) VALUES
+('Mein Mail', 'Postfach checken', 'https://mail.google.com', '✉️', 1)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO shortcuts (name, url, icon, position) VALUES
+('Google', 'https://google.com', 'https://cdn.jsdelivr.net/gh/selfhst/icons/svg/google.svg', 1)
+ON CONFLICT (id) DO NOTHING;
+INITSQL
 
 # SSL Verzeichnisse erstellen
 mkdir -p ssl db-ssl
