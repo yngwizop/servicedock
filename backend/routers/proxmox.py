@@ -30,15 +30,15 @@ def get_proxmox_connection(dashboard_id: int = 1):
         conn = config.database.db_pool.getconn()
         cur = conn.cursor()
         cur.execute(
-            "SELECT host, port, token_name, token_value, verify_ssl, node FROM proxmox_config WHERE dashboard_id = %s;",
+            "SELECT host, port, token_name, token_value, verify_ssl, node, is_cluster FROM proxmox_config WHERE dashboard_id = %s;",
             (dashboard_id,)
         )
         row = cur.fetchone()
         
         if not row:
-            return None, None
+            return None, None, False
         
-        host, port, token_name, token_value_encrypted, verify_ssl, node = row
+        host, port, token_name, token_value_encrypted, verify_ssl, node, is_cluster = row
         
         # Entschlüssele den Token
         token_value = decrypt_value(token_value_encrypted)
@@ -67,14 +67,14 @@ def get_proxmox_connection(dashboard_id: int = 1):
                 token_value=token_value,
                 verify_ssl=verify_ssl
             )
-            return proxmox, node
+            return proxmox, node, is_cluster
         except Exception as e:
             # Keine Details loggen, um Token-Leaks zu vermeiden
             logger.error("Proxmox connection error")
-            return None, None
+            return None, None, False
     except Exception as e:
         logger.error(f"Database error in get_proxmox_connection: {e}")
-        return None, None
+        return None, None, False
     finally:
         if cur is not None:
             try:
@@ -99,7 +99,7 @@ async def get_proxmox_config(request: Request, dashboard_id: int = 1, token: dic
         cur = db.cursor()
         try:
             cur.execute(
-                "SELECT id, host, port, token_name, verify_ssl, node FROM proxmox_config WHERE dashboard_id = %s;",
+                "SELECT id, host, port, token_name, verify_ssl, node, is_cluster FROM proxmox_config WHERE dashboard_id = %s;",
                 (dashboard_id,)
             )
             row = cur.fetchone()
@@ -111,7 +111,8 @@ async def get_proxmox_config(request: Request, dashboard_id: int = 1, token: dic
                     "port": 8006,
                     "token_name": None,
                     "verify_ssl": False,
-                    "node": None
+                    "node": None,
+                    "is_cluster": False
                 }
             
             # Maskiere token_name: zeige nur user@realm!*** statt vollem Token-Namen
@@ -130,7 +131,8 @@ async def get_proxmox_config(request: Request, dashboard_id: int = 1, token: dic
                 "port": row[2],
                 "token_name": masked_token_name,
                 "verify_ssl": row[4],
-                "node": row[5]
+                "node": row[5],
+                "is_cluster": row[6]
             }
         finally:
             cur.close()
@@ -161,25 +163,25 @@ async def update_proxmox_config(config: ProxmoxConfig, request: Request, dashboa
                 if token_was_updated:
                     cur.execute(
                         """UPDATE proxmox_config 
-                           SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s, token_created_at=NOW() 
+                           SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s, is_cluster=%s, token_created_at=NOW() 
                            WHERE dashboard_id=%s 
                            RETURNING id;""",
-                        (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node, dashboard_id)
+                        (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node, config.is_cluster, dashboard_id)
                     )
                 else:
                     cur.execute(
                         """UPDATE proxmox_config 
-                           SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s 
+                           SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s, is_cluster=%s 
                            WHERE dashboard_id=%s 
                            RETURNING id;""",
-                        (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node, dashboard_id)
+                        (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node, config.is_cluster, dashboard_id)
                     )
             else:
                 cur.execute(
-                    """INSERT INTO proxmox_config (host, port, token_name, token_value, verify_ssl, node, dashboard_id) 
-                       VALUES (%s, %s, %s, %s, %s, %s, %s) 
+                    """INSERT INTO proxmox_config (host, port, token_name, token_value, verify_ssl, node, is_cluster, dashboard_id) 
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s) 
                        RETURNING id;""",
-                    (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node, dashboard_id)
+                    (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node, config.is_cluster, dashboard_id)
                 )
             
             updated = cur.fetchone()
@@ -194,13 +196,76 @@ async def update_proxmox_config(config: ProxmoxConfig, request: Request, dashboa
     
     return await run_in_threadpool(_update_config_sync)
 
+@router.post("/api/proxmox/test")
+@limiter.limit("10/minute")  # Rate limit for connection tests
+async def test_proxmox_connection(request: Request, dashboard_id: int = 1, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+    """Testet die Proxmox-Verbindung und gibt detailliertes Feedback"""
+    def _test_connection_sync():
+        proxmox, configured_node, is_cluster = get_proxmox_connection(dashboard_id)
+        
+        if not proxmox:
+            return {
+                "success": False,
+                "error": "Proxmox nicht konfiguriert oder Token-Entschlüsselung fehlgeschlagen"
+            }
+        
+        try:
+            # Versuche Nodes abzurufen
+            nodes = proxmox.nodes.get()
+            
+            if not nodes or len(nodes) == 0:
+                return {
+                    "success": False,
+                    "error": "Keine Nodes gefunden. Prüfe die Berechtigungen des API Tokens."
+                }
+            
+            # Sammle Node-Namen
+            node_names = [node['node'] for node in nodes]
+            
+            # Prüfe ob konfigurierter Node existiert
+            if configured_node and configured_node not in node_names:
+                return {
+                    "success": False,
+                    "error": f"Konfigurierter Node '{configured_node}' nicht gefunden. Verfügbare Nodes: {', '.join(node_names)}"
+                }
+            
+            return {
+                "success": True,
+                "message": "Verbindung erfolgreich!",
+                "nodes": node_names,
+                "configured_node": configured_node
+            }
+            
+        except Exception as e:
+            error_msg = str(e)
+            logger.error(f"Proxmox connection test failed: {error_msg}")
+            
+            # Detaillierte Fehlermeldung
+            if "401" in error_msg or "authentication" in error_msg.lower():
+                detail = "Authentifizierung fehlgeschlagen. Prüfe Token Name (Format: user@realm!tokenname) und Token Secret."
+            elif "403" in error_msg or "permission" in error_msg.lower():
+                detail = "Keine Berechtigung. Der API Token benötigt mindestens:\n- Pfad: /\n- Rolle: PVEAuditor (für Lesezugriff) oder PVEAdmin (für volle Kontrolle)\n\nWichtig: Bei aktivierter 'Privilege Separation' benötigt der TOKEN die Berechtigung, nicht der User!"
+            elif "connection" in error_msg.lower() or "timeout" in error_msg.lower() or "refused" in error_msg.lower():
+                detail = "Verbindung fehlgeschlagen. Prüfe:\n- Host/IP-Adresse korrekt?\n- Port erreichbar? (Standard: 8006)\n- Firewall blockiert Zugriff?"
+            elif "ssl" in error_msg.lower() or "certificate" in error_msg.lower():
+                detail = "SSL-Zertifikatfehler. Bei self-signed Zertifikaten: Deaktiviere 'SSL-Zertifikat verifizieren'."
+            else:
+                detail = f"Proxmox API Fehler: {error_msg}"
+            
+            return {
+                "success": False,
+                "error": detail
+            }
+    
+    return await run_in_threadpool(_test_connection_sync)
+
 @router.get("/api/proxmox/vms")
 @limiter.limit("20/minute")  # Rate limit for VM list
 def list_proxmox_vms(request: Request, dashboard_id: int = 1, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Holt alle VMs und LXCs von Proxmox für spezifisches Dashboard"""
     client_ip = get_client_ip(request)
     
-    proxmox, configured_node = get_proxmox_connection(dashboard_id)
+    proxmox, configured_node, is_cluster = get_proxmox_connection(dashboard_id)
     
     if not proxmox:
         log_audit(
@@ -216,69 +281,230 @@ def list_proxmox_vms(request: Request, dashboard_id: int = 1, token: dict = Depe
         all_resources = []
         node_stats = []
         
-        # Hole alle Nodes
-        nodes = proxmox.nodes.get()
-        
-        for node_data in nodes:
-            node_name = node_data['node']
-            
-            # Wenn ein spezifischer Node konfiguriert ist, nur diesen abfragen
-            if configured_node and node_name != configured_node:
-                continue
-            
-            # Hole Node-Statistiken (CPU Cores des Hosts)
+        # CLUSTER-MODUS: Nutze /cluster/resources API
+        if is_cluster:
+            logger.info("🌐 Using Cluster API: /cluster/resources")
             try:
-                node_status = proxmox.nodes(node_name).status.get()
-                node_stats.append({
-                    "node": node_name,
-                    "cpus": node_status.get('cpuinfo', {}).get('cpus', 0),
-                    "cpu_usage": node_status.get('cpu', 0),
-                    "memory_total": node_status.get('memory', {}).get('total', 0),
-                    "memory_used": node_status.get('memory', {}).get('used', 0),
-                    "uptime": node_status.get('uptime', 0)
-                })
-            except Exception as e:
-                logger.error(f"Error fetching node stats from {node_name}", exc_info=False)
-            
-            try:
-                # Hole QEMUs (VMs)
-                qemus = proxmox.nodes(node_name).qemu.get()
-                for vm in qemus:
+                # Hole ALLE Ressourcen ohne Filter, um zu debuggen
+                resources = proxmox.cluster.resources.get()
+                logger.info(f"✓ Cluster API returned {len(resources)} total resources")
+                
+                # Log die Typen der Ressourcen
+                resource_types = {}
+                for r in resources:
+                    rtype = r.get('type', 'unknown')
+                    resource_types[rtype] = resource_types.get(rtype, 0) + 1
+                logger.info(f"📊 Resource types: {resource_types}")
+                
+                # Sammle Node-Namen für Stats
+                nodes_seen = set()
+                
+                for resource in resources:
+                    # Filter: nur VMs/LXCs (type='qemu' oder 'lxc')
+                    res_type = resource.get('type')
+                    if res_type not in ['qemu', 'lxc']:
+                        continue
+                    
+                    logger.info(f"🔍 Found {res_type}: {resource.get('name')} (ID: {resource.get('vmid')}) on node {resource.get('node')}")
+                    
+                    node_name = resource.get('node')
+                    nodes_seen.add(node_name)
+                
+                for resource in resources:
+                    # Filter: nur VMs/LXCs (type='qemu' oder 'lxc')
+                    res_type = resource.get('type')
+                    if res_type not in ['qemu', 'lxc']:
+                        continue
+                    
+                    node_name = resource.get('node')
+                    nodes_seen.add(node_name)
+                    
+                    # Wenn ein spezifischer Node konfiguriert ist, filtern
+                    if configured_node and node_name != configured_node:
+                        continue
+                    
                     all_resources.append({
-                        "id": f"qemu-{node_name}-{vm['vmid']}",
-                        "vmid": vm['vmid'],
-                        "name": vm.get('name', f"VM {vm['vmid']}"),
-                        "type": "qemu",
-                        "status": vm.get('status', 'unknown'),
-                        "cpu": vm.get('cpu', 0),
-                        "mem": vm.get('mem', 0),
-                        "maxmem": vm.get('maxmem', 0),
-                        "disk": vm.get('disk', 0),
-                        "maxdisk": vm.get('maxdisk', 0),
-                        "uptime": vm.get('uptime', 0),
+                        "id": f"{res_type}-{node_name}-{resource.get('vmid')}",
+                        "vmid": resource.get('vmid'),
+                        "name": resource.get('name', f"{'VM' if res_type == 'qemu' else 'CT'} {resource.get('vmid')}"),
+                        "type": res_type,
+                        "status": resource.get('status', 'unknown'),
+                        "cpu": resource.get('cpu', 0),
+                        "mem": resource.get('mem', 0),
+                        "maxmem": resource.get('maxmem', 0),
+                        "disk": resource.get('disk', 0),
+                        "maxdisk": resource.get('maxdisk', 0),
+                        "uptime": resource.get('uptime', 0),
                         "node": node_name
                     })
                 
-                # Hole LXCs (Container)
-                lxcs = proxmox.nodes(node_name).lxc.get()
-                for container in lxcs:
-                    all_resources.append({
-                        "id": f"lxc-{node_name}-{container['vmid']}",
-                        "vmid": container['vmid'],
-                        "name": container.get('name', f"CT {container['vmid']}"),
-                        "type": "lxc",
-                        "status": container.get('status', 'unknown'),
-                        "cpu": container.get('cpu', 0),
-                        "mem": container.get('mem', 0),
-                        "maxmem": container.get('maxmem', 0),
-                        "disk": container.get('disk', 0),
-                        "maxdisk": container.get('maxdisk', 0),
-                        "uptime": container.get('uptime', 0),
-                        "node": node_name
-                    })
+                # Hole Node-Statistiken
+                for node_name in nodes_seen:
+                    if configured_node and node_name != configured_node:
+                        continue
+                    try:
+                        node_status = proxmox.nodes(node_name).status.get()
+                        node_stats.append({
+                            "node": node_name,
+                            "cpus": node_status.get('cpuinfo', {}).get('cpus', 0),
+                            "cpu_usage": node_status.get('cpu', 0),
+                            "memory_total": node_status.get('memory', {}).get('total', 0),
+                            "memory_used": node_status.get('memory', {}).get('used', 0),
+                            "uptime": node_status.get('uptime', 0)
+                        })
+                    except Exception as e:
+                        logger.error(f"Error fetching node stats from {node_name}: {str(e)}")
+                
             except Exception as e:
-                logger.error(f"Error fetching resources from node {node_name}", exc_info=False)
-                continue
+                error_msg = str(e)
+                logger.error(f"Failed to fetch cluster resources: {error_msg}")
+                
+                if "401" in error_msg or "authentication" in error_msg.lower():
+                    detail_msg = "Authentifizierung fehlgeschlagen. Prüfe Token Name und Secret."
+                elif "403" in error_msg or "permission" in error_msg.lower():
+                    detail_msg = "Keine Berechtigung. API Token benötigt für Cluster-Zugriff die Rolle 'PVEAuditor' oder höher auf Pfad '/'."
+                elif "connection" in error_msg.lower() or "timeout" in error_msg.lower():
+                    detail_msg = "Verbindung zum Proxmox-Cluster fehlgeschlagen. Prüfe Host/IP und Port."
+                elif "ssl" in error_msg.lower() or "certificate" in error_msg.lower():
+                    detail_msg = "SSL-Zertifikatfehler. Deaktiviere 'SSL-Zertifikat verifizieren' bei self-signed Zertifikaten."
+                else:
+                    detail_msg = f"Cluster API Fehler: {error_msg}"
+                
+                raise HTTPException(status_code=503, detail=detail_msg)
+        
+        # STANDALONE-MODUS: Nutze /nodes/<node>/qemu und /nodes/<node>/lxc API
+        else:
+            logger.info("🖥️  Using Standalone API: /nodes/<node>/qemu + /nodes/<node>/lxc")
+        try:
+            nodes = proxmox.nodes.get()
+        except Exception as e:
+            error_msg = str(e)
+            logger.error(f"Failed to fetch Proxmox nodes: {error_msg}")
+            
+            # Detaillierte Fehlermeldung für häufige Probleme
+            if "401" in error_msg or "authentication" in error_msg.lower():
+                detail_msg = "Authentifizierung fehlgeschlagen. Prüfe Token Name und Secret."
+            elif "403" in error_msg or "permission" in error_msg.lower():
+                detail_msg = "Keine Berechtigung. API Token benötigt mindestens die Rolle 'PVEAuditor' für Lesezugriff."
+            elif "connection" in error_msg.lower() or "timeout" in error_msg.lower():
+                detail_msg = "Verbindung zum Proxmox-Server fehlgeschlagen. Prüfe Host/IP und Port."
+            elif "ssl" in error_msg.lower() or "certificate" in error_msg.lower():
+                detail_msg = "SSL-Zertifikatfehler. Deaktiviere 'SSL-Zertifikat verifizieren' bei self-signed Zertifikaten."
+            else:
+                detail_msg = f"Proxmox API Fehler: {error_msg}"
+            
+            log_audit(
+                action="VIEW_VMS",
+                status="failed",
+                user_type="admin",
+                ip_address=client_ip,
+                details={"error": detail_msg}
+            )
+            raise HTTPException(status_code=503, detail=detail_msg)
+        
+# STANDALONE-MODUS: Nutze /nodes/<node>/qemu und /nodes/<node>/lxc API
+        else:
+            logger.info("🖥️  Using Standalone API: /nodes/<node>/qemu + /nodes/<node>/lxc")
+            
+            try:
+                nodes = proxmox.nodes.get()
+            except Exception as e:
+                error_msg = str(e)
+                logger.error(f"Failed to fetch Proxmox nodes: {error_msg}")
+                
+                # Detaillierte Fehlermeldung für häufige Probleme
+                if "401" in error_msg or "authentication" in error_msg.lower():
+                    detail_msg = "Authentifizierung fehlgeschlagen. Prüfe Token Name und Secret."
+                elif "403" in error_msg or "permission" in error_msg.lower():
+                    detail_msg = "Keine Berechtigung. API Token benötigt mindestens die Rolle 'PVEAuditor' für Lesezugriff."
+                elif "connection" in error_msg.lower() or "timeout" in error_msg.lower():
+                    detail_msg = "Verbindung zum Proxmox-Server fehlgeschlagen. Prüfe Host/IP und Port."
+                elif "ssl" in error_msg.lower() or "certificate" in error_msg.lower():
+                    detail_msg = "SSL-Zertifikatfehler. Deaktiviere 'SSL-Zertifikat verifizieren' bei self-signed Zertifikaten."
+                else:
+                    detail_msg = f"Proxmox API Fehler: {error_msg}"
+                
+                log_audit(
+                    action="VIEW_VMS",
+                    status="failed",
+                    user_type="admin",
+                    ip_address=client_ip,
+                    details={"error": detail_msg}
+                )
+                raise HTTPException(status_code=503, detail=detail_msg)
+            
+            logger.info(f"📡 Found {len(nodes)} node(s)")
+            
+            for node_data in nodes:
+                node_name = node_data['node']
+                
+                # Wenn ein spezifischer Node konfiguriert ist, nur diesen abfragen
+                if configured_node and node_name != configured_node:
+                    continue
+            
+                # Wenn ein spezifischer Node konfiguriert ist, nur diesen abfragen
+                if configured_node and node_name != configured_node:
+                    continue
+                
+                # Hole Node-Statistiken (CPU Cores des Hosts)
+                try:
+                    node_status = proxmox.nodes(node_name).status.get()
+                    node_stats.append({
+                        "node": node_name,
+                        "cpus": node_status.get('cpuinfo', {}).get('cpus', 0),
+                        "cpu_usage": node_status.get('cpu', 0),
+                        "memory_total": node_status.get('memory', {}).get('total', 0),
+                        "memory_used": node_status.get('memory', {}).get('used', 0),
+                        "uptime": node_status.get('uptime', 0)
+                    })
+                except Exception as e:
+                    error_msg = str(e)
+                    logger.error(f"Error fetching node stats from {node_name}: {error_msg}")
+                
+                try:
+                    # Hole QEMUs (VMs)
+                    qemus = proxmox.nodes(node_name).qemu.get()
+                    logger.info(f"✓ Found {len(qemus)} VMs on node {node_name}")
+                    for vm in qemus:
+                        all_resources.append({
+                            "id": f"qemu-{node_name}-{vm['vmid']}",
+                            "vmid": vm['vmid'],
+                            "name": vm.get('name', f"VM {vm['vmid']}"),
+                            "type": "qemu",
+                            "status": vm.get('status', 'unknown'),
+                            "cpu": vm.get('cpu', 0),
+                            "mem": vm.get('mem', 0),
+                            "maxmem": vm.get('maxmem', 0),
+                            "disk": vm.get('disk', 0),
+                            "maxdisk": vm.get('maxdisk', 0),
+                            "uptime": vm.get('uptime', 0),
+                            "node": node_name
+                        })
+                    
+                    # Hole LXCs (Container)
+                    lxcs = proxmox.nodes(node_name).lxc.get()
+                    logger.info(f"✓ Found {len(lxcs)} LXC containers on node {node_name}")
+                    for container in lxcs:
+                        all_resources.append({
+                            "id": f"lxc-{node_name}-{container['vmid']}",
+                            "vmid": container['vmid'],
+                            "name": container.get('name', f"CT {container['vmid']}"),
+                            "type": "lxc",
+                            "status": container.get('status', 'unknown'),
+                            "cpu": container.get('cpu', 0),
+                            "mem": container.get('mem', 0),
+                            "maxmem": container.get('maxmem', 0),
+                            "disk": container.get('disk', 0),
+                            "maxdisk": container.get('maxdisk', 0),
+                            "uptime": container.get('uptime', 0),
+                            "node": node_name
+                        })
+                except Exception as e:
+                    error_msg = str(e)
+                    logger.error(f"⚠️ Error fetching resources from node {node_name}: {error_msg}")
+                    if "403" in error_msg or "permission" in error_msg.lower():
+                        logger.error(f"💡 Permission denied for node {node_name}")
+                    continue
         
         # Log erfolgreichen Zugriff
         log_audit(
@@ -311,7 +537,7 @@ def start_proxmox_vm(vmid: int, vm_type: str = "qemu", dashboard_id: int = 1, re
     """Startet eine VM oder LXC"""
     client_ip = get_client_ip(request) if request else "unknown"
     
-    proxmox, _ = get_proxmox_connection(dashboard_id)
+    proxmox, _, _ = get_proxmox_connection(dashboard_id)
     
     if not proxmox:
         log_audit(
@@ -389,7 +615,7 @@ def start_proxmox_vm(vmid: int, vm_type: str = "qemu", dashboard_id: int = 1, re
 def stop_proxmox_vm(vmid: int, vm_type: str = "qemu", dashboard_id: int = 1, request: Request = None, token: dict = Depends(require_role("admin"))):
     """Stoppt eine VM oder LXC"""
     client_ip = get_client_ip(request) if request else "unknown"
-    proxmox, _ = get_proxmox_connection(dashboard_id)
+    proxmox, _, _ = get_proxmox_connection(dashboard_id)
     
     if not proxmox:
         log_audit(action="STOP_VM", status="failed", user_type="admin", ip_address=client_ip,
@@ -432,7 +658,7 @@ def stop_proxmox_vm(vmid: int, vm_type: str = "qemu", dashboard_id: int = 1, req
 def reboot_proxmox_vm(vmid: int, vm_type: str = "qemu", dashboard_id: int = 1, request: Request = None, token: dict = Depends(require_role("admin"))):
     """Startet eine VM oder LXC neu"""
     client_ip = get_client_ip(request) if request else "unknown"
-    proxmox, _ = get_proxmox_connection(dashboard_id)
+    proxmox, _, _ = get_proxmox_connection(dashboard_id)
     
     if not proxmox:
         log_audit(action="REBOOT_VM", status="failed", user_type="admin", ip_address=client_ip,

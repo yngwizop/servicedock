@@ -51,7 +51,13 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
       const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vms?dashboard_id=${currentDashboard}`);
       
       if (!res.ok) {
-        throw new Error('Failed to fetch Proxmox data');
+        // Versuche detaillierte Fehlermeldung vom Backend zu holen
+        try {
+          const errorData = await res.json();
+          throw new Error(errorData.detail || 'Failed to fetch Proxmox data');
+        } catch (jsonErr) {
+          throw new Error(`HTTP ${res.status}: Failed to fetch Proxmox data`);
+        }
       }
       
       const data = await res.json();
@@ -260,13 +266,22 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
               Fehler beim Laden
             </h3>
           </div>
-          <p className="text-red-700 dark:text-red-400 mb-4">{error}</p>
-          <button
-            onClick={() => fetchProxmoxData(activeDashboard)}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-all"
-          >
-            Erneut versuchen
-          </button>
+          <div className="text-red-700 dark:text-red-400 mb-4 whitespace-pre-wrap">{error}</div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => fetchProxmoxData(activeDashboard)}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-all"
+            >
+              Erneut versuchen
+            </button>
+            <button
+              onClick={onOpenSettings}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2"
+            >
+              <GearSix size={18} />
+              Einstellungen öffnen
+            </button>
+          </div>
         </div>
       </div>
     );

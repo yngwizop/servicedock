@@ -32,7 +32,8 @@ function SettingsPanel({
     token_name: '',
     token_value: '',
     verify_ssl: false,
-    node: ''
+    node: '',
+    is_cluster: false
   });
   const [savedTokenName, setSavedTokenName] = React.useState(''); // Gespeicherter Token-Name (maskiert)
   const [isSavingProxmox, setIsSavingProxmox] = React.useState(false);
@@ -115,7 +116,8 @@ function SettingsPanel({
             token_name: '', // Leer lassen - wird als Placeholder angezeigt
             token_value: '', // Secret wird aus Sicherheitsgründen nicht zurückgegeben
             verify_ssl: data.verify_ssl || false,
-            node: data.node || ''
+            node: data.node || '',
+            is_cluster: data.is_cluster || false
           });
         }
       } catch (err) {
@@ -171,7 +173,26 @@ function SettingsPanel({
 
       if (res.ok) {
         setProxmoxSaved(true);
-        setTimeout(() => setProxmoxSaved(false), 2000);
+        
+        // Teste die Verbindung nach dem Speichern
+        try {
+          const testRes = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/test?dashboard_id=${activeDashboard}`, {
+            method: 'POST'
+          });
+          const testData = await testRes.json();
+          
+          if (testData.success) {
+            const nodeInfo = testData.nodes ? ` (${testData.nodes.length} Node(s) gefunden: ${testData.nodes.join(', ')})` : '';
+            alert(`✓ Konfiguration gespeichert und Verbindung erfolgreich getestet!${nodeInfo}`);
+          } else {
+            alert(`⚠️ Konfiguration gespeichert, aber Verbindungstest fehlgeschlagen:\n\n${testData.error}\n\nBitte überprüfe die Einstellungen.`);
+          }
+        } catch (testErr) {
+          console.error('Connection test failed:', testErr);
+          alert('⚠️ Konfiguration gespeichert, aber Verbindungstest konnte nicht durchgeführt werden.');
+        }
+        
+        setTimeout(() => setProxmoxSaved(false), 3000);
       } else {
         alert('Fehler beim Speichern der Proxmox-Konfiguration');
       }

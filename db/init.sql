@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS proxmox_config (
     token_value TEXT NOT NULL,         -- Der API Token Secret (verschlüsselt)
     verify_ssl BOOLEAN DEFAULT FALSE,
     node VARCHAR(100),                 -- Optional: spezifischer Node-Name
+    is_cluster BOOLEAN DEFAULT FALSE,  -- NEU: Ist es ein Cluster?
     token_created_at TIMESTAMP DEFAULT NOW(),  -- NEU: Wann wurde Token erstellt
     token_last_rotated TIMESTAMP,               -- NEU: Letzte Rotation
     dashboard_id INT DEFAULT 1,                 -- Multi-Dashboard Support

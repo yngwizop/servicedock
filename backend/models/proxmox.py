@@ -10,6 +10,7 @@ class ProxmoxConfig(BaseModel):
     token_value: str = Field(..., min_length=1, max_length=1000)  # Der Secret
     verify_ssl: bool = False
     node: Optional[str] = Field(None, max_length=100)  # Optional: spezifischer Node
+    is_cluster: bool = False  # NEU: Cluster oder Standalone?
     
     @validator('host')
     def host_not_empty(cls, v):
