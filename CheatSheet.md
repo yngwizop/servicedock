@@ -40,6 +40,7 @@ Jetzt funktioniert `/reorder` wie gewünscht.
 - **Datenmodelle:** Prüfe, ob dein Pydantic-Model mit dem erwarteten Payload übereinstimmt.
 - **Fehlende Felder:** Wenn ein Feld im Model fehlt, gibt FastAPI automatisch einen 422-Error zurück.
 - **Datenbank-Transaktionen:** Immer `commit()` und bei Fehlern `rollback()` nicht vergessen.
+- **Pydantic v2:** `regex=` heißt jetzt `pattern=` → `Field(..., pattern="^regex$")`
 
 ---
 

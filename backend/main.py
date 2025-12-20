@@ -27,6 +27,7 @@ from routers.proxmox import router as proxmox_router
 from routers.admin import router as admin_router
 from routers.spotify import router as spotify_router  # NEW: Spotify AddOn
 from routers.dashboards import router as dashboards_router  # NEW: Multi-Dashboard Support
+from routers.config import router as config_router  # NEW: Config Import/Export
 
 # Disable SSL warnings for Proxmox connections
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -130,6 +131,7 @@ app.include_router(shortcuts_router)      # /api/shortcuts/*
 app.include_router(services_router)       # /api/services/*
 app.include_router(appearance_router)     # /api/appearance/*
 app.include_router(auth_router)           # /api/login
+app.include_router(config_router)         # /api/config/* (Import/Export) - BEFORE generic routes!
 app.include_router(proxmox_router)        # /api/proxmox/*
 app.include_router(admin_router)          # /api/admin/*
 app.include_router(spotify_router)        # /api/spotify/* (AddOn)
@@ -164,9 +166,11 @@ def get_api_info():
             "services", 
             "appearance",
             "auth",
+            "config",
             "proxmox",
             "admin",
-            "spotify"
+            "spotify",
+            "dashboards"
         ],
         "features": [
             "JWT Authentication",
