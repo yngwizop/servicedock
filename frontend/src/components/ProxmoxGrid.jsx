@@ -91,7 +91,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
     }, 30000); // 30 Sekunden
 
     return () => clearInterval(interval);
-  }, [autoRefresh, isConfigured, isLoggedIn, activeDashboard]);
+  }, [autoRefresh, isConfigured, isLoggedIn]); // activeDashboard entfernt, da erster useEffect es handled
 
   // Login-Check: Nur für Admins (NACH allen Hooks!)
   if (!isLoggedIn) {

@@ -119,6 +119,26 @@ class DashboardResponse(BaseModel):
 
 ---
 
+## Debugging: Temporäre Logs für Fehlersuche
+
+Wenn du komplexe Bugs debuggen musst (z.B. warum etwas doppelt läuft oder welche API verwendet wird), kannst du temporäre Debug-Logs hinzufügen:
+
+```python
+logger.info(f"🔧 function_name called with param={value}")
+logger.info(f"🔧 is_cluster={is_cluster}, configured_node={configured_node}")
+```
+
+**Nach dem Debugging:**
+- Debug-Logs wieder entfernen (Performance & Log-Spam)
+- Nur wichtige Logs behalten (Fehler, Start/Stop Events, kritische Operationen)
+
+**Tipp:** Nutze einzigartige Emoji-Präfixe (🔧, 🎯) um Debug-Logs schnell zu finden:
+```bash
+docker compose logs backend | grep "🔧"
+```
+
+---
+
 ## Nützliche Links
 
 - [FastAPI Routing Docs](https://fastapi.tiangolo.com/tutorial/path-params/#order-matters)

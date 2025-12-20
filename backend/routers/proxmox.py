@@ -296,19 +296,8 @@ def list_proxmox_vms(request: Request, dashboard_id: int = 1, token: dict = Depe
                     resource_types[rtype] = resource_types.get(rtype, 0) + 1
                 logger.info(f"📊 Resource types: {resource_types}")
                 
-                # Sammle Node-Namen für Stats
+                # Sammle Node-Namen für Stats und verarbeite Ressourcen
                 nodes_seen = set()
-                
-                for resource in resources:
-                    # Filter: nur VMs/LXCs (type='qemu' oder 'lxc')
-                    res_type = resource.get('type')
-                    if res_type not in ['qemu', 'lxc']:
-                        continue
-                    
-                    logger.info(f"🔍 Found {res_type}: {resource.get('name')} (ID: {resource.get('vmid')}) on node {resource.get('node')}")
-                    
-                    node_name = resource.get('node')
-                    nodes_seen.add(node_name)
                 
                 for resource in resources:
                     # Filter: nur VMs/LXCs (type='qemu' oder 'lxc')
@@ -322,6 +311,8 @@ def list_proxmox_vms(request: Request, dashboard_id: int = 1, token: dict = Depe
                     # Wenn ein spezifischer Node konfiguriert ist, filtern
                     if configured_node and node_name != configured_node:
                         continue
+                    
+                    logger.info(f"🔍 Found {res_type}: {resource.get('name')} (ID: {resource.get('vmid')}) on node {node_name}")
                     
                     all_resources.append({
                         "id": f"{res_type}-{node_name}-{resource.get('vmid')}",
@@ -373,36 +364,6 @@ def list_proxmox_vms(request: Request, dashboard_id: int = 1, token: dict = Depe
                 raise HTTPException(status_code=503, detail=detail_msg)
         
         # STANDALONE-MODUS: Nutze /nodes/<node>/qemu und /nodes/<node>/lxc API
-        else:
-            logger.info("🖥️  Using Standalone API: /nodes/<node>/qemu + /nodes/<node>/lxc")
-        try:
-            nodes = proxmox.nodes.get()
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"Failed to fetch Proxmox nodes: {error_msg}")
-            
-            # Detaillierte Fehlermeldung für häufige Probleme
-            if "401" in error_msg or "authentication" in error_msg.lower():
-                detail_msg = "Authentifizierung fehlgeschlagen. Prüfe Token Name und Secret."
-            elif "403" in error_msg or "permission" in error_msg.lower():
-                detail_msg = "Keine Berechtigung. API Token benötigt mindestens die Rolle 'PVEAuditor' für Lesezugriff."
-            elif "connection" in error_msg.lower() or "timeout" in error_msg.lower():
-                detail_msg = "Verbindung zum Proxmox-Server fehlgeschlagen. Prüfe Host/IP und Port."
-            elif "ssl" in error_msg.lower() or "certificate" in error_msg.lower():
-                detail_msg = "SSL-Zertifikatfehler. Deaktiviere 'SSL-Zertifikat verifizieren' bei self-signed Zertifikaten."
-            else:
-                detail_msg = f"Proxmox API Fehler: {error_msg}"
-            
-            log_audit(
-                action="VIEW_VMS",
-                status="failed",
-                user_type="admin",
-                ip_address=client_ip,
-                details={"error": detail_msg}
-            )
-            raise HTTPException(status_code=503, detail=detail_msg)
-        
-# STANDALONE-MODUS: Nutze /nodes/<node>/qemu und /nodes/<node>/lxc API
         else:
             logger.info("🖥️  Using Standalone API: /nodes/<node>/qemu + /nodes/<node>/lxc")
             
