@@ -69,6 +69,9 @@ function SettingsPanel({
   const [importSuccess, setImportSuccess] = React.useState(false);
   const [importError, setImportError] = React.useState(null);
 
+  // NEU: State für Spotify AddOn Seite
+  const [showSpotifyPage, setShowSpotifyPage] = React.useState(false);
+
   // Sync editingDashboard state when dashboard is being edited
   React.useEffect(() => {
     if (editingDashboard) {
@@ -751,7 +754,7 @@ function SettingsPanel({
       {/* === Tab-Inhalt: AddOns === */}
       {panelTab === "addons" && (
         <div className="space-y-6">
-          {!showConfigPage ? (
+          {!showConfigPage && !showSpotifyPage ? (
             /* AddOns Übersicht */
             <>
               <div>
@@ -764,47 +767,80 @@ function SettingsPanel({
               </div>
 
               {/* Config Import/Export Card */}
-              <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                   onClick={() => setShowConfigPage(true)}>
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                      <span className="text-2xl">⚙️</span>
+              <div 
+                className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl"
+                onClick={() => setShowConfigPage(true)}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent dark:from-blue-400/30 dark:via-blue-500/20 dark:to-transparent" />
+                <div className="relative backdrop-blur-xl bg-white/70 dark:bg-gray-800/70 border border-gray-200/50 dark:border-white/10 p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <span className="text-3xl">⚙️</span>
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Config Import/Export</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Dashboard Konfiguration sichern</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-white font-bold text-lg">Config Import/Export</h4>
-                      <p className="text-blue-100 text-sm">Dashboard Konfiguration sichern</p>
-                    </div>
+                    <div className="text-2xl text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">→</div>
                   </div>
-                  <div className="text-white text-2xl">→</div>
-                </div>
-                <div className="p-6 bg-white dark:bg-gray-800">
-                  <p className="text-gray-700 dark:text-gray-300 text-sm mb-3">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
                     Exportiere und importiere deine Dashboard-Konfiguration als JSON-Datei.
                   </p>
-                  <div className="flex gap-2 text-xs text-gray-600 dark:text-gray-400">
-                    <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">📥 Export</span>
-                    <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">📤 Import</span>
-                    <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">🔒 Admin-only</span>
+                  <div className="flex gap-2">
+                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">📥 Export</span>
+                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">📤 Import</span>
+                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">🔒 Admin-only</span>
                   </div>
                 </div>
               </div>
 
               {/* Spotify AddOn Card */}
-              <SpotifyAddon
-                BACKEND_URL={BACKEND_URL}
-                SPOTIFY_REDIRECT_URI={SPOTIFY_REDIRECT_URI}
-                spotifyConfig={spotifyConfig}
-                setSpotifyConfig={setSpotifyConfig}
-                spotifyStatus={spotifyStatus}
-                isSavingSpotify={isSavingSpotify}
-                spotifySaved={spotifySaved}
-                handleSaveSpotify={handleSaveSpotify}
-                handleConnectSpotify={handleConnectSpotify}
-                handleUninstallSpotify={handleUninstallSpotify}
-              />
+              <div 
+                className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl"
+                onClick={() => setShowSpotifyPage(true)}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent dark:from-green-400/30 dark:via-green-500/20 dark:to-transparent" />
+                <div className="relative backdrop-blur-xl bg-white/70 dark:bg-gray-800/70 border border-gray-200/50 dark:border-white/10 p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <span className="text-3xl">🎵</span>
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Spotify</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Now Playing Widget</p>
+                      </div>
+                    </div>
+                    <div>
+                      {spotifyStatus.connected ? (
+                        <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm font-semibold rounded-full">
+                          ✓ Verbunden
+                        </span>
+                      ) : spotifyStatus.configured ? (
+                        <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-sm font-semibold rounded-full">
+                          Konfiguriert
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 text-sm font-semibold rounded-full">
+                          Nicht installiert
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                    Zeige aktuell abgespielte Musik direkt auf deinem Dashboard.
+                  </p>
+                  <div className="flex gap-2">
+                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">🎵 Widget</span>
+                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">🔗 OAuth</span>
+                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">🔒 Encrypted</span>
+                  </div>
+                </div>
+              </div>
             </>
-          ) : (
+          ) : showConfigPage ? (
             /* Config Import/Export Seite */
             <ConfigAddon 
               BACKEND_URL={BACKEND_URL}
@@ -822,7 +858,29 @@ function SettingsPanel({
               setImportError={setImportError}
               onBack={() => setShowConfigPage(false)}
             />
-          )}
+          ) : showSpotifyPage ? (
+            /* Spotify AddOn Seite */
+            <>
+              <button
+                onClick={() => setShowSpotifyPage(false)}
+                className="mb-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-300/50 dark:border-white/10 rounded-lg hover:bg-gray-100/70 dark:hover:bg-gray-700/70 transition-colors"
+              >
+                <span>←</span> Zurück zu AddOns
+              </button>
+              <SpotifyAddon
+                BACKEND_URL={BACKEND_URL}
+                SPOTIFY_REDIRECT_URI={SPOTIFY_REDIRECT_URI}
+                spotifyConfig={spotifyConfig}
+                setSpotifyConfig={setSpotifyConfig}
+                spotifyStatus={spotifyStatus}
+                isSavingSpotify={isSavingSpotify}
+                spotifySaved={spotifySaved}
+                handleSaveSpotify={handleSaveSpotify}
+                handleConnectSpotify={handleConnectSpotify}
+                handleUninstallSpotify={handleUninstallSpotify}
+              />
+            </>
+          ) : null}
         </div>
       )}
         </div>

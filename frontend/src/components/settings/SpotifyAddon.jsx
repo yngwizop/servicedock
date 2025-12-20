@@ -13,29 +13,32 @@ function SpotifyAddon({
   handleUninstallSpotify
 }) {
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+    <div className="relative overflow-hidden rounded-2xl backdrop-blur-xl bg-white/70 dark:bg-gray-800/70 border border-gray-200/50 dark:border-white/10 shadow-xl">
+      {/* Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-transparent to-green-400/5 dark:from-green-400/20 dark:to-transparent pointer-events-none" />
+      
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-500 to-green-600 p-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-            <span className="text-2xl">🎵</span>
+      <div className="relative bg-gradient-to-r from-green-500/80 to-green-600/80 dark:from-green-600/90 dark:to-green-700/90 backdrop-blur-sm p-6 flex items-center justify-between border-b border-green-400/30 dark:border-green-500/30">
+        <div className="flex items-center space-x-4">
+          <div className="w-14 h-14 bg-white/90 dark:bg-white/95 rounded-2xl flex items-center justify-center shadow-lg">
+            <span className="text-3xl">🎵</span>
           </div>
           <div>
-            <h4 className="text-white font-bold text-lg">Spotify</h4>
-            <p className="text-green-100 text-sm">Now Playing Widget</p>
+            <h4 className="text-white font-bold text-xl mb-1">Spotify</h4>
+            <p className="text-green-100 dark:text-green-200 text-sm">Now Playing Widget</p>
           </div>
         </div>
         <div>
           {spotifyStatus.connected ? (
-            <span className="px-3 py-1 bg-white text-green-600 text-sm font-semibold rounded-full">
+            <span className="px-4 py-2 bg-white/90 dark:bg-white/95 text-green-600 dark:text-green-700 text-sm font-semibold rounded-full shadow-md">
               ✓ Verbunden
             </span>
           ) : spotifyStatus.configured ? (
-            <span className="px-3 py-1 bg-yellow-100 text-yellow-700 text-sm font-semibold rounded-full">
+            <span className="px-4 py-2 bg-yellow-100/90 dark:bg-yellow-100/95 text-yellow-700 dark:text-yellow-800 text-sm font-semibold rounded-full shadow-md">
               Konfiguriert
             </span>
           ) : (
-            <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-semibold rounded-full">
+            <span className="px-4 py-2 bg-white/60 dark:bg-gray-700/80 text-gray-600 dark:text-gray-300 text-sm font-semibold rounded-full shadow-md">
               Nicht installiert
             </span>
           )}
@@ -43,7 +46,7 @@ function SpotifyAddon({
       </div>
 
       {/* Content */}
-      <div className="p-6 bg-white dark:bg-gray-800">
+      <div className="relative p-6">
         {!spotifyStatus.configured ? (
           // Installation Form
           <form onSubmit={handleSaveSpotify} className="space-y-4">
@@ -179,8 +182,8 @@ function SpotifyAddon({
         )}
 
         {/* Security Info */}
-        <div className="mt-6 p-4 bg-white/70 dark:bg-white/5 backdrop-blur-sm border border-gray-300/60 dark:border-white/10 rounded-2xl shadow-lg">
-          <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
+        <div className="mt-6 p-4 bg-white/50 dark:bg-white/5 backdrop-blur-sm border border-gray-300/50 dark:border-white/10 rounded-xl shadow-sm">
+          <h5 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
             🔒 Sicherheit
           </h5>
           <p className="text-sm text-gray-700 dark:text-gray-300">
