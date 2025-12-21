@@ -75,7 +75,7 @@ function ConfigAddon({
 
           {/* Import Mode Selection */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-3">
               Import-Modus
             </label>
             <div className="space-y-3">
@@ -120,7 +120,7 @@ function ConfigAddon({
 
           {/* File Upload */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
               Config-Datei auswählen
             </label>
             <div className="relative">

@@ -24,7 +24,7 @@ function SpotifyAddon({
             <span className="text-3xl">🎵</span>
           </div>
           <div>
-            <h4 className="text-white font-bold text-xl mb-1">Spotify</h4>
+            <h4 className="text-white font-semibold text-lg mb-1">Spotify</h4>
             <p className="text-green-100 dark:text-green-200 text-sm">Now Playing Widget</p>
           </div>
         </div>
@@ -79,7 +79,7 @@ function SpotifyAddon({
             </div>
 
             <div>
-              <label className="block text-base font-semibold text-gray-700 dark:text-gray-200 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Client ID
               </label>
               <input
@@ -93,7 +93,7 @@ function SpotifyAddon({
             </div>
 
             <div>
-              <label className="block text-base font-semibold text-gray-700 dark:text-gray-200 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Client Secret
               </label>
               <input
@@ -107,7 +107,7 @@ function SpotifyAddon({
             </div>
 
             <div>
-              <label className="block text-base font-semibold text-gray-700 dark:text-gray-200 mb-2">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Redirect URI
               </label>
               <input

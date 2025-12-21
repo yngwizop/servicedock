@@ -30,104 +30,104 @@ function ProxmoxTab({
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-orange-400/5 dark:from-orange-400/20 dark:to-transparent pointer-events-none" />
           
           {/* Header */}
-          <div className="relative bg-gradient-to-r from-orange-500/80 to-orange-600/80 dark:from-orange-600/90 dark:to-orange-700/90 backdrop-blur-sm p-6 flex items-center justify-between border-b border-orange-400/30 dark:border-orange-500/30">
-            <div className="flex items-center space-x-4">
-              <div className="w-14 h-14 bg-white/90 dark:bg-white/95 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-3xl">🔑</span>
+          <div className="relative bg-gradient-to-r from-orange-500/80 to-orange-600/80 dark:from-orange-600/90 dark:to-orange-700/90 backdrop-blur-sm p-4 flex items-center justify-between border-b border-orange-400/30 dark:border-orange-500/30">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-white/90 dark:bg-white/95 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-2xl">🔑</span>
               </div>
               <div>
-                <h4 className="text-white font-bold text-xl mb-1">API Token Setup</h4>
-                <p className="text-orange-100 dark:text-orange-200 text-sm">Schritt-für-Schritt Anleitung</p>
+                <h4 className="text-white font-bold text-lg mb-0.5">API Token Setup</h4>
+                <p className="text-orange-100 dark:text-orange-200 text-xs">Schritt-für-Schritt Anleitung</p>
               </div>
             </div>
           </div>
 
           {/* Content */}
-          <div className="relative p-6 space-y-6">
+          <div className="relative p-4 space-y-4">
             {/* Wichtiger Hinweis */}
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-              <p className="text-base text-blue-800 dark:text-blue-300 mb-2">
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-300 mb-1.5">
                 <strong>📋 Voraussetzung:</strong> Du benötigst Zugriff auf die Proxmox Web-Oberfläche als Administrator.
               </p>
-              <p className="text-base text-blue-700 dark:text-blue-400">
+              <p className="text-sm text-blue-700 dark:text-blue-400">
                 Erstelle den Token in Proxmox unter: <strong>Datacenter → Permissions → API Tokens</strong>
               </p>
             </div>
 
             {/* Step 1: User erstellen */}
-            <div className="p-5 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
-              <h5 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                <span className="text-2xl">1️⃣</span> User erstellen
+            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+              <h5 className="text-base font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
+                <span className="text-lg">1️⃣</span> User erstellen
               </h5>
-              <ol className="text-lg text-gray-700 dark:text-gray-300 space-y-2 ml-8 list-disc">
+              <ol className="text-sm text-gray-700 dark:text-gray-300 space-y-1.5 ml-6 list-disc">
                 <li>Gehe zu <strong>Datacenter → Permissions → Users</strong></li>
-                <li>Klicke auf <strong>"Add"</strong></li>
-                <li>Wähle Realm: <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">pve</code> (Proxmox VE authentication server)</li>
-                <li>Vergib einen Username, z.B. <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">servicedock</code></li>
+                <li>Klicke auf <strong>„Add“</strong></li>
+                <li>Wähle Realm: <code className="bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-xs">pve</code> (Proxmox VE authentication server)</li>
+                <li>Vergib einen Username, z.B. <code className="bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-xs">servicedock</code></li>
               </ol>
             </div>
 
             {/* Step 2: API Token erstellen */}
-            <div className="p-5 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
-              <h5 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                <span className="text-2xl">2️⃣</span> API Token erstellen
+            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+              <h5 className="text-base font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
+                <span className="text-lg">2️⃣</span> API Token erstellen
               </h5>
-              <ol className="text-lg text-gray-700 dark:text-gray-300 space-y-2 ml-8 list-disc">
+              <ol className="text-sm text-gray-700 dark:text-gray-300 space-y-1.5 ml-6 list-disc">
                 <li>Wähle den erstellten User aus der Liste</li>
-                <li>Klicke auf <strong>"API Tokens"</strong> → <strong>"Add"</strong></li>
-                <li>Vergib einen Token-Namen, z.B. <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">dashboard</code></li>
+                <li>Klicke auf <strong>„API Tokens“</strong> → <strong>„Add“</strong></li>
+                <li>Vergib einen Token-Namen, z.B. <code className="bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-xs">dashboard</code></li>
                 <li>✅ <strong>Aktiviere "Privilege Separation"</strong> (empfohlen für mehr Sicherheit)</li>
                 <li>⚠️ <strong>Kopiere das Secret sofort!</strong> Es wird nur EINMAL angezeigt</li>
               </ol>
             </div>
 
             {/* Step 3: Berechtigungen - WICHTIGSTER TEIL */}
-            <div className="p-5 bg-red-50 dark:bg-red-900/20 rounded-xl border-2 border-red-300 dark:border-red-700">
-              <h5 className="text-lg font-bold text-red-900 dark:text-red-200 mb-3 flex items-center gap-2">
-                <span className="text-2xl">3️⃣</span> Berechtigungen setzen <span className="text-xl">⚠️ WICHTIG!</span>
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-2 border-red-300 dark:border-red-700">
+              <h5 className="text-base font-bold text-red-900 dark:text-red-200 mb-2 flex items-center gap-2">
+                <span className="text-lg">3️⃣</span> Berechtigungen setzen <span className="text-base">⚠️ WICHTIG!</span>
               </h5>
               
               {/* Cluster Mode */}
-              <div className="mb-5 p-4 bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800">
-                <h6 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                  <span className="text-xl">🖥️</span> Für Proxmox CLUSTER
+              <div className="mb-4 p-3 bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800">
+                <h6 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-2">
+                  <span className="text-base">🖥️</span> Für Proxmox CLUSTER
                 </h6>
-                <div className="mb-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded">
-                  <p className="text-base font-bold text-yellow-900 dark:text-yellow-200 mb-1">
+                <div className="mb-2.5 p-2.5 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded">
+                  <p className="text-sm font-bold text-yellow-900 dark:text-yellow-200 mb-1">
                     ⚠️ Proxmox Cluster Bug mit "Privilege Separation"
                   </p>
-                  <p className="text-base text-yellow-800 dark:text-yellow-300">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-300">
                     Trotz aktivierter "Privilege Separation" müssen in Clustern BEIDE Berechtigungen gesetzt werden! 
-                    Die Cluster-API <code className="bg-yellow-200 dark:bg-yellow-900 px-1 rounded">/cluster/resources</code> prüft User UND Token.
+                    Die Cluster-API <code className="bg-yellow-200 dark:bg-yellow-900 px-1 rounded text-xs">/cluster/resources</code> prüft User UND Token.
                   </p>
                 </div>
                 
-                <div className="space-y-4 ml-4">
+                <div className="space-y-3 ml-3">
                   <div>
-                    <p className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1.5">
                       A) API Token Berechtigung
                     </p>
-                    <ol className="text-base text-gray-700 dark:text-gray-300 space-y-2 ml-6 list-decimal">
+                    <ol className="text-sm text-gray-700 dark:text-gray-300 space-y-1.5 ml-5 list-decimal">
                       <li><strong>Datacenter → Permissions → Add → API Token Permission</strong></li>
-                      <li>Token auswählen: <code className="bg-gray-200 dark:bg-gray-800 px-1 rounded text-sm">servicedock@pve!dashboard</code></li>
-                      <li>Path: <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded font-bold">/</code></li>
+                      <li>Token auswählen: <code className="bg-gray-200 dark:bg-gray-800 px-1 rounded text-xs">servicedock@pve!dashboard</code></li>
+                      <li>Path: <code className="bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded font-bold text-xs">/</code></li>
                       <li>Role: <strong className="text-orange-600 dark:text-orange-400">PVEAdmin</strong></li>
                       <li>✅ Propagate aktivieren</li>
                     </ol>
                   </div>
                   
-                  <div className="pt-3 border-t border-gray-300 dark:border-gray-600">
-                    <p className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                  <div className="pt-2.5 border-t border-gray-300 dark:border-gray-600">
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1.5">
                       B) User Berechtigung <span className="text-red-600 dark:text-red-400">(Auch notwendig!)</span>
                     </p>
-                    <ol className="text-base text-gray-700 dark:text-gray-300 space-y-2 ml-6 list-decimal">
+                    <ol className="text-sm text-gray-700 dark:text-gray-300 space-y-1.5 ml-5 list-decimal">
                       <li><strong>Datacenter → Permissions → Add → User Permission</strong></li>
-                      <li>User auswählen: <code className="bg-gray-200 dark:bg-gray-800 px-1 rounded text-sm">servicedock@pve</code></li>
-                      <li>Path: <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded font-bold">/</code></li>
+                      <li>User auswählen: <code className="bg-gray-200 dark:bg-gray-800 px-1 rounded text-xs">servicedock@pve</code></li>
+                      <li>Path: <code className="bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded font-bold text-xs">/</code></li>
                       <li>Role: <strong className="text-orange-600 dark:text-orange-400">PVEAdmin</strong></li>
                       <li>✅ Propagate aktivieren</li>
                     </ol>
-                    <p className="text-sm italic text-gray-600 dark:text-gray-400 mt-2 ml-6">
+                    <p className="text-xs italic text-gray-600 dark:text-gray-400 mt-2 ml-5">
                       → Ja, beides ist notwendig! Ohne User-Berechtigung funktioniert die Cluster-API nicht.
                     </p>
                   </div>
@@ -135,36 +135,36 @@ function ProxmoxTab({
               </div>
 
               {/* Standalone Mode */}
-              <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600">
-                <h6 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                  <span className="text-xl">💻</span> Für Proxmox STANDALONE (Single Node)
+              <div className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600">
+                <h6 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-2">
+                  <span className="text-base">💻</span> Für Proxmox STANDALONE (Single Node)
                 </h6>
-                <p className="text-base text-green-700 dark:text-green-400 mb-3 font-semibold">
+                <p className="text-sm text-green-700 dark:text-green-400 mb-2 font-semibold">
                   ✅ Bei Standalone funktioniert "Privilege Separation" korrekt!
                 </p>
-                <ol className="text-base text-gray-700 dark:text-gray-300 space-y-2 ml-6 list-decimal">
+                <ol className="text-sm text-gray-700 dark:text-gray-300 space-y-1.5 ml-5 list-decimal">
                   <li><strong>Datacenter → Permissions → Add → API Token Permission</strong></li>
-                  <li>Token auswählen: <code className="bg-gray-200 dark:bg-gray-800 px-1 rounded text-sm">servicedock@pve!dashboard</code></li>
-                  <li>Path: <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded font-bold">/</code></li>
+                  <li>Token auswählen: <code className="bg-gray-200 dark:bg-gray-800 px-1 rounded text-xs">servicedock@pve!dashboard</code></li>
+                  <li>Path: <code className="bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded font-bold text-xs">/</code></li>
                   <li>Role: <strong className="text-orange-600 dark:text-orange-400">PVEAuditor</strong> (nur Lesen) oder <strong className="text-orange-600 dark:text-orange-400">PVEAdmin</strong> (VM Steuern)</li>
                   <li>✅ Propagate aktivieren</li>
                 </ol>
-                <p className="text-sm italic text-gray-600 dark:text-gray-400 mt-2 ml-6">
+                <p className="text-xs italic text-gray-600 dark:text-gray-400 mt-2 ml-5">
                   → Hier reicht die Token-Berechtigung, User-Berechtigung ist NICHT notwendig.
                 </p>
               </div>
             </div>
 
             {/* Tipps & Troubleshooting */}
-            <div className="p-5 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
-              <h5 className="text-lg font-bold text-blue-900 dark:text-blue-200 mb-3 flex items-center gap-2">
-                <span className="text-2xl">💡</span> Tipps & Troubleshooting
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
+              <h5 className="text-base font-bold text-blue-900 dark:text-blue-200 mb-2 flex items-center gap-2">
+                <span className="text-lg">💡</span> Tipps & Troubleshooting
               </h5>
-              <ul className="text-lg text-blue-800 dark:text-blue-300 space-y-2 ml-8 list-disc">
+              <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1.5 ml-6 list-disc">
                 <li>
-                  <strong>Token-Format:</strong> <code className="bg-blue-200 dark:bg-blue-900 px-2 py-0.5 rounded">user@realm!tokenname</code>
+                  <strong>Token-Format:</strong> <code className="bg-blue-200 dark:bg-blue-900 px-1.5 py-0.5 rounded text-xs">user@realm!tokenname</code>
                   <br />
-                  <span className="text-base">Beispiel: <code className="bg-blue-200 dark:bg-blue-900 px-2 py-0.5 rounded text-sm">servicedock@pve!dashboard</code></span>
+                  <span className="text-sm">Beispiel: <code className="bg-blue-200 dark:bg-blue-900 px-1.5 py-0.5 rounded text-xs">servicedock@pve!dashboard</code></span>
                 </li>
                 <li>Nach dem Speichern wird automatisch ein Verbindungstest durchgeführt</li>
                 <li><strong>Fehler "Permission denied":</strong> Prüfe bei Clustern, ob BEIDE Berechtigungen gesetzt sind</li>
@@ -220,7 +220,7 @@ function ProxmoxTab({
             value={proxmoxConfig.host}
             onChange={(e) => setProxmoxConfig({ ...proxmoxConfig, host: e.target.value })}
             placeholder="z.B. 192.168.1.100 oder pve.example.com"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full p-3 border border-gray-300 dark:border-white/20 rounded-xl bg-white/50 dark:bg-white/5 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
             required
           />
         </div>
@@ -235,7 +235,7 @@ function ProxmoxTab({
             value={proxmoxConfig.port}
             onChange={(e) => setProxmoxConfig({ ...proxmoxConfig, port: parseInt(e.target.value) })}
             placeholder="8006"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full p-3 border border-gray-300 dark:border-white/20 rounded-xl bg-white/50 dark:bg-white/5 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
             required
           />
         </div>
@@ -250,7 +250,7 @@ function ProxmoxTab({
             value={proxmoxConfig.token_name}
             onChange={(e) => setProxmoxConfig({ ...proxmoxConfig, token_name: e.target.value })}
             placeholder={savedTokenName || "z.B. root@pam!mytoken"}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+            className="w-full p-3 border border-gray-300 dark:border-white/20 rounded-xl bg-white/50 dark:bg-white/5 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm backdrop-blur-sm transition-all"
             required
           />
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -273,7 +273,7 @@ function ProxmoxTab({
             value={proxmoxConfig.token_value}
             onChange={(e) => setProxmoxConfig({ ...proxmoxConfig, token_value: e.target.value })}
             placeholder="********-****-****-****-************"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+            className="w-full p-3 border border-gray-300 dark:border-white/20 rounded-xl bg-white/50 dark:bg-white/5 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm backdrop-blur-sm transition-all"
             required={!proxmoxConfig.host}
           />
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -291,7 +291,7 @@ function ProxmoxTab({
             value={proxmoxConfig.node}
             onChange={(e) => setProxmoxConfig({ ...proxmoxConfig, node: e.target.value })}
             placeholder="z.B. pve oder leer für alle Nodes"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full p-3 border border-gray-300 dark:border-white/20 rounded-xl bg-white/50 dark:bg-white/5 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
           />
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Leer lassen, um VMs/LXCs von allen Nodes anzuzeigen
@@ -299,48 +299,55 @@ function ProxmoxTab({
         </div>
 
         {/* NEU: Cluster-Modus */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3 mb-2">
+        <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+          <div className="flex items-start gap-3 mb-2">
             <input
               type="checkbox"
               id="is_cluster"
               checked={proxmoxConfig.is_cluster || false}
               onChange={(e) => setProxmoxConfig({ ...proxmoxConfig, is_cluster: e.target.checked })}
-              className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
             />
-            <label htmlFor="is_cluster" className="text-base font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
-              🌐 Dies ist ein Proxmox Cluster
-            </label>
+            <div className="flex-1">
+              <label htmlFor="is_cluster" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer flex items-center gap-1.5">
+                <span className="text-base">🌐</span>
+                Dies ist ein Proxmox Cluster
+              </label>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                Aktiviere diese Option, wenn du einen Proxmox-Cluster (mehrere Nodes) hast. 
+                Die Cluster-API <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded text-[10px]">/ cluster/resources</code> wird dann verwendet.
+              </p>
+            </div>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 ml-7">
-            Aktiviere diese Option, wenn du einen Proxmox-Cluster (mehrere Nodes) hast. 
-            Die Cluster-API <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">/cluster/resources</code> wird dann verwendet.
-          </p>
         </div>
 
         {/* SSL Verification */}
-        <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-          <input
-            type="checkbox"
-            id="verify_ssl"
-            checked={proxmoxConfig.verify_ssl}
-            onChange={(e) => setProxmoxConfig({ ...proxmoxConfig, verify_ssl: e.target.checked })}
-            className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
-          />
-          <label htmlFor="verify_ssl" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-            SSL-Zertifikat verifizieren
-          </label>
+        <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              id="verify_ssl"
+              checked={proxmoxConfig.verify_ssl}
+              onChange={(e) => setProxmoxConfig({ ...proxmoxConfig, verify_ssl: e.target.checked })}
+              className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="flex-1">
+              <label htmlFor="verify_ssl" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                SSL-Zertifikat verifizieren
+              </label>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                ⚠️ Deaktiviere dies nur bei self-signed Zertifikaten
+              </p>
+            </div>
+          </div>
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400 -mt-2 ml-1">
-          ⚠️ Deaktiviere dies nur bei self-signed Zertifikaten
-        </p>
 
         {/* Save Button */}
-        <div className="pt-4">
+        <div className="pt-2">
           <button
             type="submit"
             disabled={isSavingProxmox}
-            className={`bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg w-full font-medium transition-colors shadow-md hover:shadow-lg ${
+            className={`bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl w-full font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] ${
               isSavingProxmox ? 'opacity-70 cursor-wait' : ''
             }`}
           >
@@ -350,11 +357,11 @@ function ProxmoxTab({
 
         {/* Delete Button - nur anzeigen wenn Proxmox konfiguriert ist */}
         {proxmoxConfig.host && (
-          <div className="pt-2">
+          <div>
             <button
               type="button"
               onClick={onOpenDeleteModal}
-              className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-lg w-full font-medium transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+              className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-xl w-full font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] flex items-center justify-center gap-2"
             >
               <span className="text-xl">🗑️</span>
               Proxmox-Konfiguration löschen
@@ -364,12 +371,9 @@ function ProxmoxTab({
       </form>
 
       {/* Info */}
-      <div className="p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg">
-        <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-2">
-          🔒 Sicherheitshinweis
-        </h4>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Der API Token wird verschlüsselt in der Datenbank gespeichert. 
+      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 backdrop-blur-sm border border-blue-200 dark:border-blue-800 rounded-xl">
+        <p className="text-sm text-blue-800 dark:text-blue-300">
+          🔒 <strong>Sicherheitshinweis:</strong> Der API Token wird verschlüsselt in der Datenbank gespeichert. 
           Stelle sicher, dass der Token nur die minimal notwendigen Berechtigungen hat.
         </p>
       </div>
