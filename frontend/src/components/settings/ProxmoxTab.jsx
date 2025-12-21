@@ -6,7 +6,8 @@ function ProxmoxTab({
   savedTokenName,
   isSavingProxmox,
   proxmoxSaved,
-  handleSaveProxmox
+  handleSaveProxmox,
+  onOpenDeleteModal
 }) {
   const [showHelpPage, setShowHelpPage] = React.useState(false);
 
@@ -346,6 +347,20 @@ function ProxmoxTab({
             {isSavingProxmox ? 'Wird gespeichert...' : proxmoxSaved ? '✓ Gespeichert' : 'Konfiguration speichern'}
           </button>
         </div>
+
+        {/* Delete Button - nur anzeigen wenn Proxmox konfiguriert ist */}
+        {proxmoxConfig.host && (
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={onOpenDeleteModal}
+              className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-lg w-full font-medium transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+            >
+              <span className="text-xl">🗑️</span>
+              Proxmox-Konfiguration löschen
+            </button>
+          </div>
+        )}
       </form>
 
       {/* Info */}

@@ -38,6 +38,12 @@ function SettingsPanel({
   const [savedTokenName, setSavedTokenName] = React.useState(''); // Gespeicherter Token-Name (maskiert)
   const [isSavingProxmox, setIsSavingProxmox] = React.useState(false);
   const [proxmoxSaved, setProxmoxSaved] = React.useState(false);
+  
+  // NEU: State für Proxmox Modals
+  const [showProxmoxDeleteModal, setShowProxmoxDeleteModal] = React.useState(false);
+  const [showProxmoxResultModal, setShowProxmoxResultModal] = React.useState(false);
+  const [proxmoxResultType, setProxmoxResultType] = React.useState('success'); // 'success' oder 'error'
+  const [proxmoxResultMessage, setProxmoxResultMessage] = React.useState('');
 
   // NEU: State für Spotify AddOn
   const [spotifyConfig, setSpotifyConfig] = React.useState({
@@ -183,24 +189,71 @@ function SettingsPanel({
           
           if (testData.success) {
             const nodeInfo = testData.nodes ? ` (${testData.nodes.length} Node(s) gefunden: ${testData.nodes.join(', ')})` : '';
-            alert(`✓ Konfiguration gespeichert und Verbindung erfolgreich getestet!${nodeInfo}`);
+            setProxmoxResultType('success');
+            setProxmoxResultMessage(`Konfiguration gespeichert und Verbindung erfolgreich getestet!${nodeInfo}`);
+            setShowProxmoxResultModal(true);
           } else {
-            alert(`⚠️ Konfiguration gespeichert, aber Verbindungstest fehlgeschlagen:\n\n${testData.error}\n\nBitte überprüfe die Einstellungen.`);
+            setProxmoxResultType('error');
+            setProxmoxResultMessage(`Konfiguration gespeichert, aber Verbindungstest fehlgeschlagen:\n\n${testData.error}\n\nBitte überprüfe die Einstellungen.`);
+            setShowProxmoxResultModal(true);
           }
         } catch (testErr) {
           console.error('Connection test failed:', testErr);
-          alert('⚠️ Konfiguration gespeichert, aber Verbindungstest konnte nicht durchgeführt werden.');
+          setProxmoxResultType('error');
+          setProxmoxResultMessage('Konfiguration gespeichert, aber Verbindungstest konnte nicht durchgeführt werden.');
+          setShowProxmoxResultModal(true);
         }
         
         setTimeout(() => setProxmoxSaved(false), 3000);
       } else {
-        alert('Fehler beim Speichern der Proxmox-Konfiguration');
+        setProxmoxResultType('error');
+        setProxmoxResultMessage('Fehler beim Speichern der Proxmox-Konfiguration');
+        setShowProxmoxResultModal(true);
       }
     } catch (err) {
       console.error('Failed to save Proxmox config:', err);
-      alert('Fehler beim Speichern der Proxmox-Konfiguration');
+      setProxmoxResultType('error');
+      setProxmoxResultMessage('Fehler beim Speichern der Proxmox-Konfiguration');
+      setShowProxmoxResultModal(true);
     } finally {
       setIsSavingProxmox(false);
+    }
+  };
+
+  // NEU: Lösche Proxmox Konfiguration
+  const handleDeleteProxmox = async () => {
+    try {
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/config?dashboard_id=${activeDashboard}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        setProxmoxResultType('success');
+        setProxmoxResultMessage('Proxmox-Konfiguration erfolgreich gelöscht.');
+        setShowProxmoxResultModal(true);
+        
+        // Setze Config zurück
+        setProxmoxConfig({
+          host: '',
+          port: 8006,
+          token_name: '',
+          token_value: '',
+          verify_ssl: false,
+          node: '',
+          is_cluster: false
+        });
+        setSavedTokenName('');
+      } else {
+        const errorData = await res.json();
+        setProxmoxResultType('error');
+        setProxmoxResultMessage(`Fehler beim Löschen: ${errorData.detail || 'Unbekannter Fehler'}`);
+        setShowProxmoxResultModal(true);
+      }
+    } catch (err) {
+      console.error('Failed to delete Proxmox config:', err);
+      setProxmoxResultType('error');
+      setProxmoxResultMessage('Fehler beim Löschen der Proxmox-Konfiguration');
+      setShowProxmoxResultModal(true);
     }
   };
 
@@ -769,6 +822,7 @@ function SettingsPanel({
           isSavingProxmox={isSavingProxmox}
           proxmoxSaved={proxmoxSaved}
           handleSaveProxmox={handleSaveProxmox}
+          onOpenDeleteModal={() => setShowProxmoxDeleteModal(true)}
         />
       )}
 
@@ -906,6 +960,88 @@ function SettingsPanel({
       )}
         </div>
       </div>
+
+      {/* Proxmox Delete Confirmation Modal - außerhalb des Sidebars */}
+      {showProxmoxDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 border-2 border-red-500">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="text-red-500">
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+                Proxmox-Konfiguration löschen?
+              </h3>
+            </div>
+            
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Diese Aktion kann nicht rückgängig gemacht werden. 
+              Die Proxmox-Konfiguration für dieses Dashboard wird permanent gelöscht.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowProxmoxDeleteModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={() => {
+                  setShowProxmoxDeleteModal(false);
+                  handleDeleteProxmox();
+                }}
+                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+              >
+                Ja, löschen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Proxmox Result Modal (Success/Error) - außerhalb des Sidebars */}
+      {showProxmoxResultModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 border-2 ${
+            proxmoxResultType === 'success' ? 'border-green-500' : 'border-red-500'
+          }`}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className={proxmoxResultType === 'success' ? 'text-green-500' : 'text-red-500'}>
+                {proxmoxResultType === 'success' ? (
+                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+                {proxmoxResultType === 'success' ? 'Erfolg!' : 'Fehler'}
+              </h3>
+            </div>
+            
+            <p className="text-gray-600 dark:text-gray-400 mb-6 whitespace-pre-line">
+              {proxmoxResultMessage}
+            </p>
+
+            <button
+              onClick={() => setShowProxmoxResultModal(false)}
+              className={`w-full px-4 py-2 ${
+                proxmoxResultType === 'success' 
+                  ? 'bg-green-500 hover:bg-green-600' 
+                  : 'bg-red-500 hover:bg-red-600'
+              } text-white rounded-lg transition-colors`}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

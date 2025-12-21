@@ -1,5 +1,5 @@
 import React from 'react';
-import { Desktop, PlayCircle, StopCircle, Cpu } from 'phosphor-react';
+import { Desktop, PlayCircle, StopCircle, Cpu, HardDrives } from 'phosphor-react';
 
 /**
  * ProxmoxStatsCards - Zeigt System-Übersicht wie im Screenshot
@@ -13,6 +13,9 @@ function ProxmoxStatsCards({ resources, nodes }) {
   
   // CPU Cores von allen Nodes summieren (physische CPU Cores des Hosts)
   const totalCpuCores = nodes?.reduce((sum, node) => sum + (node.cpus || 0), 0) || 0;
+  
+  // Anzahl der Cluster-Nodes
+  const nodeCount = nodes?.length || 0;
 
   // Card-Komponente für Wiederverwendbarkeit
   const StatCard = ({ title, value, icon: Icon, gradient, iconColor, bgColor }) => (
@@ -36,7 +39,7 @@ function ProxmoxStatsCards({ resources, nodes }) {
   );
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
       {/* Total */}
       <StatCard
         title="Total"
@@ -70,6 +73,15 @@ function ProxmoxStatsCards({ resources, nodes }) {
         value={totalCpuCores}
         icon={Cpu}
         bgColor="bg-gradient-to-br from-amber-600/70 to-amber-800/70"
+        iconColor="text-white"
+      />
+
+      {/* Nodes */}
+      <StatCard
+        title="Nodes"
+        value={nodeCount}
+        icon={HardDrives}
+        bgColor="bg-gradient-to-br from-blue-600/70 to-blue-800/70"
         iconColor="text-white"
       />
     </div>

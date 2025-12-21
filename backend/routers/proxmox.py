@@ -196,6 +196,30 @@ async def update_proxmox_config(config: ProxmoxConfig, request: Request, dashboa
     
     return await run_in_threadpool(_update_config_sync)
 
+@router.delete("/api/proxmox/config")
+@limiter.limit("5/minute")  # Stricter limit for config deletion
+async def delete_proxmox_config(request: Request, dashboard_id: int = 1, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+    """Löscht die Proxmox-Konfiguration für ein Dashboard"""
+    def _delete_config_sync():
+        cur = db.cursor()
+        try:
+            # Prüfe ob Eintrag existiert
+            cur.execute("SELECT id FROM proxmox_config WHERE dashboard_id = %s;", (dashboard_id,))
+            existing = cur.fetchone()
+            
+            if not existing:
+                raise HTTPException(status_code=404, detail="No Proxmox configuration found for this dashboard")
+            
+            # Lösche die Konfiguration
+            cur.execute("DELETE FROM proxmox_config WHERE dashboard_id = %s;", (dashboard_id,))
+            db.commit()
+            
+            return {"message": "Proxmox configuration deleted successfully"}
+        finally:
+            cur.close()
+    
+    return await run_in_threadpool(_delete_config_sync)
+
 @router.post("/api/proxmox/test")
 @limiter.limit("10/minute")  # Rate limit for connection tests
 async def test_proxmox_connection(request: Request, dashboard_id: int = 1, token: dict = Depends(require_role("admin")), db = Depends(get_db)):

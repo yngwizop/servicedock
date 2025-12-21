@@ -632,7 +632,7 @@ function App() {
               className="text-4xl font-bold drop-shadow-lg"
               style={{ color: getTextColor() }}
             >
-              Web Dashboard
+              {dashboards.find(d => d.id === activeDashboard)?.name || 'Dashboard'}
             </h1>
           )}
           
@@ -668,8 +668,8 @@ function App() {
               />
             )}
             
-            {/* Trenner nur wenn (Weather ODER Clock) UND Spotify aktiv/konfiguriert sind */}
-            {(appearance.show_weather || appearance.show_clock) && appearance.show_spotify && spotifyConfigured && (
+            {/* Trenner nur wenn (Weather ODER Clock) UND Spotify aktiv/konfiguriert sind UND Services Tab aktiv */}
+            {(appearance.show_weather || appearance.show_clock) && appearance.show_spotify && spotifyConfigured && activeTab === "services" && (
               <div className="hidden md:flex items-center">
                 <div 
                   className="w-px h-16 bg-gradient-to-b from-transparent via-current to-transparent opacity-30"
@@ -679,11 +679,9 @@ function App() {
               </div>
             )}
             
-            {/* Spotify Widget - Zeige nur auf Services Tab, aber reserviere Platz immer */}
-            {appearance.show_spotify && spotifyConfigured && (
-              <div className={activeTab === "services" ? "" : "invisible"}>
-                <SpotifyCard />
-              </div>
+            {/* Spotify Widget - Nur im Services Tab rendern */}
+            {appearance.show_spotify && spotifyConfigured && activeTab === "services" && (
+              <SpotifyCard />
             )}
           </div>
         </div>
