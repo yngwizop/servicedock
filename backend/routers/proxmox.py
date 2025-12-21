@@ -304,11 +304,23 @@ def list_proxmox_vms(request: Request, dashboard_id: int = 1, token: dict = Depe
     try:
         all_resources = []
         node_stats = []
+        cluster_name = None  # NEU: Clustername
         
         # CLUSTER-MODUS: Nutze /cluster/resources API
         if is_cluster:
             logger.info("🌐 Using Cluster API: /cluster/resources")
             try:
+                # NEU: Hole Clusternamen aus /cluster/status
+                try:
+                    cluster_status = proxmox.cluster.status.get()
+                    for item in cluster_status:
+                        if item.get('type') == 'cluster':
+                            cluster_name = item.get('name', 'Cluster')
+                            break
+                except Exception as e:
+                    logger.warning(f"Could not fetch cluster name: {e}")
+                    cluster_name = "Cluster"
+                
                 # Hole ALLE Ressourcen ohne Filter, um zu debuggen
                 resources = proxmox.cluster.resources.get()
                 logger.info(f"✓ Cluster API returned {len(resources)} total resources")
@@ -502,7 +514,8 @@ def list_proxmox_vms(request: Request, dashboard_id: int = 1, token: dict = Depe
         
         return {
             "resources": all_resources,
-            "nodes": node_stats
+            "nodes": node_stats,
+            "cluster_name": cluster_name  # NEU: Clustername zurückgeben
         }
         
     except Exception as e:

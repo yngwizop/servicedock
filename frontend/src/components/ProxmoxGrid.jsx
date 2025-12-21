@@ -18,6 +18,8 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
   const [error, setError] = useState(null);
   const [isConfigured, setIsConfigured] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [proxmoxName, setProxmoxName] = useState(''); // NEU: Cluster/Server Name
+  const [isCluster, setIsCluster] = useState(false); // NEU: Ist es ein Cluster?
   
   // Filter & Sort States
   const [searchQuery, setSearchQuery] = useState(''); // NEU: Suchfeld
@@ -41,11 +43,14 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
         setIsConfigured(false);
         setResources([]); // ✅ Leere die alten Daten
         setNodes([]); // ✅ Leere die alten Node-Daten
+        setProxmoxName(''); // ✅ Leere den Namen
+        setIsCluster(false);
         setLoading(false);
         return;
       }
       
       setIsConfigured(true);
+      setIsCluster(configData.is_cluster || false);
       
       // Hole VM/LXC Daten
       const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vms?dashboard_id=${currentDashboard}`);
@@ -63,6 +68,19 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
       const data = await res.json();
       setResources(data.resources || []);
       setNodes(data.nodes || []); // NEU: Speichere Node-Daten
+      
+      // Setze den Namen basierend auf Modus und API-Daten
+      if (configData.is_cluster) {
+        // Cluster: Nutze Clusternamen vom Backend
+        setProxmoxName(data.cluster_name || 'Cluster');
+      } else {
+        // Standalone: Nutze ersten Node-Namen aus nodes array
+        if (data.nodes && data.nodes.length > 0) {
+          setProxmoxName(data.nodes[0].node || 'Server');
+        } else {
+          setProxmoxName('Server');
+        }
+      }
     } catch (err) {
       console.error('Error fetching Proxmox data:', err);
       setError(err.message || 'Failed to connect to Proxmox');
@@ -300,7 +318,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
               textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
             }}
           >
-            Proxmox Monitoring
+            Proxmox Monitoring{proxmoxName ? ` - ${proxmoxName}` : ''}
           </h2>
         </div>
         
