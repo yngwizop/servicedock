@@ -1,6 +1,6 @@
-"""Proxmox configuration model"""
+"""Proxmox configuration and statistics models"""
 from pydantic import BaseModel, Field, validator
-from typing import Optional
+from typing import Optional, List
 
 class ProxmoxConfig(BaseModel):
     id: Optional[int] = None
@@ -39,3 +39,64 @@ class ProxmoxConfig(BaseModel):
         if v:
             return v.strip()
         return v
+
+
+# ========================================
+# Modelle für Cluster-Statistiken
+# ========================================
+
+class NodeSummary(BaseModel):
+    """Zusammenfassung der Node-Status"""
+    online: int = 0
+    offline: int = 0
+    total: int = 0
+
+
+class ResourceSummary(BaseModel):
+    """Zusammenfassung von VM/LXC-Status"""
+    running: int = 0
+    stopped: int = 0
+    total: int = 0
+
+
+class TopUsageItem(BaseModel):
+    """Ein Element in der Top-CPU/Memory-Liste"""
+    name: str
+    type: str  # 'node', 'qemu', 'lxc'
+    vmid: Optional[int] = None
+    node: str
+    cpu_percent: float = 0.0
+    cpu_used: float = 0.0  # Aktuelle CPU-Nutzung in Cores
+    cpu_cores: int = 0  # Anzahl CPU-Cores
+    memory_percent: float = 0.0
+    memory_used: int = 0  # Bytes
+    memory_total: int = 0  # Bytes
+    status: str = "unknown"
+
+
+class TaskByNode(BaseModel):
+    """Task-Statistiken pro Node"""
+    node: str
+    failed: int = 0
+    running: int = 0
+    success: int = 0
+
+
+class TaskSummary(BaseModel):
+    """Zusammenfassung der Proxmox-Tasks"""
+    failed: int = 0
+    running: int = 0
+    success: int = 0
+    by_node: List[TaskByNode] = []  # Detaillierte Aufschlüsselung pro Node
+
+
+class ClusterStats(BaseModel):
+    """Aggregierte Cluster-Statistiken für Status-Dashboard"""
+    nodes: NodeSummary
+    vms: ResourceSummary
+    lxcs: ResourceSummary
+    top_cpu_usage: List[TopUsageItem] = []
+    top_memory_usage: List[TopUsageItem] = []
+    tasks: TaskSummary
+    cluster_name: Optional[str] = None
+    is_cluster: bool = False

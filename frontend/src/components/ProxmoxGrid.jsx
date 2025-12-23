@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import ProxmoxCard from './ProxmoxCard';
 import ProxmoxStatsCards from './ProxmoxStatsCards';
-import { ArrowsClockwise, WarningCircle, GearSix, LockKey, FunnelSimple, SortAscending, MagnifyingGlass, MonitorPlay } from 'phosphor-react';
+import ProxmoxStatusDashboard from './ProxmoxStatusDashboard';
+import { ArrowsClockwise, WarningCircle, GearSix, LockKey, FunnelSimple, SortAscending, MagnifyingGlass, MonitorPlay, Desktop, ChartBar } from 'phosphor-react';
 import { authenticatedFetch } from '../utils/auth';
 
 // Backend-URL: Mit Nginx kein Port, ohne Nginx Port 8000
@@ -12,6 +13,9 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
   );
 
 function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard }) {
+  // Sub-Navigation State
+  const [activeView, setActiveView] = useState('resources'); // 'resources' oder 'status'
+  
   const [resources, setResources] = useState([]);
   const [nodes, setNodes] = useState([]); // NEU: Node-Informationen
   const [loading, setLoading] = useState(true);
@@ -323,32 +327,96 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
         </div>
         
         <div className="flex items-center gap-3">
-          {/* Auto-Refresh Toggle */}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={autoRefresh}
-              onChange={(e) => setAutoRefresh(e.target.checked)}
-              className="w-4 h-4"
-            />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Auto-Refresh (30s)
-            </span>
-          </label>
+          {/* Auto-Refresh Toggle (nur bei VM/LXC View) */}
+          {activeView === 'resources' && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoRefresh}
+                onChange={(e) => setAutoRefresh(e.target.checked)}
+                className="w-4 h-4"
+              />
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Auto-Refresh (30s)
+              </span>
+            </label>
+          )}
           
-          {/* Manual Refresh Button */}
+          {/* Manual Refresh Button (nur bei VM/LXC View) */}
+          {activeView === 'resources' && (
+            <button
+              onClick={() => fetchProxmoxData(activeDashboard)}
+              className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-2 rounded-lg shadow hover:shadow-lg transition-all hover:scale-105"
+              title="Aktualisieren"
+            >
+              <ArrowsClockwise size={20} className="text-gray-700 dark:text-gray-300" />
+            </button>
+          )}
+          
+          {/* Settings Button */}
           <button
-            onClick={() => fetchProxmoxData(activeDashboard)}
+            onClick={onOpenSettings}
             className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-2 rounded-lg shadow hover:shadow-lg transition-all hover:scale-105"
-            title="Aktualisieren"
+            title="Einstellungen"
           >
-            <ArrowsClockwise size={20} className="text-gray-700 dark:text-gray-300" />
+            <GearSix size={20} className="text-gray-700 dark:text-gray-300" />
           </button>
         </div>
       </div>
 
-      {/* System Stats Cards - NACH der Überschrift */}
-      <ProxmoxStatsCards resources={resources} nodes={nodes} />
+      {/* Sub-Navigation Tabs */}
+      <div className="mb-6">
+        <div className="flex gap-2 border-b border-gray-300/50 dark:border-white/10">
+          <button
+            onClick={() => setActiveView('resources')}
+            className={`
+              px-6 py-3 font-semibold transition-all relative
+              ${activeView === 'resources' 
+                ? 'text-blue-600 dark:text-blue-400' 
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+              }
+            `}
+          >
+            <div className="flex items-center gap-2">
+              <Desktop size={20} weight={activeView === 'resources' ? 'fill' : 'regular'} />
+              <span>VM/LXC</span>
+            </div>
+            {activeView === 'resources' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"></div>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveView('status')}
+            className={`
+              px-6 py-3 font-semibold transition-all relative
+              ${activeView === 'status' 
+                ? 'text-blue-600 dark:text-blue-400' 
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+              }
+            `}
+          >
+            <div className="flex items-center gap-2">
+              <ChartBar size={20} weight={activeView === 'status' ? 'fill' : 'regular'} />
+              <span>Status-Übersicht</span>
+            </div>
+            {activeView === 'status' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"></div>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Content basierend auf aktiver View */}
+      {activeView === 'status' ? (
+        <ProxmoxStatusDashboard 
+          activeDashboard={activeDashboard}
+          isLoggedIn={isLoggedIn}
+        />
+      ) : (
+        <>
+          {/* System Stats Cards - NACH der Überschrift */}
+          <ProxmoxStatsCards resources={resources} nodes={nodes} />
 
       {/* Filter & Sort Bar */}
       <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg p-4 mb-6 border border-gray-300/50 dark:border-white/10">
@@ -470,6 +538,8 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
             />
           ))}
         </div>
+      )}
+        </>
       )}
     </div>
   );

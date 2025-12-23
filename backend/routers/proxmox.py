@@ -4,7 +4,7 @@ from fastapi.concurrency import run_in_threadpool
 from proxmoxer import ProxmoxAPI
 
 import config.database
-from models.proxmox import ProxmoxConfig
+from models.proxmox import ProxmoxConfig, ClusterStats, NodeSummary, ResourceSummary, TopUsageItem, TaskSummary
 from core.security import decrypt_value, encrypt_value
 from core.logging import logger
 from core.audit import log_audit

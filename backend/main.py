@@ -24,6 +24,7 @@ from routers.services import router as services_router
 from routers.appearance import router as appearance_router
 from routers.auth import router as auth_router
 from routers.proxmox import router as proxmox_router
+from routers.proxmox_stats import router as proxmox_stats_router  # NEW: Proxmox Stats
 from routers.admin import router as admin_router
 from routers.spotify import router as spotify_router  # NEW: Spotify AddOn
 from routers.dashboards import router as dashboards_router  # NEW: Multi-Dashboard Support
@@ -133,6 +134,7 @@ app.include_router(appearance_router)     # /api/appearance/*
 app.include_router(auth_router)           # /api/login
 app.include_router(config_router)         # /api/config/* (Import/Export) - BEFORE generic routes!
 app.include_router(proxmox_router)        # /api/proxmox/*
+app.include_router(proxmox_stats_router)  # /api/proxmox/cluster-stats (Stats)
 app.include_router(admin_router)          # /api/admin/*
 app.include_router(spotify_router)        # /api/spotify/* (AddOn)
 app.include_router(dashboards_router)     # /api/dashboards/* (Multi-Dashboard)
