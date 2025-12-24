@@ -43,7 +43,7 @@ function VMStatusCard({ title, icon, stats, type = "vm" }) {
             <div className="flex items-center gap-2">
               <Play size={20} weight="fill" className="text-green-500" />
               <div>
-                <span className="text-sm font-medium block">Running</span>
+                <span className="text-base font-medium block">Running</span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">{runningPercent}% active</span>
               </div>
             </div>
@@ -67,7 +67,7 @@ function VMStatusCard({ title, icon, stats, type = "vm" }) {
         {/* Total - am Ende */}
         <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Total</span>
+            <span className="text-base font-medium">Total</span>
             <span className="text-xl font-bold text-slate-800 dark:text-slate-100">
               {total}
             </span>

@@ -25,16 +25,11 @@ function TaskSummaryCard({ stats }) {
     <StatCard 
       title="Task Summary" 
       icon={<ListChecks size={28} weight="duotone" />}
+      compact
     >
       {total > 0 && by_node && by_node.length > 0 ? (
         <div className="flex flex-col h-full">
-          {/* Mini Stat - Task Health */}
-          <div className={`mb-3 px-2 py-1 rounded-md ${health.bgColor} flex items-center justify-between`}>
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Status</span>
-            <span className={`text-xs font-bold ${health.color}`}>{health.label}</span>
-          </div>
-
-          {/* Node Tasks */}
+          {/* Node Tasks - ohne Status Badge */}
           <div className="space-y-2 flex-1">
             {by_node.map((nodeData, index) => {
               const nodeTotal = nodeData.failed + nodeData.running + nodeData.success;
@@ -46,7 +41,7 @@ function TaskSummaryCard({ stats }) {
                 >
                   {/* Node Name */}
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
+                    <div className="text-base font-medium text-slate-800 dark:text-slate-100 truncate">
                       {nodeData.node}
                     </div>
                   </div>
@@ -86,7 +81,7 @@ function TaskSummaryCard({ stats }) {
           <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
             <div className="flex items-center justify-between p-1.5">
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Total</span>
+                <span className="text-base font-medium text-slate-700 dark:text-slate-300">Total</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
