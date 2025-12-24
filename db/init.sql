@@ -126,6 +126,13 @@ CREATE INDEX IF NOT EXISTS idx_services_dashboard ON services(dashboard_id);
 CREATE INDEX IF NOT EXISTS idx_shortcuts_dashboard ON shortcuts(dashboard_id);
 CREATE INDEX IF NOT EXISTS idx_proxmox_dashboard ON proxmox_config(dashboard_id);
 
+-- NEU: Proxmox Dashboard Layout Speicherung (Pro Dashboard ein Layout)
+CREATE TABLE IF NOT EXISTS proxmox_dashboard_layouts (
+    dashboard_id INT PRIMARY KEY REFERENCES dashboards(id) ON DELETE CASCADE,
+    layout JSONB NOT NULL,
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Default Dashboard erstellen (WICHTIG: Nutzt SERIAL, damit Sequence automatisch mitzählt!)
 INSERT INTO dashboards (id, name, description, type, is_active, show_proxmox)
 VALUES (1, 'Main Dashboard', 'Default Dashboard', 'dashboard', TRUE, TRUE)

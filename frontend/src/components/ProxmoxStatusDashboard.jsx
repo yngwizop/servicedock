@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { MonitorPlay, Desktop, HardDrives, ArrowsClockwise, WarningCircle } from 'phosphor-react';
+import { MonitorPlay, Desktop, HardDrives, ArrowsClockwise, WarningCircle, FloppyDisk } from 'phosphor-react';
+import { Responsive, WidthProvider } from 'react-grid-layout';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
+import '../styles/grid-layout.css';
 import { authenticatedFetch } from '../utils/auth';
 import NodeStatusCard from './stats/NodeStatusCard';
 import VMStatusCard from './stats/VMStatusCard';
 import TopUsageCard from './stats/TopUsageCard';
 import TaskSummaryCard from './stats/TaskSummaryCard';
+
+const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
   (window.location.port === '' ? 
@@ -13,7 +19,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
   );
 
 /**
- * Proxmox Status-Dashboard mit Cluster-Übersicht
+ * Proxmox Status-Dashboard mit Cluster-Übersicht und Drag & Drop Layout
  * Zeigt aggregierte Statistiken über Nodes, VMs, LXCs und Tasks
  */
 function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn }) {
@@ -21,16 +27,37 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [layoutModified, setLayoutModified] = useState(false);
+  const [saveStatus, setSaveStatus] = useState({ type: '', message: '' });
   
-  // Card-Layout (später für Drag & Drop)
-  const [cardLayout, setCardLayout] = useState([
-    'nodes',
-    'vms', 
-    'lxcs',
-    'tasks',     // Oben rechts
-    'top-cpu',   // Unten links (2 Spalten)
-    'top-memory' // Unten rechts (2 Spalten)
-  ]);
+  // Berechne Card-Höhe basierend auf Top-Items-Anzahl
+  const getTopCardHeight = () => {
+    const topItems = parseInt(localStorage.getItem('proxmox_top_items') || '10');
+    // Pixel-basierte Höhen (bei rowHeight=75px):
+    // Top 5: 400px → h: 6 (450px)
+    // Top 10: 720px → h: 10 (750px)
+    // Top 15: 1020px → h: 14 (1050px)
+    // Top 20: 1350px → h: 18 (1350px)
+    if (topItems <= 5) return 5;
+    if (topItems <= 10) return 9;
+    if (topItems <= 15) return 13;
+    return 17; // Top 20
+  };
+
+  // Default Layout: 4-Spalten-Grid mit dynamischer Höhe
+  const getDefaultLayout = () => {
+    const topCardHeight = getTopCardHeight();
+    return [
+      { i: 'nodes', x: 0, y: 0, w: 1, h: 4, minW: 1, maxW: 4, minH: 3, maxH: 6 },
+      { i: 'vms', x: 1, y: 0, w: 1, h: 4, minW: 1, maxW: 4, minH: 3, maxH: 6 },
+      { i: 'lxcs', x: 2, y: 0, w: 1, h: 4, minW: 1, maxW: 4, minH: 3, maxH: 6 },
+      { i: 'tasks', x: 3, y: 0, w: 1, h: 4, minW: 1, maxW: 4, minH: 3, maxH: 6 },
+      { i: 'top-cpu', x: 0, y: 4, w: 2, h: topCardHeight, minW: 2, maxW: 4, minH: 6, maxH: 20 },
+      { i: 'top-memory', x: 2, y: 4, w: 2, h: topCardHeight, minW: 2, maxW: 4, minH: 6, maxH: 20 }
+    ];
+  };
+  
+  const [layout, setLayout] = useState(getDefaultLayout());
 
   // Statistiken laden
   const fetchStats = async () => {
@@ -57,14 +84,97 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn }) {
     }
   };
 
-  // Initial load
+  // Load saved layout from backend
+  const loadLayout = async () => {
+    try {
+      const res = await authenticatedFetch(
+        `${BACKEND_URL}/api/dashboards/${activeDashboard}/proxmox-layout`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.layout && Array.isArray(data.layout)) {
+          // Update top card heights dynamically based on current settings
+          const topCardHeight = getTopCardHeight();
+          const updatedLayout = data.layout.map(item => {
+            if (item.i === 'top-cpu' || item.i === 'top-memory') {
+              return { ...item, h: topCardHeight };
+            }
+            return item;
+          });
+          setLayout(updatedLayout);
+        }
+      }
+    } catch (err) {
+      console.error('Error loading layout:', err);
+    }
+  };
+
+  // Initial load: Stats + Layout
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && activeDashboard) {
       setLoading(true);
       setStats(null);
       fetchStats();
+      loadLayout();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeDashboard, isLoggedIn]);
+
+  // Save layout to backend
+  const saveLayout = async () => {
+    try {
+      console.log('Saving layout:', layout);
+      const res = await authenticatedFetch(
+        `${BACKEND_URL}/api/dashboards/${activeDashboard}/proxmox-layout`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(layout)
+        }
+      );
+      console.log('Save response status:', res.status);
+      const data = await res.json();
+      console.log('Save response data:', data);
+      if (res.ok) {
+        setLayoutModified(false);
+        setSaveStatus({ type: 'success', message: 'Layout gespeichert!' });
+        setTimeout(() => setSaveStatus({ type: '', message: '' }), 3000);
+      } else {
+        setSaveStatus({ type: 'error', message: data.detail || 'Fehler beim Speichern' });
+        setTimeout(() => setSaveStatus({ type: '', message: '' }), 5000);
+      }
+    } catch (err) {
+      console.error('Error saving layout:', err);
+      setSaveStatus({ type: 'error', message: 'Netzwerkfehler beim Speichern' });
+      setTimeout(() => setSaveStatus({ type: '', message: '' }), 5000);
+    }
+  };
+
+  // Handle layout change (Drag or Resize)
+  const handleLayoutChange = (newLayout) => {
+    setLayout(newLayout);
+    setLayoutModified(true);
+  };
+
+  // Update layout when top items setting changes
+  useEffect(() => {
+    const handleSettingsChange = () => {
+      const newHeight = getTopCardHeight();
+      setLayout(currentLayout => {
+        const updated = currentLayout.map(item => {
+          if (item.i === 'top-cpu' || item.i === 'top-memory') {
+            return { ...item, h: newHeight };
+          }
+          return item;
+        });
+        return updated;
+      });
+    };
+
+    window.addEventListener('proxmox-settings-changed', handleSettingsChange);
+    return () => window.removeEventListener('proxmox-settings-changed', handleSettingsChange);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Auto-refresh mit konfigurierbarem Intervall
   useEffect(() => {
@@ -76,6 +186,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn }) {
     }, refreshInterval);
 
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRefresh, activeDashboard, isLoggedIn]);
 
   // Render Cards basierend auf Layout
@@ -195,9 +306,9 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn }) {
   }
 
   return (
-    <div className="space-y-6">
+    <>
       {/* Header mit Cluster-Name und Actions */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <MonitorPlay size={32} weight="duotone" className="text-blue-600 dark:text-blue-400" />
           <div>
@@ -210,8 +321,21 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn }) {
           </div>
         </div>
 
-        {/* Refresh Toggle */}
+        {/* Actions */}
         <div className="flex items-center gap-4">
+          {/* Save Layout Button */}
+          {layoutModified && (
+            <button
+              onClick={saveLayout}
+              className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors shadow-lg"
+              title="Layout speichern"
+            >
+              <FloppyDisk size={18} weight="bold" />
+              Layout speichern
+            </button>
+          )}
+          
+          {/* Auto-Refresh Toggle */}
           <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
             <input
               type="checkbox"
@@ -222,21 +346,48 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn }) {
             Auto-Refresh ({parseInt(localStorage.getItem('proxmox_refresh_interval') || '30')}s)
           </label>
           
+          {/* Refresh Button */}
           <button
             onClick={fetchStats}
-            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+            className="p-2 rounded-lg bg-white/50 dark:bg-white/10 hover:bg-white/70 dark:hover:bg-white/20 backdrop-blur-md border border-gray-300/50 dark:border-white/10 transition-all shadow-lg hover:shadow-xl"
             title="Aktualisieren"
           >
-            <ArrowsClockwise size={20} weight="bold" />
+            <ArrowsClockwise size={20} weight="bold" className="text-slate-700 dark:text-slate-300" />
           </button>
         </div>
       </div>
 
-      {/* Grid Layout - Responsive */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {cardLayout.map(cardType => renderCard(cardType))}
-      </div>
-    </div>
+      {/* Status Messages */}
+      {saveStatus.message && (
+        <div className={`mb-4 p-3 rounded-lg text-sm ${
+          saveStatus.type === 'success' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
+          saveStatus.type === 'error' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
+          'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+        }`}>
+          {saveStatus.message}
+        </div>
+      )}
+
+      {/* React Grid Layout */}
+      <ResponsiveGridLayout
+        className="layout"
+        layouts={{ lg: layout }}
+        breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 0 }}
+        cols={{ lg: 4, md: 2, sm: 1, xs: 1 }}
+        rowHeight={75}
+        isDraggable={true}
+        isResizable={true}
+        onLayoutChange={handleLayoutChange}
+        draggableHandle=".drag-handle"
+        compactType="vertical"
+      >
+        {layout.map(item => (
+          <div key={item.i}>
+            {renderCard(item.i)}
+          </div>
+        ))}
+      </ResponsiveGridLayout>
+    </>
   );
 }
 

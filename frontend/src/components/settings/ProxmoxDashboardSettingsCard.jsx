@@ -21,6 +21,9 @@ function ProxmoxDashboardSettingsCard() {
     setSaveStatus('success');
     setTimeout(() => setSaveStatus(''), 3000);
     
+    // Trigger custom event für Layout-Update
+    window.dispatchEvent(new CustomEvent('proxmox-settings-changed'));
+    
     // Trigger page reload um Einstellungen zu übernehmen
     setTimeout(() => window.location.reload(), 1000);
   };

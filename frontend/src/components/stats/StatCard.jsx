@@ -1,7 +1,9 @@
 import React from 'react';
+import { DotsSixVertical } from 'phosphor-react';
 
 /**
  * Wiederverwendbare Statistik-Card für Proxmox Status-Dashboard
+ * Unterstützt Drag & Drop mit react-grid-layout
  */
 function StatCard({ 
   title, 
@@ -25,8 +27,13 @@ function StatCard({
       `}
       {...props}
     >
-      {/* Header */}
+      {/* Header mit Drag Handle */}
       <div className="flex items-center gap-3 mb-3 flex-shrink-0">
+        {/* Drag Handle - muss die Klasse "drag-handle" haben */}
+        <div className="drag-handle cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+          <DotsSixVertical size={20} weight="bold" />
+        </div>
+        
         {icon && (
           <div className="flex-shrink-0 text-blue-600 dark:text-blue-400">
             {icon}

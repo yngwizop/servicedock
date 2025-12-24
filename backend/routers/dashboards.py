@@ -8,6 +8,7 @@ from core.logging import logger
 from typing import List
 from concurrent.futures import ThreadPoolExecutor
 from starlette.concurrency import run_in_threadpool
+import json
 
 router = APIRouter(prefix="/api/dashboards", tags=["dashboards"])
 
@@ -169,3 +170,63 @@ async def delete_dashboard(
             cur.close()
     
     return await run_in_threadpool(_delete_dashboard_sync)
+
+# Proxmox Layout Routes
+@router.get("/{dashboard_id}/proxmox-layout")
+@limiter.limit("60/minute")
+async def get_proxmox_layout(
+    request: Request,
+    dashboard_id: int,
+    db = Depends(get_db)
+):
+    """Get saved Proxmox dashboard layout"""
+    def _get_layout_sync():
+        cur = db.cursor()
+        try:
+            cur.execute(
+                "SELECT layout FROM proxmox_dashboard_layouts WHERE dashboard_id = %s;",
+                (dashboard_id,)
+            )
+            row = cur.fetchone()
+            if row:
+                return {"layout": row[0]}
+            return {"layout": None}
+        finally:
+            cur.close()
+    
+    return await run_in_threadpool(_get_layout_sync)
+
+@router.put("/{dashboard_id}/proxmox-layout")
+@limiter.limit("20/minute")
+async def save_proxmox_layout(
+    request: Request,
+    dashboard_id: int,
+    db = Depends(get_db)
+):
+    """Save Proxmox dashboard layout"""
+    # Parse JSON body manually
+    layout = await request.json()
+    
+    def _save_layout_sync():
+        cur = db.cursor()
+        try:
+            # Upsert: Insert or Update
+            cur.execute(
+                """
+                INSERT INTO proxmox_dashboard_layouts (dashboard_id, layout, updated_at)
+                VALUES (%s, %s, NOW())
+                ON CONFLICT (dashboard_id) 
+                DO UPDATE SET layout = EXCLUDED.layout, updated_at = NOW();
+                """,
+                (dashboard_id, json.dumps(layout))
+            )
+            db.commit()
+            return {"message": "Layout saved"}
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Save layout failed: {e}")
+            raise HTTPException(status_code=500, detail="Failed to save layout")
+        finally:
+            cur.close()
+    
+    return await run_in_threadpool(_save_layout_sync)
