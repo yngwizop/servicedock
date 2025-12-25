@@ -79,6 +79,10 @@ function SettingsPanel({
   // NEU: State für Spotify AddOn Seite
   const [showSpotifyPage, setShowSpotifyPage] = React.useState(false);
 
+  // NEU: State für Proxmox Sub-Pages
+  const [showProxmoxConnectionPage, setShowProxmoxConnectionPage] = React.useState(false);
+  const [showProxmoxDashboardPage, setShowProxmoxDashboardPage] = React.useState(false);
+
   // Sync editingDashboard state when dashboard is being edited
   React.useEffect(() => {
     if (editingDashboard) {
@@ -909,6 +913,11 @@ function SettingsPanel({
           proxmoxSaved={proxmoxSaved}
           handleSaveProxmox={handleSaveProxmox}
           onOpenDeleteModal={() => setShowProxmoxDeleteModal(true)}
+          showProxmoxConnectionPage={showProxmoxConnectionPage}
+          setShowProxmoxConnectionPage={setShowProxmoxConnectionPage}
+          showProxmoxDashboardPage={showProxmoxDashboardPage}
+          setShowProxmoxDashboardPage={setShowProxmoxDashboardPage}
+          activeDashboard={activeDashboard}
         />
       )}
 
