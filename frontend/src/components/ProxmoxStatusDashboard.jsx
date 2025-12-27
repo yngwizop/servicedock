@@ -9,6 +9,12 @@ import NodeStatusCard from './stats/NodeStatusCard';
 import VMStatusCard from './stats/VMStatusCard';
 import TopUsageCard from './stats/TopUsageCard';
 import TaskSummaryCard from './stats/TaskSummaryCard';
+import TopDiskUsageCard from './stats/TopDiskUsageCard';
+import StorageTotalCard from './stats/StorageTotalCard';
+import StorageByNodeCard from './stats/StorageByNodeCard';
+import StorageByTypeCard from './stats/StorageByTypeCard';
+import CephHealthCard from './stats/CephHealthCard';
+import CephOSDCard from './stats/CephOSDCard';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -22,7 +28,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
  * Proxmox Status-Dashboard mit Cluster-Übersicht und Drag & Drop Layout
  * Zeigt aggregierte Statistiken über Nodes, VMs, LXCs und Tasks
  */
-function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn }) {
+function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,12 +54,27 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn }) {
   const getDefaultLayout = () => {
     const topCardHeight = getTopCardHeight();
     return [
+      // Zeile 1: Status Cards (4x Cards nebeneinander)
       { i: 'nodes', x: 0, y: 0, w: 1, h: 4, minW: 1, maxW: 4, minH: 3, maxH: 6 },
       { i: 'vms', x: 1, y: 0, w: 1, h: 4, minW: 1, maxW: 4, minH: 3, maxH: 6 },
       { i: 'lxcs', x: 2, y: 0, w: 1, h: 4, minW: 1, maxW: 4, minH: 3, maxH: 6 },
       { i: 'tasks', x: 3, y: 0, w: 1, h: 4, minW: 1, maxW: 4, minH: 3, maxH: 6 },
+      
+      // Zeile 2: Top Usage (2x Cards nebeneinander)
       { i: 'top-cpu', x: 0, y: 4, w: 2, h: topCardHeight, minW: 2, maxW: 4, minH: 6, maxH: 20 },
-      { i: 'top-memory', x: 2, y: 4, w: 2, h: topCardHeight, minW: 2, maxW: 4, minH: 6, maxH: 20 }
+      { i: 'top-memory', x: 2, y: 4, w: 2, h: topCardHeight, minW: 2, maxW: 4, minH: 6, maxH: 20 },
+      
+      // Zeile 3: Disk Usage + Storage Total
+      { i: 'top-disk', x: 0, y: 4 + topCardHeight, w: 2, h: topCardHeight, minW: 2, maxW: 4, minH: 6, maxH: 20 },
+      { i: 'storage-total', x: 2, y: 4 + topCardHeight, w: 2, h: 8, minW: 1, maxW: 4, minH: 6, maxH: 12 },
+      
+      // Zeile 4: Storage By Node + By Type
+      { i: 'storage-by-node', x: 0, y: 12 + topCardHeight, w: 2, h: 10, minW: 2, maxW: 4, minH: 8, maxH: 16 },
+      { i: 'storage-by-type', x: 2, y: 12 + topCardHeight, w: 2, h: 10, minW: 2, maxW: 4, minH: 8, maxH: 16 },
+      
+      // Zeile 5: Ceph Cards (nur wenn Ceph verfügbar)
+      { i: 'ceph-health', x: 0, y: 22 + topCardHeight, w: 2, h: 8, minW: 1, maxW: 4, minH: 6, maxH: 12 },
+      { i: 'ceph-osd', x: 2, y: 22 + topCardHeight, w: 2, h: 8, minW: 1, maxW: 4, minH: 6, maxH: 12 }
     ];
   };
   
@@ -95,13 +116,22 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn }) {
         if (data.layout && Array.isArray(data.layout)) {
           // Update top card heights dynamically based on current settings
           const topCardHeight = getTopCardHeight();
+          const defaultLayout = getDefaultLayout();
+          
+          // Merge: Keep saved positions but add missing cards from default layout
+          const savedCardIds = new Set(data.layout.map(item => item.i));
+          const missingCards = defaultLayout.filter(item => !savedCardIds.has(item.i));
+          
           const updatedLayout = data.layout.map(item => {
-            if (item.i === 'top-cpu' || item.i === 'top-memory') {
+            if (item.i === 'top-cpu' || item.i === 'top-memory' || item.i === 'top-disk') {
               return { ...item, h: topCardHeight };
             }
             return item;
           });
-          setLayout(updatedLayout);
+          
+          // Add missing cards at the bottom
+          const mergedLayout = [...updatedLayout, ...missingCards];
+          setLayout(mergedLayout);
         }
       }
     } catch (err) {
@@ -242,6 +272,55 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn }) {
           />
         );
       
+      case 'top-disk':
+        return (
+          <TopDiskUsageCard 
+            key="top-disk"
+            title="Highest Disk Usage"
+            items={stats.top_disk_usage}
+          />
+        );
+      
+      case 'storage-total':
+        return (
+          <StorageTotalCard 
+            key="storage-total"
+            storageTotal={stats.storage_total}
+          />
+        );
+      
+      case 'storage-by-node':
+        return (
+          <StorageByNodeCard 
+            key="storage-by-node"
+            storageByNode={stats.storage_by_node}
+          />
+        );
+      
+      case 'storage-by-type':
+        return (
+          <StorageByTypeCard 
+            key="storage-by-type"
+            storageByType={stats.storage_by_type}
+          />
+        );
+      
+      case 'ceph-health':
+        return (
+          <CephHealthCard 
+            key="ceph-health"
+            ceph={stats.ceph}
+          />
+        );
+      
+      case 'ceph-osd':
+        return (
+          <CephOSDCard 
+            key="ceph-osd"
+            ceph={stats.ceph}
+          />
+        );
+      
       default:
         return null;
     }
@@ -307,20 +386,8 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn }) {
 
   return (
     <>
-      {/* Header mit Cluster-Name und Actions */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <MonitorPlay size={32} weight="duotone" className="text-blue-600 dark:text-blue-400" />
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-              {stats.cluster_name || 'Server'} Status
-            </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              {stats.is_cluster ? 'Cluster' : 'Standalone'} Übersicht
-            </p>
-          </div>
-        </div>
-
+      {/* Header mit Actions */}
+      <div className="flex items-center justify-end mb-6">
         {/* Actions */}
         <div className="flex items-center gap-4">
           {/* Save Layout Button */}

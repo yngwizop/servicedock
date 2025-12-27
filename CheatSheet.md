@@ -53,6 +53,76 @@ Jetzt funktioniert `/reorder` wie gewünscht.
 
 ---
 
+## Proxmox Monitoring Features
+
+### Dashboard Cards Overview (12 total widgets)
+**Status Cards (Row 1):**
+- Nodes Online/Total
+- VMs Running/Total
+- LXC Containers Running/Total
+- Recent Tasks (last 24h by default)
+
+**Performance Top Lists (Row 2-3):**
+- Top CPU Usage (configurable top_items count)
+- Top Memory Usage
+- Top Disk Usage (with % progress bars)
+
+**Storage Monitoring (Row 3-4):**
+- **Storage Total:** Cluster-wide storage utilization with circle progress
+- **Storage by Node:** Per-node breakdown with progress bars
+- **Storage by Type:** Grouped by storage type (local, lvm, nfs, ceph, zfs)
+
+**Ceph Cluster Monitoring (Row 5):**
+- **Ceph Health:** Health status badge (OK=green, WARN=yellow, ERR=red) + OSD overview
+- **Ceph OSD:** Detailed OSD statistics (UP/IN/DOWN/OUT) with health percentage
+
+### API Configuration
+**Proxmox Config Settings:**
+- `top_items` (default: 5): Number of items shown in Top CPU/Memory/Disk lists
+- `task_hours` (default: 24): Time range for recent tasks display
+
+### Backend API Endpoints
+**GET /api/proxmox/stats/{dashboard_id}**
+Returns comprehensive stats including:
+```python
+{
+  "status": {...},              # Basic cluster status
+  "top_cpu": [...],            # Top N by CPU
+  "top_memory": [...],         # Top N by memory
+  "top_disk": [...],           # Top N by disk (includes disk_percent)
+  "storage_total": {...},      # Cluster-wide storage
+  "storage_by_node": [...],    # Per-node storage breakdown
+  "storage_by_type": [...],    # By type (local/lvm/nfs/ceph/zfs)
+  "ceph_health": {...}         # Ceph status + OSD stats
+}
+```
+
+### Ceph Detection Logic
+**Multi-path OSD data parsing:**
+```python
+# Try primary path: osdmap->osdmap
+if 'osdmap' in ceph_status:
+    osd_data = ceph_status['osdmap'].get('osdmap', {})
+    
+# Fallback to pgmap for compatibility
+elif 'pgmap' in ceph_status:
+    pgmap = ceph_status['pgmap']
+    num_osds = pgmap.get('num_osds', 0)
+```
+
+**Troubleshooting Ceph:**
+- Ceph only shows if `is_cluster=True` in config
+- Check backend logs for: `WARNING - Ceph data successfully collected`
+- If not available: `INFO - Ceph cluster not available`
+
+### Grid Layout System
+- React Grid Layout with drag & drop
+- Layout persisted per dashboard in PostgreSQL
+- New cards auto-merge with saved layouts (preserves both)
+- Default rowHeight: 75px, responsive breakpoints
+
+---
+
 ## Dashboard-spezifische vs. Globale Features
 
 ### Wichtig: Wo gehört ein Feature hin?

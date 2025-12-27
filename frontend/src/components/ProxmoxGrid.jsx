@@ -412,6 +412,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
         <ProxmoxStatusDashboard 
           activeDashboard={activeDashboard}
           isLoggedIn={isLoggedIn}
+          textColor={textColor}
         />
       ) : (
         <>
