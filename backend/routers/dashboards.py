@@ -230,3 +230,29 @@ async def save_proxmox_layout(
             cur.close()
     
     return await run_in_threadpool(_save_layout_sync)
+
+@router.delete("/{dashboard_id}/proxmox-layout")
+@limiter.limit("20/minute")
+async def reset_proxmox_layout(
+    request: Request,
+    dashboard_id: int,
+    db = Depends(get_db)
+):
+    """Reset Proxmox dashboard layout to default"""
+    def _reset_layout_sync():
+        cur = db.cursor()
+        try:
+            cur.execute(
+                "DELETE FROM proxmox_dashboard_layouts WHERE dashboard_id = %s;",
+                (dashboard_id,)
+            )
+            db.commit()
+            return {"message": "Layout reset"}
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Reset layout failed: {e}")
+            raise HTTPException(status_code=500, detail="Failed to reset layout")
+        finally:
+            cur.close()
+    
+    return await run_in_threadpool(_reset_layout_sync)

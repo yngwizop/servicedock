@@ -53,7 +53,7 @@ function CephHealthCard({ ceph }) {
       title="Ceph Health"
       icon={<Activity size={28} weight="duotone" />}
     >
-      <div className="space-y-4">
+      <div className="flex flex-col justify-center h-full space-y-4">
         {/* Status Badge */}
         <div className="flex items-center justify-center">
           <div className="text-center">

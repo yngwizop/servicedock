@@ -442,4 +442,32 @@ const loadLayout = async () => {
 - `rowHeight` anpassen (75-100px für feinere Abstufungen)
 - `h` (Höhe) in Layout-Definition anpassen
 
----
+**Problem: Whitespace in Cards (Inhalt zu klein für Grid-Höhe)**
+- Lösung: Inhalt vertikal zentrieren mit `flex flex-col justify-center h-full`
+- NICHT versuchen `h-auto` zu verwenden (wird von Grid-CSS überschrieben)
+- Beispiel:
+```jsx
+<StatCard>
+  <div className="flex flex-col justify-center h-full space-y-3">
+    {/* Inhalt wird vertikal zentriert */}
+  </div>
+</StatCard>
+```
+
+**Problem: Card wird zu klein gezogen (Inhalt abgeschnitten)**
+- `minH` und `maxH` im Layout richtig setzen
+- Beim Laden gespeicherter Layouts Constraints durchsetzen:
+```jsx
+const updatedLayout = data.layout.map(item => {
+  const defaultItem = defaultLayout.find(d => d.i === item.i);
+  if (item.i === 'my-card' && defaultItem) {
+    return { 
+      ...item, 
+      minH: defaultItem.minH,
+      h: Math.max(item.h, defaultItem.minH) // Korrigiere zu kleine Höhe
+    };
+  }
+  return item;
+});
+```
+

@@ -55,10 +55,10 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
     const topCardHeight = getTopCardHeight();
     return [
       // Zeile 1: Status Cards (4x Cards nebeneinander)
-      { i: 'nodes', x: 0, y: 0, w: 1, h: 4, minW: 1, maxW: 4, minH: 3, maxH: 6 },
-      { i: 'vms', x: 1, y: 0, w: 1, h: 4, minW: 1, maxW: 4, minH: 3, maxH: 6 },
-      { i: 'lxcs', x: 2, y: 0, w: 1, h: 4, minW: 1, maxW: 4, minH: 3, maxH: 6 },
-      { i: 'tasks', x: 3, y: 0, w: 1, h: 4, minW: 1, maxW: 4, minH: 3, maxH: 6 },
+      { i: 'nodes', x: 0, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 6 },
+      { i: 'vms', x: 1, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 6 },
+      { i: 'lxcs', x: 2, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 6 },
+      { i: 'tasks', x: 3, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 6 },
       
       // Zeile 2: Top Usage (2x Cards nebeneinander)
       { i: 'top-cpu', x: 0, y: 4, w: 2, h: topCardHeight, minW: 2, maxW: 4, minH: 6, maxH: 20 },
@@ -66,15 +66,15 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       
       // Zeile 3: Disk Usage + Storage Total
       { i: 'top-disk', x: 0, y: 4 + topCardHeight, w: 2, h: topCardHeight, minW: 2, maxW: 4, minH: 6, maxH: 20 },
-      { i: 'storage-total', x: 2, y: 4 + topCardHeight, w: 2, h: 8, minW: 1, maxW: 4, minH: 6, maxH: 12 },
+      { i: 'storage-total', x: 2, y: 4 + topCardHeight, w: 2, h: 4, minW: 1, maxW: 4, minH: 4, maxH: 6 },
       
       // Zeile 4: Storage By Node + By Type
-      { i: 'storage-by-node', x: 0, y: 12 + topCardHeight, w: 2, h: 10, minW: 2, maxW: 4, minH: 8, maxH: 16 },
-      { i: 'storage-by-type', x: 2, y: 12 + topCardHeight, w: 2, h: 10, minW: 2, maxW: 4, minH: 8, maxH: 16 },
+      { i: 'storage-by-node', x: 0, y: 9 + topCardHeight, w: 2, h: 7, minW: 2, maxW: 4, minH: 7, maxH: 12 },
+      { i: 'storage-by-type', x: 2, y: 9 + topCardHeight, w: 2, h: 6, minW: 2, maxW: 4, minH: 6, maxH: 12 },
       
       // Zeile 5: Ceph Cards (nur wenn Ceph verfügbar)
-      { i: 'ceph-health', x: 0, y: 22 + topCardHeight, w: 2, h: 8, minW: 1, maxW: 4, minH: 6, maxH: 12 },
-      { i: 'ceph-osd', x: 2, y: 22 + topCardHeight, w: 2, h: 8, minW: 1, maxW: 4, minH: 6, maxH: 12 }
+      { i: 'ceph-health', x: 0, y: 16 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 4, maxH: 10 },
+      { i: 'ceph-osd', x: 2, y: 16 + topCardHeight, w: 2, h: 6, minW: 1, maxW: 4, minH: 4, maxH: 10 }
     ];
   };
   
@@ -123,9 +123,24 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
           const missingCards = defaultLayout.filter(item => !savedCardIds.has(item.i));
           
           const updatedLayout = data.layout.map(item => {
+            // Find default config for this card
+            const defaultItem = defaultLayout.find(d => d.i === item.i);
+            
             if (item.i === 'top-cpu' || item.i === 'top-memory' || item.i === 'top-disk') {
               return { ...item, h: topCardHeight };
             }
+            
+            // Enforce minH/maxH for cards that need minimum height
+            const cardsWithMinHeight = ['storage-total', 'storage-by-node', 'storage-by-type', 'ceph-health', 'ceph-osd'];
+            if (cardsWithMinHeight.includes(item.i) && defaultItem) {
+              return { 
+                ...item, 
+                minH: defaultItem.minH,
+                maxH: defaultItem.maxH,
+                h: Math.max(item.h, defaultItem.minH) // Ensure h is not below minH
+              };
+            }
+            
             return item;
           });
           
@@ -176,6 +191,33 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
     } catch (err) {
       console.error('Error saving layout:', err);
       setSaveStatus({ type: 'error', message: 'Netzwerkfehler beim Speichern' });
+      setTimeout(() => setSaveStatus({ type: '', message: '' }), 5000);
+    }
+  };
+
+  // Reset layout to default
+  const resetLayout = async () => {
+    try {
+      const res = await authenticatedFetch(
+        `${BACKEND_URL}/api/dashboards/${activeDashboard}/proxmox-layout`,
+        {
+          method: 'DELETE'
+        }
+      );
+      if (res.ok) {
+        const newLayout = getDefaultLayout();
+        setLayout(newLayout);
+        setLayoutModified(false);
+        setSaveStatus({ type: 'success', message: 'Layout zurückgesetzt!' });
+        setTimeout(() => setSaveStatus({ type: '', message: '' }), 3000);
+      } else {
+        const data = await res.json();
+        setSaveStatus({ type: 'error', message: data.detail || 'Fehler beim Zurücksetzen' });
+        setTimeout(() => setSaveStatus({ type: '', message: '' }), 5000);
+      }
+    } catch (err) {
+      console.error('Error resetting layout:', err);
+      setSaveStatus({ type: 'error', message: 'Netzwerkfehler beim Zurücksetzen' });
       setTimeout(() => setSaveStatus({ type: '', message: '' }), 5000);
     }
   };
@@ -390,6 +432,16 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       <div className="flex items-center justify-end mb-6">
         {/* Actions */}
         <div className="flex items-center gap-4">
+          {/* Reset Layout Button */}
+          <button
+            onClick={resetLayout}
+            className="flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-lg transition-colors"
+            title="Layout zurücksetzen"
+          >
+            <ArrowsClockwise size={18} weight="bold" />
+            Layout zurücksetzen
+          </button>
+          
           {/* Save Layout Button */}
           {layoutModified && (
             <button

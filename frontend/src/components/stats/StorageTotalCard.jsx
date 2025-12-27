@@ -49,8 +49,9 @@ function StorageTotalCard({ storageTotal }) {
     <StatCard 
       title="Total Storage"
       icon={<HardDrives size={28} weight="duotone" />}
+      compact={true}
     >
-      <div className="space-y-4">
+      <div className="flex flex-col justify-center h-full space-y-3">
         {/* Percentage Circle */}
         <div className="flex items-center justify-center">
           <div className="relative w-32 h-32">
@@ -95,20 +96,20 @@ function StorageTotalCard({ storageTotal }) {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-700">
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700">
             <div className="text-xs text-slate-600 dark:text-slate-400 mb-1">Used</div>
             <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
               {formatBytes(storageTotal.used)}
             </div>
           </div>
-          <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-700">
+          <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700">
             <div className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total</div>
             <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
               {formatBytes(storageTotal.total)}
             </div>
           </div>
-          <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-700">
+          <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700">
             <div className="text-xs text-slate-600 dark:text-slate-400 mb-1">Free</div>
             <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
               {formatBytes(storageTotal.available)}
