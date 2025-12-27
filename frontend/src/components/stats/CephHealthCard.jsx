@@ -19,7 +19,7 @@ function CephHealthCard({ ceph }) {
             Ceph nicht verfügbar
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-500 mt-1">
-            Dieser Cluster nutzt kein Ceph Storage
+            Dieses Cluster nutzt kein Ceph Storage
           </div>
         </div>
       </StatCard>
@@ -42,9 +42,9 @@ function CephHealthCard({ ceph }) {
   };
 
   const getStatusBadge = () => {
-    if (ceph.status.includes('OK')) return 'Healthy';
-    if (ceph.status.includes('WARN')) return 'Warning';
-    if (ceph.status.includes('ERR')) return 'Error';
+    if (ceph.status.includes('OK')) return 'HEALTH_OK';
+    if (ceph.status.includes('WARN')) return 'HEALTH_WARN';
+    if (ceph.status.includes('ERR')) return 'HEALTH_ERR';
     return 'Unknown';
   };
 
@@ -53,24 +53,21 @@ function CephHealthCard({ ceph }) {
       title="Ceph Health"
       icon={<Activity size={28} weight="duotone" />}
     >
-      <div className="flex flex-col justify-center h-full space-y-4">
-        {/* Status Badge */}
-        <div className="flex items-center justify-center">
-          <div className="text-center">
-            <div className="mb-3">
-              {getStatusIcon()}
-            </div>
-            <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${getStatusColor()}`}>
-              {getStatusBadge()}
-            </div>
-            {ceph.status_message && (
-              <div className="mt-2 text-xs text-slate-600 dark:text-slate-400 max-w-xs">
-                {ceph.status_message}
-              </div>
-            )}
+      <div className="flex flex-col h-full">
+        {/* Statusbereich immer mittig */}
+        <div className="flex-1 flex flex-col justify-center items-center">
+          <div className="mb-3">
+            {getStatusIcon()}
           </div>
+          <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${getStatusColor()}`}>
+            {getStatusBadge()}
+          </div>
+          {ceph.status_message && (
+            <div className="mt-2 text-xs text-slate-600 dark:text-slate-400 max-w-xs text-center">
+              {ceph.status_message}
+            </div>
+          )}
         </div>
-
         {/* OSD Info (falls vorhanden) */}
         {ceph.osd && (
           <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
