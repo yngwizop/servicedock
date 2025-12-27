@@ -126,11 +126,16 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
           const updatedLayout = data.layout.map(item => {
             // Find default config for this card
             const defaultItem = defaultLayout.find(d => d.i === item.i);
-            
+            // Top Cards: Höhe immer Settings-gesteuert, nicht resizable
             if (item.i === 'top-cpu' || item.i === 'top-memory' || item.i === 'top-disk') {
-              return { ...item, h: topCardHeight };
+              // Höhe immer Settings-gesteuert, Breite bleibt frei
+              return {
+                ...item,
+                h: topCardHeight,
+                minH: topCardHeight,
+                maxH: topCardHeight
+              };
             }
-            
             // Enforce minH/maxH for cards that need minimum height
             const cardsWithMinHeight = ['storage-total', 'storage-by-node', 'storage-by-type', 'ceph-health', 'ceph-osd'];
             if (cardsWithMinHeight.includes(item.i) && defaultItem) {
@@ -141,7 +146,6 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
                 h: Math.max(item.h, defaultItem.minH) // Ensure h is not below minH
               };
             }
-            
             return item;
           });
           
