@@ -1,5 +1,5 @@
 import React from 'react';
-import { HardDrives } from 'phosphor-react';
+import { HardDrives, Database } from 'phosphor-react';
 import StatCard from './StatCard';
 
 /**
@@ -34,7 +34,7 @@ function StorageTotalCard({ storageTotal }) {
     return (
       <StatCard 
         title="Total Storage"
-        icon={<HardDrives size={28} weight="duotone" />}
+        icon={<Database size={28} weight="duotone" />}
       >
         <div className="text-center py-8 text-slate-500 dark:text-slate-400">
           Keine Storage-Daten verfügbar
@@ -48,7 +48,7 @@ function StorageTotalCard({ storageTotal }) {
   return (
     <StatCard 
       title="Total Storage"
-      icon={<HardDrives size={28} weight="duotone" />}
+      icon={<Database size={28} weight="duotone" />}
       compact={true}
     >
       <div className="flex flex-col justify-center h-full space-y-3">
