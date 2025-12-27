@@ -55,7 +55,7 @@ function CephHealthCard({ ceph }) {
     >
       <div className="flex flex-col h-full">
         {/* Statusbereich immer mittig */}
-        <div className="flex-1 flex flex-col justify-center items-center">
+        <div className="flex-1 flex flex-col justify-center items-center mb-4">
           <div className="mb-3">
             {getStatusIcon()}
           </div>

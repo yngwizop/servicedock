@@ -66,7 +66,7 @@ function TopUsageCard({ title, items, usageType = "cpu" }) {
                 </div>
 
                 {/* Name & Node */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 mr-2">
                   <div className="text-base font-medium text-slate-800 dark:text-slate-100 truncate">
                     {item.name}
                   </div>
@@ -76,7 +76,7 @@ function TopUsageCard({ title, items, usageType = "cpu" }) {
                 </div>
 
                 {/* Usage */}
-                <div className="flex-shrink-0 text-right">
+                <div className="flex-shrink-0 text-right ml-2">
                   <div className={`text-lg font-bold ${getColor(percent)}`}>
                     {percent.toFixed(1)}%
                   </div>

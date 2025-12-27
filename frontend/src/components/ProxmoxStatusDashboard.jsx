@@ -60,13 +60,14 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       { i: 'lxcs', x: 2, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 6 },
       { i: 'tasks', x: 3, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 6 },
       
-      // Zeile 2: Top Usage (2x Cards nebeneinander)
-      { i: 'top-cpu', x: 0, y: 4, w: 2, h: topCardHeight, minW: 2, maxW: 4, minH: 6, maxH: 20 },
-      { i: 'top-memory', x: 2, y: 4, w: 2, h: topCardHeight, minW: 2, maxW: 4, minH: 6, maxH: 20 },
-      
+
+      // Zeile 2: Top Usage (schmaler)
+      { i: 'top-cpu', x: 0, y: 4, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: 6, maxH: 20 },
+      { i: 'top-memory', x: 1, y: 4, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: 6, maxH: 20 },
+
       // Zeile 3: Disk Usage + Storage Total
-      { i: 'top-disk', x: 0, y: 4 + topCardHeight, w: 2, h: topCardHeight, minW: 2, maxW: 4, minH: 6, maxH: 20 },
-      { i: 'storage-total', x: 2, y: 4 + topCardHeight, w: 2, h: 4, minW: 1, maxW: 4, minH: 4, maxH: 6 },
+      { i: 'top-disk', x: 2, y: 4 + topCardHeight, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: 6, maxH: 20 },
+      { i: 'storage-total', x: 3, y: 4 + topCardHeight, w: 1, h: 4, minW: 1, maxW: 4, minH: 4, maxH: 6 },
       
       // Zeile 4: Storage By Node + By Type
       { i: 'storage-by-node', x: 0, y: 9 + topCardHeight, w: 2, h: 7, minW: 2, maxW: 4, minH: 7, maxH: 12 },
@@ -74,7 +75,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       
       // Zeile 5: Ceph Cards (nur wenn Ceph verfügbar)
       { i: 'ceph-health', x: 0, y: 16 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 4, maxH: 10 },
-      { i: 'ceph-osd', x: 2, y: 16 + topCardHeight, w: 2, h: 6, minW: 1, maxW: 4, minH: 4, maxH: 10 }
+      { i: 'ceph-osd', x: 2, y: 16 + topCardHeight, w: 2, h: 6, minW: 1, maxW: 4, minH: 6, maxH: 10 }
     ];
   };
   
