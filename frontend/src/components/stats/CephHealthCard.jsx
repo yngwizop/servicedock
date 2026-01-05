@@ -54,47 +54,47 @@ function CephHealthCard({ ceph }) {
       icon={<Activity size={28} weight="duotone" />}
     >
       <div className="flex flex-col h-full">
-        {/* Statusbereich immer mittig */}
-        <div className="flex-1 flex flex-col justify-center items-center mb-4">
-          <div className="mb-3">
+        {/* Statusbereich - kompakter */}
+        <div className="flex flex-col justify-center items-center mb-2">
+          <div className="mb-2">
             {getStatusIcon()}
           </div>
-          <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${getStatusColor()}`}>
+          <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold ${getStatusColor()}`}>
             {getStatusBadge()}
           </div>
           {ceph.status_message && (
-            <div className="mt-2 text-xs text-slate-600 dark:text-slate-400 max-w-xs text-center">
+            <div className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 max-w-xs text-center">
               {ceph.status_message}
             </div>
           )}
         </div>
-        {/* OSD Info (falls vorhanden) */}
+        {/* OSD Info (falls vorhanden) - kompakteres Layout */}
         {ceph.osd && (
-          <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
-            <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">
+          <div className="pt-2 mt-auto border-t border-slate-200 dark:border-slate-700">
+            <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
               OSD Overview
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-center">
-                <div className="text-lg font-bold text-green-600 dark:text-green-400">
+            <div className="grid grid-cols-2 gap-1.5">
+              <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-center">
+                <div className="text-base font-bold text-green-600 dark:text-green-400">
                   {ceph.osd.up}
                 </div>
                 <div className="text-xs text-slate-600 dark:text-slate-400">Up</div>
               </div>
-              <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-center">
-                <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+              <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-center">
+                <div className="text-base font-bold text-blue-600 dark:text-blue-400">
                   {ceph.osd.in_count}
                 </div>
                 <div className="text-xs text-slate-600 dark:text-slate-400">In</div>
               </div>
-              <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-center">
-                <div className="text-lg font-bold text-red-600 dark:text-red-400">
+              <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-center">
+                <div className="text-base font-bold text-red-600 dark:text-red-400">
                   {ceph.osd.down}
                 </div>
                 <div className="text-xs text-slate-600 dark:text-slate-400">Down</div>
               </div>
-              <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-center">
-                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+              <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-center">
+                <div className="text-base font-bold text-orange-600 dark:text-orange-400">
                   {ceph.osd.out}
                 </div>
                 <div className="text-xs text-slate-600 dark:text-slate-400">Out</div>

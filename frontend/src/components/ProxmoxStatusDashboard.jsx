@@ -70,12 +70,12 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       { i: 'storage-total', x: 3, y: 4 + topCardHeight, w: 1, h: 4, minW: 1, maxW: 4, minH: 4, maxH: 6 },
       
       // Zeile 4: Storage By Node + By Type
-      { i: 'storage-by-node', x: 0, y: 9 + topCardHeight, w: 2, h: 7, minW: 2, maxW: 4, minH: 7, maxH: 12 },
-      { i: 'storage-by-type', x: 2, y: 9 + topCardHeight, w: 2, h: 6, minW: 2, maxW: 4, minH: 6, maxH: 12 },
+      { i: 'storage-by-node', x: 0, y: 9 + topCardHeight, w: 2, h: 6, minW: 2, maxW: 4, minH: 6, maxH: 12 },
+      { i: 'storage-by-type', x: 2, y: 9 + topCardHeight, w: 2, h: 6, minW: 1, maxW: 4, minH: 6, maxH: 12 },
       
       // Zeile 5: Ceph Cards (nur wenn Ceph verfügbar)
       { i: 'ceph-health', x: 0, y: 16 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 4, maxH: 10 },
-      { i: 'ceph-osd', x: 2, y: 16 + topCardHeight, w: 2, h: 6, minW: 1, maxW: 4, minH: 6, maxH: 10 }
+      { i: 'ceph-osd', x: 2, y: 16 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 5, maxH: 5 }
     ];
   };
   
@@ -136,13 +136,24 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
                 maxH: topCardHeight
               };
             }
+            // Ceph OSD Card: Fixed height (only width resizable)
+            if (item.i === 'ceph-osd') {
+              return {
+                ...item,
+                h: 5,
+                minH: 5,
+                maxH: 5
+              };
+            }
             // Enforce minH/maxH for cards that need minimum height
-            const cardsWithMinHeight = ['storage-total', 'storage-by-node', 'storage-by-type', 'ceph-health', 'ceph-osd'];
+            const cardsWithMinHeight = ['storage-total', 'storage-by-node', 'storage-by-type', 'ceph-health'];
             if (cardsWithMinHeight.includes(item.i) && defaultItem) {
               return { 
                 ...item, 
                 minH: defaultItem.minH,
                 maxH: defaultItem.maxH,
+                minW: defaultItem.minW, // Enforce minW for horizontal resizing
+                maxW: defaultItem.maxW,
                 h: Math.max(item.h, defaultItem.minH) // Ensure h is not below minH
               };
             }
