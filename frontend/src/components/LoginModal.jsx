@@ -9,6 +9,11 @@ function LoginModal({ onSubmit, password, setPassword, error, onClose, disabled 
         onSubmit={onSubmit}
         className="bg-white/55 dark:bg-gray-900/60 backdrop-blur-2xl rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-300/50 dark:border-white/20"
       >
+        {/* Servicedock Überschrift */}
+        <div className="mb-6 text-center">
+          <h1 className="text-3xl font-extrabold text-blue-700 dark:text-blue-400 tracking-tight mb-1">Servicedock</h1>
+          <p className="text-base text-gray-600 dark:text-gray-300">Dein persönliches Service-Dashboard</p>
+        </div>
         {/* Header mit Icon */}
         <div className="flex items-center gap-3 mb-4">
           <LockKey size={32} className="text-blue-500 dark:text-blue-400" weight="fill" />
@@ -16,7 +21,6 @@ function LoginModal({ onSubmit, password, setPassword, error, onClose, disabled 
             Admin-Login
           </h3>
         </div>
-        
         <p className="text-gray-600 dark:text-gray-400 mb-4">
           Bitte gib dein Admin-Passwort ein, um fortzufahren.
         </p>
