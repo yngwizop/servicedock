@@ -87,7 +87,7 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
-  const [showLogin, setShowLogin] = useState(false);
+  // Login-Modal wird direkt beim App-Start angezeigt, solange nicht eingeloggt
   const [activeTab, setActiveTab] = useState("services");
   
   // Login rate limiting state
@@ -542,7 +542,19 @@ function App() {
   // --- RENDER ---
   return (
     <ErrorBoundary>
-    {/* Outer Container */}
+    {/* Wenn nicht eingeloggt: Nur Login-Modal anzeigen, sonst App */}
+    {!isLoggedIn ? (
+      <LoginModal
+        onSubmit={handleLogin}
+        password={password}
+        setPassword={setPassword}
+        error={loginError}
+        disabled={loginDisabled}
+        onClose={() => {
+          setLoginError("");
+        }}
+      />
+    ) : (
     <div className="relative min-h-screen">
       {/* 1. Gradient Background - managed by useEffect (body) */}
       
@@ -788,15 +800,8 @@ function App() {
             {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
           </button>
 
-          {!isLoggedIn ? (
-            <button
-              onClick={() => setShowLogin(true)}
-              className="bg-white/50 dark:bg-white/5 backdrop-blur-md border border-gray-400/60 dark:border-white/10 p-3 rounded-full shadow-lg hover:shadow-xl hover:bg-white/70 dark:hover:bg-white/10 hover:border-gray-500/70 dark:hover:border-white/20 transition-all hover:scale-110 text-gray-800 dark:text-white/90 hover:text-gray-900 dark:hover:text-white"
-              title="Admin-Login"
-            >
-              <Lock size={24} />
-            </button>
-          ) : (
+          {/* Login-Button entfällt, da Login-Modal global */}
+          {isLoggedIn && (
             <>
               <button
                 onClick={() => setShowSettings(!showSettings)}
@@ -817,20 +822,7 @@ function App() {
         </div>
       </div>
 
-      {/* 4. Login-Modal (AUSGELAGERT) */}
-      {showLogin && !isLoggedIn && (
-        <LoginModal
-          onSubmit={handleLogin}
-          password={password}
-          setPassword={setPassword}
-          error={loginError}
-          disabled={loginDisabled}
-          onClose={() => {
-            setShowLogin(false);
-            setLoginError("");
-          }}
-        />
-      )}
+      {/* Login-Modal ist jetzt global und wird oben gerendert, wenn nicht eingeloggt */}
 
       {/* 5. Settings-Panel (AUSGELAGERT) */}
       {isLoggedIn && showSettings && (
@@ -871,6 +863,7 @@ function App() {
         />
       )}
     </div>
+    )}
     </ErrorBoundary>
   );
 }
