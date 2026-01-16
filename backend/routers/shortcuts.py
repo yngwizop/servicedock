@@ -52,6 +52,29 @@ async def add_shortcut(request: Request, shortcut: Shortcut, token: dict = Depen
     
     return await run_in_threadpool(_add_shortcut_sync)
 
+@router.put("/reorder", tags=["admin"])
+@limiter.limit("20/minute")  # Reorder operations - moderate limit
+async def reorder_shortcuts(request: Request, reorder_request: ReorderRequest, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+    """Reorder shortcuts"""
+    def _reorder_shortcuts_sync():
+        cur = db.cursor()
+        try:
+            for idx, shortcut_id in enumerate(reorder_request.newOrder):
+                cur.execute(
+                    "UPDATE shortcuts SET position = %s WHERE id = %s;",
+                    (idx, shortcut_id)
+                )
+            db.commit()
+            return {"message": "Shortcuts reordered successfully"}
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Reorder shortcuts failed: {e}")
+            raise HTTPException(status_code=500, detail="Failed to reorder shortcuts")
+        finally:
+            cur.close()
+    
+    return await run_in_threadpool(_reorder_shortcuts_sync)
+
 @router.put("/{shortcut_id}")
 @limiter.limit("20/minute")  # Update operations - moderate limit
 async def update_shortcut(request: Request, shortcut_id: int, shortcut: Shortcut, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
@@ -90,26 +113,3 @@ async def delete_shortcut(request: Request, shortcut_id: int, token: dict = Depe
             cur.close()
     
     return await run_in_threadpool(_delete_shortcut_sync)
-
-@router.put("/reorder", tags=["admin"])
-@limiter.limit("20/minute")  # Reorder operations - moderate limit
-async def reorder_shortcuts(request: Request, reorder_request: ReorderRequest, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
-    """Reorder shortcuts"""
-    def _reorder_shortcuts_sync():
-        cur = db.cursor()
-        try:
-            for idx, shortcut_id in enumerate(reorder_request.newOrder):
-                cur.execute(
-                    "UPDATE shortcuts SET position = %s WHERE id = %s;",
-                    (idx, shortcut_id)
-                )
-            db.commit()
-            return {"message": "Shortcuts reordered successfully"}
-        except Exception as e:
-            db.rollback()
-            logger.error(f"Reorder shortcuts failed: {e}")
-            raise HTTPException(status_code=500, detail="Failed to reorder shortcuts")
-        finally:
-            cur.close()
-    
-    return await run_in_threadpool(_reorder_shortcuts_sync)

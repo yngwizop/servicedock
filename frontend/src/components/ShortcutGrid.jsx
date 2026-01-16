@@ -56,6 +56,7 @@ function ShortcutGrid({
 
   const onDragOverItem = (e, targetId) => {
     e.preventDefault();
+    e.stopPropagation();
     const el = e.currentTarget;
     const side = computeSide(e, el);
     if (dragOver.id !== targetId || dragOver.side !== side) {
@@ -65,28 +66,54 @@ function ShortcutGrid({
 
   const onDropOnItem = (e, targetId) => {
     e.preventDefault();
-    const draggedId = Number(e.dataTransfer.getData("text/plain"));
-    if (!draggedId || draggedId === targetId) {
+    e.stopPropagation();
+    
+    const draggedIdStr = e.dataTransfer.getData('text/plain');
+    if (!draggedIdStr) {
       setDragOver({ id: null, side: null });
       setDraggingId(null);
       return;
     }
 
-    const newShortcuts = [...shortcuts];
-    const srcIndex = newShortcuts.findIndex(s => s.id === draggedId);
-    if (srcIndex === -1) return;
-    const [moved] = newShortcuts.splice(srcIndex, 1);
-
-    const newTargetIndex = newShortcuts.findIndex(s => s.id === targetId);
-    if (newTargetIndex === -1) {
-      newShortcuts.push(moved);
-    } else {
-      const side = dragOver.side || 'right';
-      const before = (side === 'left'); // NUR left als before
-      const insertIndex = before ? newTargetIndex : newTargetIndex + 1;
-      const safeIndex = Math.max(0, Math.min(newShortcuts.length, insertIndex));
-      newShortcuts.splice(safeIndex, 0, moved);
+    // Use string comparisons to be robust for numeric and string IDs
+    if (String(draggedIdStr) === String(targetId)) {
+      setDragOver({ id: null, side: null });
+      setDraggingId(null);
+      return;
     }
+
+    const srcIndex = shortcuts.findIndex(s => String(s.id) === String(draggedIdStr));
+    if (srcIndex === -1) {
+      setDragOver({ id: null, side: null });
+      setDraggingId(null);
+      return;
+    }
+
+    const targetIndex = shortcuts.findIndex(s => String(s.id) === String(targetId));
+    if (targetIndex === -1) {
+      setDragOver({ id: null, side: null });
+      setDraggingId(null);
+      return;
+    }
+
+    const el = e.currentTarget;
+    const side = computeSide(e, el);
+    
+    // Calculate new position
+    // If dropping on the left side, insert before target
+    // If dropping on the right side, insert after target
+    let newIndex = side === 'left' ? targetIndex : targetIndex + 1;
+    
+    // If we're moving an item from before the target to after it,
+    // we need to account for the removal
+    if (srcIndex < targetIndex) {
+      newIndex--;
+    }
+
+    // Create new array with item moved
+    const newShortcuts = [...shortcuts];
+    const [movedItem] = newShortcuts.splice(srcIndex, 1);
+    newShortcuts.splice(newIndex, 0, movedItem);
 
     setShortcuts(newShortcuts);
     setDragOver({ id: null, side: null });

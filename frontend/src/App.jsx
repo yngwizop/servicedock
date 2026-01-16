@@ -452,7 +452,7 @@ function App() {
     try {
       const res = await authenticatedFetch(`${BACKEND_URL}/api/shortcuts/reorder`, {
         method: "PUT",
-        body: JSON.stringify(orderedIds),
+        body: JSON.stringify({ newOrder: orderedIds }),  // ✅ FIXED - wrap in object
       });
       if (!res.ok) {
         console.error("Failed to reorder shortcuts, reloading data");
