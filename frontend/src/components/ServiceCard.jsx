@@ -29,7 +29,7 @@ function ServiceCard({ service, textColor, isFavorite }) {
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-blue-500/10 group-hover:via-purple-500/5 group-hover:to-pink-500/10 rounded-2xl transition-all duration-500 pointer-events-none"></div>
       
       {/* Content */}
-      <div className="relative z-10 flex items-start gap-4 w-full">
+      <div className="relative z-10 flex items-start gap-4 w-full min-h-0">
         {service.icon && (
           isUrl ? (
             <div className="flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/10 backdrop-blur-sm border border-gray-400 dark:border-white/20 rounded-xl p-3 w-14 h-14 flex items-center justify-center group-hover:from-white group-hover:to-gray-100 dark:group-hover:from-white/20 dark:group-hover:to-white/20 group-hover:border-gray-500 dark:group-hover:border-white/30 transition-all duration-300 shadow-md">
@@ -48,9 +48,9 @@ function ServiceCard({ service, textColor, isFavorite }) {
             </div>
           )
         )}
-        <div className="flex-grow">
-          <h3 className="font-semibold text-lg mb-1 text-gray-900 dark:text-white/90 group-hover:text-black dark:group-hover:text-white transition-colors duration-300">{safeName}</h3>
-          <p className="text-sm text-gray-700 dark:text-white/60 group-hover:text-gray-900 dark:group-hover:text-white/70 transition-colors duration-300">{safeDescription}</p>
+        <div className="flex-grow min-w-0 overflow-hidden">
+          <h3 className="font-semibold text-lg mb-1 text-gray-900 dark:text-white/90 group-hover:text-black dark:group-hover:text-white transition-colors duration-300 truncate">{safeName}</h3>
+          <p className="text-sm text-gray-700 dark:text-white/60 group-hover:text-gray-900 dark:group-hover:text-white/70 transition-colors duration-300 truncate">{safeDescription}</p>
         </div>
       </div>
     </a>
