@@ -1,10 +1,22 @@
 import React from 'react';
 import { LockKey } from 'phosphor-react';
 
-function LoginModal({ onSubmit, password, setPassword, error, onClose, disabled = false }) {
+function LoginModal({ onSubmit, password, setPassword, error, onClose, disabled = false, appearance = {} }) {
   return (
-    // Hintergrund-Overlay
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="loginmodal-title">
+    <div className="fixed inset-0 z-40 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="loginmodal-title">
+      {/* Background Image Layer (wenn vorhanden) */}
+      {appearance.bg_image_url && (
+        <div
+          className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat -z-10"
+          style={{
+            backgroundImage: `url(${appearance.bg_image_url})`,
+            opacity: appearance.bg_opacity || 0.6,
+          }}
+        ></div>
+      )}
+      
+      {/* Blur Overlay für Datenschutz */}
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm -z-5"></div>
       <form
         onSubmit={onSubmit}
         className="bg-white/55 dark:bg-gray-900/60 backdrop-blur-2xl rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-300/50 dark:border-white/20"

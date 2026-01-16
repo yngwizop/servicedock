@@ -166,11 +166,9 @@ async def import_config(
                 logger.info("Config import mode: REPLACE - Deleting all existing data")
                 cur.execute("DELETE FROM services;")
                 cur.execute("DELETE FROM shortcuts;")
-                cur.execute("DELETE FROM dashboards WHERE id > 1;")  # Keep dashboard 1 structure
-                cur.execute("DELETE FROM services WHERE dashboard_id = 1;")
-                cur.execute("DELETE FROM shortcuts WHERE dashboard_id = 1;")
+                cur.execute("DELETE FROM dashboards;")  # Delete ALL dashboards including dashboard 1
                 # Reset sequences
-                cur.execute("SELECT setval('dashboards_id_seq', 1, true);")
+                cur.execute("SELECT setval('dashboards_id_seq', 1, false);")
                 cur.execute("SELECT setval('services_id_seq', 1, false);")
                 cur.execute("SELECT setval('shortcuts_id_seq', 1, false);")
             

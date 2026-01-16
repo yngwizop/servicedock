@@ -144,7 +144,7 @@ SELECT setval('dashboards_id_seq', (SELECT COALESCE(MAX(id), 1) FROM dashboards)
 -- HIER SIND DIE ÄNDERUNGEN (INSERT/UPDATE)
 -- Fügt die Standard-Einstellungszeile ein/aktualisiert sie.
 INSERT INTO appearance (id, bg_color, bg_image_url, bg_opacity, shortcut_cols, service_cols, text_color_light, text_color_dark, clock_format, weather_city, weather_fields, show_spotify, show_weather, show_clock)
-VALUES (1, '#1a1f2e', NULL, 1.0, 6, 6, '#ffffff', '#ffffff', '24h', 'Berlin', '["temperature", "humidity"]'::jsonb, TRUE, TRUE, TRUE)
+VALUES (1, '#1a1f2e', 'https://images.unsplash.com/photo-1485470733090-0aae1788d5af?q=80&w=1517&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', 0.6, 6, 6, '#ffffff', '#ffffff', '24h', 'Berlin', '["temperature", "humidity"]'::jsonb, TRUE, TRUE, TRUE)
 ON CONFLICT (id) DO UPDATE
 SET
     bg_color = COALESCE(EXCLUDED.bg_color, appearance.bg_color),

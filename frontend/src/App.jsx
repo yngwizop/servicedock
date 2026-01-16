@@ -550,6 +550,7 @@ function App() {
         setPassword={setPassword}
         error={loginError}
         disabled={loginDisabled}
+        appearance={appearance}
         onClose={() => {
           setLoginError("");
         }}
