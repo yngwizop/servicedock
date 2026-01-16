@@ -147,12 +147,15 @@ async def delete_dashboard(
     db = Depends(get_db)
 ):
     """Delete a dashboard (and all its services/shortcuts via CASCADE)"""
-    if dashboard_id == 1:
-        raise HTTPException(status_code=400, detail="Cannot delete default dashboard")
-    
     def _delete_dashboard_sync():
         cur = db.cursor()
         try:
+            # Check if this is the last dashboard
+            cur.execute("SELECT COUNT(*) FROM dashboards;")
+            total_count = cur.fetchone()[0]
+            if total_count <= 1:
+                raise HTTPException(status_code=400, detail="Cannot delete the last dashboard")
+            
             cur.execute("DELETE FROM dashboards WHERE id = %s RETURNING id;", (dashboard_id,))
             deleted = cur.fetchone()
             db.commit()

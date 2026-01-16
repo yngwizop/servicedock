@@ -827,7 +827,7 @@ function SettingsPanel({
                             <Pencil className="w-4 h-4" weight="bold" />
                           </button>
                           
-                          {dashboard.id !== 1 && ( // Cannot delete default dashboard
+                          {dashboards.length > 1 && ( // Cannot delete last dashboard
                             <button
                               onClick={async () => {
                                 if (!confirm(`Dashboard "${dashboard.name}" wirklich löschen?\n\nAlle Services und Shortcuts in diesem Dashboard werden ebenfalls gelöscht!`)) {
@@ -840,12 +840,15 @@ function SettingsPanel({
                                     { method: 'DELETE' }
                                   );
                                   
-                                  if (!res.ok) throw new Error('Delete failed');
+                                  if (!res.ok) {
+                                    const error = await res.json();
+                                    throw new Error(error.detail || 'Delete failed');
+                                  }
                                   
                                   onDashboardsChange(); // Refresh
                                 } catch (err) {
                                   console.error('Dashboard delete error:', err);
-                                  alert('Fehler beim Löschen des Dashboards');
+                                  alert('Fehler beim Löschen des Dashboards: ' + err.message);
                                 }
                               }}
                               className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
@@ -884,7 +887,7 @@ function SettingsPanel({
           {/* Info-Hinweis */}
           <div className="p-4 bg-blue-50 dark:bg-blue-900/20 backdrop-blur-sm border border-blue-200 dark:border-blue-800 rounded-xl">
             <p className="text-sm text-blue-900 dark:text-blue-200">
-              💡 <strong>Tipp:</strong> Dashboards ermöglichen es dir, verschiedene Sets von Services und Shortcuts zu organisieren. Das Standard-Dashboard kann nicht gelöscht werden.
+              💡 <strong>Tipp:</strong> Dashboards ermöglichen es dir, verschiedene Sets von Services und Shortcuts zu organisieren. Mindestens ein Dashboard muss vorhanden bleiben.
             </p>
           </div>
         </div>
