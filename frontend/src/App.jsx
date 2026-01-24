@@ -28,6 +28,11 @@ const WEATHER_FIELDS_KEY = 'appearance_weather_fields';
 
 // --- Haupt-App ---
 function App() {
+      // State für Suchfeld-Overlay
+      const [searchOpen, setSearchOpen] = useState(false);
+      const searchInputRef = React.useRef(null);
+    // Suchfeld für Services & Shortcuts
+    const [searchTerm, setSearchTerm] = useState("");
   // --- State-Definitionen ---
 
   // NEU: State für das Theme (light/dark)
@@ -699,71 +704,149 @@ function App() {
           </div>
         </div>
 
-        {/* === TAB NAVIGATION === */}
-        <div className="flex gap-4 bg-white/50 dark:bg-white/5 backdrop-blur-md rounded-xl px-4 pt-3 pb-2 border border-gray-400/60 dark:border-white/10 shadow-lg mb-8 w-fit">
-          <button
-            onClick={() => setActiveTab("services")}
-            className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
-              activeTab === "services"
-                  ? "bg-blue-500/30 dark:bg-blue-500/20 border-b-2 border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400 shadow-sm"
-                  : "text-gray-800 dark:text-white/90 hover:bg-white/50 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              Services & Shortcuts
-            </button>
-            {dashboards.find(d => d.id === activeDashboard)?.show_proxmox === true && (
+        {/* === SUCHE & TAB NAVIGATION === */}
+        {/* === TAB NAVIGATION (immer sichtbar) === */}
+        <div className="flex items-center justify-between mb-6 gap-4">
+          {/* Tabs */}
+          <div className="flex-1">
+            <div className="flex gap-4 bg-white/50 dark:bg-white/5 backdrop-blur-md rounded-xl px-4 pt-3 pb-2 border border-gray-400/60 dark:border-white/10 shadow-lg w-fit">
               <button
-                onClick={() => setActiveTab("monitoring")}
+                onClick={() => setActiveTab("services")}
                 className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
-                  activeTab === "monitoring"
+                  activeTab === "services"
                     ? "bg-blue-500/30 dark:bg-blue-500/20 border-b-2 border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400 shadow-sm"
                     : "text-gray-800 dark:text-white/90 hover:bg-white/50 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
-                Proxmox Monitoring
+                Services & Shortcuts
               </button>
-            )}
-            <button
-              onClick={() => setActiveTab("security")}
-              className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
-                activeTab === "security"
-                  ? "bg-blue-500/30 dark:bg-blue-500/20 border-b-2 border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400 shadow-sm"
-                  : "text-gray-800 dark:text-white/90 hover:bg-white/50 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              Security
-            </button>
+              {dashboards.find(d => d.id === activeDashboard)?.show_proxmox === true && (
+                <button
+                  onClick={() => setActiveTab("monitoring")}
+                  className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
+                    activeTab === "monitoring"
+                      ? "bg-blue-500/30 dark:bg-blue-500/20 border-b-2 border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400 shadow-sm"
+                      : "text-gray-800 dark:text-white/90 hover:bg-white/50 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  Proxmox Monitoring
+                </button>
+              )}
+              <button
+                onClick={() => setActiveTab("security")}
+                className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
+                  activeTab === "security"
+                    ? "bg-blue-500/30 dark:bg-blue-500/20 border-b-2 border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400 shadow-sm"
+                    : "text-gray-800 dark:text-white/90 hover:bg-white/50 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                Security
+              </button>
+            </div>
           </div>
+          
+          {/* Suche nur im Services-Tab */}
+          {activeTab === "services" && (
+            <div className="relative flex items-center" style={{ height: '100%' }}>
+              {!searchOpen && (
+                <button
+                  className="p-3 rounded-full bg-white/50 dark:bg-white/5 backdrop-blur-md border border-gray-400/60 dark:border-white/10 shadow-lg hover:scale-110 hover:bg-white/70 dark:hover:bg-white/10 transition-all"
+                  style={{ zIndex: 30 }}
+                  onClick={() => {
+                    setSearchOpen(true);
+                    setTimeout(() => searchInputRef.current?.focus(), 100);
+                  }}
+                  aria-label="Suche öffnen"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-gray-700 dark:text-gray-200">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
+                  </svg>
+                </button>
+              )}
+              {/* Overlay für Suchfeld */}
+              {searchOpen && (
+                <div
+                  className="absolute right-0 top-0 z-40 flex items-center"
+                  style={{ minWidth: '320px', marginRight: '0', marginTop: '0' }}
+                >
+                  <div
+                    className="backdrop-blur-md bg-white/50 dark:bg-white/5 border border-gray-400/60 dark:border-white/10 rounded-2xl shadow-lg flex items-center gap-2 px-4 py-2 w-full max-w-sm"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-gray-700 dark:text-gray-200">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
+                    </svg>
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      onBlur={() => setSearchOpen(false)}
+                      onKeyDown={e => {
+                        if (e.key === 'Escape') setSearchOpen(false);
+                      }}
+                      placeholder="Service oder Shortcut suchen..."
+                      className="flex-1 bg-transparent outline-none text-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      autoFocus
+                    />
+                    <button
+                      className="ml-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setSearchTerm("");
+                        setSearchOpen(false);
+                      }}
+                      tabIndex={-1}
+                      type="button"
+                      aria-label="Suche schließen"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        {/* (Doppelte Tabs entfernt, Tabs sind jetzt nur noch im Container mit der Suche) */}
 
         {/* === CONTENT BASED ON ACTIVE TAB === */}
         <div className="flex-grow">
           {activeTab === "services" && (
             <>
-              {/* === SERVICES (JETZT AUSGELAGERT) === */}
+              {/* Gefilterte Services */}
               <ServiceGrid
-              services={services}
-              setServices={setServices}
-              isLoggedIn={isLoggedIn}
-              colsClass={serviceColsClass}
-              onUpdate={updateService}
-              onDelete={deleteService}
-              textColor={getTextColor()} // NEU: Schriftfarbe übergeben
-              onReorder={reorderServices} // NEU
-            />
+                services={services.filter(s =>
+                  s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  s.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  s.url?.toLowerCase().includes(searchTerm.toLowerCase())
+                )}
+                setServices={setServices}
+                isLoggedIn={isLoggedIn}
+                colsClass={serviceColsClass}
+                onUpdate={updateService}
+                onDelete={deleteService}
+                textColor={getTextColor()}
+                onReorder={reorderServices}
+              />
 
-            {/* === SHORTCUTS (JETZT AUSGELAGERT) === */}
-            <ShortcutGrid
-              shortcuts={shortcuts}
-              setShortcuts={setShortcuts}
-              isLoggedIn={isLoggedIn}
-              colsClass={shortcutColsClass}
-              onUpdate={updateShortcut}
-              onDelete={deleteShortcut}
-              textColor={getTextColor()} // NEU: Schriftfarbe übergeben
-              onReorder={reorderShortcuts} // NEU
-            />
-          </>
-        )}
+              {/* Gefilterte Shortcuts */}
+              <ShortcutGrid
+                shortcuts={shortcuts.filter(s =>
+                  s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  s.url?.toLowerCase().includes(searchTerm.toLowerCase())
+                )}
+                setShortcuts={setShortcuts}
+                isLoggedIn={isLoggedIn}
+                colsClass={shortcutColsClass}
+                onUpdate={updateShortcut}
+                onDelete={deleteShortcut}
+                textColor={getTextColor()}
+                onReorder={reorderShortcuts}
+              />
+            </>
+          )}
 
         {activeTab === "monitoring" && (
           <ProxmoxGrid 
