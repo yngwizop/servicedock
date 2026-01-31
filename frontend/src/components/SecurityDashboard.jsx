@@ -23,7 +23,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
     `${window.location.protocol}//${window.location.hostname}:8000`
   );
 
-function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
+function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashboard = 1 }) {
   const [tokenInfo, setTokenInfo] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
@@ -43,7 +43,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
       const interval = setInterval(fetchSecurityData, 30000); // Refresh every 30s
       return () => clearInterval(interval);
     }
-  }, [isLoggedIn, logFilter]); // Re-fetch when filter changes
+  }, [isLoggedIn, logFilter, activeDashboard]); // Re-fetch when filter or dashboard changes
 
   // Filter logs when filter changes (now handled by backend, but keep for immediate UI update)
   useEffect(() => {
@@ -54,7 +54,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings }) {
   const fetchSecurityData = async () => {
     try {
       const [tokenRes, logsRes, statsRes, rateLimitRes] = await Promise.all([
-        authenticatedFetch(`${BACKEND_URL}/api/admin/proxmox/token-info`),
+        authenticatedFetch(`${BACKEND_URL}/api/admin/proxmox/token-info?dashboard_id=${activeDashboard}`),
         authenticatedFetch(`${BACKEND_URL}/api/admin/audit-logs?limit=100&filter_type=${logFilter}`),
         authenticatedFetch(`${BACKEND_URL}/api/admin/audit-stats`),
         authenticatedFetch(`${BACKEND_URL}/api/admin/rate-limit-usage`)

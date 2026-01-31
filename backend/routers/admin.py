@@ -230,15 +230,15 @@ def delete_all_audit_logs(request: Request, delete_request: DeleteLogsRequest, t
 # ===== Token Rotation =====
 
 @router.get("/api/admin/proxmox/token-info")
-def get_token_info(token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+def get_token_info(dashboard_id: int = 1, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Gibt Informationen über das Alter des aktuellen Tokens zurück"""
     cur = db.cursor()
     
     cur.execute("""
         SELECT token_created_at, token_last_rotated, token_name
         FROM proxmox_config
-        WHERE id = 1;
-    """)
+        WHERE dashboard_id = %s;
+    """, (dashboard_id,))
     row = cur.fetchone()
     
     if not row:
@@ -284,7 +284,7 @@ def get_rate_limit_usage(request: Request, token: dict = Depends(require_role("a
     cur.execute("""
         SELECT COUNT(*) 
         FROM audit_log
-        WHERE action = 'LOGIN'
+        WHERE action IN ('LOGIN_SUCCESS', 'LOGIN_FAILED', 'LOGIN_BLOCKED')
           AND timestamp > NOW() - INTERVAL '1 minute';
     """)
     login_count = cur.fetchone()[0] or 0

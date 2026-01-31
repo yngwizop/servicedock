@@ -207,7 +207,7 @@ Empfohlen: **Alle 60 Tage** neuen Token erstellen
 ```bash
 # Token-Alter prüfen
 curl -H "Authorization: Bearer <admin-token>" \
-  http://localhost:8000/api/admin/proxmox/token-info
+  http://localhost:8000/api/admin/proxmox/token-info?dashboard_id=1
 ```
 
 Siehe [TOKEN_ROTATION_GUIDE.md](TOKEN_ROTATION_GUIDE.md) für Details.

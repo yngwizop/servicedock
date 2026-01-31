@@ -864,6 +864,7 @@ function App() {
           <SecurityDashboard 
             isLoggedIn={isLoggedIn}
             textColor={getTextColor()}
+            activeDashboard={activeDashboard}
             onOpenSettings={() => {
               setShowSettings(true);
               setActiveTab("services");

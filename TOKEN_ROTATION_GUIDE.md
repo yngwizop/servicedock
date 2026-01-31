@@ -52,8 +52,8 @@ Das Dashboard zeigt eine **rote Warnung** im Security-Tab, wenn der Token älter
 ### Manuell prüfen
 
 ```bash
-# Token-Alter prüfen
-curl -s http://localhost:8000/api/admin/proxmox/token-info | jq .
+# Token-Alter prüfen (Dashboard 1 ist default)
+curl -s http://localhost:8000/api/admin/proxmox/token-info?dashboard_id=1 | jq .
 
 # Ausgabe:
 {
