@@ -38,7 +38,7 @@ function ShortcutLink({ shortcut, textColor }) {
           <div className={`flex-shrink-0 rounded-lg p-2 w-10 h-10 flex items-center justify-center transition-all duration-300 shadow-sm ${
             isUrl 
               ? 'bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/10 backdrop-blur-sm border border-gray-400 dark:border-white/20 group-hover:from-white group-hover:to-gray-100 dark:group-hover:from-white/20 dark:group-hover:to-white/20 group-hover:border-gray-500 dark:group-hover:border-white/30' 
-              : 'bg-gradient-to-br from-cyan-200 to-blue-200 dark:from-cyan-500/20 dark:to-blue-500/20 border border-cyan-300 dark:border-white/20 group-hover:from-cyan-300 group-hover:to-blue-300 dark:group-hover:from-cyan-500/30 dark:group-hover:to-blue-500/30 group-hover:border-cyan-400 dark:group-hover:border-white/30'
+              : 'bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/10 backdrop-blur-sm border border-gray-400 dark:border-white/20 group-hover:from-white group-hover:to-gray-100 dark:group-hover:from-white/20 dark:group-hover:to-white/20 group-hover:border-gray-500 dark:group-hover:border-white/30'
           }`}>
             {isUrl ? (
               <img src={safeIcon} alt={safeName} className="w-full h-full object-contain" draggable={false}/>

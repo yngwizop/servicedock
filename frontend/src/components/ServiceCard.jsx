@@ -41,7 +41,7 @@ function ServiceCard({ service, textColor, isFavorite }) {
               />
             </div>
           ) : (
-            <div className="flex-shrink-0 bg-gradient-to-br from-blue-200 to-purple-200 dark:from-blue-500/20 dark:to-purple-500/20 backdrop-blur-sm border border-blue-300 dark:border-white/20 rounded-xl p-3 w-14 h-14 flex items-center justify-center group-hover:from-blue-300 group-hover:to-purple-300 dark:group-hover:from-blue-500/30 dark:group-hover:to-purple-500/30 group-hover:border-blue-400 dark:group-hover:border-white/30 transition-all duration-300 shadow-md">
+            <div className="flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/10 backdrop-blur-sm border border-gray-400 dark:border-white/20 rounded-xl p-3 w-14 h-14 flex items-center justify-center group-hover:from-white group-hover:to-gray-100 dark:group-hover:from-white/20 dark:group-hover:to-white/20 group-hover:border-gray-500 dark:group-hover:border-white/30 transition-all duration-300 shadow-md">
               <span className="text-3xl drop-shadow-sm">
                 {safeIcon}
               </span>
