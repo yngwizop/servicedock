@@ -766,8 +766,8 @@ function App() {
               {/* Overlay für Suchfeld */}
               {searchOpen && (
                 <div
-                  className="absolute right-0 top-0 z-40 flex items-center"
-                  style={{ minWidth: '320px', marginRight: '0', marginTop: '0' }}
+                  className="absolute right-0 z-40 flex items-center"
+                  style={{ minWidth: '320px', marginRight: '0', top: '50%', transform: 'translateY(-50%)' }}
                 >
                   <div
                     className="backdrop-blur-md bg-white/50 dark:bg-white/5 border border-gray-400/60 dark:border-white/10 rounded-2xl shadow-lg flex items-center gap-2 px-4 py-2 w-full max-w-sm"
