@@ -220,6 +220,31 @@ function App() {
     fetchData();
   }, [activeDashboard]);
 
+  // Keyboard Shortcut für globale Suche (Strg+F / Cmd+F)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Verhindere Browser-Suchfunktion (Strg+F, Strg+G, Cmd+F, Cmd+G, F3)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'g')) {
+        e.preventDefault();
+        e.stopPropagation();
+        setSearchOpen(true);
+        setTimeout(() => searchInputRef.current?.focus(), 100);
+      }
+      if (e.key === 'F3') {
+        e.preventDefault();
+        e.stopPropagation();
+        setSearchOpen(true);
+        setTimeout(() => searchInputRef.current?.focus(), 100);
+      }
+      if (e.key === 'Escape' && searchOpen) {
+        setSearchOpen(false);
+        setSearchTerm("");
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown, true); // true = capture phase
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [searchOpen]);
+
   // NEU: Funktion zum Abrufen des Spotify-Status (braucht Auth!)
   const fetchSpotifyStatus = async () => {
     try {
@@ -606,30 +631,37 @@ function App() {
         showProxmox={dashboards.find(d => d.id === activeDashboard)?.show_proxmox === true}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        searchOpen={searchOpen}
+        setSearchOpen={setSearchOpen}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        searchInputRef={searchInputRef}
       />
 
       {/* Main Content with left margin for sidebar */}
       <div className={`${sidebarCollapsed ? 'ml-20' : 'ml-64'} transition-all duration-300 relative z-10 flex flex-col min-h-screen pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2 max-w-full overflow-x-hidden`}>
         {/* Header mit Titel und Widgets */}
-        <div className="flex flex-col md:flex-row md:items-center mb-8 gap-4">
-          {/* Titel mit Custom Dashboard Dropdown */}
-          {activeTab === "services" && dashboards.length > 1 ? (
-            <div className="relative">
-              <button
-                onClick={() => setDashboardDropdownOpen(!dashboardDropdownOpen)}
-                className="flex items-center gap-3 text-4xl font-bold cursor-pointer focus:outline-none hover:opacity-90 transition-opacity"
-                style={{ 
-                  color: getTextColor(),
-                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
-                }}
-              >
-                {dashboards.find(d => d.id === activeDashboard)?.name || 'Dashboard'}
-                <CaretDown 
-                  size={32} 
-                  weight="bold"
-                  className={`transition-transform duration-200 ${dashboardDropdownOpen ? 'rotate-180' : ''}`}
-                />
-              </button>
+        <div className="flex flex-col md:flex-row md:items-center mb-6 gap-4">
+          {/* Linke Seite: Titel + Suche */}
+          <div className="flex items-center gap-4">
+            {/* Titel mit Custom Dashboard Dropdown */}
+            {activeTab === "services" && dashboards.length > 1 ? (
+              <div className="relative">
+                <button
+                  onClick={() => setDashboardDropdownOpen(!dashboardDropdownOpen)}
+                  className="flex items-center gap-3 text-4xl font-bold cursor-pointer focus:outline-none hover:opacity-90 transition-opacity"
+                  style={{ 
+                    color: getTextColor(),
+                    textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
+                  }}
+                >
+                  {dashboards.find(d => d.id === activeDashboard)?.name || 'Dashboard'}
+                  <CaretDown 
+                    size={32} 
+                    weight="bold"
+                    className={`transition-transform duration-200 ${dashboardDropdownOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
               
               {/* Custom Glassmorphism Dropdown */}
               {dashboardDropdownOpen && (
@@ -665,15 +697,16 @@ function App() {
                   </div>
                 </>
               )}
-            </div>
-          ) : (
-            <h1 
-              className="text-4xl font-bold drop-shadow-lg"
-              style={{ color: getTextColor() }}
-            >
-              {dashboards.find(d => d.id === activeDashboard)?.name || 'Dashboard'}
-            </h1>
-          )}
+              </div>
+            ) : (
+              <h1 
+                className="text-4xl font-bold drop-shadow-lg"
+                style={{ color: getTextColor() }}
+              >
+                {dashboards.find(d => d.id === activeDashboard)?.name || 'Dashboard'}
+              </h1>
+            )}
+          </div>
           
           {/* Widgets - Dynamisch nebeneinander */}
           <div className="flex flex-wrap items-center gap-4 md:gap-6 md:ml-auto">
@@ -725,74 +758,52 @@ function App() {
           </div>
         </div>
 
-        {/* === SUCHE (nur im Services-Tab) === */}
-        {activeTab === "services" && (
-          <div className="flex justify-end mb-6">
-            <div className="relative flex items-center">
-              {!searchOpen && (
-                <button
-                  className="p-3 rounded-full bg-white/50 dark:bg-white/5 backdrop-blur-md border border-gray-400/60 dark:border-white/10 shadow-lg hover:scale-110 hover:bg-white/70 dark:hover:bg-white/10 transition-all"
-                  style={{ zIndex: 30 }}
-                  onClick={() => {
-                    setSearchOpen(true);
-                    setTimeout(() => searchInputRef.current?.focus(), 100);
-                  }}
-                  aria-label="Suche öffnen"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-gray-700 dark:text-gray-200">
+        {/* Search Overlay - Global über dem Content */}
+        {searchOpen && (
+          <>
+            {/* Search Modal */}
+            <div 
+              className="fixed top-32 left-1/2 z-[70] w-full max-w-2xl px-4"
+              style={{ 
+                transform: 'translateX(-50%)',
+                marginLeft: sidebarCollapsed ? '2.5rem' : '8rem'
+              }}
+            >
+              <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border border-gray-300/50 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+                {/* Search Input */}
+                <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-300/50 dark:border-white/10">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-gray-600 dark:text-gray-400">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
                   </svg>
-                </button>
-              )}
-              {/* Overlay für Suchfeld */}
-              {searchOpen && (
-                <div
-                  className="absolute right-0 z-40 flex items-center"
-                  style={{ minWidth: '320px', marginRight: '0', top: '50%', transform: 'translateY(-50%)' }}
-                >
-                  <div
-                    className="backdrop-blur-md bg-white/50 dark:bg-white/5 border border-gray-400/60 dark:border-white/10 rounded-2xl shadow-lg flex items-center gap-2 px-4 py-2 w-full max-w-sm"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-gray-700 dark:text-gray-200">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
-                    </svg>
-                    <input
-                      ref={searchInputRef}
-                      type="text"
-                      value={searchTerm}
-                      onChange={e => setSearchTerm(e.target.value)}
-                      onBlur={() => setSearchOpen(false)}
-                      onKeyDown={e => {
-                        if (e.key === 'Escape') setSearchOpen(false);
-                      }}
-                      placeholder="Service oder Shortcut suchen..."
-                      className="flex-1 bg-transparent outline-none text-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                      autoFocus
-                    />
-                    <button
-                      className="ml-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        setSearchTerm("");
-                        setSearchOpen(false);
-                      }}
-                      tabIndex={-1}
-                      type="button"
-                      aria-label="Suche schließen"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder={`Suche in ${activeTab === 'services' ? 'Services & Shortcuts' : activeTab === 'monitoring' ? 'Proxmox' : 'Security'}...`}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="flex-1 bg-transparent outline-none text-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    autoFocus
+                  />
+                  <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
+                    ESC
+                  </span>
                 </div>
-              )}
+                
+                {/* Search Hint */}
+                <div className="px-6 py-3 text-sm text-gray-600 dark:text-gray-400">
+                  {searchTerm ? (
+                    <span>Filtern nach: <strong>"{searchTerm}"</strong></span>
+                  ) : (
+                    <span>Beginne zu tippen um zu suchen...</span>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         {/* === CONTENT BASED ON ACTIVE TAB === */}
-        <div className="flex-grow">
+        <div className="flex-grow relative z-[65]">
           {activeTab === "services" && (
             <>
               {/* Gefilterte Services */}
@@ -833,6 +844,7 @@ function App() {
             isLoggedIn={isLoggedIn}
             textColor={getTextColor()}
             activeDashboard={activeDashboard}
+            searchTerm={searchTerm}
             onOpenSettings={() => {
               setShowSettings(true);
               setActiveTab("services"); // Wechsle zurück zu Services/Settings
@@ -845,6 +857,7 @@ function App() {
             isLoggedIn={isLoggedIn}
             textColor={getTextColor()}
             activeDashboard={activeDashboard}
+            searchTerm={searchTerm}
             onOpenSettings={() => {
               setShowSettings(true);
               setActiveTab("services");

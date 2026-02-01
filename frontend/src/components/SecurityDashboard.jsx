@@ -23,7 +23,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
     `${window.location.protocol}//${window.location.hostname}:8000`
   );
 
-function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashboard = 1 }) {
+function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashboard = 1, searchTerm = "" }) {
   const [tokenInfo, setTokenInfo] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
@@ -36,6 +36,9 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Hinweis: Suche ist nur in bestimmten Views sinnvoll
+  const isSearchRelevant = activeView === 'overview';
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -234,6 +237,18 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
           </div>
         </button>
       </div>
+
+      {/* Hinweis wenn Suche aktiv aber View nicht durchsuchbar */}
+      {searchTerm && !isSearchRelevant && (
+        <div className="mb-4 bg-yellow-500/20 dark:bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+          <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            <span className="text-sm font-medium">Die Suche ist in dieser Ansicht nicht verfügbar. Wechsle zu "Übersicht" zum Suchen.</span>
+          </div>
+        </div>
+      )}
 
       {/* Overview View */}
       {activeView === 'overview' && (

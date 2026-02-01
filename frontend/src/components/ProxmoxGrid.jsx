@@ -12,7 +12,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
     `${window.location.protocol}//${window.location.hostname}:8000`
   );
 
-function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard }) {
+function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, searchTerm = "" }) {
   // Sub-Navigation State
   const [activeView, setActiveView] = useState('resources'); // 'resources' oder 'status'
   
@@ -26,7 +26,6 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
   const [isCluster, setIsCluster] = useState(false); // NEU: Ist es ein Cluster?
   
   // Filter & Sort States
-  const [searchQuery, setSearchQuery] = useState(''); // NEU: Suchfeld
   const [sortBy, setSortBy] = useState('name-asc'); // name-asc, name-desc, status, type
   const [filterType, setFilterType] = useState('all'); // all, qemu, lxc
   const [filterStatus, setFilterStatus] = useState('all'); // all, running, stopped
@@ -193,9 +192,9 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
   const getFilteredAndSortedResources = () => {
     let filtered = [...resources];
     
-    // Suche nach Name oder VM-ID
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
+    // Globale Suche nach Name oder VM-ID
+    if (searchTerm.trim()) {
+      const query = searchTerm.toLowerCase();
       filtered = filtered.filter(r => 
         r.name.toLowerCase().includes(query) || 
         r.vmid.toString().includes(query) ||
@@ -409,11 +408,24 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
 
       {/* Content basierend auf aktiver View */}
       {activeView === 'status' ? (
-        <ProxmoxStatusDashboard 
-          activeDashboard={activeDashboard}
-          isLoggedIn={isLoggedIn}
-          textColor={textColor}
-        />
+        <>
+          {/* Hinweis wenn Suche aktiv aber in Status-View */}
+          {searchTerm && (
+            <div className="mb-4 bg-yellow-500/20 dark:bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+              <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <span className="text-sm font-medium">Die Suche ist in der Status-Übersicht nicht verfügbar. Wechsle zu "VM/LXC" zum Suchen.</span>
+              </div>
+            </div>
+          )}
+          <ProxmoxStatusDashboard 
+            activeDashboard={activeDashboard}
+            isLoggedIn={isLoggedIn}
+            textColor={textColor}
+          />
+        </>
       ) : (
         <>
           {/* System Stats Cards - NACH der Überschrift */}
@@ -428,26 +440,13 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
             <span className="text-sm font-semibold text-gray-950 dark:text-white/90">Filter & Sort:</span>
           </div>
 
-          {/* Suchfeld - NEU */}
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <MagnifyingGlass size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Suche nach Name, ID oder Node..."
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300/50 dark:border-white/10 bg-white/40 dark:bg-white/10 backdrop-blur-md text-gray-950 dark:text-white/90 text-sm placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white text-xl"
-                title="Suche löschen"
-              >
-                ×
-              </button>
-            )}
-          </div>
+          {/* Hinweis zur globalen Suche */}
+          {searchTerm && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 dark:bg-blue-500/20 border border-blue-500/30 rounded-lg">
+              <MagnifyingGlass size={16} className="text-blue-600 dark:text-blue-400" />
+              <span className="text-xs text-blue-600 dark:text-blue-400">Suche aktiv: "{searchTerm}"</span>
+            </div>
+          )}
 
           {/* Sortierung */}
           <select
@@ -486,10 +485,9 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
           </select>
 
           {/* Reset Button */}
-          {(searchQuery || sortBy !== 'name-asc' || filterType !== 'all' || filterStatus !== 'all') && (
+          {(searchTerm || sortBy !== 'name-asc' || filterType !== 'all' || filterStatus !== 'all') && (
             <button
               onClick={() => {
-                setSearchQuery('');
                 setSortBy('name-asc');
                 setFilterType('all');
                 setFilterStatus('all');
@@ -509,20 +507,19 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard })
           <p className="text-gray-600 dark:text-gray-400 text-lg">
             {resources.length === 0 
               ? 'Keine VMs oder Container gefunden' 
-              : searchQuery 
-                ? `Keine Ergebnisse für "${searchQuery}"`
+              : searchTerm 
+                ? `Keine Ergebnisse für "${searchTerm}"`
                 : 'Keine Ergebnisse mit aktuellen Filtern'}
           </p>
-          {(searchQuery || filterType !== 'all' || filterStatus !== 'all') && (
+          {(searchTerm || filterType !== 'all' || filterStatus !== 'all') && (
             <button
               onClick={() => {
-                setSearchQuery('');
                 setFilterType('all');
                 setFilterStatus('all');
               }}
               className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all"
             >
-              Suche & Filter zurücksetzen
+              Filter zurücksetzen
             </button>
           )}
         </div>
