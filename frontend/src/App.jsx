@@ -668,12 +668,12 @@ function App() {
                 <>
                   {/* Backdrop zum Schließen */}
                   <div 
-                    className="fixed inset-0 z-40"
+                    className="fixed inset-0 z-[60]"
                     onClick={() => setDashboardDropdownOpen(false)}
                   />
                   
                   {/* Dropdown Menu */}
-                  <div className="absolute left-0 top-full mt-2 z-50 min-w-[250px] bg-white/10 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+                  <div className="absolute left-0 top-full mt-2 z-[70] min-w-[250px] bg-white/10 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden">
                     {dashboards.map((dashboard) => (
                       <button
                         key={dashboard.id}

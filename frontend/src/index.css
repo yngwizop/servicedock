@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fade-in Animation für Sidebar Text */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-in forwards;
+  animation-delay: 0.15s;
+  opacity: 0;
+}
+
 /* Moderne Scrollbar-Gestaltung */
 /* Scrollbar-Größe */
 ::-webkit-scrollbar {
