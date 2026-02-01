@@ -9,6 +9,7 @@ import LoginModal from "./components/LoginModal";
 import SettingsPanel from "./components/SettingsPanel";
 import ClockWidget from "./components/ClockWidget";
 import WeatherWidget from "./components/WeatherWidget";
+import Sidebar from "./components/Sidebar";
 import { Moon, Sun, Lock, Gear, SignOut, CaretDown } from 'phosphor-react';
 import { setAuthSession, clearAuthSession, isAuthenticated, authenticatedFetch, getAuthHeaders } from './utils/auth';
 
@@ -33,6 +34,10 @@ function App() {
       const searchInputRef = React.useRef(null);
     // Suchfeld für Services & Shortcuts
     const [searchTerm, setSearchTerm] = useState("");
+  
+  // Sidebar Collapse State
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
   // --- State-Definitionen ---
 
   // NEU: State für das Theme (light/dark)
@@ -547,27 +552,14 @@ function App() {
   // --- RENDER ---
   return (
     <ErrorBoundary>
-    {/* Wenn nicht eingeloggt: Nur Login-Modal anzeigen, sonst App */}
-    {!isLoggedIn ? (
-      <LoginModal
-        onSubmit={handleLogin}
-        password={password}
-        setPassword={setPassword}
-        error={loginError}
-        disabled={loginDisabled}
-        appearance={appearance}
-        onClose={() => {
-          setLoginError("");
-        }}
-      />
-    ) : (
-    <div className="relative min-h-screen">
-      {/* 1. Gradient Background - managed by useEffect (body) */}
+    {/* Background-Layer (immer sichtbar, auch beim Login) */}
+    <div className="fixed inset-0 w-full h-full -z-10">
+      {/* 1. Gradient Background - managed by useEffect (body) - already applied to body */}
       
       {/* 2. User-Custom Background Color Layer (optional) */}
       {appearance.bg_color && appearance.bg_color !== 'transparent' && (
         <div
-          className="fixed inset-0 w-full h-full -z-10 pointer-events-none"
+          className="absolute inset-0 w-full h-full pointer-events-none"
           style={{ 
             backgroundColor: appearance.bg_color,
             opacity: appearance.bg_opacity || 0.3 // Default 30% wenn kein Wert
@@ -578,7 +570,7 @@ function App() {
       {/* 3. User-Custom Background Image Layer (optional) */}
       {appearance.bg_image_url && (
         <div
-          className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat pointer-events-none -z-10"
+          className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat pointer-events-none"
           style={{
             backgroundImage: `url(${appearance.bg_image_url})`,
             opacity: appearance.bg_opacity,
@@ -586,9 +578,38 @@ function App() {
           }}
         ></div>
       )}
+    </div>
 
-      {/* 4. Content-Layer */}
-      <div className="relative z-10 flex flex-col min-h-screen pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2 max-w-full overflow-x-hidden">
+    {/* Wenn nicht eingeloggt: Nur Login-Modal anzeigen, sonst App */}
+    {!isLoggedIn ? (
+      <LoginModal
+        onSubmit={handleLogin}
+        password={password}
+        setPassword={setPassword}
+        error={loginError}
+        disabled={loginDisabled}
+        onClose={() => {
+          setLoginError("");
+        }}
+      />
+    ) : (
+    <div className="relative min-h-screen">
+
+      {/* Sidebar */}
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        theme={theme}
+        toggleTheme={toggleTheme}
+        onSettingsClick={() => setShowSettings(true)}
+        onLogout={handleLogout}
+        showProxmox={dashboards.find(d => d.id === activeDashboard)?.show_proxmox === true}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
+
+      {/* Main Content with left margin for sidebar */}
+      <div className={`${sidebarCollapsed ? 'ml-20' : 'ml-64'} transition-all duration-300 relative z-10 flex flex-col min-h-screen pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2 max-w-full overflow-x-hidden`}>
         {/* Header mit Titel und Widgets */}
         <div className="flex flex-col md:flex-row md:items-center mb-8 gap-4">
           {/* Titel mit Custom Dashboard Dropdown */}
@@ -704,50 +725,10 @@ function App() {
           </div>
         </div>
 
-        {/* === SUCHE & TAB NAVIGATION === */}
-        {/* === TAB NAVIGATION (immer sichtbar) === */}
-        <div className="flex items-center justify-between mb-6 gap-4">
-          {/* Tabs */}
-          <div className="flex-1">
-            <div className="flex gap-4 bg-white/50 dark:bg-white/5 backdrop-blur-md rounded-xl px-4 pt-3 pb-2 border border-gray-400/60 dark:border-white/10 shadow-lg w-fit">
-              <button
-                onClick={() => setActiveTab("services")}
-                className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
-                  activeTab === "services"
-                    ? "bg-blue-500/30 dark:bg-blue-500/20 border-b-2 border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400 shadow-sm"
-                    : "text-gray-800 dark:text-white/90 hover:bg-white/50 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                Services & Shortcuts
-              </button>
-              {dashboards.find(d => d.id === activeDashboard)?.show_proxmox === true && (
-                <button
-                  onClick={() => setActiveTab("monitoring")}
-                  className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
-                    activeTab === "monitoring"
-                      ? "bg-blue-500/30 dark:bg-blue-500/20 border-b-2 border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400 shadow-sm"
-                      : "text-gray-800 dark:text-white/90 hover:bg-white/50 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  Proxmox Monitoring
-                </button>
-              )}
-              <button
-                onClick={() => setActiveTab("security")}
-                className={`px-5 py-2.5 text-lg font-semibold transition-all rounded-lg ${
-                  activeTab === "security"
-                    ? "bg-blue-500/30 dark:bg-blue-500/20 border-b-2 border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400 shadow-sm"
-                    : "text-gray-800 dark:text-white/90 hover:bg-white/50 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                Security
-              </button>
-            </div>
-          </div>
-          
-          {/* Suche nur im Services-Tab */}
-          {activeTab === "services" && (
-            <div className="relative flex items-center" style={{ height: '100%' }}>
+        {/* === SUCHE (nur im Services-Tab) === */}
+        {activeTab === "services" && (
+          <div className="flex justify-end mb-6">
+            <div className="relative flex items-center">
               {!searchOpen && (
                 <button
                   className="p-3 rounded-full bg-white/50 dark:bg-white/5 backdrop-blur-md border border-gray-400/60 dark:border-white/10 shadow-lg hover:scale-110 hover:bg-white/70 dark:hover:bg-white/10 transition-all"
@@ -807,9 +788,8 @@ function App() {
                 </div>
               )}
             </div>
-          )}
-        </div>
-        {/* (Doppelte Tabs entfernt, Tabs sind jetzt nur noch im Container mit der Suche) */}
+          </div>
+        )}
 
         {/* === CONTENT BASED ON ACTIVE TAB === */}
         <div className="flex-grow">
@@ -872,44 +852,9 @@ function App() {
           />
         )}
         </div>
-        
-        {/* === ADMIN BUTTONS AM ENDE DES CONTENTS === */}
-        <div className="mt-auto pt-8 pb-2 flex justify-end gap-4 items-center">
-          
-          {/* Theme-Toggle-Button */}
-          <button
-            onClick={toggleTheme}
-            className="bg-white/50 dark:bg-white/5 backdrop-blur-md border border-gray-400/60 dark:border-white/10 p-3 rounded-full shadow-lg hover:shadow-xl hover:bg-white/70 dark:hover:bg-white/10 hover:border-gray-500/70 dark:hover:border-white/20 transition-all hover:scale-110 text-gray-800 dark:text-white/90 hover:text-gray-900 dark:hover:text-white"
-            title="Toggle Theme"
-          >
-            {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
-          </button>
-
-          {/* Login-Button entfällt, da Login-Modal global */}
-          {isLoggedIn && (
-            <>
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="bg-white/50 dark:bg-white/5 backdrop-blur-md border border-gray-400/60 dark:border-white/10 p-3 rounded-full shadow-lg hover:shadow-xl hover:bg-white/70 dark:hover:bg-white/10 hover:border-gray-500/70 dark:hover:border-white/20 transition-all hover:scale-110 text-gray-800 dark:text-white/90 hover:text-gray-900 dark:hover:text-white"
-                title="Einstellungen"
-              >
-                <Gear size={24} />
-              </button>
-              <button
-                onClick={handleLogout}
-                className="bg-white/50 dark:bg-white/5 backdrop-blur-md border border-gray-400/60 dark:border-white/10 p-3 rounded-full shadow-lg hover:shadow-xl hover:bg-white/70 dark:hover:bg-white/10 hover:border-gray-500/70 dark:hover:border-white/20 transition-all hover:scale-110 text-gray-800 dark:text-white/90 hover:text-gray-900 dark:hover:text-white"
-                title="Logout"
-              >
-                <SignOut size={24} />
-              </button>
-            </>
-          )}
-        </div>
       </div>
 
-      {/* Login-Modal ist jetzt global und wird oben gerendert, wenn nicht eingeloggt */}
-
-      {/* 5. Settings-Panel (AUSGELAGERT) */}
+      {/* Settings-Panel (AUSGELAGERT) */}
       {isLoggedIn && showSettings && (
         <SettingsPanel
           onClose={() => {
