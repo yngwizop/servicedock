@@ -36,7 +36,7 @@ function App() {
     const [searchTerm, setSearchTerm] = useState("");
   
   // Sidebar Collapse State
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   
   // --- State-Definitionen ---
 
@@ -639,7 +639,7 @@ function App() {
       />
 
       {/* Main Content with left margin for sidebar */}
-      <div className={`${sidebarCollapsed ? 'ml-20' : 'ml-64'} transition-all duration-300 relative z-10 flex flex-col min-h-screen pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2 max-w-full overflow-x-hidden`}>
+      <div className={`${sidebarCollapsed ? 'ml-20' : 'ml-52'} transition-all duration-300 relative z-10 flex flex-col min-h-screen pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2 max-w-full overflow-x-hidden`}>
         {/* Header mit Titel und Widgets */}
         <div className="flex flex-col md:flex-row md:items-center mb-6 gap-4">
           {/* Linke Seite: Titel + Suche */}
@@ -766,7 +766,7 @@ function App() {
               className="fixed top-32 left-1/2 z-[70] w-full max-w-2xl px-4"
               style={{ 
                 transform: 'translateX(-50%)',
-                marginLeft: sidebarCollapsed ? '2.5rem' : '8rem'
+                marginLeft: sidebarCollapsed ? '2.5rem' : '6.5rem'
               }}
             >
               <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border border-gray-300/50 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden">
