@@ -21,6 +21,23 @@
 
 ### Spezielle Card-Constraints
 
+#### Ceph Health Card
+- `minH: 5`, `maxH: 6` - Kompakte Card, nicht zu groß skalierbar
+- Status-Content mit `flex-1` und `justify-center` für perfekte Zentrierung
+- OSD Overview mit Border-Top am unteren Rand (ohne `mt-auto`)
+- **Layout**: Status zentriert in verfügbarem Raum, OSD Info statisch unten
+
+```jsx
+<div className="flex flex-col h-full">
+  <div className="flex-1 flex flex-col justify-center items-center">
+    {/* Status Icon + Badge - automatisch zentriert */}
+  </div>
+  <div className="pt-2 border-t">
+    {/* OSD Overview - bleibt unten */}
+  </div>
+</div>
+```
+
 #### Ceph OSDs Card
 - **Nur horizontal resizable**: `minH = maxH = 5`
 - Macht keinen Sinn vertikal zu vergrößern

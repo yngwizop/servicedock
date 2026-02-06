@@ -54,23 +54,23 @@ function CephHealthCard({ ceph }) {
       icon={<Activity size={28} weight="duotone" />}
     >
       <div className="flex flex-col h-full">
-        {/* Statusbereich - kompakter */}
-        <div className="flex flex-col justify-center items-center mb-2">
-          <div className="mb-2">
+        {/* Statusbereich - zentriert */}
+        <div className="flex-1 flex flex-col justify-center items-center">
+          <div className="mb-3">
             {getStatusIcon()}
           </div>
           <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold ${getStatusColor()}`}>
             {getStatusBadge()}
           </div>
           {ceph.status_message && (
-            <div className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 max-w-xs text-center">
+            <div className="mt-2 text-xs text-slate-600 dark:text-slate-400 max-w-xs text-center">
               {ceph.status_message}
             </div>
           )}
         </div>
-        {/* OSD Info (falls vorhanden) - kompakteres Layout */}
+        {/* OSD Info (falls vorhanden) */}
         {ceph.osd && (
-          <div className="pt-2 mt-auto border-t border-slate-200 dark:border-slate-700">
+          <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
             <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
               OSD Overview
             </div>

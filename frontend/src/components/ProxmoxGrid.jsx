@@ -352,14 +352,16 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
             </button>
           )}
           
-          {/* Settings Button */}
-          <button
-            onClick={onOpenSettings}
-            className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-2 rounded-lg shadow hover:shadow-lg transition-all hover:scale-105"
-            title="Einstellungen"
-          >
-            <GearSix size={20} className="text-gray-700 dark:text-gray-300" />
-          </button>
+          {/* Settings Button (nicht im Status View) */}
+          {activeView !== 'status' && (
+            <button
+              onClick={onOpenSettings}
+              className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-2 rounded-lg shadow hover:shadow-lg transition-all hover:scale-105"
+              title="Einstellungen"
+            >
+              <GearSix size={20} className="text-gray-700 dark:text-gray-300" />
+            </button>
+          )}
         </div>
       </div>
 

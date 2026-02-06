@@ -74,7 +74,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       { i: 'storage-by-type', x: 2, y: 9 + topCardHeight, w: 2, h: 6, minW: 1, maxW: 4, minH: 6, maxH: 12 },
       
       // Zeile 5: Ceph Cards (nur wenn Ceph verfügbar)
-      { i: 'ceph-health', x: 0, y: 16 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 4, maxH: 10 },
+      { i: 'ceph-health', x: 0, y: 16 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 5, maxH: 6 },
       { i: 'ceph-osd', x: 2, y: 16 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 5, maxH: 5 }
     ];
   };
