@@ -510,6 +510,8 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
         breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 0 }}
         cols={{ lg: 4, md: 2, sm: 1, xs: 1 }}
         rowHeight={75}
+        margin={[20, 20]}
+        containerPadding={[0, 0]}
         isDraggable={true}
         isResizable={true}
         onLayoutChange={handleLayoutChange}

@@ -639,7 +639,7 @@ function App() {
       />
 
       {/* Main Content with left margin for sidebar */}
-      <div className={`${sidebarCollapsed ? 'ml-20' : 'ml-52'} transition-all duration-300 relative z-10 flex flex-col min-h-screen pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2 max-w-full overflow-x-hidden`}>
+      <div className={`${sidebarCollapsed ? 'ml-20' : 'ml-52'} transition-all duration-300 relative z-10 flex flex-col min-h-screen pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2`}>
         {/* Header mit Titel und Widgets */}
         <div className="flex flex-col md:flex-row md:items-center mb-6 gap-4">
           {/* Linke Seite: Titel + Suche */}

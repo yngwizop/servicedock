@@ -35,7 +35,7 @@ function Sidebar({
   ];
 
   return (
-    <div className={`fixed left-0 top-0 h-screen ${collapsed ? 'w-20' : 'w-52'} transition-all duration-300 ease-in-out flex flex-col z-50 overflow-hidden`}>
+    <div className={`sidebar-no-scrollbar fixed left-0 top-0 h-screen ${collapsed ? 'w-20' : 'w-52'} transition-all duration-300 ease-in-out flex flex-col z-50 overflow-clip`}>
       {/* Logo/Header */}
       <div className="p-6">
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} transition-all duration-300 ease-in-out`}>
@@ -64,7 +64,7 @@ function Sidebar({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+      <nav className="flex-1 p-4 space-y-2 overflow-hidden">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;

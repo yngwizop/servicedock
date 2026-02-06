@@ -55,7 +55,23 @@
 @layer base {
   html {
     overflow-y: scroll;
+    overflow-x: clip;
   }
+  
+  body {
+    overflow-x: clip;
+  }
+}
+
+/* Scrollbar in der Sidebar komplett ausblenden */
+.sidebar-no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.sidebar-no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Slide-In Animation für Settings Sidebar */
