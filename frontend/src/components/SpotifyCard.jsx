@@ -1,21 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { MusicNote, Play, Pause, SkipForward, SkipBack, CircleNotch, ArrowSquareOut } from 'phosphor-react';
+import { authenticatedFetch } from '../utils/auth';
 
 const SpotifyCard = () => {
   const [nowPlaying, setNowPlaying] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Backend URL: Mit Nginx kein Port, ohne Nginx Port 8000
-  const BACKEND_URL = window.location.port === '' 
-    ? `${window.location.protocol}//${window.location.hostname}`
-    : `${window.location.protocol}//${window.location.hostname}:8000`;
-
   const fetchNowPlaying = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/spotify/now-playing`, {
-        credentials: 'include'
-      });
+      const response = await authenticatedFetch('/api/spotify/now-playing');
 
       if (response.ok) {
         const data = await response.json();
@@ -23,6 +17,10 @@ const SpotifyCard = () => {
         setError(null);
       } else if (response.status === 429) {
         setError('Rate limit erreicht. Bitte warten...');
+      } else if (response.status === 401) {
+        // Session expired — don't show error, just wait for re-login
+        setError(null);
+        setNowPlaying(null);
       } else {
         setError('Fehler beim Laden');
       }
