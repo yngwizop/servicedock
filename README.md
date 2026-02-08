@@ -76,34 +76,51 @@ git clone https://github.com/yngwizop/servicedock.git
 cd servicedock
 ```
 
+### 2. Generate SSL Certificates
+
+**PostgreSQL SSL:**
 ```bash
-# Generate keys
+mkdir -p db/ssl
+openssl req -new -x509 -days 365 -nodes -text \
+  -out db/ssl/server.crt -keyout db/ssl/server.key -subj "/CN=postgres"
+chmod 600 db/ssl/server.key
+sudo chown 999:999 db/ssl/server.key db/ssl/server.crt
+```
+
+**Nginx SSL:**
+```bash
+./generate-ssl.sh
+```
+> Or manually: see [HTTPS_SETUP.md](HTTPS_SETUP.md)
+
+### 3. Generate Security Keys
+
+```bash
+# Encryption key (Fernet) — never change after first start!
 python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+
+# JWT secret key
 openssl rand -hex 32
 ```
 
-Create a `.env` file:
+### 4. Create `.env`
 
-```env
-ADMIN_PASSWORD=your_secure_password
-POSTGRES_USER=dashboard_user
-POSTGRES_PASSWORD=your_db_password
-POSTGRES_DB=dashboard
-DATABASE_URL=postgresql://dashboard_user:your_db_password@db:5432/dashboard
-ENCRYPTION_KEY=<generated_fernet_key>
-JWT_SECRET_KEY=<generated_hex_key>
-ACCESS_TOKEN_EXPIRE_MINUTES=120
-FRONTEND_URL=https://your-ip
-ENVIRONMENT=production
+Copy the template and fill in your values:
+
+```bash
+cp .env.template .env
+nano .env
 ```
 
-### 2. Start
+> See [.env.template](.env.template) for all available options with descriptions.
+
+### 5. Start
 
 ```bash
 docker compose up -d --build
 ```
 
-### 3. Open
+### 6. Open
 
 ```
 https://your-ip
