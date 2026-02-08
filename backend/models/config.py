@@ -5,29 +5,29 @@ from datetime import datetime
 
 class ServiceExport(BaseModel):
     """Service for export (no id, will be reassigned on import)"""
-    name: str
-    description: Optional[str] = None
-    url: str
-    icon: Optional[str] = None
-    position: int = 0
+    name: str = Field(..., min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
+    url: str = Field(..., min_length=1, max_length=500)
+    icon: Optional[str] = Field(None, max_length=500)
+    position: int = Field(0, ge=0, le=1000)
     is_favorite: bool = False
 
 class ShortcutExport(BaseModel):
     """Shortcut for export (no id, will be reassigned on import)"""
-    name: str
-    url: str
-    icon: Optional[str] = None
-    position: int = 0
+    name: str = Field(..., min_length=1, max_length=100)
+    url: str = Field(..., min_length=1, max_length=500)
+    icon: Optional[str] = Field(None, max_length=500)
+    position: int = Field(0, ge=0, le=1000)
 
 class DashboardExport(BaseModel):
     """Dashboard for export with nested services and shortcuts"""
-    name: str
-    description: Optional[str] = None
-    type: str = "dashboard"
+    name: str = Field(..., min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
+    type: str = Field("dashboard", max_length=50)
     is_active: bool = True
     show_proxmox: bool = True
-    services: List[ServiceExport] = []
-    shortcuts: List[ShortcutExport] = []
+    services: List[ServiceExport] = Field(default=[], max_items=500)
+    shortcuts: List[ShortcutExport] = Field(default=[], max_items=500)
 
 class AppearanceExport(BaseModel):
     """Appearance settings for export"""

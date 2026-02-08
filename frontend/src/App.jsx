@@ -30,7 +30,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
 function App() {
   // === Custom Hooks ===
   const auth = useAuth();
-  const { dashboards, activeDashboard, fetchDashboards, switchDashboard } = useDashboards();
+  const { dashboards, activeDashboard, fetchDashboards, switchDashboard } = useDashboards({ onSessionExpired: auth.onSessionExpired });
   const {
     theme, toggleTheme,
     appearance, editAppearance, setEditAppearance,
@@ -72,10 +72,10 @@ function App() {
   };
 
   useEffect(() => {
-    fetchDashboards();
-    fetchData();
-    fetchAppearance();
     if (auth.isLoggedIn) {
+      fetchDashboards();
+      fetchData();
+      fetchAppearance();
       fetchSpotifyStatus();
     }
   }, [auth.isLoggedIn]);

@@ -4,7 +4,7 @@ OAuth2 Flow, Token Management, Now Playing API
 """
 from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.responses import HTMLResponse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import secrets
 import requests
@@ -111,7 +111,10 @@ def refresh_access_token(spotify_config: dict) -> Optional[str]:
         # (anderer Thread könnte bereits refreshed haben)
         current_config = get_spotify_config()
         if current_config and current_config["token_expires_at"]:
-            if datetime.utcnow() + timedelta(minutes=5) < current_config["token_expires_at"]:
+            expires_at = current_config["token_expires_at"]
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            if datetime.now(timezone.utc) + timedelta(minutes=5) < expires_at:
                 logger.info("Token already refreshed by another thread")
                 return current_config["access_token"]
         
@@ -143,7 +146,7 @@ def refresh_access_token(spotify_config: dict) -> Optional[str]:
                     cur = conn.cursor()
                     
                     encrypted_token = encrypt_value(new_access_token)
-                    expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
+                    expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
                     
                     cur.execute("""
                         UPDATE spotify_config 
@@ -185,8 +188,11 @@ def get_valid_access_token() -> Optional[str]:
     # Check ob Token noch gültig ist
     if spotify_config["token_expires_at"]:
         # Token 5 Minuten vor Ablauf erneuern
-        expires_soon = datetime.utcnow() + timedelta(minutes=5)
-        if spotify_config["token_expires_at"] <= expires_soon:
+        expires_soon = datetime.now(timezone.utc) + timedelta(minutes=5)
+        token_expires = spotify_config["token_expires_at"]
+        if token_expires.tzinfo is None:
+            token_expires = token_expires.replace(tzinfo=timezone.utc)
+        if token_expires <= expires_soon:
             logger.info("Spotify token expires soon, refreshing...")
             return refresh_access_token(spotify_config)
     
@@ -263,7 +269,9 @@ async def install_spotify(
 
 
 @router.get("/api/spotify/status", response_model=SpotifyConfigResponse)
+@limiter.limit("30/minute")
 async def get_spotify_status(
+    request: Request,
     token: dict = Depends(require_role("admin")),
     db = Depends(get_db)
 ):
@@ -299,6 +307,7 @@ async def get_spotify_status(
 
 
 @router.get("/api/spotify/auth-url", response_model=SpotifyAuthUrlResponse)
+@limiter.limit("10/minute")
 async def get_auth_url(
     request: Request,
     token: dict = Depends(require_role("admin")),
@@ -319,12 +328,14 @@ async def get_auth_url(
     state = secrets.token_urlsafe(32)
     
     # Clean old states (älter als 10 Minuten)
-    cutoff = datetime.utcnow() - timedelta(minutes=10)
-    _oauth_states.clear()
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=10)
+    expired_states = [k for k, v in _oauth_states.items() if v["timestamp"] < cutoff]
+    for k in expired_states:
+        del _oauth_states[k]
     
     # Speichere State mit redirect_uri (für Token-Exchange)
     _oauth_states[state] = {
-        "timestamp": datetime.utcnow(),
+        "timestamp": datetime.now(timezone.utc),
         "redirect_uri": spotify_config["redirect_uri"]
     }
     logger.info(f"[SPOTIFY OAUTH] Auth-Request: redirect_uri={spotify_config['redirect_uri']}")
@@ -347,6 +358,7 @@ async def get_auth_url(
 
 
 @router.get("/api/spotify/callback")
+@limiter.limit("10/minute")
 async def spotify_callback(
     request: Request,
     code: Optional[str] = None,
@@ -360,7 +372,7 @@ async def spotify_callback(
     # Error Handling
     if error:
         logger.warning(f"Spotify OAuth error: {error}")
-        raise HTTPException(status_code=400, detail=f"Spotify Autorisierung fehlgeschlagen: {error}")
+        raise HTTPException(status_code=400, detail="Spotify Autorisierung fehlgeschlagen")
     
     if not code or not state:
         raise HTTPException(status_code=400, detail="Code oder State fehlt")
@@ -412,7 +424,7 @@ async def spotify_callback(
         # Encrypt und speichere Tokens
         encrypted_access = encrypt_value(access_token)
         encrypted_refresh = encrypt_value(refresh_token)
-        expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
         
         conn = None
         try:
@@ -488,7 +500,7 @@ async def spotify_callback(
                     // Notify parent window if opened as popup
                     if (window.opener) {
                         try {
-                            window.opener.postMessage({ type: 'spotify-connected' }, '*');
+                            window.opener.postMessage({ type: 'spotify-connected' }, window.location.origin);
                         } catch(e) {
                             console.log('postMessage failed:', e);
                         }
@@ -514,10 +526,10 @@ async def spotify_callback(
 
 @router.get("/api/spotify/now-playing", response_model=SpotifyNowPlayingResponse)
 @limiter.limit("30/minute")
-async def get_now_playing(request: Request):
+async def get_now_playing(request: Request, _admin = Depends(require_role("admin"))):
     """
     Gibt aktuell abgespielten Song zurück.
-    Öffentlich zugänglich (kein Admin-Token nötig).
+    Nur für authentifizierte Benutzer.
     """
     access_token = get_valid_access_token()
     

@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/appearance", tags=["appearance"])
 
 @router.get("", response_model=AppearanceResponse)
 @limiter.limit("60/minute")  # Read operations - generous limit
-async def get_appearance(request: Request, db = Depends(get_db)) -> AppearanceResponse:
+async def get_appearance(request: Request, db = Depends(get_db), _admin = Depends(require_role("admin"))) -> AppearanceResponse:
     def _get_appearance_sync():
         cur = db.cursor()
         try:

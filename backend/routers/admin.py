@@ -230,7 +230,8 @@ def delete_all_audit_logs(request: Request, delete_request: DeleteLogsRequest, t
 # ===== Token Rotation =====
 
 @router.get("/api/admin/proxmox/token-info")
-def get_token_info(dashboard_id: int = 1, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+@limiter.limit("30/minute")
+def get_token_info(request: Request, dashboard_id: int = 1, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Gibt Informationen über das Alter des aktuellen Tokens zurück"""
     cur = db.cursor()
     
@@ -340,7 +341,8 @@ def get_rate_limit_usage(request: Request, token: dict = Depends(require_role("a
     }
 
 @router.post("/api/admin/proxmox/rotate-token")
-def rotate_token(config: ProxmoxConfig, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+@limiter.limit("5/hour")
+def rotate_token(request: Request, config: ProxmoxConfig, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """
     Rotiert den Proxmox-Token (speichert neuen Token und updated Zeitstempel)
     """

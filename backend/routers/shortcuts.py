@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/shortcuts", tags=["shortcuts"])
 
 @router.get("", response_model=List[ShortcutResponse])
 @limiter.limit("60/minute")  # Read operations - generous limit
-async def get_shortcuts(request: Request, dashboard_id: int = 1, db = Depends(get_db)) -> List[ShortcutResponse]:
+async def get_shortcuts(request: Request, dashboard_id: int = 1, db = Depends(get_db), _admin = Depends(require_role("admin"))) -> List[ShortcutResponse]:
     """Get all shortcuts for a specific dashboard (default: 1)"""
     def _get_shortcuts_sync():
         cur = db.cursor()

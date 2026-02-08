@@ -13,15 +13,20 @@ export function useServices({ activeDashboard, onSessionExpired }) {
 
   const fetchData = async () => {
     try {
-      const sRes = await fetch(`${BACKEND_URL}/api/services?dashboard_id=${activeDashboard}`);
-      const servicesData = await sRes.json();
-      setServices(servicesData);
+      const sRes = await authenticatedFetch(`${BACKEND_URL}/api/services?dashboard_id=${activeDashboard}`);
+      if (sRes.ok) {
+        const servicesData = await sRes.json();
+        setServices(servicesData);
+      }
 
-      const scRes = await fetch(`${BACKEND_URL}/api/shortcuts?dashboard_id=${activeDashboard}`);
-      const shortcutsData = await scRes.json();
-      setShortcuts(shortcutsData);
+      const scRes = await authenticatedFetch(`${BACKEND_URL}/api/shortcuts?dashboard_id=${activeDashboard}`);
+      if (scRes.ok) {
+        const shortcutsData = await scRes.json();
+        setShortcuts(shortcutsData);
+      }
     } catch (err) {
       console.error("Fehler beim Laden der Daten:", err);
+      if (err.message?.includes('Session expired')) onSessionExpired();
     }
   };
 

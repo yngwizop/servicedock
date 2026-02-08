@@ -134,14 +134,32 @@ def refresh_token(
             expires_delta=access_token_expires
         )
         
+        # Rotate refresh token (issue a new one, invalidating the old)
+        refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        new_refresh_token = create_access_token(
+            data={"sub": "admin", "type": "admin", "token_type": "refresh"},
+            expires_delta=refresh_token_expires
+        )
+        
         # Update access token cookie
         response.set_cookie(
             key="access_token",
             value=new_access_token,
             httponly=True,
             secure=ENVIRONMENT == "production",
-            samesite="strict",  # ✅ CSRF protection
+            samesite="strict",
             max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            path="/"
+        )
+        
+        # Update refresh token cookie (rotation)
+        response.set_cookie(
+            key="refresh_token",
+            value=new_refresh_token,
+            httponly=True,
+            secure=ENVIRONMENT == "production",
+            samesite="strict",
+            max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
             path="/"
         )
         
@@ -171,14 +189,16 @@ def logout(response: Response):
         key="access_token",
         path="/",
         httponly=True,
-        samesite="lax"
+        secure=ENVIRONMENT == "production",
+        samesite="strict"
     )
     
     response.delete_cookie(
         key="refresh_token",
         path="/",
         httponly=True,
-        samesite="lax"
+        secure=ENVIRONMENT == "production",
+        samesite="strict"
     )
     
     return {"message": "Logout successful"}

@@ -213,17 +213,28 @@ function ConfigAddon({
                 return;
               }
 
+              // Password re-confirmation for replace mode
+              let confirmPassword = null;
+              if (importMode === 'replace') {
+                confirmPassword = prompt('Bitte gib dein Admin-Passwort zur Bestätigung ein:');
+                if (!confirmPassword) return;
+              }
+
               setIsImporting(true);
               setImportError(null);
               setImportSuccess(false);
 
               try {
                 const text = await importFile.text();
+                const headers = { 'Content-Type': 'application/json' };
+                if (confirmPassword) {
+                  headers['X-Confirm-Password'] = confirmPassword;
+                }
                 const res = await authenticatedFetch(
                   `${BACKEND_URL}/api/config/import?mode=${importMode}`,
                   {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers,
                     body: text
                   }
                 );

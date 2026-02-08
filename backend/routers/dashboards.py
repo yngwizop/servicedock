@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/dashboards", tags=["dashboards"])
 
 @router.get("", response_model=List[DashboardResponse])
 @limiter.limit("60/minute")
-async def get_dashboards(request: Request, db = Depends(get_db)) -> List[DashboardResponse]:
+async def get_dashboards(request: Request, db = Depends(get_db), _admin = Depends(require_role("admin"))) -> List[DashboardResponse]:
     """Get all dashboards with counts"""
     def _get_dashboards_sync():
         cur = db.cursor()
@@ -185,7 +185,8 @@ async def delete_dashboard(
 async def get_proxmox_layout(
     request: Request,
     dashboard_id: int,
-    db = Depends(get_db)
+    db = Depends(get_db),
+    _admin = Depends(require_role("admin"))
 ):
     """Get saved Proxmox dashboard layout"""
     def _get_layout_sync():
@@ -213,8 +214,19 @@ async def save_proxmox_layout(
     db = Depends(get_db)
 ):
     """Save Proxmox dashboard layout"""
-    # Parse JSON body manually
-    layout = await request.json()
+    # Parse and validate JSON body
+    try:
+        layout = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+    
+    # Validate layout structure and size
+    layout_str = json.dumps(layout)
+    if len(layout_str) > 100_000:  # Max 100KB
+        raise HTTPException(status_code=400, detail="Layout data too large (max 100KB)")
+    
+    if not isinstance(layout, (dict, list)):
+        raise HTTPException(status_code=400, detail="Layout must be a JSON object or array")
     
     def _save_layout_sync():
         cur = db.cursor()

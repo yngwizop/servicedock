@@ -51,6 +51,12 @@ const SpotifyCard = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // Sanitize URLs - only allow https:// schemes
+  const isSafeUrl = (url) => {
+    if (!url || typeof url !== 'string') return false;
+    return url.startsWith('https://') || url.startsWith('http://');
+  };
+
   // Loading State
   if (loading) {
     return (
@@ -82,7 +88,7 @@ const SpotifyCard = () => {
     <div className="flex items-center gap-3 group">
       <div className="flex items-center gap-3">
         {/* Album Cover */}
-        {track.album_image && (
+        {track.album_image && isSafeUrl(track.album_image) && (
           <div className="flex-shrink-0">
             <img
               src={track.album_image}
@@ -133,7 +139,7 @@ const SpotifyCard = () => {
         </div>
 
         {/* Spotify Link */}
-        {track.external_url && (
+        {track.external_url && isSafeUrl(track.external_url) && (
           <a
             href={track.external_url}
             target="_blank"

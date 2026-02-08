@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { authenticatedFetch } from '../utils/auth';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
   (window.location.port === '' ? 
@@ -6,7 +7,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
     `${window.location.protocol}//${window.location.hostname}:8000`
   );
 
-export function useDashboards() {
+export function useDashboards({ onSessionExpired } = {}) {
   const [dashboards, setDashboards] = useState([]);
   const [activeDashboard, setActiveDashboard] = useState(() => {
     const saved = localStorage.getItem('activeDashboard');
@@ -20,7 +21,8 @@ export function useDashboards() {
 
   const fetchDashboards = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/dashboards`);
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/dashboards`);
+      if (!res.ok) return;
       const data = await res.json();
       setDashboards(data);
 
@@ -32,6 +34,7 @@ export function useDashboards() {
       }
     } catch (err) {
       console.error("Fehler beim Laden der Dashboards:", err);
+      if (err.message?.includes('Session expired') && onSessionExpired) onSessionExpired();
     }
   };
 

@@ -19,4 +19,9 @@ class Shortcut(BaseModel):
     def url_not_empty(cls, v):
         if not v or not v.strip():
             raise ValueError('URL cannot be empty or whitespace only')
-        return v.strip()
+        v = v.strip()
+        # Block dangerous URI schemes (XSS vectors)
+        dangerous = ('javascript:', 'data:', 'vbscript:', 'blob:')
+        if any(v.lower().startswith(s) for s in dangerous):
+            raise ValueError('URL contains a blocked scheme')
+        return v

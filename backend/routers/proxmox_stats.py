@@ -204,7 +204,7 @@ def get_cluster_stats(
                 logger.error(f"Failed to fetch cluster resources: {e}")
                 raise HTTPException(
                     status_code=503, 
-                    detail=f"Cluster-Ressourcen konnten nicht abgerufen werden: {str(e)}"
+                    detail="Cluster-Ressourcen konnten nicht abgerufen werden"
                 )
             
             # Tasks abrufen (letzte X Stunden)
@@ -434,7 +434,7 @@ def get_cluster_stats(
                 logger.error(f"Failed to fetch standalone server data: {e}")
                 raise HTTPException(
                     status_code=503, 
-                    detail=f"Server-Daten konnten nicht abgerufen werden: {str(e)}"
+                    detail="Server-Daten konnten nicht abgerufen werden"
                 )
         
         # ========================================
@@ -656,5 +656,5 @@ def get_cluster_stats(
         )
         raise HTTPException(
             status_code=500, 
-            detail=f"Cluster-Statistiken konnten nicht abgerufen werden: {str(e)}"
+            detail="Cluster-Statistiken konnten nicht abgerufen werden"
         )

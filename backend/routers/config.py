@@ -1,10 +1,11 @@
 """Config Import/Export router"""
-from typing import Any
-from fastapi import APIRouter, HTTPException, Depends, Request, Body
+from typing import Any, Optional
+from fastapi import APIRouter, HTTPException, Depends, Request, Body, Header
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
-from datetime import datetime
+from datetime import datetime, timezone
 import json
+import bcrypt
 
 from models.config import ConfigExport, ConfigImport, DashboardExport, ServiceExport, ShortcutExport, AppearanceExport
 from dependencies.auth import require_role
@@ -120,7 +121,7 @@ async def export_config(
             # 3. Build export object
             return ConfigExport(
                 version="1.0",
-                exported_at=datetime.utcnow().isoformat() + "Z",
+                exported_at=datetime.now(timezone.utc).isoformat() + "Z",
                 dashboards=dashboards,
                 appearance=appearance
             )
@@ -129,7 +130,7 @@ async def export_config(
             raise
         except Exception as e:
             logger.error(f"Config export failed: {e}")
-            raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+            raise HTTPException(status_code=500, detail="Export failed")
         finally:
             cur.close()
     
@@ -142,11 +143,13 @@ async def import_config(
     request: Request,
     config: ConfigImport,
     mode: str = "append",
+    x_confirm_password: Optional[str] = Header(None, alias="X-Confirm-Password"),
     token: dict = Depends(require_role("admin")),
     db = Depends(get_db)
 ):
     """
     Import dashboard configuration from JSON.
+    Requires X-Confirm-Password header for replace mode.
     
     Modes:
     - append (default): Add imported dashboards/services/shortcuts without deleting existing ones.
@@ -154,6 +157,28 @@ async def import_config(
     - replace: Delete all existing dashboards/services/shortcuts, then import.
               WARNING: This deletes all data!
     """
+    # Password re-confirmation for destructive replace mode
+    if mode == "replace":
+        if not x_confirm_password:
+            raise HTTPException(status_code=400, detail="Password confirmation required for replace mode. Send X-Confirm-Password header.")
+        from dependencies.auth import ADMIN_PASSWORD_HASH
+        if not bcrypt.checkpw(x_confirm_password.encode('utf-8'), ADMIN_PASSWORD_HASH.encode('utf-8')):
+            raise HTTPException(status_code=403, detail="Password confirmation failed")
+
+    # Limit number of dashboards to prevent abuse
+    if len(config.dashboards) > 50:
+        raise HTTPException(status_code=400, detail="Too many dashboards (max 50)")
+
+    # Validate all URLs in imported data - block dangerous schemes
+    dangerous_schemes = ('javascript:', 'data:', 'vbscript:', 'blob:')
+    for dashboard in config.dashboards:
+        for svc in dashboard.services:
+            if any(svc.url.lower().startswith(s) for s in dangerous_schemes):
+                raise HTTPException(status_code=422, detail=f"Blocked URL scheme in service '{svc.name}'")
+        for sc in dashboard.shortcuts:
+            if any(sc.url.lower().startswith(s) for s in dangerous_schemes):
+                raise HTTPException(status_code=422, detail=f"Blocked URL scheme in shortcut '{sc.name}'")
+
     def _import_config_sync():
         cur = db.cursor()
         try:
@@ -278,7 +303,7 @@ async def import_config(
         except Exception as e:
             db.rollback()
             logger.error(f"Config import failed: {e}")
-            raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+            raise HTTPException(status_code=500, detail="Import failed")
         finally:
             cur.close()
     
@@ -320,7 +345,8 @@ async def validate_config(
             }
         }
     except Exception as e:
+        logger.error(f"Config validation failed: {e}")
         return {
             "valid": False,
-            "error": str(e)
+            "error": "Validation failed"
         }

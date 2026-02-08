@@ -32,12 +32,12 @@ def initialize_connection_pool():
                 conn_kwargs[k] = v[0]
             else:
                 conn_kwargs[k] = v
-        db_pool = psycopg2.pool.SimpleConnectionPool(
+        db_pool = psycopg2.pool.ThreadedConnectionPool(
             minconn=2,
             maxconn=10,
             **conn_kwargs
         )
-        logger.info("Database connection pool initialized (min=2, max=10)")
+        logger.info("Database connection pool initialized (ThreadedConnectionPool, min=2, max=10)")
     except Exception as e:
         logger.error("Failed to initialize connection pool", exc_info=True)
         raise

@@ -34,11 +34,21 @@ from routers.config import router as config_router  # NEW: Config Import/Export
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # Initialize FastAPI app
-app = FastAPI(
-    title="Web Dashboard API",
-    version="2.0",
-    description="Modular dashboard backend with Proxmox integration"
-)
+if ENVIRONMENT == "production":
+    app = FastAPI(
+        title="Web Dashboard API",
+        version="2.0",
+        description="Modular dashboard backend with Proxmox integration",
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None
+    )
+else:
+    app = FastAPI(
+        title="Web Dashboard API",
+        version="2.0",
+        description="Modular dashboard backend with Proxmox integration"
+    )
 
 # ===== Rate Limiter Setup =====
 app.state.limiter = limiter
@@ -152,33 +162,15 @@ def root():
     """
     return {
         "message": "Web Dashboard Backend v2.0",
-        "status": "running",
-        "architecture": "modular"
+        "status": "running"
     }
 
-# ===== Application Info =====
-@app.get("/api/info", tags=["meta"])
-def get_api_info():
-    """Returns API metadata and available endpoints"""
-    return {
-        "version": "2.0",
-        "architecture": "modular",
-        "routers": [
-            "shortcuts",
-            "services", 
-            "appearance",
-            "auth",
-            "config",
-            "proxmox",
-            "admin",
-            "spotify",
-            "dashboards"
-        ],
-        "features": [
-            "JWT Authentication",
-            "Rate Limiting",
-            "Audit Logging",
-            "Proxmox VM Management",
-            "Token Rotation"
-        ]
-    }
+# ===== Application Info (disabled in production) =====
+if ENVIRONMENT != "production":
+    @app.get("/api/info", tags=["meta"])
+    def get_api_info():
+        """Returns API metadata - only available in development"""
+        return {
+            "version": "2.0",
+            "environment": ENVIRONMENT
+        }

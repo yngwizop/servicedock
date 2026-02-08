@@ -1,5 +1,5 @@
 """Rate limiting for failed login attempts"""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from typing import Tuple
 import threading
@@ -22,7 +22,7 @@ def check_login_rate_limit(ip: str) -> Tuple[bool, str]:
         (is_allowed: bool, message: str)
     """
     with _login_lock:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         attempt_data = failed_login_attempts[ip]
         
         # 1. Prüfe ob IP aktuell gesperrt ist
@@ -52,7 +52,7 @@ def record_failed_login(ip: str):
     Thread-safe durch Lock.
     """
     with _login_lock:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         attempt_data = failed_login_attempts[ip]
         
         # Erster Versuch → Timestamp setzen

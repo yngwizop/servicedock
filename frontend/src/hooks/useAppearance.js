@@ -71,7 +71,8 @@ export function useAppearance({ onSessionExpired }) {
 
   const fetchAppearance = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/appearance`);
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/appearance`);
+      if (!res.ok) return;
       const data = await res.json();
       const safeData = {
         bg_color: data.bg_color || "#f0f2f5",

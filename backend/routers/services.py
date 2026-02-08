@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/services", tags=["services"])
 
 @router.get("", response_model=List[ServiceResponse])
 @limiter.limit("60/minute")  # Read operations - generous limit
-async def get_services(request: Request, dashboard_id: int = 1, db = Depends(get_db)) -> List[ServiceResponse]:
+async def get_services(request: Request, dashboard_id: int = 1, db = Depends(get_db), _admin = Depends(require_role("admin"))) -> List[ServiceResponse]:
     """Get all services for a specific dashboard (default: 1)"""
     def _get_services_sync():
         cur = db.cursor()
