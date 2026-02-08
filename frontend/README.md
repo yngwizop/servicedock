@@ -18,7 +18,8 @@ frontend/
 │   │   ├── ShortcutGrid.jsx      # Grid-Layout für Shortcuts
 │   │   ├── EditModal.jsx         # Modal für Add/Edit
 │   │   ├── LoginModal.jsx        # Admin-Login
-│   │   ├── SettingsPanel.jsx     # Settings mit Tabs
+│   │   ├── SettingsPage.jsx      # Settings als Fullscreen-Tab
+│   │   ├── AddItemFAB.jsx        # FAB für Service/Shortcut hinzufügen
 │   │   ├── ProxmoxCard.jsx       # VM/Container-Karte
 │   │   ├── ProxmoxGrid.jsx       # Proxmox Monitoring
 │   │   ├── SecurityDashboard.jsx # Audit-Logs & Stats
@@ -119,12 +120,17 @@ Add/Edit Modal für Services/Shortcuts mit:
 - Icon-Preview
 - Create/Update/Delete-Actions
 
-#### `SettingsPanel.jsx`
-Tabs für:
+#### `SettingsPage.jsx`
+Fullscreen Settings-Tab mit 2-Spalten-Grid:
 - **Appearance**: Farben, Hintergründe, Layout
-- **Services & Shortcuts**: Add/Edit/Delete
+- **Dashboards**: Dashboard-Verwaltung
 - **Proxmox**: VM/Container-Monitoring
-- **Security**: Audit-Logs & Token-Rotation
+- **Add-Ons**: Config Import/Export, Spotify
+
+#### `AddItemFAB.jsx`
+Floating Action Button (unten rechts, erscheint beim Runterscrollen):
+- Service hinzufügen
+- Shortcut hinzufügen
 
 ---
 

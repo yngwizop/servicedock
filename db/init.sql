@@ -126,6 +126,20 @@ CREATE INDEX IF NOT EXISTS idx_services_dashboard ON services(dashboard_id);
 CREATE INDEX IF NOT EXISTS idx_shortcuts_dashboard ON shortcuts(dashboard_id);
 CREATE INDEX IF NOT EXISTS idx_proxmox_dashboard ON proxmox_config(dashboard_id);
 
+-- FK constraint for proxmox_config.dashboard_id (CREATE TABLE defines it without FK)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'proxmox_config_dashboard_id_fkey'
+          AND table_name = 'proxmox_config'
+    ) THEN
+        ALTER TABLE proxmox_config 
+        ADD CONSTRAINT proxmox_config_dashboard_id_fkey 
+        FOREIGN KEY (dashboard_id) REFERENCES dashboards(id) ON DELETE CASCADE;
+    END IF;
+END $$;
+
 -- NEU: Proxmox Dashboard Layout Speicherung (Pro Dashboard ein Layout)
 CREATE TABLE IF NOT EXISTS proxmox_dashboard_layouts (
     dashboard_id INT PRIMARY KEY REFERENCES dashboards(id) ON DELETE CASCADE,

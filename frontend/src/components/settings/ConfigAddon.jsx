@@ -30,7 +30,7 @@ function ConfigAddon({
 
       <div className="space-y-6">
         {/* Export Section */}
-        <div className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-gray-400/60 dark:border-white/10">
+        <div className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-blue-500/50 dark:border-blue-500/40">
           <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="text-2xl">📥</span>
             Config Exportieren
@@ -67,7 +67,7 @@ function ConfigAddon({
         </div>
 
         {/* Import Section */}
-        <div className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-gray-400/60 dark:border-white/10">
+        <div className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-blue-500/50 dark:border-blue-500/40">
           <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="text-2xl">📤</span>
             Config Importieren
@@ -260,7 +260,7 @@ function ConfigAddon({
           </button>
 
           {/* Info Box */}
-          <div className="mt-6 p-4 bg-white/70 dark:bg-white/5 backdrop-blur-sm border border-gray-300/60 dark:border-white/10 rounded-2xl shadow-lg">
+          <div className="mt-6 p-4 bg-white/70 dark:bg-white/5 backdrop-blur-sm border border-blue-500/50 dark:border-blue-500/40 rounded-2xl shadow-lg">
             <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
               💡 Hinweise
             </h5>

@@ -67,7 +67,7 @@ Ein modernes, selbst gehostetes Dashboard zum Verwalten und Organisieren deiner 
 - **Song-Info**: Titel, Künstler, Album mit Fortschrittsbalken
 - **OAuth 2.0**: Sicherer Verbindungsaufbau mit verschlüsselten Tokens
 - **Auto-Refresh**: Automatische Token-Erneuerung im Hintergrund
-- **AddOns-Verwaltung**: Einfaches Setup über SettingsPanel
+- **AddOns-Verwaltung**: Einfaches Setup über Settings-Tab
 
 ### 🛡️ Security Features (Admin-only)
 - **Audit-Logging**: Alle Proxmox-Aktionen werden protokolliert
@@ -307,7 +307,8 @@ servicedock/
 │   │   │   ├── ShortcutGrid.jsx     # Grid-Layout für Shortcuts
 │   │   │   ├── EditModal.jsx        # Modal für Add/Edit
 │   │   │   ├── LoginModal.jsx       # Admin-Login
-│   │   │   ├── SettingsPanel.jsx    # Settings mit Tabs
+│   │   │   ├── SettingsPage.jsx     # Settings als Fullscreen-Tab
+│   │   │   ├── AddItemFAB.jsx       # FAB für Service/Shortcut hinzufügen
 │   │   │   ├── ProxmoxCard.jsx      # VM/Container-Karte
 │   │   │   ├── ProxmoxGrid.jsx      # Proxmox Monitoring
 │   │   │   ├── SecurityDashboard.jsx # Audit-Logs & Stats

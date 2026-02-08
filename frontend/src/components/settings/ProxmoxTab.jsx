@@ -57,7 +57,7 @@ function ProxmoxTab({
                 <div className="text-2xl text-orange-600 dark:text-orange-400 group-hover:translate-x-1 transition-transform">→</div>
               </div>
               <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                Verbinde dein ServiceDock mit deinem Proxmox-Server über API-Token. Unterstützt Einzelknoten und Cluster-Setups mit SSL-Verifizierung.
+                Verbinde dein Servicedock mit deinem Proxmox-Server über API-Token. Unterstützt Einzelknoten und Cluster-Setups mit SSL-Verifizierung.
               </p>
               <div className="flex items-center gap-2">
                 {savedTokenName ? (

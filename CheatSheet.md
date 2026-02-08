@@ -166,7 +166,7 @@ class DashboardResponse(BaseModel):
 )}
 ```
 
-**5. Frontend Settings (frontend/src/components/SettingsPanel.jsx):**
+**5. Frontend Settings (frontend/src/components/SettingsPage.jsx + settings/):**
 - Checkbox im **Dashboards Tab** (Dashboard-Bearbeitungsformular)
 - State: `dashboardFeatureName` 
 - useEffect zum Sync mit aktuellem Dashboard

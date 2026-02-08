@@ -48,8 +48,8 @@ function ShortcutLink({ shortcut, textColor }) {
           </div>
         )}
         <div className="flex-grow min-w-0">
-          <h3 className="font-medium text-sm text-gray-900 dark:text-white/90 group-hover:text-black dark:group-hover:text-white truncate transition-colors duration-300">{safeName}</h3>
-          <p className="text-xs text-gray-700 dark:text-white/50 group-hover:text-gray-900 dark:group-hover:text-white/60 truncate transition-colors duration-300">{displayUrl(safeUrl)}</p>
+          <h3 className="font-medium text-sm text-gray-900 dark:text-white/90 group-hover:text-black dark:group-hover:text-white truncate transition-colors duration-300" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>{safeName}</h3>
+          <p className="text-xs text-gray-700 dark:text-white/50 group-hover:text-gray-900 dark:group-hover:text-white/60 truncate transition-colors duration-300" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>{displayUrl(safeUrl)}</p>
         </div>
       </div>
     </a>

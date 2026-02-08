@@ -13,7 +13,7 @@ function SpotifyAddon({
   handleUninstallSpotify
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl backdrop-blur-xl bg-white/70 dark:bg-gray-800/70 border border-gray-200/50 dark:border-white/10 shadow-xl">
+    <div className="relative overflow-hidden rounded-2xl backdrop-blur-xl bg-white/70 dark:bg-gray-800/70 border border-green-500/50 dark:border-green-500/40 shadow-xl">
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-transparent to-green-400/5 dark:from-green-400/20 dark:to-transparent pointer-events-none" />
       

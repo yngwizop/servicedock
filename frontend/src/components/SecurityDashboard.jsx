@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import CustomSelect from './CustomSelect';
 import { 
   Detective, 
   Clock, 
@@ -567,18 +568,19 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
               
               <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
                 {/* Filter Dropdown */}
-                <select
+                <CustomSelect
                   value={logFilter}
-                  onChange={(e) => setLogFilter(e.target.value)}
-                  className="px-4 py-2 bg-white/70 dark:bg-gray-900/80 backdrop-blur-md border border-gray-300/50 dark:border-white/20 rounded-lg text-gray-950 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-all"
-                >
-                  <option value="all">🔍 Alle Logs</option>
-                  <option value="failed">❌ Alle Fehler</option>
-                  <option value="failed_logins">🔐 Failed Logins</option>
-                  <option value="permission_errors">⚠️ Permission Denied</option>
-                  <option value="vm_operations">🖥️ VM Operationen</option>
-                  <option value="success">✅ Erfolgreich</option>
-                </select>
+                  onChange={(val) => setLogFilter(val)}
+                  options={[
+                    { value: 'all', label: '🔍 Alle Logs' },
+                    { value: 'failed', label: '❌ Alle Fehler' },
+                    { value: 'failed_logins', label: '🔐 Failed Logins' },
+                    { value: 'permission_errors', label: '⚠️ Permission Denied' },
+                    { value: 'vm_operations', label: '🖥️ VM Operationen' },
+                    { value: 'success', label: '✅ Erfolgreich' },
+                  ]}
+                  className="w-full md:w-56"
+                />
 
                 {/* Delete Button */}
                 <button

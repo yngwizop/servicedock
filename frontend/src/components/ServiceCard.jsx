@@ -49,8 +49,8 @@ function ServiceCard({ service, textColor, isFavorite }) {
           )
         )}
         <div className="flex-grow min-w-0 overflow-hidden">
-          <h3 className="font-semibold text-lg mb-1 text-gray-900 dark:text-white/90 group-hover:text-black dark:group-hover:text-white transition-colors duration-300 truncate">{safeName}</h3>
-          <p className="text-sm text-gray-700 dark:text-white/60 group-hover:text-gray-900 dark:group-hover:text-white/70 transition-colors duration-300 truncate">{safeDescription}</p>
+          <h3 className="font-semibold text-lg mb-1 text-gray-900 dark:text-white/90 group-hover:text-black dark:group-hover:text-white transition-colors duration-300 truncate" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>{safeName}</h3>
+          <p className="text-sm text-gray-700 dark:text-white/60 group-hover:text-gray-900 dark:group-hover:text-white/70 transition-colors duration-300 truncate" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>{safeDescription}</p>
         </div>
       </div>
     </a>

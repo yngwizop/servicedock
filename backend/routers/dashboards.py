@@ -63,8 +63,8 @@ async def create_dashboard(
         cur = db.cursor()
         try:
             cur.execute(
-                "INSERT INTO dashboards (name, description, type, is_active) VALUES (%s, %s, %s, TRUE) RETURNING id;",
-                (dashboard.name, dashboard.description, dashboard.type)
+                "INSERT INTO dashboards (name, description, type, is_active, show_proxmox) VALUES (%s, %s, %s, TRUE, %s) RETURNING id;",
+                (dashboard.name, dashboard.description, dashboard.type, dashboard.show_proxmox)
             )
             new_id = cur.fetchone()[0]
             db.commit()
@@ -150,17 +150,22 @@ async def delete_dashboard(
     def _delete_dashboard_sync():
         cur = db.cursor()
         try:
-            # Check if this is the last dashboard
-            cur.execute("SELECT COUNT(*) FROM dashboards;")
-            total_count = cur.fetchone()[0]
-            if total_count <= 1:
-                raise HTTPException(status_code=400, detail="Cannot delete the last dashboard")
-            
-            cur.execute("DELETE FROM dashboards WHERE id = %s RETURNING id;", (dashboard_id,))
+            # Atomic delete — only succeeds if more than 1 dashboard exists
+            cur.execute(
+                "DELETE FROM dashboards WHERE id = %s AND (SELECT COUNT(*) FROM dashboards) > 1 RETURNING id;",
+                (dashboard_id,)
+            )
             deleted = cur.fetchone()
-            db.commit()
             if not deleted:
-                raise HTTPException(status_code=404, detail="Dashboard not found")
+                # Determine reason: not found or last dashboard
+                cur.execute("SELECT COUNT(*) FROM dashboards WHERE id = %s;", (dashboard_id,))
+                exists = cur.fetchone()[0]
+                db.rollback()
+                if exists == 0:
+                    raise HTTPException(status_code=404, detail="Dashboard not found")
+                else:
+                    raise HTTPException(status_code=400, detail="Cannot delete the last dashboard")
+            db.commit()
             return {"message": "Dashboard deleted"}
         except HTTPException:
             db.rollback()
@@ -204,6 +209,7 @@ async def get_proxmox_layout(
 async def save_proxmox_layout(
     request: Request,
     dashboard_id: int,
+    token: dict = Depends(require_role("admin")),
     db = Depends(get_db)
 ):
     """Save Proxmox dashboard layout"""
@@ -239,6 +245,7 @@ async def save_proxmox_layout(
 async def reset_proxmox_layout(
     request: Request,
     dashboard_id: int,
+    token: dict = Depends(require_role("admin")),
     db = Depends(get_db)
 ):
     """Reset Proxmox dashboard layout to default"""

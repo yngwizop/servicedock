@@ -3,6 +3,7 @@ import ProxmoxCard from './ProxmoxCard';
 import ProxmoxStatsCards from './ProxmoxStatsCards';
 import ProxmoxStatusDashboard from './ProxmoxStatusDashboard';
 import { ArrowsClockwise, WarningCircle, GearSix, LockKey, FunnelSimple, SortAscending, MagnifyingGlass, MonitorPlay, Desktop, ChartBar } from 'phosphor-react';
+import CustomSelect from './CustomSelect';
 import { authenticatedFetch } from '../utils/auth';
 
 // Backend-URL: Mit Nginx kein Port, ohne Nginx Port 8000
@@ -335,7 +336,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
                 onChange={(e) => setAutoRefresh(e.target.checked)}
                 className="w-4 h-4"
               />
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-gray-600 dark:text-gray-400" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
                 Auto-Refresh (30s)
               </span>
             </label>
@@ -439,7 +440,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
           {/* Sort Icon */}
           <div className="flex items-center gap-2">
             <SortAscending size={20} className="text-gray-950 dark:text-white/90" />
-            <span className="text-sm font-semibold text-gray-950 dark:text-white/90">Filter & Sort:</span>
+            <span className="text-sm font-semibold text-gray-950 dark:text-white/90" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>Filter & Sort:</span>
           </div>
 
           {/* Hinweis zur globalen Suche */}
@@ -451,40 +452,43 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
           )}
 
           {/* Sortierung */}
-          <select
+          <CustomSelect
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-gray-300/50 dark:border-white/10 bg-white/40 dark:bg-gray-800 backdrop-blur-md text-gray-950 dark:text-white/90 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-          >
-            <option value="name-asc" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Name A-Z</option>
-            <option value="name-desc" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Name Z-A</option>
-            <option value="vmid-asc" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">VM-ID aufsteigend</option>
-            <option value="vmid-desc" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">VM-ID absteigend</option>
-            <option value="status" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Status (Running zuerst)</option>
-            <option value="type" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Typ (VM zuerst)</option>
-          </select>
+            onChange={(val) => setSortBy(val)}
+            options={[
+              { value: 'name-asc', label: 'Name A-Z' },
+              { value: 'name-desc', label: 'Name Z-A' },
+              { value: 'vmid-asc', label: 'VM-ID aufsteigend' },
+              { value: 'vmid-desc', label: 'VM-ID absteigend' },
+              { value: 'status', label: 'Status (Running zuerst)' },
+              { value: 'type', label: 'Typ (VM zuerst)' },
+            ]}
+            className="w-44"
+          />
 
           {/* Typ Filter */}
-          <select
+          <CustomSelect
             value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-gray-300/50 dark:border-white/10 bg-white/40 dark:bg-gray-800 backdrop-blur-md text-gray-950 dark:text-white/90 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-          >
-            <option value="all" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Alle Typen</option>
-            <option value="qemu" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Nur VMs</option>
-            <option value="lxc" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Nur Container</option>
-          </select>
+            onChange={(val) => setFilterType(val)}
+            options={[
+              { value: 'all', label: 'Alle Typen' },
+              { value: 'qemu', label: 'Nur VMs' },
+              { value: 'lxc', label: 'Nur Container' },
+            ]}
+            className="w-36"
+          />
 
           {/* Status Filter */}
-          <select
+          <CustomSelect
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-gray-300/50 dark:border-white/10 bg-white/40 dark:bg-gray-800 backdrop-blur-md text-gray-950 dark:text-white/90 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-          >
-            <option value="all" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Alle Status</option>
-            <option value="running" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Nur Running</option>
-            <option value="stopped" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">Nur Stopped</option>
-          </select>
+            onChange={(val) => setFilterStatus(val)}
+            options={[
+              { value: 'all', label: 'Alle Status' },
+              { value: 'running', label: 'Nur Running' },
+              { value: 'stopped', label: 'Nur Stopped' },
+            ]}
+            className="w-36"
+          />
 
           {/* Reset Button */}
           {(searchTerm || sortBy !== 'name-asc' || filterType !== 'all' || filterStatus !== 'all') && (

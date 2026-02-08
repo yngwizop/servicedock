@@ -41,6 +41,10 @@ async def add_service(request: Request, service: Service, token: dict = Depends(
         cur = db.cursor()
         try:
             dashboard_id = service.dashboard_id or 1
+            # Validate dashboard exists
+            cur.execute("SELECT id FROM dashboards WHERE id = %s;", (dashboard_id,))
+            if not cur.fetchone():
+                raise HTTPException(status_code=400, detail=f"Dashboard {dashboard_id} not found")
             cur.execute(
                 "INSERT INTO services (name, description, url, icon, position, is_favorite, dashboard_id) VALUES (%s, %s, %s, %s, (SELECT COALESCE(MAX(position),0)+1 FROM services WHERE dashboard_id = %s), %s, %s) RETURNING id, position;",
                 (service.name, service.description, service.url, service.icon, dashboard_id, service.is_favorite or False, dashboard_id)

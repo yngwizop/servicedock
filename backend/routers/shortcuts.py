@@ -38,6 +38,10 @@ async def add_shortcut(request: Request, shortcut: Shortcut, token: dict = Depen
         cur = db.cursor()
         try:
             dashboard_id = shortcut.dashboard_id or 1
+            # Validate dashboard exists
+            cur.execute("SELECT id FROM dashboards WHERE id = %s;", (dashboard_id,))
+            if not cur.fetchone():
+                raise HTTPException(status_code=400, detail=f"Dashboard {dashboard_id} not found")
             cur.execute(
                 "INSERT INTO shortcuts (name, url, icon, position, dashboard_id) VALUES (%s, %s, %s, (SELECT COALESCE(MAX(position),0)+1 FROM shortcuts WHERE dashboard_id = %s), %s) RETURNING id, position;",
                 (shortcut.name, shortcut.url, shortcut.icon, dashboard_id, dashboard_id)

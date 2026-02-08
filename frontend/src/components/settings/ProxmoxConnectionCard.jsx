@@ -128,7 +128,7 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
   };
 
   return (
-    <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-300/50 dark:border-slate-700/50 hover:border-orange-500/50 dark:hover:border-orange-500/50 transition-all duration-200">
+    <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/50 dark:border-orange-500/40 transition-all duration-200">
       {/* Header */}
       <div className="flex items-center gap-4 mb-4">
         <div className="bg-orange-500/10 p-3 rounded-xl">
