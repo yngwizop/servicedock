@@ -7,6 +7,7 @@ function ShortcutGrid({
   shortcuts, 
   setShortcuts, 
   isLoggedIn, 
+  editMode = false,
   colsClass, 
   onUpdate, 
   onDelete,
@@ -166,8 +167,8 @@ function ShortcutGrid({
         {shortcuts.map((s) => (
           <div 
             key={s.id} 
-            className={`relative group ${isLoggedIn ? (draggingId === s.id ? 'cursor-grabbing' : 'cursor-grab') : ''}`}
-            draggable={isLoggedIn}
+            className={`relative group ${editMode ? (draggingId === s.id ? 'cursor-grabbing' : 'cursor-grab') : ''}`}
+            draggable={editMode}
             onDragStart={(e) => onDragStart(e, s.id)}
             onDragEnd={onDragEnd}
             onDragOver={(e) => onDragOverItem(e, s.id)}
@@ -188,11 +189,11 @@ function ShortcutGrid({
             {/* ACTUAL SHORTCUT CONTENT */}
             <ShortcutLink shortcut={s} textColor={textColor} />
 
-            {/* Edit-Button (nur im eingeloggten Modus) */}
-            {isLoggedIn && (
+            {/* Edit-Button (nur im Bearbeitungsmodus) */}
+            {editMode && (
               <button
                 onClick={() => setEditingShortcut(s)}
-                className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
+                className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-lg opacity-100 transition-all duration-200 hover:scale-110"
                 title="Bearbeiten"
                 aria-label={`Shortcut ${s.name || s.id} bearbeiten`}
               >

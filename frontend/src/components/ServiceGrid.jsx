@@ -8,6 +8,7 @@ function ServiceGrid({
   services = [], 
   setServices, 
   isLoggedIn, 
+  editMode = false,
   colsClass, 
   onUpdate, 
   onDelete,
@@ -283,8 +284,8 @@ function ServiceGrid({
           <div
             key={s.id}
             data-id={s.id}
-            className={`relative group ${isLoggedIn ? (String(draggingId) === String(s.id) ? 'cursor-grabbing opacity-50' : 'cursor-grab') : ''}`}
-            draggable={isLoggedIn}
+            className={`relative group ${editMode ? (String(draggingId) === String(s.id) ? 'cursor-grabbing opacity-50' : 'cursor-grab') : ''}`}
+            draggable={editMode}
             onDragStart={(e) => onDragStart(e, s.id)}
             onDragEnd={onDragEnd}
             onDragOver={(e) => onDragOverItem(e, s.id)}
@@ -305,7 +306,7 @@ function ServiceGrid({
             <ServiceCard service={s} textColor={textColor} isFavorite={s.is_favorite} />
 
             {/* Action Buttons - Rechts oben */}
-            {isLoggedIn && (
+            {editMode && (
               <div className="absolute top-2 right-2 flex gap-2">
                 {/* Favorite Star Button */}
                 <button
@@ -315,7 +316,7 @@ function ServiceGrid({
                     const updatedService = { ...s, is_favorite: !s.is_favorite };
                     await handleSave(updatedService);
                   }}
-                  className={`p-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-200 hover:scale-110 z-30 ${
+                  className={`p-2 rounded-lg shadow-lg opacity-100 transition-all duration-200 hover:scale-110 z-30 ${
                     s.is_favorite 
                       ? 'bg-yellow-500 hover:bg-yellow-600 text-white' 
                       : 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300'
@@ -329,7 +330,7 @@ function ServiceGrid({
                 {/* Edit-Button */}
                 <button
                   onClick={() => setEditingServiceId(s.id)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-200 hover:scale-110"
+                  className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-lg opacity-100 transition-all duration-200 hover:scale-110"
                   aria-label={`Service ${s.name || s.id} bearbeiten`}
                   title="Bearbeiten"
                 >
@@ -364,6 +365,7 @@ ServiceGrid.propTypes = {
   })),
   setServices: PropTypes.func.isRequired,
   isLoggedIn: PropTypes.bool,
+  editMode: PropTypes.bool,
   colsClass: PropTypes.string,
   onUpdate: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,

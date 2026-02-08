@@ -51,6 +51,7 @@ function App() {
   const searchInputRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [editMode, setEditMode] = useState(false);
   const [activeTab, setActiveTab] = useState("services");
   const [spotifyConfigured, setSpotifyConfigured] = useState(false);
   const [weatherLocationInfo, setWeatherLocationInfo] = useState(null);
@@ -177,6 +178,8 @@ function App() {
         dashboards={dashboards}
         activeDashboard={activeDashboard}
         switchDashboard={switchDashboard}
+        editMode={editMode}
+        setEditMode={setEditMode}
       />
 
       {/* Main Content */}
@@ -295,6 +298,7 @@ function App() {
                 )}
                 setServices={setServices}
                 isLoggedIn={auth.isLoggedIn}
+                editMode={editMode}
                 colsClass={serviceColsClass}
                 onUpdate={updateService}
                 onDelete={deleteService}
@@ -309,6 +313,7 @@ function App() {
                 )}
                 setShortcuts={setShortcuts}
                 isLoggedIn={auth.isLoggedIn}
+                editMode={editMode}
                 colsClass={shortcutColsClass}
                 onUpdate={updateShortcut}
                 onDelete={deleteShortcut}

@@ -13,7 +13,8 @@ import {
   MagnifyingGlass,
   CaretDown,
   Check,
-  ArrowsLeftRight
+  ArrowsLeftRight,
+  PencilSimple
 } from 'phosphor-react';
 
 function Sidebar({ 
@@ -32,7 +33,9 @@ function Sidebar({
   searchInputRef,
   dashboards = [],
   activeDashboard = 1,
-  switchDashboard
+  switchDashboard,
+  editMode = false,
+  setEditMode
 }) {
   const [dashDropdownOpen, setDashDropdownOpen] = useState(false);
   const dashTriggerRef = useRef(null);
@@ -212,6 +215,22 @@ function Sidebar({
 
       {/* Bottom Actions */}
       <div className="p-4 space-y-2">
+        {/* Edit Mode Toggle */}
+        <button
+          onClick={() => setEditMode && setEditMode(!editMode)}
+          className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} ${collapsed ? 'px-2 py-3' : 'px-4 py-3'} rounded-xl ${
+            editMode
+              ? 'bg-amber-500/80 text-white shadow-lg shadow-amber-500/30'
+              : 'text-white dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10'
+          } transition-all duration-300 ease-in-out`}
+          title={collapsed ? (editMode ? 'Bearbeitung beenden' : 'Bearbeiten') : ''}
+        >
+          <PencilSimple size={22} weight={editMode ? 'fill' : 'regular'} />
+          <span className={`font-medium transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${collapsed ? 'opacity-0 max-w-0' : 'opacity-100 max-w-xs'}`} style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+            {editMode ? 'Bearbeitung beenden' : 'Bearbeiten'}
+          </span>
+        </button>
+
         {/* Globale Suche */}
         <button
           onClick={() => {
