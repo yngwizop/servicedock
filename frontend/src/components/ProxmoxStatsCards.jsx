@@ -18,21 +18,21 @@ function ProxmoxStatsCards({ resources, nodes }) {
   const nodeCount = nodes?.length || 0;
 
   // Card-Komponente für Wiederverwendbarkeit
-  const StatCard = ({ title, value, icon: Icon, gradient, iconColor, bgColor }) => (
+  const StatCard = ({ title, value, icon: Icon, accentColor, iconBg }) => (
     <div 
-      className={`${bgColor} backdrop-blur-md rounded-xl shadow-lg p-6 border border-white/20 hover:scale-105 transition-transform duration-300`}
+      className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/[0.12] hover:scale-105 hover:border-gray-400/70 dark:hover:border-white/20 transition-all duration-300"
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-white/90 uppercase tracking-wide mb-2">
+          <p className="text-xs font-semibold text-gray-600 dark:text-white/50 uppercase tracking-wider mb-2" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
             {title}
           </p>
-          <p className="text-4xl font-bold text-white">
+          <p className={`text-4xl font-bold ${accentColor}`} style={{ textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
             {value}
           </p>
         </div>
-        <div className={`${iconColor} bg-white/20 p-4 rounded-lg`}>
-          <Icon size={32} weight="duotone" />
+        <div className={`${iconBg} p-3.5 rounded-xl`}>
+          <Icon size={28} weight="duotone" className={accentColor} />
         </div>
       </div>
     </div>
@@ -45,8 +45,8 @@ function ProxmoxStatsCards({ resources, nodes }) {
         title="Total"
         value={total}
         icon={Desktop}
-        bgColor="bg-gradient-to-br from-slate-600/70 to-slate-800/70"
-        iconColor="text-white"
+        accentColor="text-gray-800 dark:text-white"
+        iconBg="bg-gray-200/60 dark:bg-white/10"
       />
 
       {/* Running */}
@@ -54,8 +54,8 @@ function ProxmoxStatsCards({ resources, nodes }) {
         title="Running"
         value={running}
         icon={PlayCircle}
-        bgColor="bg-gradient-to-br from-emerald-600/70 to-emerald-800/70"
-        iconColor="text-white"
+        accentColor="text-emerald-600 dark:text-emerald-400"
+        iconBg="bg-emerald-100/60 dark:bg-emerald-500/10"
       />
 
       {/* Stopped */}
@@ -63,8 +63,8 @@ function ProxmoxStatsCards({ resources, nodes }) {
         title="Stopped"
         value={stopped}
         icon={StopCircle}
-        bgColor="bg-gradient-to-br from-rose-600/70 to-rose-800/70"
-        iconColor="text-white"
+        accentColor="text-rose-600 dark:text-rose-400"
+        iconBg="bg-rose-100/60 dark:bg-rose-500/10"
       />
 
       {/* CPU Cores (all VMs/Containers) */}
@@ -72,8 +72,8 @@ function ProxmoxStatsCards({ resources, nodes }) {
         title="CPU Cores"
         value={totalCpuCores}
         icon={Cpu}
-        bgColor="bg-gradient-to-br from-amber-600/70 to-amber-800/70"
-        iconColor="text-white"
+        accentColor="text-amber-600 dark:text-amber-400"
+        iconBg="bg-amber-100/60 dark:bg-amber-500/10"
       />
 
       {/* Nodes */}
@@ -81,8 +81,8 @@ function ProxmoxStatsCards({ resources, nodes }) {
         title="Nodes"
         value={nodeCount}
         icon={HardDrives}
-        bgColor="bg-gradient-to-br from-blue-600/70 to-blue-800/70"
-        iconColor="text-white"
+        accentColor="text-blue-600 dark:text-blue-400"
+        iconBg="bg-blue-100/60 dark:bg-blue-500/10"
       />
     </div>
   );

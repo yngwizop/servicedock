@@ -353,16 +353,6 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
             </button>
           )}
           
-          {/* Settings Button (nicht im Status View) */}
-          {activeView !== 'status' && (
-            <button
-              onClick={onOpenSettings}
-              className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-2 rounded-lg shadow hover:shadow-lg transition-all hover:scale-105"
-              title="Einstellungen"
-            >
-              <GearSix size={20} className="text-gray-700 dark:text-gray-300" />
-            </button>
-          )}
         </div>
       </div>
 
@@ -435,7 +425,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
           <ProxmoxStatsCards resources={resources} nodes={nodes} />
 
       {/* Filter & Sort Bar */}
-      <div className="bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl shadow-lg p-4 mb-6 border border-gray-300/50 dark:border-white/10">
+      <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-xl shadow-lg p-4 mb-6 border border-gray-300/50 dark:border-white/[0.12]">
         <div className="flex flex-wrap items-center gap-4">
           {/* Sort Icon */}
           <div className="flex items-center gap-2">
