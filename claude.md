@@ -8,7 +8,8 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 ### Kern-Features
 - **Multi-Dashboard** — Mehrere Dashboards mit jeweils eigenen Services/Shortcuts/Proxmox-Konfigurationen
 - **Service- & Shortcut-Verwaltung** — CRUD + Drag-and-Drop Reordering + Favoriten
-- **Proxmox-Integration** — VM/LXC-Übersicht, Start/Stop/Reboot, Cluster-Stats, Status-Dashboard mit react-grid-layout
+- **Proxmox-Integration** — VM/LXC-Übersicht, Start/Stop/Reboot, Cluster-Stats, Datacenter Status-Dashboard
+- **Proxmox Status-Dashboard** — Draggable/Resizable Widget-Grid (react-grid-layout) mit Node-Status, VM/LXC-Status, Top-Usage, Storage, Ceph Health, Task-Übersicht
 - **Spotify-AddOn** — OAuth2-Flow, Now-Playing-Anzeige mit Playback-Controls
 - **Security Dashboard** — Audit-Log-Viewer, Token-Rotation, Rate-Limit-Monitoring, Threat-Detection
 - **Appearance-System** — Hintergrundbilder, Farben, Grid-Spaltenanzahl, Widget-Toggles (Wetter/Uhr/Spotify)
@@ -73,12 +74,12 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 ┌─────────────────────────────────────────────────┐
 │  Docker Compose Stack                           │
 │                                                 │
-│  ┌──────────┐   ┌──────────┐   ┌────────────┐  │
-│  │  nginx   │──▶│ frontend │   │  backend   │  │
+│  ┌──────────┐    ┌──────────┐   ┌────────────┐  │
+│  │  nginx   │──▶│frontend │   │  backend   │  │
 │  │ :80/:443 │──▶│ (SPA)    │   │ (FastAPI)  │  │
 │  │ reverse  │   │ :80      │   │ :8000      │  │
 │  │ proxy    │──▶│          │   │            │  │
-│  │ + SSL    │   └──────────┘   └──────┬─────┘  │
+│  │ + SSL    │    └──────────┘   └──────┬─────┘  │
 │  └──────────┘                         │        │
 │                                ┌──────▼─────┐  │
 │                                │ PostgreSQL │  │
@@ -329,7 +330,80 @@ docker compose up --build -d frontend
 
 ---
 
-## 6. Aktueller Status & Besonderheiten
+## 6. Proxmox Status-Dashboard (Datacenter-Übersicht)
+
+### Überblick
+Das Status-Dashboard (`ProxmoxStatusDashboard.jsx`, ~532 Zeilen) ist eine zweite Ansicht im Proxmox-Tab (erreichbar via "Status-Übersicht" Sub-Tab). Es zeigt aggregierte Cluster-Statistiken in einem **draggable & resizable Widget-Grid** (react-grid-layout).
+
+### Architektur
+```
+ProxmoxGrid.jsx (Tab-Container)
+  └── activeView === 'status'
+        └── ProxmoxStatusDashboard.jsx
+              ├── ResponsiveGridLayout (4-Spalten, rowHeight=75px)
+              │   ├── StatCard.jsx (Base-Wrapper mit Drag-Handle)
+              │   │   ├── NodeStatusCard
+              │   │   ├── VMStatusCard (×2: VMs + LXCs)
+              │   │   ├── TaskSummaryCard
+              │   │   ├── TopUsageCard (×2: CPU + Memory)
+              │   │   ├── TopDiskUsageCard
+              │   │   ├── StorageTotalCard
+              │   │   ├── StorageByNodeCard
+              │   │   ├── StorageByTypeCard
+              │   │   ├── CephHealthCard
+              │   │   └── CephOSDCard
+              └── API: GET /api/proxmox/cluster-stats
+```
+
+### Widget-Karten (12 Stück)
+| Widget | Datei | Daten | Visualisierung |
+|---|---|---|---|
+| **Node Status** | `NodeStatusCard.jsx` | online/offline/total, Health-Label | Farbige Health-Badge, Check/X Icons |
+| **VM Status** | `VMStatusCard.jsx` | running/stopped/total, Activity-Label | Activity-Badge, Play/Stop Icons |
+| **LXC Status** | `VMStatusCard.jsx` | (gleiche Komponente, anderer Typ) | (gleich, mit HardDrives-Icon) |
+| **Task Summary** | `TaskSummaryCard.jsx` | failed/running/success pro Node | Per-Node-Zeilen, 3-Spalten (X/↻/✓), Total-Zeile |
+| **Top CPU** | `TopUsageCard.jsx` | Ranked Liste mit Name, %, Cores | Nummerierte Liste, Farbcodes (<60 grün, <80 orange, ≥80 rot) |
+| **Top Memory** | `TopUsageCard.jsx` | Ranked Liste mit Name, %, GB | (gleich wie CPU) |
+| **Top Disk** | `TopDiskUsageCard.jsx` | Ranked Liste mit Name, %, used/total | Nummerierte Liste, GB-Anzeige |
+| **Storage Total** | `StorageTotalCard.jsx` | used/total/available, % | **SVG Donut-Chart** (Farbring), 3-Spalten-Grid |
+| **Storage by Node** | `StorageByNodeCard.jsx` | Pro Node: used/total, Storage-Namen | Progress-Bars, blaue Storage-Tags |
+| **Storage by Type** | `StorageByTypeCard.jsx` | Pro Typ: used/total, %, Anzahl | Emoji-Icons (💾/📀/🌐/🔷), Progress-Bars |
+| **Ceph Health** | `CephHealthCard.jsx` | Status (OK/WARN/ERR), OSD-Übersicht | Großes Status-Icon, Farb-Badge, 2×2 OSD-Grid |
+| **Ceph OSD** | `CephOSDCard.jsx` | total/up/in/down/out, healthyPercent | Große Zahl, 2×2 Farb-Grid, Legende |
+
+### Layout-System
+- **Default:** 4-Spalten, 5 Zeilen (Status → Top-Usage → Disk+Storage → Storage-Detail → Ceph)
+- **Drag & Drop:** Via `draggableHandle=".drag-handle"` (DotsSixVertical-Icon in StatCard)
+- **Resize:** Alle Karten haben `minW/maxW/minH/maxH` Constraints
+- **Persistenz:** Layout wird pro Dashboard in `proxmox_dashboard_layouts` gespeichert (JSON, max 100KB)
+- **API:** `GET/PUT/DELETE /api/dashboards/{id}/proxmox-layout`
+- **Save-Flow:** Layout-Änderung → "Layout speichern" Button erscheint → Manuelles Speichern → Toast-Feedback
+- **Reset:** "Layout zurücksetzen" löscht gespeichertes Layout, lädt Defaults
+
+### Konfigurierbare Parameter (in Settings)
+| Parameter | localStorage Key | Default | Effekt |
+|---|---|---|---|
+| Top-Items Anzahl | `proxmox_top_items` | 10 | Anzahl Einträge in Top-CPU/Memory/Disk Listen |
+| Task-Zeitraum | `proxmox_task_hours` | 48h | Zeitfenster für Task-Summary |
+| Refresh-Intervall | `proxmox_refresh_interval` | 30s | Auto-Refresh Interval |
+
+### Backend-Endpunkt
+`GET /api/proxmox/cluster-stats?dashboard_id=X&top_n=10&task_hours=48`
+
+Zwei Code-Pfade:
+- **Cluster-Modus:** `/cluster/resources`, `/cluster/tasks`, `/cluster/status` APIs
+- **Standalone-Modus:** Iteriert einzelne Node-APIs (`/nodes/<node>/qemu`, `/lxc`, `/status`, `/tasks`)
+
+Response-Model `ClusterStats`: `nodes`, `vms`, `lxcs`, `top_cpu_usage`, `top_memory_usage`, `top_disk_usage`, `tasks` (mit `by_node`), `storage_total`, `storage_by_node`, `storage_by_type`, `ceph`, `cluster_name`, `is_cluster`
+
+### Styling
+- **StatCard (Base):** `bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-xl shadow-lg border-slate-200 dark:border-slate-700`
+- Alle Karten erben dieses Styling — **abweichend** vom VM/LXC-Cards-Stil (`dark:bg-gray-900/70`)
+- Ceph-Karten zeigen Placeholder-UI wenn kein Ceph im Cluster vorhanden
+
+---
+
+## 7. Aktueller Status & Besonderheiten
 
 ### API-Endpunkte (Übersicht)
 | Router | Prefix | Endpunkte | Auth |
