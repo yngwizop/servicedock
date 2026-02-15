@@ -65,17 +65,17 @@ function StorageByTypeCard({ storageByType }) {
               return (
                 <div 
                   key={typeData.type}
-                  className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  className="p-2.5 rounded-lg bg-white/5 dark:bg-white/[0.03] hover:bg-white/10 dark:hover:bg-white/5 transition-colors"
                 >
                   {/* Type Header */}
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
                       <span className="text-base">{getTypeIcon(typeData.type)}</span>
                       <div>
-                        <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                        <span className="text-sm font-semibold text-gray-800 dark:text-white">
                           {typeData.type.toUpperCase()}
                         </span>
-                        <span className="ml-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        <span className="ml-1.5 text-xs text-gray-500 dark:text-gray-400">
                           ({typeData.count} Storage{typeData.count !== 1 ? 's' : ''})
                         </span>
                       </div>
@@ -87,7 +87,7 @@ function StorageByTypeCard({ storageByType }) {
 
                   {/* Progress Bar */}
                   <div className="mb-1.5">
-                    <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2">
+                    <div className="w-full bg-gray-300/30 dark:bg-white/10 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(percent)}`}
                         style={{ width: `${Math.min(percent, 100)}%` }}
@@ -97,10 +97,10 @@ function StorageByTypeCard({ storageByType }) {
 
                   {/* Stats */}
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-600 dark:text-slate-400">
+                    <span className="text-gray-600 dark:text-gray-400">
                       {formatBytes(typeData.used)} used
                     </span>
-                    <span className="text-slate-600 dark:text-slate-400">
+                    <span className="text-gray-600 dark:text-gray-400">
                       {formatBytes(typeData.total)} total
                     </span>
                   </div>
@@ -109,7 +109,7 @@ function StorageByTypeCard({ storageByType }) {
             })}
         </div>
       ) : (
-        <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           Keine Storage-Type-Daten verfügbar
         </div>
       )}

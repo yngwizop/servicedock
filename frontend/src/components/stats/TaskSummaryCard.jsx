@@ -11,7 +11,7 @@ function TaskSummaryCard({ stats }) {
   
   // Health Status basierend auf Failed Tasks
   const getHealthStatus = () => {
-    if (total === 0) return { label: 'No Tasks', color: 'text-slate-500', bgColor: 'bg-slate-500/10' };
+    if (total === 0) return { label: 'No Tasks', color: 'text-gray-500', bgColor: 'bg-gray-500/10' };
     const failRate = (failed / total) * 100;
     if (failRate === 0) return { label: 'Perfect', color: 'text-green-500', bgColor: 'bg-green-500/10' };
     if (failRate < 5) return { label: 'Good', color: 'text-green-500', bgColor: 'bg-green-500/10' };
@@ -37,11 +37,11 @@ function TaskSummaryCard({ stats }) {
               return (
                 <div 
                   key={nodeData.node}
-                  className="flex items-center justify-between p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  className="flex items-center justify-between p-1.5 rounded hover:bg-white/10 dark:hover:bg-white/5 transition-colors"
                 >
                   {/* Node Name */}
                   <div className="flex-1 min-w-0">
-                    <div className="text-base font-medium text-slate-800 dark:text-slate-100 truncate">
+                    <div className="text-base font-medium text-gray-800 dark:text-white truncate">
                       {nodeData.node}
                     </div>
                   </div>
@@ -78,10 +78,10 @@ function TaskSummaryCard({ stats }) {
           </div>
 
           {/* Total - am Ende auf gleicher Höhe */}
-          <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
+          <div className="border-t border-gray-300/30 dark:border-white/10 pt-2 mt-2">
             <div className="flex items-center justify-between p-1.5">
               <div className="flex-1 min-w-0">
-                <span className="text-base font-medium text-slate-700 dark:text-slate-300">Total</span>
+                <span className="text-base font-medium text-gray-700 dark:text-gray-200">Total</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
@@ -101,7 +101,7 @@ function TaskSummaryCard({ stats }) {
           </div>
         </div>
       ) : (
-        <div className="text-center py-4 text-slate-500 dark:text-slate-400 text-sm">
+        <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
           Keine Tasks im konfigurierten Zeitraum
         </div>
       )}

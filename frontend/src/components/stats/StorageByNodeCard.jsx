@@ -43,13 +43,13 @@ function StorageByNodeCard({ storageByNode }) {
               return (
                 <div 
                   key={node.node}
-                  className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  className="p-2.5 rounded-lg bg-white/5 dark:bg-white/[0.03] hover:bg-white/10 dark:hover:bg-white/5 transition-colors"
                 >
                   {/* Node Header */}
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">🖥️</span>
-                    <span className="text-base font-semibold text-slate-800 dark:text-slate-100">
+                    <span className="text-base font-semibold text-gray-800 dark:text-white">
                       {node.node}
                     </span>
                   </div>
@@ -60,7 +60,7 @@ function StorageByNodeCard({ storageByNode }) {
 
                 {/* Progress Bar */}
                 <div className="mb-1">
-                    <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2">
+                    <div className="w-full bg-gray-300/30 dark:bg-white/10 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full transition-all duration-300 ${getColor(percent)}`}
                         style={{ width: `${Math.min(percent, 100)}%` }}
@@ -69,15 +69,15 @@ function StorageByNodeCard({ storageByNode }) {
                   </div>
 
                   {/* Stats */}
-                  <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
+                  <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
                     <span>{formatBytes(node.used)} used</span>
                     <span>{formatBytes(node.total)} total</span>
                   </div>
 
                   {/* Storage Details (collapsible) */}
                   {node.storages && node.storages.length > 0 && (
-                  <div className="mt-1 pt-1.5 border-t border-slate-200 dark:border-slate-600">
-                    <div className="text-xs text-slate-600 dark:text-slate-400 mb-1.5">
+                  <div className="mt-1 pt-1.5 border-t border-gray-300/30 dark:border-white/10">
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-1.5">
                         {node.storages.length} Storage{node.storages.length !== 1 ? 's' : ''}
                       </div>
                       <div className="flex flex-wrap gap-1">
@@ -98,7 +98,7 @@ function StorageByNodeCard({ storageByNode }) {
             })}
         </div>
       ) : (
-        <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           Keine Node-Storage-Daten verfügbar
         </div>
       )}

@@ -51,11 +51,11 @@ function TopUsageCard({ title, items, usageType = "cpu" }) {
             return (
               <div 
                 key={`${item.type}-${item.vmid || item.node}-${index}`}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 dark:hover:bg-white/5 transition-colors"
               >
                 {/* Rank */}
                 <div className="flex-shrink-0 w-6 text-center">
-                  <span className="text-sm font-bold text-slate-500 dark:text-slate-400">
+                  <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
                     {index + 1}
                   </span>
                 </div>
@@ -67,10 +67,10 @@ function TopUsageCard({ title, items, usageType = "cpu" }) {
 
                 {/* Name & Node */}
                 <div className="flex-1 min-w-0 mr-2">
-                  <div className="text-base font-medium text-slate-800 dark:text-slate-100 truncate">
+                  <div className="text-base font-medium text-gray-800 dark:text-white truncate">
                     {item.name}
                   </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
                     {item.type === 'node' ? 'Node' : `${item.type.toUpperCase()} • ${item.node}`}
                   </div>
                 </div>
@@ -80,7 +80,7 @@ function TopUsageCard({ title, items, usageType = "cpu" }) {
                   <div className={`text-lg font-bold ${getColor(percent)}`}>
                     {percent.toFixed(1)}%
                   </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
                     {isCPU 
                       ? `${item.cpu_used?.toFixed(1) || '0'} / ${item.cpu_cores || 'N/A'} Cores`
                       : `${formatBytes(item.memory_used)} / ${formatBytes(item.memory_total)}`
@@ -92,7 +92,7 @@ function TopUsageCard({ title, items, usageType = "cpu" }) {
           })}
         </div>
       ) : (
-        <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           Keine Daten verfügbar
         </div>
       )}

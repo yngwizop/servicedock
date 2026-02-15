@@ -16,10 +16,10 @@ function StatCard({
   return (
     <div
       className={`
-        bg-white/95 dark:bg-slate-800/95 
+        bg-white/70 dark:bg-gray-900/70 
         backdrop-blur-md
-        rounded-xl shadow-lg 
-        border border-slate-200 dark:border-slate-700
+        rounded-2xl shadow-xl 
+        border border-gray-300/50 dark:border-white/[0.12]
         transition-all duration-200
         h-full flex flex-col
         ${compact ? 'p-3' : 'p-6'}
@@ -30,7 +30,7 @@ function StatCard({
       {/* Header mit Drag Handle */}
       <div className="flex items-center gap-3 mb-3 flex-shrink-0">
         {/* Drag Handle - muss die Klasse "drag-handle" haben */}
-        <div className="drag-handle cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+        <div className="drag-handle cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-500 dark:hover:text-white/60 transition-colors">
           <DotsSixVertical size={20} weight="bold" />
         </div>
         
@@ -39,13 +39,13 @@ function StatCard({
             {icon}
           </div>
         )}
-        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 flex-1">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white flex-1">
           {title}
         </h3>
       </div>
 
       {/* Content - nimmt verfügbaren Raum */}
-      <div className="flex-1 flex flex-col text-slate-700 dark:text-slate-300">
+      <div className="flex-1 flex flex-col text-gray-700 dark:text-gray-200">
         {children}
       </div>
     </div>

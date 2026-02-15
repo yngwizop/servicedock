@@ -36,7 +36,7 @@ function StorageTotalCard({ storageTotal }) {
         title="Total Storage"
         icon={<Database size={28} weight="duotone" />}
       >
-        <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           Keine Storage-Daten verfügbar
         </div>
       </StatCard>
@@ -64,7 +64,7 @@ function StorageTotalCard({ storageTotal }) {
                 stroke="currentColor"
                 strokeWidth="8"
                 fill="none"
-                className="text-slate-200 dark:text-slate-700"
+                className="text-gray-300/50 dark:text-white/10"
               />
               {/* Progress Circle */}
               <circle
@@ -87,7 +87,7 @@ function StorageTotalCard({ storageTotal }) {
                 <div className={`text-2xl font-bold ${getTextColor(percent)}`}>
                   {percent.toFixed(1)}%
                 </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">
+                <div className="text-xs text-gray-500 dark:text-gray-400">
                   Used
                 </div>
               </div>
@@ -97,21 +97,21 @@ function StorageTotalCard({ storageTotal }) {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700">
-            <div className="text-xs text-slate-600 dark:text-slate-400 mb-1">Used</div>
-            <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+          <div className="p-2 rounded-lg bg-white/10 dark:bg-white/5">
+            <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Used</div>
+            <div className="text-sm font-semibold text-gray-800 dark:text-white">
               {formatBytes(storageTotal.used)}
             </div>
           </div>
-          <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700">
-            <div className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total</div>
-            <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+          <div className="p-2 rounded-lg bg-white/10 dark:bg-white/5">
+            <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Total</div>
+            <div className="text-sm font-semibold text-gray-800 dark:text-white">
               {formatBytes(storageTotal.total)}
             </div>
           </div>
-          <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700">
-            <div className="text-xs text-slate-600 dark:text-slate-400 mb-1">Free</div>
-            <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+          <div className="p-2 rounded-lg bg-white/10 dark:bg-white/5">
+            <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Free</div>
+            <div className="text-sm font-semibold text-gray-800 dark:text-white">
               {formatBytes(storageTotal.available)}
             </div>
           </div>

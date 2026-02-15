@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { MonitorPlay, Desktop, HardDrives, ArrowsClockwise, WarningCircle, FloppyDisk } from 'phosphor-react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
@@ -35,6 +35,59 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [layoutModified, setLayoutModified] = useState(false);
   const [saveStatus, setSaveStatus] = useState({ type: '', message: '' });
+  const layoutInitialized = useRef(false);
+  const currentBreakpoint = useRef('lg');
+
+  // Dynamische Card-Höhen basierend auf API-Daten berechnen
+  // rowHeight=75px, margin=20px → Pixel = h*75 + (h-1)*20 = 95h - 20
+  const getDynamicCardHeight = (cardId, statsData) => {
+    if (!statsData) return null;
+
+    switch (cardId) {
+      case 'storage-by-node': {
+        const nodeCount = statsData.storage_by_node?.length || 0;
+        // p-6 Card + Header ~60px + each node ~130px (header+bar+stats+tags)
+        // 3 Nodes → ~450px → h=5 (455px), 5 Nodes → ~710px → h=8 (740px)
+        return Math.max(4, Math.ceil(1 + nodeCount * 1.4));
+      }
+      case 'storage-by-type': {
+        const typeCount = statsData.storage_by_type?.length || 0;
+        // p-6 Card + Header ~60px + each type ~80px (header+bar+stats)
+        // 5 Types → ~460px → h=6 (550px), 3 Types → ~300px → h=4 (360px)
+        return Math.max(4, Math.ceil(1 + typeCount * 0.85));
+      }
+      case 'tasks': {
+        const nodeCount = statsData.tasks?.by_node?.length || 0;
+        // compact (p-3) + Header ~50px + each node ~35px + footer ~40px
+        // 3 Nodes → ~195px → h=3 (265px)
+        return Math.max(3, Math.ceil(1.2 + nodeCount * 0.45));
+      }
+      default:
+        return null;
+    }
+  };
+
+  // Layout-Höhen nach Stats-Update anpassen
+  const applyDynamicHeights = (currentLayout, statsData) => {
+    if (!statsData) return currentLayout;
+
+    const dynamicCards = ['storage-by-node', 'storage-by-type', 'tasks'];
+
+    return currentLayout.map(item => {
+      if (dynamicCards.includes(item.i)) {
+        const dynamicH = getDynamicCardHeight(item.i, statsData);
+        if (dynamicH !== null) {
+          return {
+            ...item,
+            h: dynamicH,
+            minH: dynamicH,
+            maxH: dynamicH, // Höhe ist fix, nur Breite resizable
+          };
+        }
+      }
+      return item;
+    });
+  };
   
   // Berechne Card-Höhe basierend auf Top-Items-Anzahl
   const getTopCardHeight = () => {
@@ -55,27 +108,27 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
     const topCardHeight = getTopCardHeight();
     return [
       // Zeile 1: Status Cards (4x Cards nebeneinander)
-      { i: 'nodes', x: 0, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 6 },
-      { i: 'vms', x: 1, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 6 },
-      { i: 'lxcs', x: 2, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 6 },
-      { i: 'tasks', x: 3, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 6 },
-      
+      { i: 'nodes', x: 0, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 3 },
+      { i: 'vms', x: 1, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 3 },
+      { i: 'lxcs', x: 2, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 3 },
+      // Tasks: Höhe wird dynamisch nach API-Daten gesetzt
+      { i: 'tasks', x: 3, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 3 },
 
-      // Zeile 2: Top Usage (schmaler)
-      { i: 'top-cpu', x: 0, y: 4, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: 6, maxH: 20 },
-      { i: 'top-memory', x: 1, y: 4, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: 6, maxH: 20 },
+      // Zeile 2: Top Usage (Höhe Settings-gesteuert)
+      { i: 'top-cpu', x: 0, y: 4, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: topCardHeight, maxH: topCardHeight },
+      { i: 'top-memory', x: 1, y: 4, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: topCardHeight, maxH: topCardHeight },
 
       // Zeile 3: Disk Usage + Storage Total
-      { i: 'top-disk', x: 2, y: 4 + topCardHeight, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: 6, maxH: 20 },
-      { i: 'storage-total', x: 3, y: 4 + topCardHeight, w: 1, h: 4, minW: 1, maxW: 4, minH: 4, maxH: 6 },
+      { i: 'top-disk', x: 2, y: 4 + topCardHeight, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: topCardHeight, maxH: topCardHeight },
+      { i: 'storage-total', x: 3, y: 4 + topCardHeight, w: 1, h: 4, minW: 1, maxW: 4, minH: 4, maxH: 7 },
       
-      // Zeile 4: Storage By Node + By Type
-      { i: 'storage-by-node', x: 0, y: 9 + topCardHeight, w: 2, h: 6, minW: 2, maxW: 4, minH: 6, maxH: 12 },
-      { i: 'storage-by-type', x: 2, y: 9 + topCardHeight, w: 2, h: 6, minW: 1, maxW: 4, minH: 6, maxH: 12 },
+      // Zeile 4: Storage By Node + By Type (Höhe dynamisch nach API-Daten)
+      { i: 'storage-by-node', x: 0, y: 9 + topCardHeight, w: 2, h: 6, minW: 2, maxW: 4, minH: 3, maxH: 6 },
+      { i: 'storage-by-type', x: 2, y: 9 + topCardHeight, w: 2, h: 6, minW: 1, maxW: 4, minH: 3, maxH: 6 },
       
-      // Zeile 5: Ceph Cards (nur wenn Ceph verfügbar)
-      { i: 'ceph-health', x: 0, y: 16 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 5, maxH: 6 },
-      { i: 'ceph-osd', x: 2, y: 16 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 5, maxH: 5 }
+      // Zeile 5: Ceph Cards (Höhe manuell einstellbar)
+      { i: 'ceph-health', x: 0, y: 16 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 4, maxH: 7 },
+      { i: 'ceph-osd', x: 2, y: 16 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 4, maxH: 7 }
     ];
   };
   
@@ -98,6 +151,9 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       
       const data = await res.json();
       setStats(data);
+      
+      // Layout-Höhen dynamisch an Daten anpassen
+      setLayout(currentLayout => applyDynamicHeights(currentLayout, data));
     } catch (err) {
       console.error('Error fetching Proxmox stats:', err);
       setError(err.message);
@@ -126,38 +182,21 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
           const updatedLayout = data.layout.map(item => {
             // Find default config for this card
             const defaultItem = defaultLayout.find(d => d.i === item.i);
-            // Top Cards: Höhe immer Settings-gesteuert, nicht resizable
-            if (item.i === 'top-cpu' || item.i === 'top-memory' || item.i === 'top-disk') {
-              // Höhe immer Settings-gesteuert, Breite bleibt frei
-              return {
-                ...item,
-                h: topCardHeight,
-                minH: topCardHeight,
-                maxH: topCardHeight
-              };
-            }
-            // Ceph OSD Card: Fixed height (only width resizable)
-            if (item.i === 'ceph-osd') {
-              return {
-                ...item,
-                h: 5,
-                minH: 5,
-                maxH: 5
-              };
-            }
-            // Enforce minH/maxH for cards that need minimum height
-            const cardsWithMinHeight = ['storage-total', 'storage-by-node', 'storage-by-type', 'ceph-health'];
-            if (cardsWithMinHeight.includes(item.i) && defaultItem) {
-              return { 
-                ...item, 
-                minH: defaultItem.minH,
-                maxH: defaultItem.maxH,
-                minW: defaultItem.minW, // Enforce minW for horizontal resizing
-                maxW: defaultItem.maxW,
-                h: Math.max(item.h, defaultItem.minH) // Ensure h is not below minH
-              };
-            }
-            return item;
+            if (!defaultItem) return item;
+
+            // Cards mit manuell einstellbarer Höhe: gespeicherte Höhe beibehalten
+            const resizableHeightCards = ['storage-total', 'ceph-health', 'ceph-osd'];
+            const savedH = resizableHeightCards.includes(item.i)
+              ? Math.min(Math.max(item.h, defaultItem.minH), defaultItem.maxH)
+              : defaultItem.h;
+
+            return {
+              ...defaultItem,       // Default constraints (minH, maxH, minW, maxW)
+              x: item.x,            // Gespeicherte Position
+              y: item.y,
+              w: Math.max(item.w, defaultItem.minW),
+              h: savedH,
+            };
           });
           
           // Add missing cards at the bottom
@@ -175,6 +214,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
     if (isLoggedIn && activeDashboard) {
       setLoading(true);
       setStats(null);
+      layoutInitialized.current = false;
       fetchStats();
       loadLayout();
     }
@@ -240,8 +280,21 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
 
   // Handle layout change (Drag or Resize)
   const handleLayoutChange = (newLayout) => {
-    setLayout(newLayout);
-    setLayoutModified(true);
+    // Skip initial mount calls from react-grid-layout
+    if (!layoutInitialized.current) {
+      layoutInitialized.current = true;
+      return;
+    }
+    // Only track changes for the lg breakpoint
+    if (currentBreakpoint.current === 'lg') {
+      setLayout(newLayout);
+      setLayoutModified(true);
+    }
+  };
+
+  // Track breakpoint changes
+  const handleBreakpointChange = (newBreakpoint) => {
+    currentBreakpoint.current = newBreakpoint;
   };
 
   // Update layout when top items setting changes
@@ -250,8 +303,8 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       const newHeight = getTopCardHeight();
       setLayout(currentLayout => {
         const updated = currentLayout.map(item => {
-          if (item.i === 'top-cpu' || item.i === 'top-memory') {
-            return { ...item, h: newHeight };
+          if (item.i === 'top-cpu' || item.i === 'top-memory' || item.i === 'top-disk') {
+            return { ...item, h: newHeight, minH: newHeight, maxH: newHeight };
           }
           return item;
         });
@@ -394,7 +447,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
             weight="bold"
             className="mx-auto text-blue-600 dark:text-blue-400 animate-spin"
           />
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-gray-600 dark:text-gray-400">
             Lade Cluster-Statistiken...
           </p>
         </div>
@@ -413,10 +466,10 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
             className="mx-auto text-red-600 dark:text-red-400"
           />
           <div>
-            <p className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-2">
+            <p className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
               Fehler beim Laden der Statistiken
             </p>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               {error}
             </p>
             <button
@@ -435,7 +488,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
   if (!stats) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-slate-600 dark:text-slate-400">
+        <p className="text-gray-600 dark:text-gray-400">
           Keine Daten verfügbar
         </p>
       </div>
@@ -451,7 +504,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
           {/* Reset Layout Button */}
           <button
             onClick={resetLayout}
-            className="flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors"
             title="Layout zurücksetzen"
           >
             <ArrowsClockwise size={18} weight="bold" />
@@ -471,12 +524,12 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
           )}
           
           {/* Auto-Refresh Toggle */}
-          <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200 cursor-pointer">
             <input
               type="checkbox"
               checked={autoRefresh}
               onChange={(e) => setAutoRefresh(e.target.checked)}
-              className="rounded border-slate-300 dark:border-slate-600"
+              className="rounded border-gray-300 dark:border-white/20"
             />
             Auto-Refresh ({parseInt(localStorage.getItem('proxmox_refresh_interval') || '30')}s)
           </label>
@@ -487,7 +540,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
             className="p-2 rounded-lg bg-white/50 dark:bg-white/10 hover:bg-white/70 dark:hover:bg-white/20 backdrop-blur-md border border-gray-300/50 dark:border-white/10 transition-all shadow-lg hover:shadow-xl"
             title="Aktualisieren"
           >
-            <ArrowsClockwise size={20} weight="bold" className="text-slate-700 dark:text-slate-300" />
+            <ArrowsClockwise size={20} weight="bold" className="text-gray-700 dark:text-gray-200" />
           </button>
         </div>
       </div>
@@ -515,6 +568,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
         isDraggable={true}
         isResizable={true}
         onLayoutChange={handleLayoutChange}
+        onBreakpointChange={handleBreakpointChange}
         draggableHandle=".drag-handle"
         compactType="vertical"
       >

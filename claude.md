@@ -374,11 +374,21 @@ ProxmoxGrid.jsx (Tab-Container)
 ### Layout-System
 - **Default:** 4-Spalten, 5 Zeilen (Status → Top-Usage → Disk+Storage → Storage-Detail → Ceph)
 - **Drag & Drop:** Via `draggableHandle=".drag-handle"` (DotsSixVertical-Icon in StatCard)
-- **Resize:** Alle Karten haben `minW/maxW/minH/maxH` Constraints
+- **Resize:** Breite immer resizable. Höhe je nach Card-Typ:
+  - **Dynamisch (API-gesteuert):** Storage per Node, Storage by Type, Task Summary — Höhe = f(Anzahl Nodes/Typen), `minH=maxH`, nicht manuell änderbar
+  - **Settings-gesteuert:** Top CPU/Memory/Disk — Höhe folgt `proxmox_top_items` Setting
+  - **Manuell resizable:** Total Storage (h=4–7), Ceph Health (h=4–7), Ceph OSD (h=4–7)
+  - **Fix:** Nodes, VMs, LXCs (h=3)
+- **Dynamische Höhen-Berechnung:** `getDynamicCardHeight()` in ProxmoxStatusDashboard — berechnet nach `fetchStats()` und setzt `minH=maxH=berechnet`
+  - Storage per Node: `ceil(1 + nodeCount * 1.4)` (3 Nodes → h=6)
+  - Storage by Type: `ceil(1 + typeCount * 0.85)` (5 Types → h=6)
+  - Tasks: `ceil(1.2 + nodeCount * 0.45)` (3 Nodes → h=3)
 - **Persistenz:** Layout wird pro Dashboard in `proxmox_dashboard_layouts` gespeichert (JSON, max 100KB)
+- **Gespeicherte Werte:** Position (x,y) + Breite (w) + Höhe nur für manuell resizable Cards. Dynamische Höhen kommen immer frisch von API-Daten.
 - **API:** `GET/PUT/DELETE /api/dashboards/{id}/proxmox-layout`
 - **Save-Flow:** Layout-Änderung → "Layout speichern" Button erscheint → Manuelles Speichern → Toast-Feedback
 - **Reset:** "Layout zurücksetzen" löscht gespeichertes Layout, lädt Defaults
+- **Bug-Fixes:** `layoutInitialized` Ref verhindert false-positive "Save"-Button beim Mount; `onBreakpointChange` trackt Breakpoint, Layout-Änderungen nur für `lg` gespeichert
 
 ### Konfigurierbare Parameter (in Settings)
 | Parameter | localStorage Key | Default | Effekt |
@@ -397,8 +407,11 @@ Zwei Code-Pfade:
 Response-Model `ClusterStats`: `nodes`, `vms`, `lxcs`, `top_cpu_usage`, `top_memory_usage`, `top_disk_usage`, `tasks` (mit `by_node`), `storage_total`, `storage_by_node`, `storage_by_type`, `ceph`, `cluster_name`, `is_cluster`
 
 ### Styling
-- **StatCard (Base):** `bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-xl shadow-lg border-slate-200 dark:border-slate-700`
-- Alle Karten erben dieses Styling — **abweichend** vom VM/LXC-Cards-Stil (`dark:bg-gray-900/70`)
+- **StatCard (Base):** `bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl border-gray-300/50 dark:border-white/[0.12]`
+- Alle Karten nutzen **identisches Glasmorphismus-Design** wie die VM/LXC-Cards
+- Innere Elemente: `bg-white/10 dark:bg-white/5` (Stat-Boxen), `bg-white/5 dark:bg-white/[0.03]` (Node-Cards), `border-gray-300/30 dark:border-white/10` (Dividers)
+- Drag-Handle: `text-gray-400 hover:text-gray-500 dark:hover:text-white/60`
+- Resize-Handle: Hover-to-Blue Transition, verbesserte Dark-Mode Sichtbarkeit
 - Ceph-Karten zeigen Placeholder-UI wenn kein Ceph im Cluster vorhanden
 
 ---
@@ -443,3 +456,29 @@ Response-Model `ClusterStats`: `nodes`, `vms`, `lxcs`, `top_cpu_usage`, `top_mem
 - **Farbige Akzent-Ränder** bei Proxmox Cards (grün/rot per inline style, da Tailwind Border-Utilities von Dark-Mode überschrieben werden)
 - **Edit Mode Toggle** — Sidebar-Button statt permanent sichtbare Edit-Controls
 - **Keine SPA-Routing-Library** — Tab-basierte Navigation via `activeTab` State (services, monitoring, security, settings)
+
+---
+
+## 8. Changelog
+
+### 2025-02-15 — Status-Dashboard Redesign & Drag/Resize Fixes
+
+**Glasmorphismus-Redesign (Status-Dashboard):**
+- StatCard Base + alle 10 Stat-Widgets von `slate-*`-Palette auf `gray-*`/Glass-Theme migriert
+- Neues Styling: `bg-white/70 dark:bg-gray-900/70 rounded-2xl border-white/[0.12]` — identisch mit VM/LXC-Cards
+- Innere Elemente: `bg-white/10`, `bg-white/5`, `border-white/10` statt opaker `slate`-Farben
+- ProxmoxStatusDashboard Header/Loading/Error States ebenfalls auf `gray-*` aktualisiert
+
+**Dynamische Card-Höhen:**
+- Storage per Node, Storage by Type, Task Summary: Höhe wird automatisch von API-Daten berechnet (Anzahl Nodes/Typen)
+- `getDynamicCardHeight()` + `applyDynamicHeights()` in ProxmoxStatusDashboard
+- Kein manuelles Resize nötig — Cards wachsen/schrumpfen mit Cluster-Größe
+- Total Storage, Ceph Health, Ceph OSD: Manuell resizable (h=4–7) — sinnvoll für Zeilen-Ausrichtung
+
+**Drag/Resize Bug-Fixes:**
+- `layoutInitialized` Ref: Verhindert false-positive "Save"-Button beim initialen Mount
+- `onBreakpointChange` + `currentBreakpoint` Ref: Layout-Änderungen nur für `lg` Breakpoint getrackt
+- `overflow: hidden` statt `visible` auf Grid-Items: Kein Content-Leak während Resize
+- Resize-Handle: Größer (6px), Hover-to-Blue Transition, verbesserte Dark-Mode Sichtbarkeit
+- Placeholder: `border-radius: 1rem` passend zu `rounded-2xl` Cards
+- Saved Layout Merge vereinfacht: Positionen + Breite aus Backend, Höhen immer dynamisch/frisch

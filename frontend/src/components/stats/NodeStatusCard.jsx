@@ -28,7 +28,7 @@ function NodeStatusCard({ stats }) {
       <div className="flex flex-col h-full">
         {/* Mini Stat - Health Indicator */}
         <div className={`mb-3 px-2 py-1 rounded-md ${health.bgColor} flex items-center justify-between`}>
-          <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Health</span>
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Health</span>
           <span className={`text-xs font-bold ${health.color}`}>{health.label}</span>
         </div>
 
@@ -40,7 +40,7 @@ function NodeStatusCard({ stats }) {
               <CheckCircle size={20} weight="fill" className="text-green-500" />
               <div>
                 <span className="text-base font-medium block">Online</span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">{onlinePercent}% available</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{onlinePercent}% available</span>
               </div>
             </div>
             <span className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -63,10 +63,10 @@ function NodeStatusCard({ stats }) {
         </div>
 
         {/* Total - am Ende */}
-        <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
+        <div className="border-t border-gray-300/30 dark:border-white/10 pt-2 mt-2">
           <div className="flex items-center justify-between">
             <span className="text-base font-medium">Total</span>
-            <span className="text-xl font-bold text-slate-800 dark:text-slate-100">
+            <span className="text-xl font-bold text-gray-800 dark:text-white">
               {total}
             </span>
           </div>

@@ -15,7 +15,7 @@ function CephOSDCard({ ceph }) {
       >
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="text-6xl mb-3">💿</div>
-          <div className="text-sm text-slate-600 dark:text-slate-400">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
             Keine OSD-Daten verfügbar
           </div>
         </div>
@@ -42,10 +42,10 @@ function CephOSDCard({ ceph }) {
         <div className="space-y-1.5">
           {/* Total OSDs */}
           <div className="text-center">
-            <div className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+            <div className="text-3xl font-bold text-gray-800 dark:text-white">
               {osd.total}
             </div>
-            <div className="text-xs text-slate-600 dark:text-slate-400">
+            <div className="text-xs text-gray-600 dark:text-gray-400">
               Total OSDs
             </div>
           </div>
@@ -105,8 +105,8 @@ function CephOSDCard({ ceph }) {
           </div>
 
         {/* Status Info */}
-        <div className="pt-1 mt-auto border-t border-slate-200 dark:border-slate-700">
-            <div className="text-xs text-slate-600 dark:text-slate-400 space-y-0.5">
+        <div className="pt-1 mt-auto border-t border-gray-300/30 dark:border-white/10">
+            <div className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
               <div>• <strong>Up:</strong> OSD is running and reachable</div>
               <div>• <strong>In:</strong> OSD is part of the cluster</div>
               <div>• <strong>Down:</strong> OSD is not responding</div>

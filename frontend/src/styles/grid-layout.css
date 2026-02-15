@@ -17,7 +17,7 @@
 .react-grid-item > div {
   width: 100%;
   height: 100%;
-  overflow: visible;
+  overflow: hidden;
   position: relative;
 }
 
@@ -30,17 +30,24 @@
   position: absolute;
   width: 20px;
   height: 20px;
+  cursor: se-resize;
 }
 
 .react-grid-item > .react-resizable-handle::after {
   content: "";
   position: absolute;
-  right: 3px;
-  bottom: 3px;
-  width: 5px;
-  height: 5px;
-  border-right: 2px solid rgba(0, 0, 0, 0.4);
-  border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+  right: 4px;
+  bottom: 4px;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid rgba(0, 0, 0, 0.3);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.3);
+  transition: border-color 0.2s ease;
+}
+
+.react-grid-item:hover > .react-resizable-handle::after {
+  border-right-color: rgba(59, 130, 246, 0.6);
+  border-bottom-color: rgba(59, 130, 246, 0.6);
 }
 
 .react-resizable-hide > .react-resizable-handle {
@@ -104,19 +111,24 @@
   -ms-user-select: none;
   -o-user-select: none;
   user-select: none;
-  border-radius: 0.5rem;
-  border: 2px dashed rgba(59, 130, 246, 0.5);
+  border-radius: 1rem;
+  border: 2px dashed rgba(59, 130, 246, 0.4);
 }
 
 /* Dark mode adjustments */
 .dark .react-grid-item > .react-resizable-handle::after {
-  border-right-color: rgba(255, 255, 255, 0.4);
-  border-bottom-color: rgba(255, 255, 255, 0.4);
+  border-right-color: rgba(255, 255, 255, 0.3);
+  border-bottom-color: rgba(255, 255, 255, 0.3);
+}
+
+.dark .react-grid-item:hover > .react-resizable-handle::after {
+  border-right-color: rgba(96, 165, 250, 0.7);
+  border-bottom-color: rgba(96, 165, 250, 0.7);
 }
 
 .dark .react-grid-item.react-grid-placeholder {
-  background: rgba(59, 130, 246, 0.3);
-  border-color: rgba(59, 130, 246, 0.6);
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(96, 165, 250, 0.4);
 }
 
 /* Drag handle styles */

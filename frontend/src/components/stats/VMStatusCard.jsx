@@ -14,7 +14,7 @@ function VMStatusCard({ title, icon, stats, type = "vm" }) {
   
   // Health Status berechnen
   const getHealthStatus = () => {
-    if (total === 0) return { label: 'No Data', color: 'text-slate-500', bgColor: 'bg-slate-500/10' };
+    if (total === 0) return { label: 'No Data', color: 'text-gray-500', bgColor: 'bg-gray-500/10' };
     if (runningPercent >= 90) return { label: 'Excellent', color: 'text-green-500', bgColor: 'bg-green-500/10' };
     if (runningPercent >= 70) return { label: 'Good', color: 'text-green-500', bgColor: 'bg-green-500/10' };
     if (runningPercent >= 40) return { label: 'Fair', color: 'text-orange-500', bgColor: 'bg-orange-500/10' };
@@ -32,7 +32,7 @@ function VMStatusCard({ title, icon, stats, type = "vm" }) {
       <div className="flex flex-col h-full">
         {/* Mini Stat - Activity Indicator */}
         <div className={`mb-3 px-2 py-1 rounded-md ${health.bgColor} flex items-center justify-between`}>
-          <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Activity</span>
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Activity</span>
           <span className={`text-xs font-bold ${health.color}`}>{health.label}</span>
         </div>
 
@@ -44,7 +44,7 @@ function VMStatusCard({ title, icon, stats, type = "vm" }) {
               <Play size={20} weight="fill" className="text-green-500" />
               <div>
                 <span className="text-base font-medium block">Running</span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">{runningPercent}% active</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{runningPercent}% active</span>
               </div>
             </div>
             <span className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -55,20 +55,20 @@ function VMStatusCard({ title, icon, stats, type = "vm" }) {
           {/* Stopped */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Stop size={20} weight="fill" className="text-slate-400" />
+              <Stop size={20} weight="fill" className="text-gray-400" />
               <span className="text-sm font-medium">Stopped</span>
             </div>
-            <span className="text-2xl font-bold text-slate-500 dark:text-slate-400">
+            <span className="text-2xl font-bold text-gray-500 dark:text-gray-400">
               {stopped}
             </span>
           </div>
         </div>
 
         {/* Total - am Ende */}
-        <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
+        <div className="border-t border-gray-300/30 dark:border-white/10 pt-2 mt-2">
           <div className="flex items-center justify-between">
             <span className="text-base font-medium">Total</span>
-            <span className="text-xl font-bold text-slate-800 dark:text-slate-100">
+            <span className="text-xl font-bold text-gray-800 dark:text-white">
               {total}
             </span>
           </div>

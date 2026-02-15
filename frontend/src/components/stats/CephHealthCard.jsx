@@ -15,10 +15,10 @@ function CephHealthCard({ ceph }) {
       >
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="text-6xl mb-3">🔷</div>
-          <div className="text-sm text-slate-600 dark:text-slate-400">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
             Ceph nicht verfügbar
           </div>
-          <div className="text-xs text-slate-500 dark:text-slate-500 mt-1">
+          <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
             Dieses Cluster nutzt kein Ceph Storage
           </div>
         </div>
@@ -31,7 +31,7 @@ function CephHealthCard({ ceph }) {
     if (ceph.status.includes('OK')) return <CheckCircle size={32} weight="fill" className="text-green-500" />;
     if (ceph.status.includes('WARN')) return <WarningCircle size={32} weight="fill" className="text-orange-500" />;
     if (ceph.status.includes('ERR')) return <XCircle size={32} weight="fill" className="text-red-500" />;
-    return <Activity size={32} weight="duotone" className="text-slate-500" />;
+    return <Activity size={32} weight="duotone" className="text-gray-500" />;
   };
 
   const getStatusColor = () => {
@@ -63,41 +63,41 @@ function CephHealthCard({ ceph }) {
             {getStatusBadge()}
           </div>
           {ceph.status_message && (
-            <div className="mt-2 text-xs text-slate-600 dark:text-slate-400 max-w-xs text-center">
+            <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 max-w-xs text-center">
               {ceph.status_message}
             </div>
           )}
         </div>
         {/* OSD Info (falls vorhanden) */}
         {ceph.osd && (
-          <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
-            <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+          <div className="pt-2 border-t border-gray-300/30 dark:border-white/10">
+            <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">
               OSD Overview
             </div>
             <div className="grid grid-cols-2 gap-1.5">
-              <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-center">
+              <div className="p-1.5 rounded-lg bg-white/10 dark:bg-white/5 text-center">
                 <div className="text-base font-bold text-green-600 dark:text-green-400">
                   {ceph.osd.up}
                 </div>
-                <div className="text-xs text-slate-600 dark:text-slate-400">Up</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Up</div>
               </div>
-              <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-center">
+              <div className="p-1.5 rounded-lg bg-white/10 dark:bg-white/5 text-center">
                 <div className="text-base font-bold text-blue-600 dark:text-blue-400">
                   {ceph.osd.in_count}
                 </div>
-                <div className="text-xs text-slate-600 dark:text-slate-400">In</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">In</div>
               </div>
-              <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-center">
+              <div className="p-1.5 rounded-lg bg-white/10 dark:bg-white/5 text-center">
                 <div className="text-base font-bold text-red-600 dark:text-red-400">
                   {ceph.osd.down}
                 </div>
-                <div className="text-xs text-slate-600 dark:text-slate-400">Down</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Down</div>
               </div>
-              <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-center">
+              <div className="p-1.5 rounded-lg bg-white/10 dark:bg-white/5 text-center">
                 <div className="text-base font-bold text-orange-600 dark:text-orange-400">
                   {ceph.osd.out}
                 </div>
-                <div className="text-xs text-slate-600 dark:text-slate-400">Out</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Out</div>
               </div>
             </div>
           </div>
