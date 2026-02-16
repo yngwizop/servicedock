@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 
-function ClockWidget({ textColor, locale = (typeof navigator !== 'undefined' && navigator.language) || 'de-DE', showSeconds = true, use24Hour = true }) {
-  const { t } = useTranslation();
+function ClockWidget({ textColor, locale: localeProp, showSeconds = true, use24Hour = true }) {
+  const { t, i18n } = useTranslation();
+  // Sync locale with i18n language — map 'de' → 'de-DE', 'en' → 'en-GB'
+  const locale = localeProp || (i18n.language?.startsWith('en') ? 'en-GB' : i18n.language?.startsWith('de') ? 'de-DE' : i18n.language || 'de-DE');
   const [time, setTime] = useState(() => new Date());
   const [announce, setAnnounce] = useState(''); // für sr-only Live-Region (seltener updaten)
   const timerRef = useRef(null);
@@ -26,13 +28,19 @@ function ClockWidget({ textColor, locale = (typeof navigator !== 'undefined' && 
     })
   );
 
-  // Formatter neu erstellen wenn use24Hour sich ändert
+  // Formatter neu erstellen wenn use24Hour oder locale sich ändert
   useEffect(() => {
     timeFormatterRef.current = new Intl.DateTimeFormat(locale, {
       hour: '2-digit',
       minute: '2-digit',
       second: showSeconds ? '2-digit' : undefined,
       hour12: !use24Hour,
+    });
+    dateFormatterRef.current = new Intl.DateTimeFormat(locale, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   }, [use24Hour, locale, showSeconds]);
 
