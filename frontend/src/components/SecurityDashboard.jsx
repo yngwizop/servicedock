@@ -197,7 +197,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
       </div>
 
       {/* View Toggle */}
-      <div className="flex gap-2 bg-white/60 dark:bg-gray-900/70 backdrop-blur-md rounded-xl px-4 pt-3 pb-2 border border-gray-300/50 dark:border-white/20 shadow-lg">
+      <div className="flex gap-2 bg-white/60 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl px-4 pt-3 pb-2 border border-gray-300/50 dark:border-white/[0.12] shadow-xl">
         <button
           onClick={() => setActiveView('overview')}
           className={`px-4 py-2 font-semibold transition-all rounded-lg ${
@@ -256,7 +256,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
           {/* Token Rotation Card */}
-          <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/20">
+          <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-300/50 dark:border-white/[0.12]">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <ArrowsClockwise 
@@ -264,7 +264,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                   className={tokenInfo?.rotation_recommended ? 'text-red-500' : 'text-green-500'} 
                   weight="bold"
                 />
-                <h3 className="text-lg font-bold text-gray-950 dark:text-gray-100">
+                <h3 className="text-lg font-bold text-gray-800 dark:text-white">
                   Token Rotation
                 </h3>
               </div>
@@ -277,7 +277,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-gray-700 dark:text-gray-400">Token Alter</p>
-                  <p className="text-2xl font-bold text-gray-950 dark:text-gray-100">
+                  <p className="text-2xl font-bold text-gray-800 dark:text-white">
                     {tokenInfo.age_days} Tage
                   </p>
                 </div>
@@ -319,10 +319,10 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
           </div>
 
           {/* Audit Stats Card */}
-          <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/20">
+          <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-300/50 dark:border-white/[0.12]">
             <div className="flex items-center gap-3 mb-4">
               <ChartBar size={28} className="text-blue-500" weight="bold" />
-              <h3 className="text-lg font-bold text-gray-950 dark:text-gray-100">
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">
                 Aktivität (24h)
               </h3>
             </div>
@@ -332,7 +332,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-700 dark:text-gray-400">Gesamt</p>
-                    <p className="text-3xl font-bold text-gray-950 dark:text-gray-100">
+                    <p className="text-3xl font-bold text-gray-800 dark:text-white">
                       {auditStats.error_stats.total}
                     </p>
                   </div>
@@ -356,17 +356,17 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
           </div>
 
           {/* Security Threats Card */}
-          <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/20">
+          <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-300/50 dark:border-white/[0.12]">
             <div className="flex items-center gap-3 mb-4">
               <Detective size={28} className="text-red-500" weight="bold" />
-              <h3 className="text-lg font-bold text-gray-950 dark:text-gray-100">
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">
                 Security Threats (24h)
               </h3>
             </div>
             
             {auditStats?.security_threats ? (
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-white/30 dark:hover:bg-gray-700/30">
+                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-white/30 dark:hover:bg-white/5">
                   <div className="flex items-center gap-2">
                     <XCircle 
                       size={24} 
@@ -380,13 +380,13 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                   <span className={`text-lg font-bold ${
                     auditStats.security_threats.failed_logins > 10 
                       ? 'text-red-600 dark:text-red-400' 
-                      : 'text-gray-950 dark:text-gray-100'
+                      : 'text-gray-800 dark:text-white'
                   }`}>
                     {auditStats.security_threats.failed_logins}
                   </span>
                 </div>
                 
-                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-white/30 dark:hover:bg-gray-700/30">
+                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-white/30 dark:hover:bg-white/5">
                   <div className="flex items-center gap-2">
                     <ProhibitInset 
                       size={24} 
@@ -400,13 +400,13 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                   <span className={`text-lg font-bold ${
                     auditStats.security_threats.blocked_ips > 5 
                       ? 'text-orange-600 dark:text-orange-400' 
-                      : 'text-gray-950 dark:text-gray-100'
+                      : 'text-gray-800 dark:text-white'
                   }`}>
                     {auditStats.security_threats.blocked_ips}
                   </span>
                 </div>
                 
-                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-white/30 dark:hover:bg-gray-700/30">
+                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-white/30 dark:hover:bg-white/5">
                   <div className="flex items-center gap-2">
                     <ShieldWarning 
                       size={24} 
@@ -420,7 +420,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                   <span className={`text-lg font-bold ${
                     auditStats.security_threats.permission_errors > 5 
                       ? 'text-yellow-600 dark:text-yellow-400' 
-                      : 'text-gray-950 dark:text-gray-100'
+                      : 'text-gray-800 dark:text-white'
                   }`}>
                     {auditStats.security_threats.permission_errors}
                   </span>
@@ -448,10 +448,10 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
           </div>
 
           {/* Rate Limiting Info */}
-          <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/20">
+          <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-300/50 dark:border-white/[0.12]">
             <div className="flex items-center gap-3 mb-4">
               <Clock size={28} className="text-purple-500" weight="bold" />
-              <h3 className="text-lg font-bold text-gray-950 dark:text-gray-100">
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">
                 Rate Limit Usage
               </h3>
             </div>
@@ -462,11 +462,11 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm text-gray-700 dark:text-gray-400">Login</span>
-                    <span className="text-sm font-bold text-gray-950 dark:text-gray-100">
+                    <span className="text-sm font-bold text-gray-800 dark:text-white">
                       {rateLimitUsage.login.current}/{rateLimitUsage.login.limit}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-300/60 dark:bg-gray-700 rounded-full h-2">
+                  <div className="w-full bg-gray-300/30 dark:bg-white/10 rounded-full h-2">
                     <div 
                       className={`h-2 rounded-full transition-all ${
                         rateLimitUsage.login.percentage >= 80 
@@ -484,11 +484,11 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm text-gray-700 dark:text-gray-400">Proxmox View</span>
-                    <span className="text-sm font-bold text-gray-950 dark:text-gray-100">
+                    <span className="text-sm font-bold text-gray-800 dark:text-white">
                       {rateLimitUsage.proxmox_view.current}/{rateLimitUsage.proxmox_view.limit}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-300/60 dark:bg-gray-700 rounded-full h-2">
+                  <div className="w-full bg-gray-300/30 dark:bg-white/10 rounded-full h-2">
                     <div 
                       className={`h-2 rounded-full transition-all ${
                         rateLimitUsage.proxmox_view.percentage >= 80 
@@ -506,11 +506,11 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm text-gray-700 dark:text-gray-400">Proxmox Control</span>
-                    <span className="text-sm font-bold text-gray-950 dark:text-gray-100">
+                    <span className="text-sm font-bold text-gray-800 dark:text-white">
                       {rateLimitUsage.proxmox_control.current}/{rateLimitUsage.proxmox_control.limit}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-300/60 dark:bg-gray-700 rounded-full h-2">
+                  <div className="w-full bg-gray-300/30 dark:bg-white/10 rounded-full h-2">
                     <div 
                       className={`h-2 rounded-full transition-all ${
                         rateLimitUsage.proxmox_control.percentage >= 80 
@@ -554,11 +554,11 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
 
       {/* Logs View */}
       {activeView === 'logs' && (
-        <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg border border-gray-300/50 dark:border-white/20 overflow-hidden">
+        <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl border border-gray-300/50 dark:border-white/[0.12] overflow-hidden">
           <div className="p-6 border-b border-gray-300/50 dark:border-white/10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h3 className="text-xl font-bold text-gray-950 dark:text-gray-100">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white">
                   Audit Logs
                 </h3>
                 <p className="text-sm text-gray-700 dark:text-gray-400 mt-1">
@@ -628,7 +628,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                 ) : (
                   filteredLogs.map((log) => (
                     <tr key={log.id} className="hover:bg-white/20 dark:hover:bg-white/5">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-950 dark:text-gray-200">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-white">
                         {formatTimestamp(log.timestamp)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -636,7 +636,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                           {log.action}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-950 dark:text-gray-200">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-white">
                         {log.ip_address}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -661,8 +661,8 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* Top Actions */}
-          <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/20">
-            <h3 className="text-xl font-bold text-gray-950 dark:text-gray-100 mb-4">
+          <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-300/50 dark:border-white/[0.12]">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
               Top Aktionen (24h)
             </h3>
             <div className="space-y-3">
@@ -674,7 +674,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getActionColor(action.action)}`}>
                       {action.action}
                     </span>
-                    <span className="text-lg font-bold text-gray-950 dark:text-gray-100">
+                    <span className="text-lg font-bold text-gray-800 dark:text-white">
                       {action.count}
                     </span>
                   </div>
@@ -684,8 +684,8 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
           </div>
 
           {/* Top IPs */}
-          <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/20">
-            <h3 className="text-xl font-bold text-gray-950 dark:text-gray-100 mb-4">
+          <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-300/50 dark:border-white/[0.12]">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
               Top IP-Adressen (24h)
             </h3>
             <div className="space-y-3">
@@ -694,10 +694,10 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
               ) : (
                 auditStats.top_ips.map((ip, index) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-white/30 dark:bg-white/5 rounded-lg">
-                    <span className="text-sm font-mono text-gray-950 dark:text-gray-100">
+                    <span className="text-sm font-mono text-gray-800 dark:text-white">
                       {ip.ip}
                     </span>
-                    <span className="text-lg font-bold text-gray-950 dark:text-gray-100">
+                    <span className="text-lg font-bold text-gray-800 dark:text-white">
                       {ip.count} Requests
                     </span>
                   </div>
@@ -711,7 +711,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 border-2 border-red-500">
+          <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-2xl max-w-md w-full p-6 border border-red-500/50 dark:border-red-500/30">
             <div className="flex items-center gap-3 mb-4">
               <Warning size={32} className="text-red-500" weight="fill" />
               <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
@@ -733,7 +733,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                 onChange={(e) => setDeletePassword(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleDeleteAllLogs()}
                 placeholder="Passwort eingeben"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300/50 dark:border-white/[0.12] rounded-lg bg-white/50 dark:bg-white/5 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 autoFocus
               />
               {deleteError && (
@@ -748,7 +748,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                   setDeletePassword('');
                   setDeleteError('');
                 }}
-                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="flex-1 px-4 py-2 bg-white/30 dark:bg-white/10 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-white/50 dark:hover:bg-white/15 transition-colors"
                 disabled={isDeleting}
               >
                 Abbrechen
