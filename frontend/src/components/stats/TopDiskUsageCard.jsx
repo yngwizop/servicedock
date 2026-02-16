@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { HardDrives } from 'phosphor-react';
 import StatCard from './StatCard';
 
@@ -6,6 +7,7 @@ import StatCard from './StatCard';
  * Zeigt Top Disk Usage an
  */
 function TopDiskUsageCard({ title, items }) {
+  const { t } = useTranslation();
   // Formatiere Bytes zu GB
   const formatBytes = (bytes) => {
     if (!bytes) return '0 GB';
@@ -87,7 +89,7 @@ function TopDiskUsageCard({ title, items }) {
         </div>
       ) : (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          Keine Daten verfügbar
+          {t('stats.no_data')}
         </div>
       )}
     </StatCard>

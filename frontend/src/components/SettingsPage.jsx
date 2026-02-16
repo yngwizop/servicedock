@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Palette, SquaresFour, Desktop, Plug, Lightbulb, Info, ShieldCheck, Lightning } from 'phosphor-react';
+import { Palette, SquaresFour, Desktop, Plug, Lightbulb, Info, ShieldCheck, Lightning, Translate } from 'phosphor-react';
+import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../utils/auth';
 import AppearanceTab from './settings/AppearanceTab';
 import ProxmoxTab from './settings/ProxmoxTab';
 import DashboardsCard from './settings/DashboardsCard';
 import AddOnsCard from './settings/AddOnsCard';
+import LanguageCard from './settings/LanguageCard';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
   (window.location.port === '' ? 
@@ -22,6 +24,8 @@ function SettingsPage({
   onDashboardsChange,
   textColor
 }) {
+  const { t } = useTranslation();
+
   // Active section for mobile navigation
   const [activeSection, setActiveSection] = useState('appearance');
 
@@ -78,26 +82,26 @@ function SettingsPage({
           if (testData.success) {
             const nodeInfo = testData.nodes ? ` (${testData.nodes.length} Node(s) gefunden: ${testData.nodes.join(', ')})` : '';
             setProxmoxResultType('success');
-            setProxmoxResultMessage(`Konfiguration gespeichert und Verbindung erfolgreich getestet!${nodeInfo}`);
+            setProxmoxResultMessage(t('settings.proxmox_save_success'));
           } else {
             setProxmoxResultType('error');
-            setProxmoxResultMessage(`Konfiguration gespeichert, aber Verbindungstest fehlgeschlagen:\n\n${testData.error}\n\nBitte überprüfe die Einstellungen.`);
+            setProxmoxResultMessage(t('settings.proxmox_save_test_failed', { error: testData.error }));
           }
         } catch {
           setProxmoxResultType('error');
-          setProxmoxResultMessage('Konfiguration gespeichert, aber Verbindungstest konnte nicht durchgeführt werden.');
+          setProxmoxResultMessage(t('settings.proxmox_save_no_test'));
         }
         setShowProxmoxResultModal(true);
         setTimeout(() => setProxmoxSaved(false), 3000);
       } else {
         setProxmoxResultType('error');
-        setProxmoxResultMessage('Fehler beim Speichern der Proxmox-Konfiguration');
+        setProxmoxResultMessage(t('settings.proxmox_save_error'));
         setShowProxmoxResultModal(true);
       }
     } catch (err) {
       console.error('Failed to save Proxmox config:', err);
       setProxmoxResultType('error');
-      setProxmoxResultMessage('Fehler beim Speichern der Proxmox-Konfiguration');
+      setProxmoxResultMessage(t('settings.proxmox_save_error'));
       setShowProxmoxResultModal(true);
     } finally {
       setIsSavingProxmox(false);
@@ -109,28 +113,29 @@ function SettingsPage({
       const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/config?dashboard_id=${activeDashboard}`, { method: 'DELETE' });
       if (res.ok) {
         setProxmoxResultType('success');
-        setProxmoxResultMessage('Proxmox-Konfiguration erfolgreich gelöscht.');
+        setProxmoxResultMessage(t('settings.proxmox_delete_success'));
         setProxmoxConfig({ host: '', port: 8006, token_name: '', token_value: '', verify_ssl: false, node: '', is_cluster: false });
         setSavedTokenName('');
       } else {
         const errorData = await res.json();
         setProxmoxResultType('error');
-        setProxmoxResultMessage(`Fehler beim Löschen: ${errorData.detail || 'Unbekannter Fehler'}`);
+        setProxmoxResultMessage(t('settings.proxmox_delete_error', { detail: errorData.detail || 'Unbekannter Fehler' }));
       }
       setShowProxmoxResultModal(true);
     } catch (err) {
       console.error('Failed to delete Proxmox config:', err);
       setProxmoxResultType('error');
-      setProxmoxResultMessage('Fehler beim Löschen der Proxmox-Konfiguration');
+      setProxmoxResultMessage(t('settings.proxmox_delete_error_generic'));
       setShowProxmoxResultModal(true);
     }
   };
 
   const sections = [
-    { id: 'appearance', label: 'Appearance', icon: Palette },
-    { id: 'dashboards', label: 'Dashboards', icon: SquaresFour },
-    { id: 'proxmox', label: 'Proxmox', icon: Desktop },
-    { id: 'addons', label: 'AddOns', icon: Plug },
+    { id: 'appearance', label: t('settings.tabs.appearance'), icon: Palette },
+    { id: 'dashboards', label: t('settings.tabs.dashboards'), icon: SquaresFour },
+    { id: 'proxmox', label: t('settings.tabs.proxmox'), icon: Desktop },
+    { id: 'addons', label: t('settings.tabs.addons'), icon: Plug },
+    { id: 'language', label: t('settings.tabs.language'), icon: Translate },
   ];
 
   // Refs for each section
@@ -179,59 +184,69 @@ function SettingsPage({
   // Contextual tips per section
   const sectionTips = {
     appearance: {
-      title: 'Appearance Tipps',
+      title: t('settings.tips.appearance_title'),
       icon: Palette,
       color: 'text-pink-400',
       tips: [
-        { icon: Lightbulb, text: 'Hintergrundbilder von Unsplash funktionieren am besten mit einer Opacity von 0.6–0.8 für gute Lesbarkeit.' },
-        { icon: Info, text: 'Schriftfarben werden pro Modus (Light/Dark) getrennt gespeichert — wechsle den Modus mit dem ☀/🌙 Button um beide zu testen.' },
-        { icon: Lightning, text: 'Service-Spalten (2–10) und Shortcut-Spalten (2–8) lassen sich unabhängig konfigurieren.' },
-        { icon: ShieldCheck, text: 'Hex-Eingabe und Color-Picker sind synchronisiert — du kannst exakte Farbwerte direkt eintippen.' },
-        { icon: Info, text: 'Wetter-Widget: Die Stadt wird per Geocoding aufgelöst — zeigt dir Land, PLZ und Koordinaten zur Bestätigung.' },
-        { icon: Lightbulb, text: 'Wetterdaten werden alle 2 Stunden automatisch aktualisiert. Manueller Refresh über den Widget-Button möglich.' },
-        { icon: Lightning, text: 'Einzelne Widgets (Uhr, Wetter, Spotify) können ausgeblendet werden, ohne die Konfiguration zu verlieren.' },
+        { icon: Lightbulb, text: t('settings.tips.appearance.0') },
+        { icon: Info, text: t('settings.tips.appearance.1') },
+        { icon: Lightning, text: t('settings.tips.appearance.2') },
+        { icon: ShieldCheck, text: t('settings.tips.appearance.3') },
+        { icon: Info, text: t('settings.tips.appearance.4') },
+        { icon: Lightbulb, text: t('settings.tips.appearance.5') },
+        { icon: Lightning, text: t('settings.tips.appearance.6') },
       ]
     },
     dashboards: {
-      title: 'Dashboard Tipps',
+      title: t('settings.tips.dashboards_title'),
       icon: SquaresFour,
       color: 'text-blue-400',
       tips: [
-        { icon: Lightbulb, text: 'Erstelle separate Dashboards für verschiedene Umgebungen — z.B. Home, Work, Gaming, Media oder Development.' },
-        { icon: Info, text: 'Jedes Dashboard ist komplett unabhängig: eigene Services, Shortcuts und Proxmox-Konfiguration.' },
-        { icon: ShieldCheck, text: 'Dashboard-Namen und Beschreibungen können jederzeit geändert werden ohne Datenverlust.' },
-        { icon: Lightning, text: 'Der Proxmox-Tab kann pro Dashboard einzeln aktiviert/deaktiviert werden — spart Platz wenn nicht benötigt.' },
-        { icon: Info, text: 'Das letzte Dashboard kann nicht gelöscht werden — mindestens eins muss immer existieren.' },
-        { icon: Lightbulb, text: 'Beim Löschen eines Dashboards werden auch alle zugehörigen Services und Shortcuts entfernt.' },
+        { icon: Lightbulb, text: t('settings.tips.dashboards.0') },
+        { icon: Info, text: t('settings.tips.dashboards.1') },
+        { icon: ShieldCheck, text: t('settings.tips.dashboards.2') },
+        { icon: Lightning, text: t('settings.tips.dashboards.3') },
+        { icon: Info, text: t('settings.tips.dashboards.4') },
+        { icon: Lightbulb, text: t('settings.tips.dashboards.5') },
       ]
     },
     proxmox: {
-      title: 'Proxmox Tipps',
+      title: t('settings.tips.proxmox_title'),
       icon: Desktop,
       color: 'text-orange-400',
       tips: [
-        { icon: ShieldCheck, text: 'Nutze einen dedizierten API-Token mit minimalen Rechten (PVEAuditor) oder PVEAdmin, wenn VMs gesteuert werden sollen. Format: user@realm!tokenname' },
-        { icon: Info, text: 'API-Token Secrets werden mit Fernet (AES-128) verschlüsselt gespeichert und nie im Klartext angezeigt.' },
-        { icon: Lightbulb, text: 'SSL-Verifizierung kann deaktiviert werden — praktisch für selbstsignierte Zertifikate im Homelab.' },
-        { icon: Lightning, text: 'Im Cluster-Modus werden automatisch alle Nodes erkannt. Optional: Bestimmten Node als Filter setzen.' },
-        { icon: Info, text: 'Verbindung erst speichern, dann testen — der Test zeigt die Anzahl gefundener Nodes.' },
-        { icon: Lightbulb, text: 'Auto-Refresh Intervall einstellbar: 15s / 30s / 60s / 120s — kürzere Intervalle = mehr API-Aufrufe.' },
-        { icon: ShieldCheck, text: 'Monitoring-Einstellungen (Refresh, Top-Items, Zeitraum) sind browser-lokal und synchen nicht zwischen Geräten.' },
+        { icon: ShieldCheck, text: t('settings.tips.proxmox.0') },
+        { icon: Info, text: t('settings.tips.proxmox.1') },
+        { icon: Lightbulb, text: t('settings.tips.proxmox.2') },
+        { icon: Lightning, text: t('settings.tips.proxmox.3') },
+        { icon: Info, text: t('settings.tips.proxmox.4') },
+        { icon: Lightbulb, text: t('settings.tips.proxmox.5') },
+        { icon: ShieldCheck, text: t('settings.tips.proxmox.6') },
       ]
     },
     addons: {
-      title: 'AddOn Tipps',
+      title: t('settings.tips.addons_title'),
       icon: Plug,
       color: 'text-green-400',
       tips: [
-        { icon: Lightbulb, text: 'Config Export sichert: Dashboards, Services, Shortcuts & Appearance. Dateiname: servicedock-config-YYYY-MM-DD.json' },
-        { icon: ShieldCheck, text: 'Aus Sicherheitsgründen werden Proxmox- und Spotify-Credentials nie mit exportiert.' },
-        { icon: Info, text: 'Import-Modus "Anhängen" fügt Daten hinzu (IDs werden neu vergeben). "Ersetzen" löscht vorher alles.' },
-        { icon: Lightning, text: 'Vor dem Import wird die Datei validiert und eine Vorschau angezeigt (Anzahl Dashboards, Services, Shortcuts).' },
-        { icon: Lightbulb, text: 'Immer einen Export-Backup machen bevor du den "Ersetzen"-Modus nutzt!' },
-        { icon: Info, text: 'Spotify benötigt eine App im Spotify Developer Dashboard. Die Redirect URI wird automatisch erkannt.' },
-        { icon: ShieldCheck, text: 'Spotify hat nur Lese-Zugriff — es wird ausschließlich der aktuelle Song abgefragt.' },
-        { icon: Lightning, text: 'OAuth-Verbindung: 2 Minuten Timeout. Wird automatisch alle 3 Sekunden geprüft. Bei Timeout einfach neu verbinden.' },
+        { icon: Lightbulb, text: t('settings.tips.addons.0') },
+        { icon: ShieldCheck, text: t('settings.tips.addons.1') },
+        { icon: Info, text: t('settings.tips.addons.2') },
+        { icon: Lightning, text: t('settings.tips.addons.3') },
+        { icon: Lightbulb, text: t('settings.tips.addons.4') },
+        { icon: Info, text: t('settings.tips.addons.5') },
+        { icon: ShieldCheck, text: t('settings.tips.addons.6') },
+        { icon: Lightning, text: t('settings.tips.addons.7') },
+      ]
+    },
+    language: {
+      title: t('settings.tips.language_title'),
+      icon: Translate,
+      color: 'text-violet-400',
+      tips: [
+        { icon: Lightbulb, text: t('settings.tips.language.0') },
+        { icon: Info, text: t('settings.tips.language.1') },
+        { icon: Lightning, text: t('settings.tips.language.2') },
       ]
     },
   };
@@ -344,6 +359,13 @@ function SettingsPage({
               <AddOnsCard />
             </div>
           </section>
+
+          {/* Language */}
+          <section ref={(el) => (sectionRefs.current['language'] = el)} id="settings-language">
+            <div className={cardClass}>
+              <LanguageCard />
+            </div>
+          </section>
         </div>
 
         {/* Contextual Tips Panel */}
@@ -379,25 +401,24 @@ function SettingsPage({
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-                Proxmox-Konfiguration löschen?
+                {t('settings.proxmox_delete_title')}
               </h3>
             </div>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Diese Aktion kann nicht rückgängig gemacht werden. 
-              Die Proxmox-Konfiguration für dieses Dashboard wird permanent gelöscht.
+              {t('settings.proxmox_delete_warning')}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowProxmoxDeleteModal(false)}
                 className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
               >
-                Abbrechen
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => { setShowProxmoxDeleteModal(false); handleDeleteProxmox(); }}
                 className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
               >
-                Ja, löschen
+                {t('common.yes_delete')}
               </button>
             </div>
           </div>
@@ -423,7 +444,7 @@ function SettingsPage({
                 )}
               </div>
               <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-                {proxmoxResultType === 'success' ? 'Erfolg!' : 'Fehler'}
+                {proxmoxResultType === 'success' ? t('settings.result_success') : t('settings.result_error')}
               </h3>
             </div>
             <p className="text-gray-600 dark:text-gray-400 mb-6 whitespace-pre-line">

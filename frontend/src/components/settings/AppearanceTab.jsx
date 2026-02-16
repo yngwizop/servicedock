@@ -1,13 +1,14 @@
 import React from 'react';
 import { Moon, Sun } from 'phosphor-react';
+import { useTranslation } from 'react-i18next';
 
 const WEATHER_FIELDS = [
-  { key: 'temperature', label: 'Temperatur', icon: '🌡️' },
-  { key: 'humidity', label: 'Luftfeuchtigkeit', icon: '💧' },
-  { key: 'wind', label: 'Wind', icon: '🌀' },
-  { key: 'precipitation', label: 'Niederschlag', icon: '🌧️' },
-  { key: 'cloudCover', label: 'Bewölkung', icon: '☁️' },
-  { key: 'pressure', label: 'Luftdruck', icon: '🔽' }
+  { key: 'temperature', labelKey: 'appearance.temperature', icon: '🌡️' },
+  { key: 'humidity', labelKey: 'appearance.humidity', icon: '💧' },
+  { key: 'wind', labelKey: 'appearance.wind', icon: '🌀' },
+  { key: 'precipitation', labelKey: 'appearance.precipitation', icon: '🌧️' },
+  { key: 'cloudCover', labelKey: 'appearance.cloud_cover', icon: '☁️' },
+  { key: 'pressure', labelKey: 'appearance.pressure', icon: '🔽' }
 ];
 
 function AppearanceTab({
@@ -19,17 +20,19 @@ function AppearanceTab({
   showSaved,
   onSaveAppearance
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6">
       {/* Sektion: Hintergrund */}
       <div className="space-y-4 p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-gray-400/60 dark:border-white/10">
         <h4 className="font-semibold text-lg text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-          🎨 Hintergrund
+          {t('appearance.background')}
         </h4>
         
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Hintergrundfarbe
+            {t('appearance.bg_color')}
           </label>
           <div className="flex items-center gap-3">
             <input
@@ -50,7 +53,7 @@ function AppearanceTab({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Hintergrundbild URL
+            {t('appearance.bg_image_url')}
           </label>
           <input
             type="text"
@@ -63,7 +66,7 @@ function AppearanceTab({
         
         <div>
           <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Bild-Deckkraft: <span className="font-mono text-blue-600 dark:text-blue-400">{editAppearance.bg_opacity}</span>
+            {t('appearance.bg_opacity')} <span className="font-mono text-blue-600 dark:text-blue-400">{editAppearance.bg_opacity}</span>
           </label>
           <input
             type="range"
@@ -78,27 +81,22 @@ function AppearanceTab({
       {/* Sektion: Schriftfarben */}
       <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
         <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-          ✏️ Schriftfarben
+          {t('appearance.font_colors')}
         </h4>
         
         <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-700">
           <p className="text-sm text-blue-800 dark:text-blue-300">
-            💡 Aktuell im <strong>{currentTheme === 'light' ? 'Light' : 'Dark'} Mode</strong>.{' '}
-            Wechsle den Modus mit dem{' '}
-            <span className="inline-flex items-center gap-1 whitespace-nowrap" aria-hidden="true">
-              <Moon size={12} />
-              <span className="text-gray-600 dark:text-gray-400">/</span>
-              <Sun size={12} />
-            </span>
-            <span className="sr-only"> Theme-Umschalter (Mond und Sonne)</span>
-            {' '}Button, um die Farben zu testen.
+            {t('appearance.mode_info', {
+              mode: currentTheme === 'light' ? t('appearance.mode_light') : t('appearance.mode_dark'),
+              icon: '☀/🌙'
+            })}
           </p>
         </div>
 
         {/* Light Mode Schriftfarbe */}
         <div>
           <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Light Mode
+            {t('appearance.light_mode')}
           </label>
           <div className="flex items-center gap-3">
             <input
@@ -120,7 +118,7 @@ function AppearanceTab({
         {/* Dark Mode Schriftfarbe */}
         <div>
           <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Dark Mode
+            {t('appearance.dark_mode')}
           </label>
           <div className="flex items-center gap-3">
             <input
@@ -143,12 +141,12 @@ function AppearanceTab({
       {/* Sektion: Layout */}
       <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
         <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-          📐 Layout & Spalten
+          {t('appearance.layout')}
         </h4>
         
         <div>
           <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Service-Spalten (Desktop): <span className="font-mono text-blue-600 dark:text-blue-400">{editAppearance.service_cols}</span>
+            {t('appearance.service_cols')} <span className="font-mono text-blue-600 dark:text-blue-400">{editAppearance.service_cols}</span>
           </label>
           <input
             type="range"
@@ -161,7 +159,7 @@ function AppearanceTab({
         
         <div>
           <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Shortcut-Spalten (Desktop): <span className="font-mono text-blue-600 dark:text-blue-400">{editAppearance.shortcut_cols}</span>
+            {t('appearance.shortcut_cols')} <span className="font-mono text-blue-600 dark:text-blue-400">{editAppearance.shortcut_cols}</span>
           </label>
           <input
             type="range"
@@ -176,12 +174,12 @@ function AppearanceTab({
       {/* Sektion: Uhr */}
       <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
         <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-          🕐 Uhr-Einstellungen
+          {t('appearance.clock_settings')}
         </h4>
         
         <div>
           <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Zeitformat
+            {t('appearance.time_format')}
           </label>
           <div className="flex gap-4">
             <label className="flex items-center gap-2 cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
@@ -194,7 +192,7 @@ function AppearanceTab({
                 className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
               />
               <div>
-                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">24-Stunden</div>
+                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.format_24h')}</div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">14:30:45</div>
               </div>
             </label>
@@ -208,7 +206,7 @@ function AppearanceTab({
                 className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
               />
               <div>
-                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">12-Stunden</div>
+                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.format_12h')}</div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">2:30:45 PM</div>
               </div>
             </label>
@@ -219,7 +217,7 @@ function AppearanceTab({
       {/* NEU: Sektion: Widget Sichtbarkeit */}
       <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
         <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-          🎛️ Widget Sichtbarkeit
+          {t('appearance.widgets')}
         </h4>
         
         <div className="space-y-3">
@@ -232,8 +230,8 @@ function AppearanceTab({
             />
             <span className="text-2xl flex-shrink-0">🎵</span>
             <div className="flex-1">
-              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Spotify Widget</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">Zeige aktuell abgespielte Musik</div>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.spotify_widget')}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{t('appearance.show_music')}</div>
             </div>
           </label>
 
@@ -246,8 +244,8 @@ function AppearanceTab({
             />
             <span className="text-2xl flex-shrink-0">🌤️</span>
             <div className="flex-1">
-              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Wetter Widget</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">Zeige Wetterinformationen</div>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.weather_widget')}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{t('appearance.show_weather')}</div>
             </div>
           </label>
 
@@ -260,8 +258,8 @@ function AppearanceTab({
             />
             <span className="text-2xl flex-shrink-0">🕐</span>
             <div className="flex-1">
-              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Uhr Widget</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">Zeige aktuelle Uhrzeit und Datum</div>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.clock_widget')}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{t('appearance.show_clock')}</div>
             </div>
           </label>
         </div>
@@ -270,40 +268,39 @@ function AppearanceTab({
       {/* Sektion: Wetter */}
       <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
         <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-          🌤️ Wetter-Widget
+          {t('appearance.weather_section')}
         </h4>
         
         <div>
           <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Stadt
+            {t('appearance.city')}
           </label>
           <input
             type="text"
             value={editAppearance.weather_city || ''}
             onChange={(e) => setEditAppearance({ ...editAppearance, weather_city: e.target.value })}
-            placeholder="z.B. Berlin, München, Hamburg"
+            placeholder={t('appearance.city_placeholder')}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           {/* Geocoding Info Anzeige */}
           {weatherLocationInfo && weatherLocationInfo.name && weatherLocationInfo.country && (
             <div className="mt-2 text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-900/30 rounded px-2 py-1">
-              <span className="font-semibold">Gefundener Ort:</span> {weatherLocationInfo.name}, {weatherLocationInfo.country}
-              {weatherLocationInfo.postal_code ? `, PLZ: ${weatherLocationInfo.postal_code}` : ''}
+              <span className="font-semibold">{t('appearance.found_location')}</span> {weatherLocationInfo.name}, {weatherLocationInfo.country}
+              {weatherLocationInfo.postal_code ? `${t('appearance.postal_code')}${weatherLocationInfo.postal_code}` : ''}
               {typeof weatherLocationInfo.latitude === 'number' && typeof weatherLocationInfo.longitude === 'number' ?
                 `, (${weatherLocationInfo.latitude.toFixed(4)}, ${weatherLocationInfo.longitude.toFixed(4)})`
                 : ''}
             </div>
           )}
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Wetterdaten werden alle 2 Stunden automatisch aktualisiert und zwischengespeichert (Cache).
-            Manuelle Aktualisierung ist jederzeit per Button im Widget möglich.
+            {t('appearance.weather_cache_info')}
           </p>
         </div>
 
         {/* Wetterdaten Felder Auswahl */}
         <div>
           <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Angezeigte Wetterdaten
+            {t('appearance.weather_fields')}
           </label>
           <div className="grid grid-cols-1 gap-3">
             {WEATHER_FIELDS.map(f => (
@@ -321,7 +318,7 @@ function AppearanceTab({
                   className="appearance-none w-4 h-4 border-2 border-gray-300 dark:border-gray-600 rounded-full bg-transparent checked:bg-transparent checked:border-gray-300 dark:checked:border-gray-600 relative checked:before:content-[''] checked:before:absolute checked:before:top-1/2 checked:before:left-1/2 checked:before:transform checked:before:-translate-x-1/2 checked:before:-translate-y-1/2 checked:before:w-2 checked:before:h-2 checked:before:bg-blue-600 checked:before:rounded-full focus:ring-2 focus:ring-blue-500"
                 />
                 <span className="text-2xl flex-shrink-0" aria-hidden="true">{f.icon}</span>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">{f.label}</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">{t(f.labelKey)}</span>
               </label>
             ))}
           </div>
@@ -335,7 +332,7 @@ function AppearanceTab({
           disabled={isSavingAppearance}
           className={`bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg w-full font-medium transition-colors shadow-md hover:shadow-lg ${isSavingAppearance ? 'opacity-70 cursor-wait' : ''}`}
         >
-          {isSavingAppearance ? 'Wird gespeichert' : showSaved ? 'Gespeichert' : 'Speichern'}
+          {isSavingAppearance ? t('common.saving') : showSaved ? t('common.saved') : t('common.save')}
         </button>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { HardDrives, CheckCircle, XCircle } from 'phosphor-react';
 import StatCard from './StatCard';
 
@@ -6,6 +7,7 @@ import StatCard from './StatCard';
  * Zeigt Ceph OSD Status im Detail an
  */
 function CephOSDCard({ ceph }) {
+  const { t } = useTranslation();
   // Wenn Ceph nicht verfügbar ist
   if (!ceph || !ceph.available || !ceph.osd) {
     return (
@@ -16,7 +18,7 @@ function CephOSDCard({ ceph }) {
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="text-6xl mb-3">💿</div>
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Keine OSD-Daten verfügbar
+            {t('stats.no_osd')}
           </div>
         </div>
       </StatCard>

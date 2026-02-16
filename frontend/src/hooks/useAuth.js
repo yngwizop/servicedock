@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { setAuthSession, clearAuthSession, isAuthenticated } from '../utils/auth';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
@@ -8,6 +9,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
   );
 
 export function useAuth() {
+  const { t } = useTranslation();
   const [isLoggedIn, setIsLoggedIn] = useState(isAuthenticated());
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -21,7 +23,7 @@ export function useAuth() {
 
     if (loginDisabled) {
       const remainingTime = Math.ceil((loginDisabledUntil - Date.now()) / 1000);
-      setLoginError(`Zu viele Fehlversuche. Bitte warte ${remainingTime} Sekunden.`);
+      setLoginError(t('login.too_many_attempts', { seconds: remainingTime }));
       return;
     }
 
@@ -48,7 +50,7 @@ export function useAuth() {
           const disabledUntil = Date.now() + 30000;
           setLoginDisabled(true);
           setLoginDisabledUntil(disabledUntil);
-          setLoginError("Zu viele Fehlversuche. Login für 30 Sekunden gesperrt.");
+          setLoginError(t('login.login_locked'));
 
           setTimeout(() => {
             setLoginDisabled(false);
@@ -56,12 +58,12 @@ export function useAuth() {
             setFailedLoginAttempts(0);
           }, 30000);
         } else {
-          setLoginError(errorData.detail || `Falsches Passwort. (${newAttempts}/3 Versuche)`);
+          setLoginError(errorData.detail || t('login.wrong_password', { attempts: newAttempts }));
         }
       }
     } catch (err) {
       console.error("Login error:", err);
-      setLoginError("Login-Fehler. Läuft das Backend?");
+      setLoginError(t('login.backend_error'));
     }
   };
 

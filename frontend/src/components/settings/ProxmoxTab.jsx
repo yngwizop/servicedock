@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import ProxmoxConnectionCard from './ProxmoxConnectionCard';
 import ProxmoxDashboardSettingsCard from './ProxmoxDashboardSettingsCard';
 
@@ -22,6 +23,7 @@ function ProxmoxTab({
   onOpenDeleteModal
 }) {
   const [connectionConfigured, setConnectionConfigured] = React.useState(false);
+  const { t } = useTranslation();
   
   return (
     <div className="space-y-6">
@@ -30,10 +32,10 @@ function ProxmoxTab({
         <>
           <div>
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
-              🖥️ Proxmox Integration
+              🖥️ {t('proxmoxTab.title')}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
-              Verbinde dein Proxmox-System und überwache deine Infrastruktur
+              {t('proxmoxTab.description')}
             </p>
           </div>
 
@@ -50,28 +52,28 @@ function ProxmoxTab({
                     <span className="text-3xl">🔗</span>
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Proxmox Verbindung</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Server-Zugangsdaten konfigurieren</p>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('proxmoxTab.connection')}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('proxmoxTab.connection_desc')}</p>
                   </div>
                 </div>
                 <div className="text-2xl text-orange-600 dark:text-orange-400 group-hover:translate-x-1 transition-transform">→</div>
               </div>
               <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                Verbinde dein Servicedock mit deinem Proxmox-Server über API-Token. Unterstützt Einzelknoten und Cluster-Setups mit SSL-Verifizierung.
+                {t('proxmoxTab.connection_body')}
               </p>
               <div className="flex items-center gap-2">
                 {savedTokenName ? (
                   <>
                     <span className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5">
-                      <span>✓</span> Konfiguriert
-                    </span>
-                    <span className="text-xs text-gray-600 dark:text-gray-400">
-                      Token: {savedTokenName}
-                    </span>
-                  </>
+                    <span>✓</span> {t('proxmoxTab.configured')}
+                  </span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                    Token: {savedTokenName}
+                  </span>
+                </>
                 ) : (
                   <span className="text-xs bg-gray-500 text-white px-3 py-1.5 rounded-full font-medium">
-                    Nicht konfiguriert
+                    {t('common.not_configured')}
                   </span>
                 )}
               </div>
@@ -91,18 +93,18 @@ function ProxmoxTab({
                     <span className="text-3xl">📊</span>
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Monitoring Dashboard</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Anzeige und Layout anpassen</p>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('proxmoxTab.monitoring_dashboard')}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('proxmoxTab.dashboard_desc')}</p>
                   </div>
                 </div>
                 <div className="text-2xl text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">→</div>
               </div>
               <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                Passe die Anzeige deiner Proxmox-Statistiken an. Wähle welche Metriken und wie viele Top-Ressourcen du sehen möchtest. Drag & Drop für individuelles Layout.
+                {t('proxmoxTab.dashboard_body')}
               </p>
               <div className="flex items-center gap-2">
                 <span className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium">
-                  Dashboard-Einstellungen
+                  {t('proxmoxTab.dashboard_settings')}
                 </span>
               </div>
             </div>
@@ -117,7 +119,7 @@ function ProxmoxTab({
             className="flex items-center gap-2 px-4 py-2 mb-4 bg-white/70 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/10 rounded-xl transition-all text-gray-700 dark:text-gray-300 font-medium shadow-lg"
           >
             <span className="text-xl">←</span>
-            Zurück zu Proxmox
+            {t('proxmoxTab.back')}
           </button>
 
           {/* Header Card */}
@@ -129,11 +131,11 @@ function ProxmoxTab({
                   <span className="text-2xl">🔗</span>
                 </div>
                 <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-                  Proxmox Verbindung
+                  {t('proxmoxTab.connection')}
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-400 text-sm">
-                Konfiguriere die Verbindung zu deinem Proxmox-Server
+                {t('proxmoxTab.connection_header_desc')}
               </p>
             </div>
           </div>
@@ -152,7 +154,7 @@ function ProxmoxTab({
             className="flex items-center gap-2 px-4 py-2 mb-4 bg-white/70 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/10 rounded-xl transition-all text-gray-700 dark:text-gray-300 font-medium shadow-lg"
           >
             <span className="text-xl">←</span>
-            Zurück zu Proxmox
+            {t('proxmoxTab.back')}
           </button>
 
           {/* Header Card */}
@@ -164,11 +166,11 @@ function ProxmoxTab({
                   <span className="text-2xl">📊</span>
                 </div>
                 <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-                  Monitoring Dashboard
+                  {t('proxmoxTab.monitoring_dashboard')}
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-400 text-sm">
-                Passe die Anzeige und das Layout deiner Proxmox-Statistiken an
+                {t('proxmoxTab.dashboard_header_desc')}
               </p>
             </div>
           </div>

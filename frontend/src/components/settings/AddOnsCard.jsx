@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
 import ConfigAddon from './ConfigAddon';
 import SpotifyAddon from './SpotifyAddon';
@@ -14,6 +15,7 @@ const SPOTIFY_REDIRECT_URI = window.location.protocol === 'https:'
   : 'http://127.0.0.1:8000/api/spotify/callback';
 
 function AddOnsCard() {
+  const { t } = useTranslation();
   const [showConfigPage, setShowConfigPage] = useState(false);
   const [showSpotifyPage, setShowSpotifyPage] = useState(false);
 
@@ -75,11 +77,11 @@ function AddOnsCard() {
         setSpotifyStatus(statusData);
       } else {
         const error = await res.json();
-        alert(error.detail || 'Fehler beim Speichern der Spotify-Konfiguration');
+        alert(error.detail || t('addons.spotify_save_error'));
       }
     } catch (err) {
       console.error('Failed to save Spotify config:', err);
-      alert('Fehler beim Speichern der Spotify-Konfiguration');
+      alert(t('addons.spotify_save_error'));
     } finally {
       setIsSavingSpotify(false);
     }
@@ -97,31 +99,31 @@ function AddOnsCard() {
           if (statusData.connected) {
             setSpotifyStatus(statusData);
             clearInterval(pollInterval);
-            alert('Spotify erfolgreich verbunden!');
+            alert(t('addons.spotify_connected'));
           }
         }, 3000);
         setTimeout(() => clearInterval(pollInterval), 120000);
       }
     } catch (err) {
       console.error('Failed to get Spotify auth URL:', err);
-      alert('Fehler beim Starten der Spotify-Verbindung');
+      alert(t('addons.spotify_connect_error'));
     }
   };
 
   const handleUninstallSpotify = async () => {
-    if (!confirm('Möchten Sie Spotify wirklich entfernen? Alle Daten werden gelöscht.')) return;
+    if (!confirm(t('addons.spotify_remove_confirm'))) return;
     try {
       const res = await authenticatedFetch(`${BACKEND_URL}/api/spotify/uninstall`, { method: 'DELETE' });
       if (res.ok) {
         setSpotifyStatus({ configured: false, connected: false });
         setSpotifyConfig({ client_id: '', client_secret: '', redirect_uri: SPOTIFY_REDIRECT_URI });
-        alert('Spotify erfolgreich entfernt');
+        alert(t('addons.spotify_removed'));
       } else {
-        alert('Fehler beim Entfernen von Spotify');
+        alert(t('addons.spotify_remove_error'));
       }
     } catch (err) {
       console.error('Failed to uninstall Spotify:', err);
-      alert('Fehler beim Entfernen von Spotify');
+      alert(t('addons.spotify_remove_error'));
     }
   };
 
@@ -131,10 +133,10 @@ function AddOnsCard() {
         <>
           <div>
             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2 flex items-center gap-2">
-              🧩 AddOns verwalten
+              🧩 {t('addons.title')}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
-              Erweitere dein Dashboard mit zusätzlichen Integrationen
+              {t('addons.description')}
             </p>
           </div>
 
@@ -151,14 +153,14 @@ function AddOnsCard() {
                     <span className="text-3xl">⚙️</span>
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Config Import/Export</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Dashboard Konfiguration sichern</p>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.config_title')}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('addons.config_subtitle')}</p>
                   </div>
                 </div>
                 <div className="text-2xl text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">→</div>
               </div>
               <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                Exportiere und importiere deine Dashboard-Konfiguration als JSON-Datei.
+                {t('addons.config_description')}
               </p>
               <div className="flex gap-2">
                 <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">📥 Export</span>
@@ -181,28 +183,28 @@ function AddOnsCard() {
                     <span className="text-3xl">🎵</span>
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Spotify</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Now Playing Widget</p>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.spotify_title')}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('addons.spotify_subtitle')}</p>
                   </div>
                 </div>
                 <div>
                   {spotifyStatus.connected ? (
                     <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm font-semibold rounded-full">
-                      ✓ Verbunden
+                      {t('addons.connected')}
                     </span>
                   ) : spotifyStatus.configured ? (
                     <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-sm font-semibold rounded-full">
-                      Konfiguriert
+                      {t('addons.configured')}
                     </span>
                   ) : (
                     <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 text-sm font-semibold rounded-full">
-                      Nicht installiert
+                      {t('addons.not_installed')}
                     </span>
                   )}
                 </div>
               </div>
               <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                Zeige aktuell abgespielte Musik direkt auf deinem Dashboard.
+                {t('addons.spotify_description')}
               </p>
               <div className="flex gap-2">
                 <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">🎵 Widget</span>
@@ -235,7 +237,7 @@ function AddOnsCard() {
             onClick={() => setShowSpotifyPage(false)}
             className="mb-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-300/50 dark:border-white/10 rounded-lg hover:bg-gray-100/70 dark:hover:bg-gray-700/70 transition-colors"
           >
-            <span>←</span> Zurück zu AddOns
+            <span>←</span> {t('addons.back')}
           </button>
           <SpotifyAddon
             BACKEND_URL={BACKEND_URL}

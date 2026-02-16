@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { HardDrives, Database } from 'phosphor-react';
 import StatCard from './StatCard';
 
@@ -6,6 +7,7 @@ import StatCard from './StatCard';
  * Zeigt Total Storage Overview an
  */
 function StorageTotalCard({ storageTotal }) {
+  const { t } = useTranslation();
   // Formatiere Bytes zu TB/GB
   const formatBytes = (bytes) => {
     if (!bytes) return '0 GB';
@@ -37,7 +39,7 @@ function StorageTotalCard({ storageTotal }) {
         icon={<Database size={28} weight="duotone" />}
       >
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          Keine Storage-Daten verfügbar
+          {t('stats.no_storage')}
         </div>
       </StatCard>
     );

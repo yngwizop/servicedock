@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 /**
  * WeatherWidget Component
@@ -34,6 +35,7 @@ const debugLog = (...args) => {
 };
 
 export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', weatherFields = ['temperature', 'humidity'], onLocationChange }) {
+  const { t } = useTranslation();
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -133,13 +135,13 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
       );
 
       if (!response.ok) {
-        throw new Error('Geocoding fehlgeschlagen');
+        throw new Error(t('weather.geocoding_failed'));
       }
 
       const data = await response.json();
 
       if (!data.results || data.results.length === 0) {
-        throw new Error(`Stadt "${cityName}" nicht gefunden`);
+        throw new Error(t('weather.city_not_found', { city: cityName }));
       }
 
       const { latitude, longitude, name, country, postal_code } = data.results[0];
@@ -173,7 +175,7 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
         `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=${apiFields.join(',')}&timezone=auto`
       );
       if (!response.ok) {
-        throw new Error('Wetter-API fehlgeschlagen');
+        throw new Error(t('weather.api_failed'));
       }
       const data = await response.json();
       return data.current;
@@ -204,7 +206,7 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
 
   const loadWeather = async (skipCache = false) => {
       if (!city || city.trim() === '') {
-        setError('Keine Stadt angegeben');
+        setError(t('weather.no_city'));
         setLoading(false);
         return;
       }
@@ -347,11 +349,11 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
           color: textColor,
           textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
         }}
-        aria-label="Wetter wird geladen"
+        aria-label={t('weather.loading_aria')}
         aria-busy="true"
       >
-        <span>�️</span>
-        <span>Lädt...</span>
+        <span>🌡️</span>
+        <span>{t('common.loading')}</span>
       </div>
     );
   }
@@ -366,11 +368,11 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
           color: textColor,
           textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
         }}
-        aria-label="Wetter-Fehler - Klicken zum erneuten Laden"
-        title={`Fehler: ${error}\n\nKlicken zum erneuten Versuch`}
+        aria-label={t('weather.error_aria')}
+        title={t('weather.error_title') + ': ' + error}
       >
         <span>⚠️</span>
-        <span>Wetter nicht verfügbar</span>
+        <span>{t('weather.unavailable')}</span>
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
           className="h-4 w-4 opacity-50" 
@@ -403,10 +405,10 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
     const cacheAgeMinutes = cacheAge ? Math.round(cacheAge / 60000) : 0;
     const cacheAgeHours = cacheAge ? Math.round(cacheAge / 3600000) : 0;
     const cacheAgeText = cacheAgeHours > 0 
-      ? `vor ${cacheAgeHours}h` 
+      ? t('weather.updated_ago_hours', { hours: cacheAgeHours }) 
       : cacheAgeMinutes > 0 
-        ? `vor ${cacheAgeMinutes} Min.` 
-        : 'gerade eben';
+        ? t('weather.updated_ago_minutes', { minutes: cacheAgeMinutes }) 
+        : t('weather.just_updated');
 
 
     return (
@@ -431,8 +433,8 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
           onClick={handleManualRefresh}
           className="p-1.5 rounded-lg hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 hover:opacity-100"
           style={{ color: textColor }}
-          title={isFromCache ? `Aktualisiert ${cacheAgeText}\nKlicken zum Neuladen` : 'Gerade aktualisiert\nKlicken zum Neuladen'}
-          aria-label="Wetter manuell aktualisieren"
+          title={isFromCache ? t('weather.updated_tooltip', { time: cacheAgeText }) : t('weather.just_updated_tooltip')}
+          aria-label={t('weather.refresh_aria')}
         >
           <svg 
             xmlns="http://www.w3.org/2000/svg" 

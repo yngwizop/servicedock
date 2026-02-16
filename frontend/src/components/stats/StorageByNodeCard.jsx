@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { HardDrives } from 'phosphor-react';
 import StatCard from './StatCard';
 
@@ -6,6 +7,7 @@ import StatCard from './StatCard';
  * Zeigt Storage pro Node an
  */
 function StorageByNodeCard({ storageByNode }) {
+  const { t } = useTranslation();
   // Formatiere Bytes zu TB/GB
   const formatBytes = (bytes) => {
     if (!bytes) return '0 GB';
@@ -99,7 +101,7 @@ function StorageByNodeCard({ storageByNode }) {
         </div>
       ) : (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          Keine Node-Storage-Daten verfügbar
+          {t('stats.no_node_storage')}
         </div>
       )}
     </StatCard>

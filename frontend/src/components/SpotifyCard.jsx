@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { MusicNote, Play, Pause, SkipForward, SkipBack, CircleNotch, ArrowSquareOut } from 'phosphor-react';
+import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../utils/auth';
 
 const SpotifyCard = () => {
+  const { t } = useTranslation();
   const [nowPlaying, setNowPlaying] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,17 +18,17 @@ const SpotifyCard = () => {
         setNowPlaying(data);
         setError(null);
       } else if (response.status === 429) {
-        setError('Rate limit erreicht. Bitte warten...');
+        setError(t('spotify.rate_limit'));
       } else if (response.status === 401) {
         // Session expired — don't show error, just wait for re-login
         setError(null);
         setNowPlaying(null);
       } else {
-        setError('Fehler beim Laden');
+        setError(t('spotify.load_error'));
       }
     } catch (err) {
       console.error('Spotify fetch error:', err);
-      setError('Verbindungsfehler');
+      setError(t('spotify.connection_error'));
     } finally {
       setLoading(false);
     }
@@ -60,7 +62,7 @@ const SpotifyCard = () => {
     return (
       <div className="flex items-center space-x-3">
         <CircleNotch className="w-5 h-5 text-green-500 dark:text-green-400 animate-spin" />
-        <span className="text-sm text-gray-900 dark:text-white/90" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>Lädt...</span>
+        <span className="text-sm text-gray-900 dark:text-white/90" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>{t('spotify.loading')}</span>
       </div>
     );
   }
@@ -70,7 +72,7 @@ const SpotifyCard = () => {
     return (
       <div className="flex items-center space-x-3">
         <MusicNote className="w-5 h-5 text-gray-600 dark:text-white/40" />
-        <span className="text-sm text-gray-800 dark:text-white/60" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>Fehler</span>
+        <span className="text-sm text-gray-800 dark:text-white/60" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>{t('spotify.error')}</span>
       </div>
     );
   }
@@ -143,7 +145,7 @@ const SpotifyCard = () => {
             target="_blank"
             rel="noopener noreferrer"
             className="text-green-600 dark:text-green-400 hover:text-green-500 dark:hover:text-green-300 flex-shrink-0 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 hover:opacity-100"
-            title="In Spotify öffnen"
+            title={t('spotify.open_in_spotify')}
           >
             <ArrowSquareOut className="w-5 h-5" weight="bold" />
           </a>

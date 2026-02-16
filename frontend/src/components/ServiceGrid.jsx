@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 import ServiceCard from './ServiceCard';
 import EditModal from './EditModal';
 import { Pencil, Star } from 'phosphor-react';
@@ -15,6 +16,7 @@ function ServiceGrid({
   textColor,
   onReorder
 }) {
+  const { t } = useTranslation();
   const [editingServiceId, setEditingServiceId] = useState(null);
   const [draggingId, setDraggingId] = useState(null);
   const [dragOver, setDragOver] = useState({ id: null, side: null });
@@ -37,7 +39,7 @@ function ServiceGrid({
       // Rollback on error
       console.error('Failed to update service:', err);
       setServices(previousServices);
-      alert('Fehler beim Speichern. Bitte versuche es erneut.');
+      alert(t('serviceGrid.save_error'));
     }
   };
 
@@ -57,7 +59,7 @@ function ServiceGrid({
       // Rollback on error
       console.error('Failed to delete service:', err);
       setServices(previousServices);
-      alert('Fehler beim Löschen. Bitte versuche es erneut.');
+      alert(t('serviceGrid.delete_error'));
     }
   };
 
@@ -331,8 +333,8 @@ function ServiceGrid({
                 <button
                   onClick={() => setEditingServiceId(s.id)}
                   className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-lg opacity-100 transition-all duration-200 hover:scale-110"
-                  aria-label={`Service ${s.name || s.id} bearbeiten`}
-                  title="Bearbeiten"
+                  aria-label={t('serviceGrid.edit_service', { name: s.name })}
+                  title={t('serviceGrid.edit')}
                 >
                   <Pencil size={16} />
                 </button>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import CustomSelect from './CustomSelect';
 import { 
   Detective, 
@@ -25,6 +26,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
   );
 
 function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashboard = 1, searchTerm = "" }) {
+  const { t } = useTranslation();
   const [tokenInfo, setTokenInfo] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
@@ -94,7 +96,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
 
     const handleDeleteAllLogs = async () => {
     if (!deletePassword) {
-      alert('Please enter admin password');
+      alert(t('security.enter_password'));
       return;
     }
     
@@ -109,22 +111,22 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
       
       if (res.ok) {
         const data = await res.json();
-        alert(`✅ ${data.deleted_count} Logs erfolgreich gelöscht`);
+        alert(t('security.delete_success', { count: data.deleted_count }));
         setAuditLogs([]);
         setDeletePassword('');
         setShowDeleteModal(false);
         fetchSecurityData();
       } else if (res.status === 429) {
-        alert(`⏱️ Rate Limit erreicht!\n\nDu kannst nur 3x pro Stunde alle Logs löschen.\nBitte warte eine Stunde oder starte das Backend neu.`);
+        alert(t('security.delete_rate_limit'));
       } else if (res.status === 403) {
-        alert(`❌ Falsches Admin-Passwort`);
+        alert(t('security.wrong_password'));
       } else {
         const errorData = await res.json();
-        alert(`❌ Fehler: ${errorData.detail || 'Failed to delete logs'}`);
+        alert(t('security.delete_error_detail', { detail: errorData.detail || 'Failed to delete logs' }));
       }
     } catch (err) {
       console.error('Delete logs error:', err);
-      alert(`❌ Fehler beim Löschen: ${err.message}`);
+      alert(t('security.delete_error', { message: err.message }));
     }
   };
 
@@ -165,7 +167,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
           Security Dashboard
         </h2>
         <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">
-          Bitte melde dich als Admin an, um die Sicherheitsfunktionen zu sehen.
+          {t('security.admin_required')}
         </p>
         <LockKey size={32} className="text-gray-400 dark:text-gray-600 mt-4" />
       </div>
@@ -208,7 +210,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
         >
           <div className="flex items-center gap-2">
             <Eye size={20} />
-            <span>Übersicht</span>
+            <span>{t('security.overview')}</span>
           </div>
         </button>
         <button
@@ -234,7 +236,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
         >
           <div className="flex items-center gap-2">
             <ChartBar size={20} />
-            <span>Statistiken</span>
+            <span>{t('security.statistics')}</span>
           </div>
         </button>
       </div>
@@ -246,7 +248,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
             </svg>
-            <span className="text-sm font-medium">Die Suche ist in dieser Ansicht nicht verfügbar. Wechsle zu "Übersicht" zum Suchen.</span>
+            <span className="text-sm font-medium">{t('security.search_unavailable')}</span>
           </div>
         </div>
       )}
@@ -276,20 +278,20 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
             {tokenInfo?.configured ? (
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-gray-700 dark:text-gray-400">Token Alter</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-400">{t('security.token_age')}</p>
                   <p className="text-2xl font-bold text-gray-800 dark:text-white">
-                    {tokenInfo.age_days} Tage
+                    {tokenInfo.age_days} {t('security.days')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-700 dark:text-gray-400">Erstellt am</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-400">{t('security.created_on')}</p>
                   <p className="text-sm text-gray-900 dark:text-gray-100">
                     {formatTimestamp(tokenInfo.created_at)}
                   </p>
                 </div>
                 {tokenInfo.last_rotated && (
                   <div>
-                    <p className="text-sm text-gray-700 dark:text-gray-400">Letzte Rotation</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-400">{t('security.last_rotation')}</p>
                     <p className="text-sm text-gray-900 dark:text-gray-100">
                       {formatTimestamp(tokenInfo.last_rotated)}
                     </p>
@@ -306,14 +308,14 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                       : 'text-green-800 dark:text-green-300'
                   }`}>
                     {tokenInfo.rotation_recommended 
-                      ? '⚠️ Rotation empfohlen (>60 Tage)' 
-                      : '✓ Token ist aktuell'}
+                      ? t('security.rotation_recommended') 
+                      : t('security.token_current')}
                   </p>
                 </div>
               </div>
             ) : (
               <p className="text-gray-600 dark:text-gray-400">
-                Proxmox nicht konfiguriert
+                {t('security.proxmox_not_configured')}
               </p>
             )}
           </div>
@@ -323,7 +325,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
             <div className="flex items-center gap-3 mb-4">
               <ChartBar size={28} className="text-blue-500" weight="bold" />
               <h3 className="text-lg font-bold text-gray-800 dark:text-white">
-                Aktivität (24h)
+                {t('security.activity_24h')}
               </h3>
             </div>
             
@@ -331,13 +333,13 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-700 dark:text-gray-400">Gesamt</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-400">{t('security.total')}</p>
                     <p className="text-3xl font-bold text-gray-800 dark:text-white">
                       {auditStats.error_stats.total}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-700 dark:text-gray-400">Erfolgreich</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-400">{t('security.successful')}</p>
                     <p className="text-3xl font-bold text-green-600 dark:text-green-400">
                       {auditStats.error_stats.success}
                     </p>
@@ -347,7 +349,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                 {auditStats.error_stats.failed > 0 && (
                   <div className="bg-red-100 dark:bg-red-900/30 p-3 rounded-lg">
                     <p className="text-sm font-semibold text-red-800 dark:text-red-300">
-                      ⚠️ {auditStats.error_stats.failed} fehlgeschlagene Anfragen
+                      {t('security.failed_requests', { count: auditStats.error_stats.failed })}
                     </p>
                   </div>
                 )}
@@ -374,7 +376,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                       className="text-red-500 dark:text-red-400" 
                     />
                     <span className="text-sm text-gray-700 dark:text-gray-400">
-                      Fehlgeschlagene Logins
+                      {t('security.failed_logins')}
                     </span>
                   </div>
                   <span className={`text-lg font-bold ${
@@ -394,7 +396,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                       className="text-orange-500 dark:text-orange-400" 
                     />
                     <span className="text-sm text-gray-700 dark:text-gray-400">
-                      IPs mit Fehlern
+                      {t('security.ips_with_errors')}
                     </span>
                   </div>
                   <span className={`text-lg font-bold ${
@@ -430,20 +432,20 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                   <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center gap-2">
                     <Warning size={20} weight="fill" className="text-red-600 dark:text-red-400" />
                     <p className="text-sm font-semibold text-red-800 dark:text-red-300">
-                      Erhöhte Sicherheitsaktivität erkannt
+                      {t('security.threat_detected')}
                     </p>
                   </div>
                 ) : (
                   <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center gap-2">
                     <CheckCircle size={20} weight="fill" className="text-green-600 dark:text-green-400" />
                     <p className="text-sm font-semibold text-green-800 dark:text-green-300">
-                      Keine Bedrohungen erkannt
+                      {t('security.no_threats')}
                     </p>
                   </div>
                 )}
               </div>
             ) : (
-              <p className="text-gray-600 dark:text-gray-400">Lade Daten...</p>
+              <p className="text-gray-600 dark:text-gray-400">{t('security.loading_data')}</p>
             )}
           </div>
 
@@ -527,7 +529,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                 <div className="mt-4 p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center gap-2">
                   <Clock size={16} weight="bold" className="text-blue-600 dark:text-blue-400" />
                   <p className="text-xs text-blue-800 dark:text-blue-300">
-                    Live-Daten der letzten Minute
+                    {t('security.live_data')}
                   </p>
                 </div>
               </div>
@@ -543,7 +545,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                 </div>
                 <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
                   <p className="text-sm font-semibold text-green-800 dark:text-green-300">
-                    ✓ Rate Limiting aktiv
+                    {t('security.rate_limiting_active')}
                   </p>
                 </div>
               </div>
@@ -562,7 +564,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                   Audit Logs
                 </h3>
                 <p className="text-sm text-gray-700 dark:text-gray-400 mt-1">
-                  {filteredLogs.length} Einträge geladen (max. 100)
+                  {filteredLogs.length} {t('security.entries_loaded')}
                 </p>
               </div>
               
@@ -572,12 +574,12 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                   value={logFilter}
                   onChange={(val) => setLogFilter(val)}
                   options={[
-                    { value: 'all', label: '🔍 Alle Logs' },
-                    { value: 'failed', label: '❌ Alle Fehler' },
-                    { value: 'failed_logins', label: '🔐 Failed Logins' },
-                    { value: 'permission_errors', label: '⚠️ Permission Denied' },
-                    { value: 'vm_operations', label: '🖥️ VM Operationen' },
-                    { value: 'success', label: '✅ Erfolgreich' },
+                    { value: 'all', label: t('security.all_logs') },
+                    { value: 'failed', label: t('security.all_errors') },
+                    { value: 'failed_logins', label: t('security.failed_logins_filter') },
+                    { value: 'permission_errors', label: t('security.permission_denied') },
+                    { value: 'vm_operations', label: t('security.vm_operations') },
+                    { value: 'success', label: t('security.successful_filter') },
                   ]}
                   className="w-full md:w-56"
                 />
@@ -588,8 +590,8 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                   className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
                 >
                   <XCircle size={20} weight="fill" />
-                  <span className="hidden md:inline">Alle Logs löschen</span>
-                  <span className="md:hidden">Löschen</span>
+                  <span className="hidden md:inline">{t('security.delete_all_logs')}</span>
+                  <span className="md:hidden">{t('common.delete')}</span>
                 </button>
               </div>
             </div>
@@ -600,19 +602,19 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
               <thead className="bg-white/20 dark:bg-white/5">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
-                    Zeitstempel
+                    {t('security.timestamp')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
-                    Aktion
+                    {t('security.action')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
-                    IP-Adresse
+                    {t('security.ip_address')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
-                    Details
+                    {t('security.details')}
                   </th>
                 </tr>
               </thead>
@@ -621,8 +623,8 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                   <tr>
                     <td colSpan="5" className="px-6 py-8 text-center text-gray-700 dark:text-gray-400">
                       {auditLogs.length === 0 
-                        ? 'Keine Audit-Logs vorhanden' 
-                        : 'Keine Logs entsprechen dem Filter'}
+                        ? t('security.no_logs') 
+                        : t('security.no_logs_filter')}
                     </td>
                   </tr>
                 ) : (
@@ -663,11 +665,11 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
           {/* Top Actions */}
           <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-300/50 dark:border-white/[0.12]">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-              Top Aktionen (24h)
+              {t('security.top_actions')}
             </h3>
             <div className="space-y-3">
               {auditStats.actions_24h.length === 0 ? (
-                <p className="text-gray-700 dark:text-gray-400">Keine Aktivitäten</p>
+                <p className="text-gray-700 dark:text-gray-400">{t('security.no_activities')}</p>
               ) : (
                 auditStats.actions_24h.map((action, index) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-white/30 dark:bg-white/5 rounded-lg">
@@ -686,11 +688,11 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
           {/* Top IPs */}
           <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-300/50 dark:border-white/[0.12]">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-              Top IP-Adressen (24h)
+              {t('security.top_ips')}
             </h3>
             <div className="space-y-3">
               {auditStats.top_ips.length === 0 ? (
-                <p className="text-gray-700 dark:text-gray-400">Keine Zugriffe</p>
+                <p className="text-gray-700 dark:text-gray-400">{t('security.no_access')}</p>
               ) : (
                 auditStats.top_ips.map((ip, index) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-white/30 dark:bg-white/5 rounded-lg">
@@ -715,24 +717,24 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
             <div className="flex items-center gap-3 mb-4">
               <Warning size={32} className="text-red-500" weight="fill" />
               <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-                Alle Audit-Logs löschen?
+                {t('security.delete_all_title')}
               </h3>
             </div>
             
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Diese Aktion kann nicht rückgängig gemacht werden. Alle Audit-Log-Einträge werden permanent gelöscht.
+              {t('security.delete_all_warning')}
             </p>
 
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Admin-Passwort zur Bestätigung:
+                {t('security.password_confirm')}
               </label>
               <input
                 type="password"
                 value={deletePassword}
                 onChange={(e) => setDeletePassword(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleDeleteAllLogs()}
-                placeholder="Passwort eingeben"
+                placeholder={t('security.password_placeholder')}
                 className="w-full px-4 py-2 border border-gray-300/50 dark:border-white/[0.12] rounded-lg bg-white/50 dark:bg-white/5 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 autoFocus
               />
@@ -751,14 +753,14 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                 className="flex-1 px-4 py-2 bg-white/30 dark:bg-white/10 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-white/50 dark:hover:bg-white/15 transition-colors"
                 disabled={isDeleting}
               >
-                Abbrechen
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleDeleteAllLogs}
                 className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isDeleting}
               >
-                {isDeleting ? 'Lösche...' : 'Löschen'}
+                {isDeleting ? t('security.deleting') : t('common.delete')}
               </button>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ListChecks, XCircle, ArrowsClockwise, CheckCircle } from 'phosphor-react';
 import StatCard from './StatCard';
 
@@ -6,6 +7,7 @@ import StatCard from './StatCard';
  * Zeigt Task Summary an - gruppiert nach Nodes wie im PDM
  */
 function TaskSummaryCard({ stats }) {
+  const { t } = useTranslation();
   const { failed, running, success, by_node } = stats;
   const total = failed + running + success;
   
@@ -102,7 +104,7 @@ function TaskSummaryCard({ stats }) {
         </div>
       ) : (
         <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
-          Keine Tasks im konfigurierten Zeitraum
+          {t('stats.no_tasks')}
         </div>
       )}
     </StatCard>

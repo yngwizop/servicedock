@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Activity, CheckCircle, WarningCircle, XCircle } from 'phosphor-react';
 import StatCard from './StatCard';
 
@@ -6,6 +7,7 @@ import StatCard from './StatCard';
  * Zeigt Ceph Health Status an
  */
 function CephHealthCard({ ceph }) {
+  const { t } = useTranslation();
   // Wenn Ceph nicht verfügbar ist
   if (!ceph || !ceph.available) {
     return (
@@ -16,10 +18,10 @@ function CephHealthCard({ ceph }) {
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="text-6xl mb-3">🔷</div>
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Ceph nicht verfügbar
+            {t('stats.ceph_unavailable')}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-            Dieses Cluster nutzt kein Ceph Storage
+            {t('stats.ceph_not_used')}
           </div>
         </div>
       </StatCard>

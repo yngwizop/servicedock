@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Cpu, Database } from 'phosphor-react';
 import StatCard from './StatCard';
 
@@ -6,6 +7,7 @@ import StatCard from './StatCard';
  * Zeigt Top CPU oder Memory Usage an
  */
 function TopUsageCard({ title, items, usageType = "cpu" }) {
+  const { t } = useTranslation();
   const isCPU = usageType === "cpu";
   const Icon = isCPU ? Cpu : Database;
 
@@ -93,7 +95,7 @@ function TopUsageCard({ title, items, usageType = "cpu" }) {
         </div>
       ) : (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          Keine Daten verfügbar
+          {t('stats.no_data')}
         </div>
       )}
     </StatCard>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LinkSimple, CheckCircle, WarningCircle, LockKey } from 'phosphor-react';
+import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
@@ -12,6 +13,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
  * Card für Proxmox-Verbindungseinstellungen
  */
 function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
+  const { t } = useTranslation();
   const [config, setConfig] = useState({
     host: '',
     port: 8006,
@@ -54,7 +56,7 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
   }, [activeDashboard]);
 
   const handleSave = async () => {
-    setSaveStatus({ type: 'loading', message: 'Speichern...' });
+    setSaveStatus({ type: 'loading', message: t('proxmoxConnection.saving') });
     
     try {
       const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/config?dashboard_id=${activeDashboard}`, {
@@ -64,21 +66,21 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
       });
       
       if (res.ok) {
-        setSaveStatus({ type: 'success', message: 'Erfolgreich gespeichert!' });
+        setSaveStatus({ type: 'success', message: t('proxmoxConnection.save_success') });
         setIsConfigured(true);
         if (onSettingsChange) onSettingsChange();
         setTimeout(() => setSaveStatus({ type: '', message: '' }), 3000);
       } else {
         const error = await res.json();
-        setSaveStatus({ type: 'error', message: error.detail || 'Fehler beim Speichern' });
+        setSaveStatus({ type: 'error', message: error.detail || t('proxmoxConnection.save_error') });
       }
     } catch (err) {
-      setSaveStatus({ type: 'error', message: 'Netzwerkfehler' });
+      setSaveStatus({ type: 'error', message: t('common.network_error') });
     }
   };
 
   const handleTest = async () => {
-    setTestStatus({ type: 'loading', message: 'Teste Verbindung...' });
+    setTestStatus({ type: 'loading', message: t('proxmoxConnection.testing') });
     
     try {
       const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/test?dashboard_id=${activeDashboard}`, {
@@ -89,18 +91,18 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
       if (data.success) {
         setTestStatus({ 
           type: 'success', 
-          message: `✓ Verbindung erfolgreich! ${data.nodes?.length || 0} Node(s) gefunden.` 
+          message: t('proxmoxConnection.test_success', { count: data.nodes?.length || 0 })
         });
       } else {
-        setTestStatus({ type: 'error', message: data.error || 'Verbindung fehlgeschlagen' });
+        setTestStatus({ type: 'error', message: data.error || t('proxmoxConnection.test_failed') });
       }
     } catch (err) {
-      setTestStatus({ type: 'error', message: 'Testverbindung fehlgeschlagen' });
+      setTestStatus({ type: 'error', message: t('proxmoxConnection.test_error') });
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Proxmox-Konfiguration wirklich löschen?')) return;
+    if (!window.confirm(t('proxmoxConnection.delete_confirm'))) return;
     
     try {
       const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/config?dashboard_id=${activeDashboard}`, {
@@ -118,12 +120,12 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
           is_cluster: false
         });
         setIsConfigured(false);
-        setSaveStatus({ type: 'success', message: 'Konfiguration gelöscht' });
+        setSaveStatus({ type: 'success', message: t('proxmoxConnection.delete_success') });
         if (onSettingsChange) onSettingsChange();
         setTimeout(() => setSaveStatus({ type: '', message: '' }), 3000);
       }
     } catch (err) {
-      setSaveStatus({ type: 'error', message: 'Fehler beim Löschen' });
+      setSaveStatus({ type: 'error', message: t('proxmoxConnection.delete_error') });
     }
   };
 
@@ -136,15 +138,15 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
         </div>
         <div className="flex-1">
           <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-            Proxmox Verbindung
+            {t('proxmoxConnection.title')}
           </h3>
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            Konfiguriere die Verbindung zu deinem Proxmox Server oder Cluster
+            {t('proxmoxConnection.description')}
           </p>
           {isConfigured && (
             <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 mt-1">
               <CheckCircle size={14} weight="fill" />
-              Konfiguriert
+              {t('common.configured')}
             </span>
           )}
         </div>
@@ -155,13 +157,13 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
         {/* Host */}
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Host/IP-Adresse *
+            {t('proxmoxConnection.host_label')}
           </label>
           <input
             type="text"
             value={config.host}
             onChange={(e) => setConfig({ ...config, host: e.target.value })}
-            placeholder="192.168.1.100 oder proxmox.local"
+            placeholder={t('proxmoxConnection.host_placeholder')}
             className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white/60 dark:bg-slate-700/60 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-orange-500 outline-none"
           />
         </div>
@@ -169,7 +171,7 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
         {/* Port */}
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Port
+            {t('proxmoxConnection.port_label')}
           </label>
           <input
             type="number"
@@ -182,7 +184,7 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
         {/* Token Name */}
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            API Token Name * <span className="text-xs text-slate-500">(Format: user@realm!tokenname)</span>
+            {t('proxmoxConnection.token_name_label')} <span className="text-xs text-slate-500">{t('proxmoxConnection.token_name_format')}</span>
           </label>
           <input
             type="text"
@@ -196,7 +198,7 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
         {/* Token Value */}
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            API Token Secret * <LockKey size={16} className="inline ml-1 text-orange-500" />
+            {t('proxmoxConnection.token_secret_label')} <LockKey size={16} className="inline ml-1 text-orange-500" />
           </label>
           <input
             type="password"
@@ -216,7 +218,7 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
               onChange={(e) => setConfig({ ...config, verify_ssl: e.target.checked })}
               className="rounded"
             />
-            <span className="text-sm text-slate-700 dark:text-slate-300">SSL-Zertifikat verifizieren</span>
+            <span className="text-sm text-slate-700 dark:text-slate-300">{t('proxmoxConnection.verify_ssl')}</span>
           </label>
           
           <label className="flex items-center gap-2 cursor-pointer">
@@ -226,7 +228,7 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
               onChange={(e) => setConfig({ ...config, is_cluster: e.target.checked })}
               className="rounded"
             />
-            <span className="text-sm text-slate-700 dark:text-slate-300">Cluster-Modus (mehrere Nodes)</span>
+            <span className="text-sm text-slate-700 dark:text-slate-300">{t('proxmoxConnection.cluster_mode')}</span>
           </label>
         </div>
 
@@ -234,13 +236,13 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
         {config.is_cluster && (
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Spezifischer Node (optional)
+              {t('proxmoxConnection.specific_node')}
             </label>
             <input
               type="text"
               value={config.node}
               onChange={(e) => setConfig({ ...config, node: e.target.value })}
-              placeholder="Leer lassen für alle Nodes"
+              placeholder={t('proxmoxConnection.node_placeholder')}
               className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white/60 dark:bg-slate-700/60 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-orange-500 outline-none"
             />
           </div>
@@ -274,7 +276,7 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
             disabled={!config.host || !config.token_name || !config.token_value}
             className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors disabled:cursor-not-allowed"
           >
-            Speichern
+            {t('common.save')}
           </button>
           
           <button
@@ -282,7 +284,7 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
             disabled={!isConfigured}
             className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors disabled:cursor-not-allowed"
           >
-            Verbindung testen
+            {t('proxmoxConnection.test_connection')}
           </button>
           
           {isConfigured && (
@@ -290,7 +292,7 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange }) {
               onClick={handleDelete}
               className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors"
             >
-              Löschen
+              {t('common.delete')}
             </button>
           )}
         </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
 
 function ConfigAddon({ 
@@ -11,6 +12,8 @@ function ConfigAddon({
   importError, setImportError,
   onBack 
 }) {
+  const { t } = useTranslation();
+
   return (
     <>
       {/* Zurück-Button */}
@@ -25,7 +28,7 @@ function ConfigAddon({
         className="flex items-center gap-2 px-4 py-2 mb-4 bg-white/70 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/10 rounded-xl transition-all text-gray-700 dark:text-gray-300 font-medium shadow-lg"
       >
         <span className="text-xl">←</span>
-        Zurück zu AddOns
+        {t('configAddon.back')}
       </button>
 
       <div className="space-y-6">
@@ -33,11 +36,10 @@ function ConfigAddon({
         <div className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-blue-500/50 dark:border-blue-500/40">
           <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="text-2xl">📥</span>
-            Config Exportieren
+            {t('configAddon.export_title')}
           </h3>
           <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-            Exportiere deine Dashboards, Services, Shortcuts und Appearance-Einstellungen als JSON-Datei.
-            Proxmox- und Spotify-Zugangsdaten werden NICHT exportiert.
+            {t('configAddon.export_description')}
           </p>
           <button
             onClick={async () => {
@@ -57,12 +59,12 @@ function ConfigAddon({
                 URL.revokeObjectURL(url);
               } catch (err) {
                 console.error('Export failed:', err);
-                alert('Export fehlgeschlagen: ' + err.message);
+                alert(t('configAddon.export_failed') + err.message);
               }
             }}
             className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
           >
-            📥 Config als JSON herunterladen
+            {t('configAddon.export_button')}
           </button>
         </div>
 
@@ -70,13 +72,13 @@ function ConfigAddon({
         <div className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-blue-500/50 dark:border-blue-500/40">
           <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="text-2xl">📤</span>
-            Config Importieren
+            {t('configAddon.import_title')}
           </h3>
 
           {/* Import Mode Selection */}
           <div className="mb-6">
             <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Import-Modus
+              {t('configAddon.import_mode')}
             </label>
             <div className="space-y-3">
               <label className="flex items-start gap-3 cursor-pointer p-4 border-2 rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
@@ -90,10 +92,10 @@ function ConfigAddon({
                 />
                 <div className="flex-1">
                   <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    📦 Hinzufügen (Empfohlen)
+                    {t('configAddon.mode_append')}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Fügt importierte Daten hinzu, ohne bestehende zu löschen. IDs werden neu vergeben.
+                    {t('configAddon.mode_append_desc')}
                   </div>
                 </div>
               </label>
@@ -108,10 +110,10 @@ function ConfigAddon({
                 />
                 <div className="flex-1">
                   <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    ⚠️ Ersetzen (ACHTUNG!)
+                    {t('configAddon.mode_replace')}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    <strong>Löscht ALLE bestehenden Dashboards</strong> und importiert die neuen. Nicht rückgängig machbar!
+                    <strong>{t('configAddon.mode_replace_desc')}</strong>
                   </div>
                 </div>
               </label>
@@ -121,7 +123,7 @@ function ConfigAddon({
           {/* File Upload */}
           <div className="mb-4">
             <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Config-Datei auswählen
+              {t('configAddon.select_file')}
             </label>
             <div className="relative">
               <input
@@ -151,10 +153,10 @@ function ConfigAddon({
                     if (validation.valid) {
                       setImportPreview(validation);
                     } else {
-                      setImportError(validation.error || 'Ungültige Config-Datei');
+                      setImportError(validation.error || t('configAddon.invalid_file'));
                     }
                   } catch (err) {
-                    setImportError('Fehler beim Lesen der Datei: ' + err.message);
+                    setImportError(t('configAddon.file_read_error') + err.message);
                   }
                 }}
                 className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white/70 dark:bg-white/5 text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300 cursor-pointer"
@@ -166,7 +168,7 @@ function ConfigAddon({
           {importPreview && (
             <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded-xl">
               <h4 className="font-semibold text-green-900 dark:text-green-300 mb-2">
-                ✅ Config-Datei gültig
+                {t('configAddon.file_valid')}
               </h4>
               <div className="text-sm text-green-800 dark:text-green-400 space-y-1">
                 <p>📊 <strong>{importPreview.statistics.dashboards}</strong> Dashboard(s)</p>
@@ -183,7 +185,7 @@ function ConfigAddon({
           {importError && (
             <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-xl">
               <h4 className="font-semibold text-red-900 dark:text-red-300 mb-2">
-                ❌ Fehler
+                {t('configAddon.file_error')}
               </h4>
               <p className="text-sm text-red-800 dark:text-red-400">{importError}</p>
             </div>
@@ -193,10 +195,10 @@ function ConfigAddon({
           {importSuccess && (
             <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded-xl">
               <h4 className="font-semibold text-green-900 dark:text-green-300 mb-2">
-                ✅ Import erfolgreich!
+                {t('configAddon.import_success')}
               </h4>
               <p className="text-sm text-green-800 dark:text-green-400">
-                Config wurde erfolgreich importiert. Seite wird neu geladen...
+                {t('configAddon.import_success_detail')}
               </p>
             </div>
           )}
@@ -205,18 +207,18 @@ function ConfigAddon({
           <button
             onClick={async () => {
               if (!importFile || !importPreview) {
-                alert('Bitte wähle zuerst eine gültige Config-Datei aus.');
+                alert(t('configAddon.select_file_first'));
                 return;
               }
 
-              if (importMode === 'replace' && !confirm('ACHTUNG: Dies löscht ALLE bestehenden Dashboards, Services und Shortcuts!\n\nMöchtest du wirklich fortfahren?')) {
+              if (importMode === 'replace' && !confirm(t('configAddon.replace_confirm'))) {
                 return;
               }
 
               // Password re-confirmation for replace mode
               let confirmPassword = null;
               if (importMode === 'replace') {
-                confirmPassword = prompt('Bitte gib dein Admin-Passwort zur Bestätigung ein:');
+                confirmPassword = prompt(t('configAddon.password_prompt'));
                 if (!confirmPassword) return;
               }
 
@@ -240,7 +242,7 @@ function ConfigAddon({
                 );
 
                 if (!res.ok) {
-                  throw new Error('Import fehlgeschlagen');
+                  throw new Error(t('configAddon.import_failed'));
                 }
 
                 const result = await res.json();
@@ -253,7 +255,7 @@ function ConfigAddon({
                   window.location.reload();
                 }, 2000);
               } catch (err) {
-                setImportError('Import fehlgeschlagen: ' + err.message);
+                setImportError(t('configAddon.import_failed') + ': ' + err.message);
               } finally {
                 setIsImporting(false);
               }
@@ -267,19 +269,19 @@ function ConfigAddon({
                 : 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-xl'
             }`}
           >
-            {isImporting ? '⏳ Importiere...' : importMode === 'replace' ? '⚠️ Ersetzen und Importieren' : '📤 Hinzufügen und Importieren'}
+            {isImporting ? t('configAddon.importing') : importMode === 'replace' ? t('configAddon.replace_import') : t('configAddon.append_import')}
           </button>
 
           {/* Info Box */}
           <div className="mt-6 p-4 bg-white/70 dark:bg-white/5 backdrop-blur-sm border border-blue-500/50 dark:border-blue-500/40 rounded-2xl shadow-lg">
             <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
-              💡 Hinweise
+              {t('configAddon.notes_title')}
             </h5>
             <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1 list-disc list-inside">
-              <li>Proxmox- und Spotify-Zugangsdaten werden NICHT importiert</li>
-              <li>Appearance-Einstellungen werden immer überschrieben</li>
-              <li>Bei "Hinzufügen" bleiben deine bestehenden Daten erhalten</li>
-              <li>Bei "Ersetzen" werden ALLE Daten gelöscht (Vorsicht!)</li>
+              <li>{t('configAddon.note_no_credentials')}</li>
+              <li>{t('configAddon.note_appearance')}</li>
+              <li>{t('configAddon.note_append')}</li>
+              <li>{t('configAddon.note_replace')}</li>
             </ul>
           </div>
         </div>

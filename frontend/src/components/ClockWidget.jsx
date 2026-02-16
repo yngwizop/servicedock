@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 
 function ClockWidget({ textColor, locale = (typeof navigator !== 'undefined' && navigator.language) || 'de-DE', showSeconds = true, use24Hour = true }) {
+  const { t } = useTranslation();
   const [time, setTime] = useState(() => new Date());
   const [announce, setAnnounce] = useState(''); // für sr-only Live-Region (seltener updaten)
   const timerRef = useRef(null);
@@ -102,7 +104,7 @@ function ClockWidget({ textColor, locale = (typeof navigator !== 'undefined' && 
         textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)'
       }}
       role="group"
-      aria-label="Uhrzeit und Datum"
+      aria-label={t('clock.aria_label')}
     >
       <div className="text-xl md:text-2xl font-bold tabular-nums" aria-hidden="false" role="timer">
         {formatTime()}

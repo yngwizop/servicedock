@@ -12,6 +12,7 @@ import ClockWidget from "./components/ClockWidget";
 import WeatherWidget from "./components/WeatherWidget";
 import Sidebar from "./components/Sidebar";
 import { authenticatedFetch } from './utils/auth';
+import { useTranslation } from 'react-i18next';
 
 // Hooks
 import { useAuth } from './hooks/useAuth';
@@ -28,6 +29,8 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
 
 // --- Haupt-App ---
 function App() {
+  const { t } = useTranslation();
+
   // === Custom Hooks ===
   const auth = useAuth();
   const { dashboards, activeDashboard, fetchDashboards, switchDashboard } = useDashboards({ onSessionExpired: auth.onSessionExpired });
@@ -265,7 +268,7 @@ function App() {
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder={`Suche in ${activeTab === 'services' ? 'Services & Shortcuts' : activeTab === 'monitoring' ? 'Proxmox' : 'Security'}...`}
+                  placeholder={activeTab === 'services' ? t('search.placeholder_services') : activeTab === 'monitoring' ? t('search.placeholder_monitoring') : t('search.placeholder_security')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="flex-1 bg-transparent outline-none text-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
@@ -277,9 +280,9 @@ function App() {
               </div>
               <div className="px-6 py-3 text-sm text-gray-600 dark:text-gray-400">
                 {searchTerm ? (
-                  <span>Filtern nach: <strong>"{searchTerm}"</strong></span>
+                  <span>{t('search.filter_by')} <strong>"{searchTerm}"</strong></span>
                 ) : (
-                  <span>Beginne zu tippen um zu suchen...</span>
+                  <span>{t('search.start_typing')}</span>
                 )}
               </div>
             </div>

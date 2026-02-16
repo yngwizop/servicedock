@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MonitorPlay, Desktop, HardDrives, ArrowsClockwise, WarningCircle, FloppyDisk } from 'phosphor-react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
@@ -29,6 +30,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
  * Zeigt aggregierte Statistiken über Nodes, VMs, LXCs und Tasks
  */
 function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
+  const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -238,15 +240,15 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       console.log('Save response data:', data);
       if (res.ok) {
         setLayoutModified(false);
-        setSaveStatus({ type: 'success', message: 'Layout gespeichert!' });
+        setSaveStatus({ type: 'success', message: t('statusDashboard.layout_saved') });
         setTimeout(() => setSaveStatus({ type: '', message: '' }), 3000);
       } else {
-        setSaveStatus({ type: 'error', message: data.detail || 'Fehler beim Speichern' });
+        setSaveStatus({ type: 'error', message: data.detail || t('statusDashboard.save_error') });
         setTimeout(() => setSaveStatus({ type: '', message: '' }), 5000);
       }
     } catch (err) {
       console.error('Error saving layout:', err);
-      setSaveStatus({ type: 'error', message: 'Netzwerkfehler beim Speichern' });
+      setSaveStatus({ type: 'error', message: t('statusDashboard.save_network_error') });
       setTimeout(() => setSaveStatus({ type: '', message: '' }), 5000);
     }
   };
@@ -264,16 +266,16 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
         const newLayout = getDefaultLayout();
         setLayout(newLayout);
         setLayoutModified(false);
-        setSaveStatus({ type: 'success', message: 'Layout zurückgesetzt!' });
+        setSaveStatus({ type: 'success', message: t('statusDashboard.layout_reset') });
         setTimeout(() => setSaveStatus({ type: '', message: '' }), 3000);
       } else {
         const data = await res.json();
-        setSaveStatus({ type: 'error', message: data.detail || 'Fehler beim Zurücksetzen' });
+        setSaveStatus({ type: 'error', message: data.detail || t('statusDashboard.reset_error') });
         setTimeout(() => setSaveStatus({ type: '', message: '' }), 5000);
       }
     } catch (err) {
       console.error('Error resetting layout:', err);
-      setSaveStatus({ type: 'error', message: 'Netzwerkfehler beim Zurücksetzen' });
+      setSaveStatus({ type: 'error', message: t('statusDashboard.reset_network_error') });
       setTimeout(() => setSaveStatus({ type: '', message: '' }), 5000);
     }
   };
@@ -448,7 +450,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
             className="mx-auto text-blue-600 dark:text-blue-400 animate-spin"
           />
           <p className="text-gray-600 dark:text-gray-400">
-            Lade Cluster-Statistiken...
+            {t('statusDashboard.loading')}
           </p>
         </div>
       </div>
@@ -467,7 +469,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
           />
           <div>
             <p className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
-              Fehler beim Laden der Statistiken
+              {t('statusDashboard.error_loading')}
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               {error}
@@ -476,7 +478,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
               onClick={fetchStats}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
-              Erneut versuchen
+              {t('common.retry')}
             </button>
           </div>
         </div>
@@ -489,7 +491,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
     return (
       <div className="flex items-center justify-center py-20">
         <p className="text-gray-600 dark:text-gray-400">
-          Keine Daten verfügbar
+          {t('statusDashboard.no_data')}
         </p>
       </div>
     );
@@ -505,10 +507,10 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
           <button
             onClick={resetLayout}
             className="flex items-center gap-2 px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors"
-            title="Layout zurücksetzen"
+            title={t('statusDashboard.reset_layout')}
           >
             <ArrowsClockwise size={18} weight="bold" />
-            Layout zurücksetzen
+            {t('statusDashboard.reset_layout')}
           </button>
           
           {/* Save Layout Button */}
@@ -516,10 +518,10 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
             <button
               onClick={saveLayout}
               className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors shadow-lg"
-              title="Layout speichern"
+              title={t('statusDashboard.save_layout')}
             >
               <FloppyDisk size={18} weight="bold" />
-              Layout speichern
+              {t('statusDashboard.save_layout')}
             </button>
           )}
           
@@ -538,7 +540,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
           <button
             onClick={fetchStats}
             className="p-2 rounded-lg bg-white/50 dark:bg-white/10 hover:bg-white/70 dark:hover:bg-white/20 backdrop-blur-md border border-gray-300/50 dark:border-white/10 transition-all shadow-lg hover:shadow-xl"
-            title="Aktualisieren"
+            title={t('common.refresh')}
           >
             <ArrowsClockwise size={20} weight="bold" className="text-gray-700 dark:text-gray-200" />
           </button>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, X } from 'phosphor-react';
 import { authenticatedFetch } from '../utils/auth';
 
@@ -9,6 +10,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
   );
 
 function AddItemFAB({ activeDashboard, onItemAdded }) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [activeForm, setActiveForm] = useState('service');
   const [showFAB, setShowFAB] = useState(false);
@@ -106,7 +108,7 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
             ? 'translate-y-0 opacity-100 scale-100'
             : 'translate-y-16 opacity-0 scale-75 pointer-events-none'
         } hover:scale-110 active:scale-95`}
-        title="Service oder Shortcut hinzufügen"
+        title={t('addItem.add_title')}
       >
         <Plus size={28} weight="bold" />
       </button>
@@ -130,7 +132,7 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200/50 dark:border-white/10">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   <Plus size={22} weight="bold" className="text-blue-500" />
-                  Hinzufügen
+                  {t('addItem.add_heading')}
                 </h2>
                 <button
                   onClick={() => setIsOpen(false)}
@@ -172,10 +174,10 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
                   <form onSubmit={handleServiceSubmit} className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                        Service Name
+                        {t('addItem.service_name')}
                       </label>
                       <input
-                        placeholder="z.B. Nextcloud, Plex, Home Assistant"
+                        placeholder={t('addItem.service_name_placeholder')}
                         value={serviceName}
                         onChange={(e) => setServiceName(e.target.value)}
                         className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
@@ -183,10 +185,10 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                        Beschreibung
+                        {t('addItem.description')}
                       </label>
                       <input
-                        placeholder="Kurze Beschreibung des Service"
+                        placeholder={t('addItem.description_placeholder')}
                         value={serviceDesc}
                         onChange={(e) => setServiceDesc(e.target.value)}
                         className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
@@ -197,7 +199,7 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
                         URL
                       </label>
                       <input
-                        placeholder="https://deine-app.domain.de"
+                        placeholder={t('addItem.url_placeholder_service')}
                         value={serviceUrl}
                         onChange={(e) => setServiceUrl(e.target.value)}
                         className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
@@ -208,7 +210,7 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
                         Icon
                       </label>
                       <input
-                        placeholder="Icon URL oder Emoji 🌐"
+                        placeholder={t('addItem.icon_placeholder')}
                         value={serviceIcon}
                         onChange={(e) => setServiceIcon(e.target.value)}
                         className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
@@ -218,24 +220,24 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
                       type="submit"
                       className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-medium w-full transition-all shadow-md hover:shadow-lg"
                     >
-                      Service hinzufügen
+                      {t('addItem.add_service')}
                     </button>
                     <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                      💡 Icons von{' '}
+                      💡 {t('addItem.icons_tip')}{' '}
                       <a href="https://selfh.st/icons/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-500 transition-colors">
                         selfh.st/icons
                       </a>
-                      {' '}oder einfach Emojis nutzen!
+                      {' '}{t('addItem.icons_tip_suffix')}
                     </p>
                   </form>
                 ) : (
                   <form onSubmit={handleShortcutSubmit} className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                        Shortcut Name
+                        {t('addItem.shortcut_name')}
                       </label>
                       <input
-                        placeholder="z.B. GitHub, YouTube, Reddit"
+                        placeholder={t('addItem.shortcut_name_placeholder')}
                         value={shortcutName}
                         onChange={(e) => setShortcutName(e.target.value)}
                         className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
@@ -246,7 +248,7 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
                         URL
                       </label>
                       <input
-                        placeholder="https://beispiel.de"
+                        placeholder={t('addItem.url_placeholder_shortcut')}
                         value={shortcutUrl}
                         onChange={(e) => setShortcutUrl(e.target.value)}
                         className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
@@ -257,7 +259,7 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
                         Icon
                       </label>
                       <input
-                        placeholder="Icon URL oder Emoji 🌐"
+                        placeholder={t('addItem.icon_placeholder')}
                         value={shortcutIcon}
                         onChange={(e) => setShortcutIcon(e.target.value)}
                         className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
@@ -267,14 +269,14 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
                       type="submit"
                       className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-medium w-full transition-all shadow-md hover:shadow-lg"
                     >
-                      Shortcut hinzufügen
+                      {t('addItem.add_shortcut')}
                     </button>
                     <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                      💡 Icons von{' '}
+                      💡 {t('addItem.icons_tip')}{' '}
                       <a href="https://selfh.st/icons/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-500 transition-colors">
                         selfh.st/icons
                       </a>
-                      {' '}oder einfach Emojis nutzen!
+                      {' '}{t('addItem.icons_tip_suffix')}
                     </p>
                   </form>
                 )}

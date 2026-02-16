@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Database, HardDrives, CloudArrowUp, Archive } from 'phosphor-react';
 import StatCard from './StatCard';
 
@@ -6,6 +7,7 @@ import StatCard from './StatCard';
  * Zeigt Storage nach Type an (local, lvm, nfs, ceph, zfs)
  */
 function StorageByTypeCard({ storageByType }) {
+  const { t } = useTranslation();
   // Formatiere Bytes zu TB/GB
   const formatBytes = (bytes) => {
     if (!bytes) return '0 GB';
@@ -110,7 +112,7 @@ function StorageByTypeCard({ storageByType }) {
         </div>
       ) : (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          Keine Storage-Type-Daten verfügbar
+          {t('stats.no_storage_type')}
         </div>
       )}
     </StatCard>

@@ -17,6 +17,7 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 - **Config Import/Export** — JSON-Backup/Restore mit Validierung
 - **Edit Mode** — Toggle in Sidebar, kontrolliert Sichtbarkeit von Edit/Star/Drag auf Cards
 - **Globale Suche** — Ctrl+F Overlay, filtert Services/Shortcuts/Proxmox je nach aktivem Tab
+- **Internationalisierung (i18n)** — Deutsch/Englisch mit react-i18next, Browser-Erkennung, Sprachwahl in Settings
 
 ---
 
@@ -31,6 +32,8 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 | phosphor-react | 1.4 | Icon Library (Duotone-Stil) |
 | react-grid-layout | 1.4 | Draggable/Resizable Grid (Status-Dashboard) |
 | DOMPurify | 3.2 | XSS-Schutz für User-Input |
+| i18next + react-i18next | 24.x / 15.x | Internationalisierung (DE/EN) |
+| i18next-browser-languagedetector | 8.x | Automatische Spracherkennung |
 
 **State Management:** Kein Redux/Zustand — 4 Custom Hooks (`useAuth`, `useDashboards`, `useAppearance`, `useServices`) + lokaler `useState` in `App.jsx`.
 
@@ -187,7 +190,8 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 │       │   │   ├── DashboardsCard.jsx
 │       │   │   ├── AddOnsCard.jsx
 │       │   │   ├── SpotifyAddon.jsx
-│       │   │   └── ConfigAddon.jsx
+│       │   │   ├── ConfigAddon.jsx
+│       │   │   └── LanguageCard.jsx
 │       │   └── stats/              # Proxmox Status-Dashboard Widgets
 │       │       ├── StatCard.jsx (Base)
 │       │       ├── NodeStatusCard.jsx
@@ -200,6 +204,11 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 │       │       ├── StorageTotalCard.jsx
 │       │       ├── CephHealthCard.jsx
 │       │       └── CephOSDCard.jsx
+│       ├── i18n/
+│       │   ├── index.js             # i18n Config (LanguageDetector, fallback: de)
+│       │   └── locales/
+│       │       ├── de.json           # Deutsche Übersetzungen (~420 Keys)
+│       │       └── en.json           # Englische Übersetzungen (~420 Keys)
 │       └── styles/
 │           └── grid-layout.css     # react-grid-layout Overrides
 │
@@ -252,13 +261,14 @@ User Browser
 ## 4. Wichtige Konventionen & Regeln
 
 ### Coding Guidelines
-- **Sprache:** Code auf Englisch, UI-Texte & Kommentare auf Deutsch
+- **Sprache:** Code auf Englisch, Kommentare auf Deutsch. UI-Texte über i18n-Keys (`t('namespace.key')`) — nie hardcoded
 - **Backend-Dateibenennung:** snake_case (`proxmox_stats.py`, `rate_limiting.py`)
 - **Frontend-Dateibenennung:** PascalCase für Komponenten (`ServiceCard.jsx`), camelCase für Hooks (`useAuth.js`) und Utils (`auth.js`)
 - **Komponenten-Struktur:** Functional Components mit Hooks, keine Klassen (außer ErrorBoundary)
 - **API-Aufrufe im Frontend:** Immer via `authenticatedFetch()` aus `utils/auth.js` (Cookie-basiert, Auto-Refresh)
 - **DB-Aufrufe im Backend:** Sync psycopg2 in `run_in_threadpool()` für async Kompatibilität
-- **Fehlerbehandlung:** Backend gibt HTTP-Statuscodes zurück (401, 403, 404, 500), Frontend zeigt deutsche Fehlermeldungen
+- **Fehlerbehandlung:** Backend gibt HTTP-Statuscodes zurück (401, 403, 404, 500), Frontend zeigt lokalisierte Fehlermeldungen via `t()`
+- **i18n-Konvention:** Alle sichtbaren Strings in `src/i18n/locales/{de,en}.json`. Neue Strings immer in beide Dateien + `t('namespace.key')` in der Komponente
 - **Verschlüsselung:** Alle sensiblen Daten (Proxmox Token, Spotify Secrets) werden mit Fernet verschlüsselt in DB gespeichert
 - **Audit:** Sicherheitsrelevante Aktionen werden in `audit_log` geschrieben, sensible Daten automatisch redacted
 
@@ -456,6 +466,7 @@ Response-Model `ClusterStats`: `nodes`, `vms`, `lxcs`, `top_cpu_usage`, `top_mem
 - **Farbige Akzent-Ränder** bei Proxmox Cards (grün/rot per inline style, da Tailwind Border-Utilities von Dark-Mode überschrieben werden)
 - **Edit Mode Toggle** — Sidebar-Button statt permanent sichtbare Edit-Controls
 - **Keine SPA-Routing-Library** — Tab-basierte Navigation via `activeTab` State (services, monitoring, security, settings)
+- **i18n via react-i18next** — Browser-Sprache wird automatisch erkannt (`i18next-browser-languagedetector`), Fallback auf Deutsch. Sprachwahl in Settings > Language Tab, persistiert in `localStorage` (`servicedock_language`)
 
 ---
 
@@ -482,3 +493,34 @@ Response-Model `ClusterStats`: `nodes`, `vms`, `lxcs`, `top_cpu_usage`, `top_mem
 - Resize-Handle: Größer (6px), Hover-to-Blue Transition, verbesserte Dark-Mode Sichtbarkeit
 - Placeholder: `border-radius: 1rem` passend zu `rounded-2xl` Cards
 - Saved Layout Merge vereinfacht: Positionen + Breite aus Backend, Höhen immer dynamisch/frisch
+
+### 2025-02-16 — Internationalisierung (i18n)
+
+**i18n-Infrastruktur:**
+- `i18next` + `react-i18next` + `i18next-browser-languagedetector` als Dependencies
+- `src/i18n/index.js` — i18n-Konfiguration mit LanguageDetector (localStorage → navigator), Fallback `de`
+- `src/i18n/locales/de.json` — ~420 deutsche Übersetzungs-Keys in 25+ Namespaces
+- `src/i18n/locales/en.json` — ~420 englische Übersetzungs-Keys (gleiche Struktur)
+- `main.jsx` importiert `./i18n/index.js` beim App-Start
+
+**Konvertierte Komponenten (36 Dateien):**
+- Alle Komponenten nutzen `const { t } = useTranslation()` + `t('namespace.key')`
+- App, Sidebar, LoginModal, EditModal, ServiceCard, ServiceGrid, ShortcutGrid, AddItemFAB
+- SpotifyCard, WeatherWidget, ClockWidget, ProxmoxGrid, ProxmoxCard, SecurityDashboard
+- ProxmoxStatusDashboard + alle 8 Stats-Cards (TopUsage, TopDisk, Task, Storage×3, Ceph×2)
+- SettingsPage + alle Settings-Sub-Komponenten (Appearance, Dashboards, Proxmox×3, AddOns, Spotify, Config)
+- useAuth.js (Login-Fehlermeldungen mit Interpolation)
+
+**Language Settings Tab:**
+- Neuer Tab "Sprache" / "Language" in Settings (unter AddOns)
+- `settings/LanguageCard.jsx` — DE 🇩🇪 / EN 🇬🇧 als klickbare Karten mit Checkmark, violetter Akzent
+- Scroll-Spy + Tips-Panel Integration im Settings-Layout
+- Language-Toggle aus Sidebar entfernt → nur noch in Settings
+
+**Namespaces (Übersicht):**
+- `common` — Shared Buttons/Labels (Save, Cancel, Delete, etc.)
+- `sidebar`, `login`, `editModal`, `serviceGrid`, `shortcutGrid`, `addItem`
+- `proxmox`, `statusDashboard`, `stats`, `security`, `spotify`, `weather`, `clock`
+- `settings` (Tabs + Tips + Proxmox-Modals), `appearance`, `dashboards`
+- `proxmoxTab`, `proxmoxConnection`, `proxmoxDashboardSettings`
+- `addons`, `spotifyAddon`, `configAddon`, `language`, `errorBoundary`

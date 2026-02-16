@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-  SquaresFour, 
+import { useTranslation } from 'react-i18next';
+import {
+  SquaresFour,
   Desktop, 
   ShieldCheck, 
   Gear, 
@@ -37,6 +38,7 @@ function Sidebar({
   editMode = false,
   setEditMode
 }) {
+  const { t } = useTranslation();
   const [dashDropdownOpen, setDashDropdownOpen] = useState(false);
   const dashTriggerRef = useRef(null);
   const dashDropdownRef = useRef(null);
@@ -178,11 +180,11 @@ function Sidebar({
         <button
           onClick={onToggleCollapse}
           className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} ${collapsed ? 'px-2 py-2' : 'px-4 py-2'} rounded-xl text-white dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10 transition-all duration-300 ease-in-out`}
-          title={collapsed ? 'Sidebar erweitern' : 'Sidebar reduzieren'}
+          title={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
         >
           {collapsed ? <CaretRight size={22} weight="bold" /> : <CaretLeft size={22} weight="bold" />}
           <span className={`font-medium transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${collapsed ? 'opacity-0 max-w-0' : 'opacity-100 max-w-xs'}`} style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-            Reduzieren
+            {t('sidebar.collapse_label')}
           </span>
         </button>
       </div>
@@ -223,11 +225,11 @@ function Sidebar({
               ? 'bg-amber-500/80 text-white shadow-lg shadow-amber-500/30'
               : 'text-white dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10'
           } transition-all duration-300 ease-in-out`}
-          title={collapsed ? (editMode ? 'Bearbeitung beenden' : 'Bearbeiten') : ''}
+          title={collapsed ? (editMode ? t('sidebar.end_edit') : t('sidebar.edit')) : ''}
         >
           <PencilSimple size={22} weight={editMode ? 'fill' : 'regular'} />
           <span className={`font-medium transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${collapsed ? 'opacity-0 max-w-0' : 'opacity-100 max-w-xs'}`} style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-            {editMode ? 'Bearbeitung beenden' : 'Bearbeiten'}
+            {editMode ? t('sidebar.end_edit') : t('sidebar.edit')}
           </span>
         </button>
 
@@ -244,11 +246,11 @@ function Sidebar({
               ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
               : 'text-white dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10'
           } transition-all duration-300 ease-in-out`}
-          title={collapsed ? 'Suche (Strg+F)' : ''}
+          title={collapsed ? t('sidebar.search_shortcut') : ''}
         >
           <MagnifyingGlass size={22} weight={searchOpen ? 'bold' : 'regular'} />
           <span className={`font-medium transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${collapsed ? 'opacity-0 max-w-0' : 'opacity-100 max-w-xs'}`} style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-            Suche
+            {t('sidebar.search')}
           </span>
         </button>
 
@@ -268,11 +270,11 @@ function Sidebar({
         <button
           onClick={onLogout}
           className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} ${collapsed ? 'px-2 py-3' : 'px-4 py-3'} rounded-xl text-red-300 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-300 ease-in-out`}
-          title={collapsed ? 'Abmelden' : ''}
+          title={collapsed ? t('sidebar.logout') : ''}
         >
           <SignOut size={22} />
           <span className={`font-medium transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${collapsed ? 'opacity-0 max-w-0' : 'opacity-100 max-w-xs'}`} style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-            Abmelden
+            {t('sidebar.logout')}
           </span>
         </button>
       </div>

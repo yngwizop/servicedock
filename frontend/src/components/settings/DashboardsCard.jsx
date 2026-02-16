@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Pencil } from 'phosphor-react';
+import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
 import CustomSelect from '../CustomSelect';
 
@@ -10,6 +11,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
   );
 
 function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
+  const { t } = useTranslation();
   const [dashboardName, setDashboardName] = useState('');
   const [dashboardDesc, setDashboardDesc] = useState('');
   const [dashboardType, setDashboardType] = useState('default');
@@ -75,14 +77,14 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
       setTimeout(() => setDashboardSaved(false), 2000);
     } catch (err) {
       console.error('Dashboard save error:', err);
-      alert('Fehler beim Speichern des Dashboards');
+      alert(t('dashboards.save_error'));
     } finally {
       setIsSavingDashboard(false);
     }
   };
 
   const handleDelete = async (dashboard) => {
-    if (!confirm(`Dashboard "${dashboard.name}" wirklich löschen?\n\nAlle Services und Shortcuts in diesem Dashboard werden ebenfalls gelöscht!`)) {
+    if (!confirm(t('dashboards.delete_confirm', { name: dashboard.name }))) {
       return;
     }
     
@@ -98,7 +100,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
       onDashboardsChange();
     } catch (err) {
       console.error('Dashboard delete error:', err);
-      alert('Fehler beim Löschen des Dashboards: ' + err.message);
+      alert(t('dashboards.delete_error') + err.message);
     }
   };
 
@@ -106,10 +108,10 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
     <div className="space-y-5">
       <div>
         <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1.5 flex items-center gap-2">
-          📊 Dashboard Management
+          📊 {t('dashboards.title')}
         </h3>
         <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-          Erstelle mehrere Dashboards für verschiedene Kontexte (Arbeit, Zuhause, etc.)
+          {t('dashboards.description')}
         </p>
       </div>
 
@@ -120,12 +122,12 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
       >
         <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3.5 flex items-center gap-2">
           <span className="text-lg">{editingDashboard ? '✏️' : '➕'}</span>
-          {editingDashboard ? 'Dashboard bearbeiten' : 'Neues Dashboard erstellen'}
+          {editingDashboard ? t('dashboards.edit_dashboard') : t('dashboards.create_dashboard')}
         </h4>
         <div className="space-y-3.5">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Dashboard Name
+              {t('dashboards.dashboard_name')}
             </label>
             <input
               placeholder="z.B. Work, Home, Gaming"
@@ -138,10 +140,10 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Beschreibung (optional)
+              {t('dashboards.description_label')}
             </label>
             <textarea
-              placeholder="Beschreibe den Zweck..."
+              placeholder={t('dashboards.description_placeholder')}
               value={dashboardDesc}
               onChange={(e) => setDashboardDesc(e.target.value)}
               maxLength={500}
@@ -151,15 +153,15 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Typ
+              {t('dashboards.type')}
             </label>
             <CustomSelect
               value={dashboardType}
               onChange={(val) => setDashboardType(val)}
               options={[
-                { value: 'default', label: 'Standard' },
-                { value: 'work', label: 'Arbeit' },
-                { value: 'home', label: 'Zuhause' },
+                { value: 'default', label: t('dashboards.type_default') },
+                { value: 'work', label: t('dashboards.type_work') },
+                { value: 'home', label: t('dashboards.type_home') },
                 { value: 'gaming', label: 'Gaming' },
                 { value: 'media', label: 'Media' },
                 { value: 'dev', label: 'Development' },
@@ -180,7 +182,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
                   <span className="text-xl">🖥️</span>
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Proxmox Monitoring Tab</span>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Zeige Proxmox Monitoring in der Navigation</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('dashboards.show_proxmox')}</p>
               </div>
             </label>
           </div>
@@ -191,7 +193,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
               disabled={isSavingDashboard || !dashboardName.trim()}
               className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white p-3 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-[1.02]"
             >
-              {isSavingDashboard ? 'Speichere...' : (editingDashboard ? 'Aktualisieren' : 'Dashboard erstellen')}
+              {isSavingDashboard ? t('dashboards.saving') : (editingDashboard ? t('dashboards.update') : t('dashboards.create'))}
             </button>
             
             {editingDashboard && (
@@ -206,14 +208,14 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
                 }}
                 className="px-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-xl font-semibold transition-all"
               >
-                Abbrechen
+                {t('common.cancel')}
               </button>
             )}
           </div>
           
           {dashboardSaved && (
             <div className="text-green-600 dark:text-green-400 font-medium text-center">
-              ✓ Dashboard gespeichert!
+              {t('dashboards.saved')}
             </div>
           )}
         </div>
@@ -222,7 +224,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
       {/* Dashboard Liste */}
       <div>
         <h4 className="text-base font-semibold text-gray-800 dark:text-white mb-3">
-          📋 Meine Dashboards
+          📋 {t('dashboards.my_dashboards')}
         </h4>
         
         {dashboards && dashboards.length > 0 ? (
@@ -250,12 +252,12 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
                         </h5>
                         {dashboard.id === activeDashboard && (
                           <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full font-medium">
-                            Aktiv
+                            {t('dashboards.active')}
                           </span>
                         )}
                         {dashboard.id === 1 && (
                           <span className="text-xs bg-gray-500 text-white px-2 py-1 rounded-full font-medium">
-                            Standard
+                            {t('dashboards.default')}
                           </span>
                         )}
                       </div>
@@ -276,7 +278,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
                           setDashboardShowProxmox(dashboard.show_proxmox !== undefined ? dashboard.show_proxmox : true);
                         }}
                         className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-                        title="Bearbeiten"
+                        title={t('common.edit')}
                       >
                         <Pencil className="w-4 h-4" weight="bold" />
                       </button>
@@ -285,7 +287,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
                         <button
                           onClick={() => handleDelete(dashboard)}
                           className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                          title="Löschen"
+                          title={t('common.delete')}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -312,7 +314,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
           </div>
         ) : (
           <p className="text-gray-600 dark:text-gray-400 text-center py-4">
-            Noch keine Dashboards vorhanden.
+            {t('dashboards.no_dashboards')}
           </p>
         )}
       </div>
@@ -320,7 +322,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
       {/* Info-Hinweis */}
       <div className="p-4 bg-blue-50 dark:bg-blue-900/20 backdrop-blur-sm border border-blue-200 dark:border-blue-800 rounded-xl">
         <p className="text-sm text-blue-900 dark:text-blue-200">
-          💡 <strong>Tipp:</strong> Dashboards ermöglichen es dir, verschiedene Sets von Services und Shortcuts zu organisieren. Mindestens ein Dashboard muss vorhanden bleiben.
+          {t('dashboards.tip')}
         </p>
       </div>
     </div>

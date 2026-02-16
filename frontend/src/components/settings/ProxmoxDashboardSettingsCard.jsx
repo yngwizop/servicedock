@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { SlidersHorizontal, CheckCircle } from 'phosphor-react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Card für Proxmox Dashboard-Einstellungen
  */
 function ProxmoxDashboardSettingsCard() {
+  const { t } = useTranslation();
   const [settings, setSettings] = useState({
     autoRefreshInterval: parseInt(localStorage.getItem('proxmox_refresh_interval') || '30'),
     topItemsCount: parseInt(localStorage.getItem('proxmox_top_items') || '10'),
@@ -29,7 +31,7 @@ function ProxmoxDashboardSettingsCard() {
   };
 
   const handleReset = () => {
-    if (!window.confirm('Dashboard-Einstellungen auf Standardwerte zurücksetzen?')) return;
+    if (!window.confirm(t('proxmoxDashboardSettings.reset_confirm'))) return;
     
     const defaults = {
       autoRefreshInterval: 30,
@@ -56,10 +58,10 @@ function ProxmoxDashboardSettingsCard() {
         </div>
         <div className="flex-1">
           <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-            Dashboard Einstellungen
+            {t('proxmoxDashboardSettings.title')}
           </h3>
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            Passe das Proxmox Monitoring-Dashboard an deine Bedürfnisse an
+            {t('proxmoxDashboardSettings.description')}
           </p>
         </div>
       </div>
@@ -69,7 +71,7 @@ function ProxmoxDashboardSettingsCard() {
         {/* Auto-Refresh Interval */}
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            ⏱️ Auto-Refresh Intervall
+            {t('proxmoxDashboardSettings.refresh_interval')}
           </label>
           <div className="flex gap-3">
             {[15, 30, 60, 120].map((seconds) => (
@@ -87,14 +89,14 @@ function ProxmoxDashboardSettingsCard() {
             ))}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Wie oft sollen die Daten automatisch aktualisiert werden?
+            {t('proxmoxDashboardSettings.refresh_help')}
           </p>
         </div>
 
         {/* Top Items Count */}
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            📊 Anzahl Top-Items
+            {t('proxmoxDashboardSettings.top_items')}
           </label>
           <div className="flex gap-3">
             {[5, 10, 15, 20].map((count) => (
@@ -112,20 +114,20 @@ function ProxmoxDashboardSettingsCard() {
             ))}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Wie viele Einträge sollen in den CPU/Memory-Listen angezeigt werden?
+            {t('proxmoxDashboardSettings.top_items_help')}
           </p>
         </div>
 
         {/* Task Time Range */}
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            📅 Task-Zeitraum
+            {t('proxmoxDashboardSettings.task_range')}
           </label>
           <div className="flex gap-3">
             {[
               { hours: 24, label: '24h' },
               { hours: 48, label: '48h' },
-              { hours: 168, label: '7 Tage' }
+              { hours: 168, label: t('proxmoxDashboardSettings.seven_days') }
             ].map(({ hours, label }) => (
               <button
                 key={hours}
@@ -141,18 +143,18 @@ function ProxmoxDashboardSettingsCard() {
             ))}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Für welchen Zeitraum sollen Tasks in der Summary angezeigt werden?
+            {t('proxmoxDashboardSettings.task_range_help')}
           </p>
         </div>
 
         {/* Card Layout */}
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            🎨 Card-Layout
+            {t('proxmoxDashboardSettings.card_layout')}
           </label>
           <div className="bg-slate-100 dark:bg-slate-700/50 rounded-lg p-4 text-center">
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              Drag & Drop für Cards wird in einer zukünftigen Version verfügbar sein
+              {t('proxmoxDashboardSettings.card_layout_placeholder')}
             </p>
           </div>
         </div>
@@ -161,14 +163,14 @@ function ProxmoxDashboardSettingsCard() {
         {saveStatus === 'success' && (
           <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-sm flex items-center gap-2">
             <CheckCircle size={18} weight="fill" />
-            Einstellungen gespeichert! Seite wird neu geladen...
+            {t('proxmoxDashboardSettings.save_success')}
           </div>
         )}
         
         {saveStatus === 'reset' && (
           <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-sm flex items-center gap-2">
             <CheckCircle size={18} weight="fill" />
-            Einstellungen zurückgesetzt! Seite wird neu geladen...
+            {t('proxmoxDashboardSettings.reset_success')}
           </div>
         )}
 
@@ -178,22 +180,21 @@ function ProxmoxDashboardSettingsCard() {
             onClick={handleSave}
             className="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors"
           >
-            Einstellungen speichern
+            {t('proxmoxDashboardSettings.save_settings')}
           </button>
           
           <button
             onClick={handleReset}
             className="bg-slate-400 hover:bg-slate-500 dark:bg-slate-600 dark:hover:bg-slate-500 text-white px-4 py-2 rounded-lg transition-colors"
           >
-            Zurücksetzen
+            {t('common.reset')}
           </button>
         </div>
 
         {/* Info */}
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
           <p className="text-xs text-blue-800 dark:text-blue-300">
-            💡 <strong>Hinweis:</strong> Nach dem Speichern wird die Seite automatisch neu geladen, 
-            damit die Änderungen sofort wirksam werden.
+            {t('proxmoxDashboardSettings.note')}
           </p>
         </div>
       </div>

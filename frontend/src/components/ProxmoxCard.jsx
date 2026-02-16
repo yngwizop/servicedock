@@ -1,7 +1,9 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Play, Stop, ArrowsClockwise, Desktop, HardDrives } from 'phosphor-react';
 
 function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
+  const { t } = useTranslation();
   const isRunning = resource.status === 'running';
   
   // Berechne Prozentsätze für CPU, RAM, Disk
@@ -152,16 +154,16 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
         ) : (
           <div className="space-y-3 flex flex-col justify-center h-full">
             <div className="text-center text-xs text-gray-600 dark:text-white/50 pt-2" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
-              <span className="block font-semibold">Zuletzt gestartet:</span>
+              <span className="block font-semibold">{t('proxmox.last_started')}</span>
               {resource.lastRun ? (
                 <span className="block font-mono text-gray-800 dark:text-white/70 mt-0.5">{resource.lastRun}</span>
               ) : (
-                <span className="block font-mono text-gray-400 dark:text-white/30 italic mt-0.5">kein Zeitstempel verfügbar</span>
+                <span className="block font-mono text-gray-400 dark:text-white/30 italic mt-0.5">{t('proxmox.no_timestamp')}</span>
               )}
-              <span className="block mt-2">Laufzeit: <span className="font-semibold">{formatUptime(resource.uptime)}</span></span>
+              <span className="block mt-2">{t('proxmox.runtime')} <span className="font-semibold">{formatUptime(resource.uptime)}</span></span>
             </div>
             <div className="text-center text-xs text-orange-600 dark:text-orange-400 bg-orange-500/10 rounded-lg px-2 py-1.5">
-              VM ist offline
+              {t('proxmox.vm_offline')}
             </div>
           </div>
         )}
@@ -175,14 +177,14 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
               <button
                 onClick={() => onStop(resource.vmid, resource.type)}
                 className="flex-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:border-rose-500/40 py-1.5 px-2 rounded-xl transition-all flex items-center justify-center gap-1 text-xs font-semibold"
-                title="Stoppen"
+                title={t('proxmox.stop')}
               >
                 <Stop size={14} weight="fill" />
               </button>
               <button
                 onClick={() => onReboot(resource.vmid, resource.type)}
                 className="flex-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:border-amber-500/40 py-1.5 px-2 rounded-xl transition-all flex items-center justify-center gap-1 text-xs font-semibold"
-                title="Neustarten"
+                title={t('proxmox.restart')}
               >
                 <ArrowsClockwise size={14} weight="bold" />
               </button>
@@ -191,7 +193,7 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
             <button
               onClick={() => onStart(resource.vmid, resource.type)}
               className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:border-emerald-500/40 py-1.5 px-2 rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs font-semibold"
-              title="VM/Container starten"
+              title={t('proxmox.start_vm')}
             >
               <Play size={14} weight="fill" />
             </button>

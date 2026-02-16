@@ -1,7 +1,9 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { sanitizeText, sanitizeUrl } from '../utils/sanitize';
 
 function ServiceCard({ service, textColor, isFavorite }) {
+  const { t } = useTranslation();
   const isUrl = service.icon && (
     service.icon.includes('.') || service.icon.includes('/')
   );
@@ -23,7 +25,7 @@ function ServiceCard({ service, textColor, isFavorite }) {
           ? 'border-2 border-yellow-500 dark:border-yellow-400 hover:border-yellow-600 dark:hover:border-yellow-500' 
           : 'border border-gray-400/60 dark:border-white/10 hover:border-gray-500/70 dark:hover:border-white/20'
       }`}
-      aria-label={`Service: ${safeName}${safeDescription ? ', ' + safeDescription : ''}${isFavorite ? ' (Favorit)' : ''}`}
+      aria-label={`Service: ${safeName}${safeDescription ? ', ' + safeDescription : ''}${isFavorite ? ' ' + t('serviceGrid.favorite') : ''}`}
     >
       {/* Hover Glow Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-blue-500/10 group-hover:via-purple-500/5 group-hover:to-pink-500/10 rounded-2xl transition-all duration-500 pointer-events-none"></div>

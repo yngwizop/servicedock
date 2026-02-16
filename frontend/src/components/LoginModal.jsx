@@ -1,7 +1,9 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { LockKey } from 'phosphor-react';
 
 function LoginModal({ onSubmit, password, setPassword, error, onClose, disabled = false, appearance = {} }) {
+  const { t } = useTranslation();
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="loginmodal-title">
       {/* Background Image Layer (wenn vorhanden) */}
@@ -24,27 +26,27 @@ function LoginModal({ onSubmit, password, setPassword, error, onClose, disabled 
         {/* Servicedock Überschrift */}
         <div className="mb-6 text-center">
           <h1 className="text-3xl font-extrabold text-blue-700 dark:text-blue-400 tracking-tight mb-1">Servicedock</h1>
-          <p className="text-base text-gray-600 dark:text-gray-300">Dein persönliches Service-Dashboard</p>
+          <p className="text-base text-gray-600 dark:text-gray-300">{t('login.subtitle')}</p>
         </div>
         {/* Header mit Icon */}
         <div className="flex items-center gap-3 mb-4">
           <LockKey size={32} className="text-blue-500 dark:text-blue-400" weight="fill" />
           <h3 id="loginmodal-title" className="text-xl font-bold text-gray-800 dark:text-gray-100">
-            Admin-Login
+            {t('login.title')}
           </h3>
         </div>
         <p className="text-gray-600 dark:text-gray-400 mb-4">
-          Bitte gib dein Admin-Passwort ein, um fortzufahren.
+          {t('login.instruction')}
         </p>
 
         {/* Password Input */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Passwort:
+            {t('login.password_label')}
           </label>
           <input
             type="password"
-            placeholder="Passwort eingeben"
+            placeholder={t('login.password_placeholder')}
             autoFocus
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -62,7 +64,7 @@ function LoginModal({ onSubmit, password, setPassword, error, onClose, disabled 
             onClick={onClose}
             className="flex-1 px-4 py-2 bg-white/70 dark:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/20 text-gray-800 dark:text-white rounded-lg hover:bg-white/90 dark:hover:bg-white/15 transition-all shadow-lg hover:shadow-xl"
           >
-            Abbrechen
+            {t('common.cancel')}
           </button>
           <button
             type="submit"

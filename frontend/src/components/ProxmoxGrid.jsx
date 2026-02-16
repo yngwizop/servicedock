@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ProxmoxCard from './ProxmoxCard';
 import ProxmoxStatsCards from './ProxmoxStatsCards';
 import ProxmoxStatusDashboard from './ProxmoxStatusDashboard';
@@ -14,6 +15,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
   );
 
 function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, searchTerm = "" }) {
+  const { t } = useTranslation();
   // Sub-Navigation State
   const [activeView, setActiveView] = useState('resources'); // 'resources' oder 'status'
   
@@ -124,10 +126,10 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
           Proxmox Monitoring
         </h2>
         <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">
-          Bitte melde dich als Admin an, um das Proxmox Monitoring zu nutzen.
+          {t('proxmox.admin_required')}
         </p>
         <div className="mt-4 text-sm text-gray-500 dark:text-gray-500">
-          🔒 Nur für Administratoren
+          {t('proxmox.admin_only')}
         </div>
       </div>
     );
@@ -249,10 +251,10 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
         <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg p-8 text-center">
           <WarningCircle size={64} className="mx-auto mb-4 text-yellow-500" />
           <h2 className="text-2xl font-bold mb-2 text-gray-800 dark:text-white">
-            Proxmox nicht konfiguriert
+            {t('proxmox.not_configured')}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Bitte konfiguriere die Proxmox-Verbindung in den Einstellungen.
+            {t('proxmox.configure_hint')}
           </p>
           {isLoggedIn && (
             <button
@@ -260,7 +262,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
               className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-all flex items-center justify-center gap-2 mx-auto"
             >
               <GearSix size={20} />
-              <span>Einstellungen öffnen</span>
+              <span>{t('proxmox.open_settings')}</span>
             </button>
           )}
         </div>
@@ -285,7 +287,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
           <div className="flex items-center gap-3 mb-2">
             <WarningCircle size={24} className="text-red-600 dark:text-red-400" />
             <h3 className="text-lg font-semibold text-red-800 dark:text-red-300">
-              Fehler beim Laden
+              {t('proxmox.error_loading')}
             </h3>
           </div>
           <div className="text-red-700 dark:text-red-400 mb-4 whitespace-pre-wrap">{error}</div>
@@ -294,14 +296,14 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
               onClick={() => fetchProxmoxData(activeDashboard)}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-all"
             >
-              Erneut versuchen
+              {t('common.retry')}
             </button>
             <button
               onClick={onOpenSettings}
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2"
             >
               <GearSix size={18} />
-              Einstellungen öffnen
+              {t('proxmox.open_settings')}
             </button>
           </div>
         </div>
@@ -337,7 +339,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
                 className="w-4 h-4"
               />
               <span className="text-sm text-gray-600 dark:text-gray-400" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-                Auto-Refresh (30s)
+                {t('proxmox.auto_refresh', { seconds: 30 })}
               </span>
             </label>
           )}
@@ -347,7 +349,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
             <button
               onClick={() => fetchProxmoxData(activeDashboard)}
               className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-2 rounded-lg shadow hover:shadow-lg transition-all hover:scale-105"
-              title="Aktualisieren"
+              title={t('common.refresh')}
             >
               <ArrowsClockwise size={20} className="text-gray-700 dark:text-gray-300" />
             </button>
@@ -390,7 +392,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
           >
             <div className="flex items-center gap-2">
               <ChartBar size={20} weight={activeView === 'status' ? 'fill' : 'regular'} />
-              <span>Status-Übersicht</span>
+              <span>{t('proxmox.status_overview')}</span>
             </div>
             {activeView === 'status' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"></div>
@@ -409,7 +411,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                 </svg>
-                <span className="text-sm font-medium">Die Suche ist in der Status-Übersicht nicht verfügbar. Wechsle zu "VM/LXC" zum Suchen.</span>
+                <span className="text-sm font-medium">{t('proxmox.search_unavailable')}</span>
               </div>
             </div>
           )}
@@ -448,10 +450,10 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
             options={[
               { value: 'name-asc', label: 'Name A-Z' },
               { value: 'name-desc', label: 'Name Z-A' },
-              { value: 'vmid-asc', label: 'VM-ID aufsteigend' },
-              { value: 'vmid-desc', label: 'VM-ID absteigend' },
-              { value: 'status', label: 'Status (Running zuerst)' },
-              { value: 'type', label: 'Typ (VM zuerst)' },
+              { value: 'vmid-asc', label: t('proxmox.sort_id_asc') },
+              { value: 'vmid-desc', label: t('proxmox.sort_id_desc') },
+              { value: 'status', label: t('proxmox.sort_status') },
+              { value: 'type', label: t('proxmox.sort_type') },
             ]}
             className="w-44"
           />
@@ -461,9 +463,9 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
             value={filterType}
             onChange={(val) => setFilterType(val)}
             options={[
-              { value: 'all', label: 'Alle Typen' },
-              { value: 'qemu', label: 'Nur VMs' },
-              { value: 'lxc', label: 'Nur Container' },
+              { value: 'all', label: t('proxmox.filter_all_types') },
+              { value: 'qemu', label: t('proxmox.filter_vms') },
+              { value: 'lxc', label: t('proxmox.filter_containers') },
             ]}
             className="w-36"
           />
@@ -473,9 +475,9 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
             value={filterStatus}
             onChange={(val) => setFilterStatus(val)}
             options={[
-              { value: 'all', label: 'Alle Status' },
-              { value: 'running', label: 'Nur Running' },
-              { value: 'stopped', label: 'Nur Stopped' },
+              { value: 'all', label: t('proxmox.filter_all_status') },
+              { value: 'running', label: t('proxmox.filter_running') },
+              { value: 'stopped', label: t('proxmox.filter_stopped') },
             ]}
             className="w-36"
           />
@@ -502,10 +504,10 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
           <FunnelSimple size={48} className="mx-auto mb-3 text-gray-400 dark:text-gray-600" />
           <p className="text-gray-600 dark:text-gray-400 text-lg">
             {resources.length === 0 
-              ? 'Keine VMs oder Container gefunden' 
+              ? t('proxmox.no_vms') 
               : searchTerm 
-                ? `Keine Ergebnisse für "${searchTerm}"`
-                : 'Keine Ergebnisse mit aktuellen Filtern'}
+                ? t('proxmox.no_search_results', { term: searchTerm })
+                : t('proxmox.no_filter_results')}
           </p>
           {(searchTerm || filterType !== 'all' || filterStatus !== 'all') && (
             <button
@@ -515,7 +517,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
               }}
               className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all"
             >
-              Filter zurücksetzen
+              {t('proxmox.reset_filters')}
             </button>
           )}
         </div>

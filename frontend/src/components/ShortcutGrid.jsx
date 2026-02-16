@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import ShortcutLink from './ShortcutLink';
 import EditModal from './EditModal';
 import { Pencil } from 'phosphor-react';
@@ -14,6 +15,7 @@ function ShortcutGrid({
   textColor,
   onReorder
 }) {
+  const { t } = useTranslation();
   const [editingShortcut, setEditingShortcut] = useState(null);
   const [draggingId, setDraggingId] = useState(null);
   const [dragOver, setDragOver] = useState({ id: null, side: null });
@@ -153,7 +155,7 @@ function ShortcutGrid({
         className="text-2xl font-semibold mb-4"
         style={{ color: textColor }}
       >
-        Shortcuts
+        {t('shortcutGrid.shortcuts')}
       </h2>
 
       <div
@@ -194,8 +196,8 @@ function ShortcutGrid({
               <button
                 onClick={() => setEditingShortcut(s)}
                 className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-lg opacity-100 transition-all duration-200 hover:scale-110"
-                title="Bearbeiten"
-                aria-label={`Shortcut ${s.name || s.id} bearbeiten`}
+                title={t('shortcutGrid.edit')}
+                aria-label={t('shortcutGrid.edit_shortcut', { name: s.name })}
               >
                 <Pencil size={16} />
               </button>
