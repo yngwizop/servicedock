@@ -277,10 +277,16 @@ Das Status-Dashboard (`ProxmoxStatusDashboard.jsx`) zeigt aggregierte Cluster-St
 
 - **12 Widget-Cards:** Node-Status, VM/LXC-Status, Task-Summary, Top CPU/Memory/Disk, Storage (Total/byNode/byType), Ceph Health/OSD
 - **Layout:** 4-Spalten Grid, Drag & Drop + Resize, pro Dashboard persistiert in `proxmox_dashboard_layouts`
+- **Card Visibility:** Gear-Dropdown im Header zum Ein-/Ausblenden einzelner Cards. Ceph-Cards werden bei Nicht-Ceph-Setups automatisch ausgeblendet. Persistiert in DB (`proxmox_dashboard_layouts.visible_cards` JSONB) + localStorage-Cache
 - **Dynamische Höhen:** Storage/Task-Cards passen sich automatisch an Cluster-Größe an (`getDynamicCardHeight()`)
+- **Tab-Persistenz:** Status-Dashboard bleibt gemounted beim Tab-Wechsel (VM/LXC ↔ Status) — kein Neuladen beim Zurückwechseln
+- **Refresh:** Manueller Refresh-Button mit Spin-Animation, Auto-Refresh (konfigurierbar, Default 30s)
+- **Save-Detection:** "Save Layout"-Button erscheint nur bei echten Drag/Resize-Änderungen (Baseline-Vergleich via `savedLayoutRef`)
 - **Settings:** `localStorage` Keys: `proxmox_top_items` (Default: 10), `proxmox_task_hours` (48h), `proxmox_refresh_interval` (30s)
 - **API:** `GET /api/proxmox/cluster-stats?dashboard_id=X&top_n=10&task_hours=48` — Cluster-Modus oder Standalone-Modus
 - **Layout-API:** `GET/PUT/DELETE /api/dashboards/{id}/proxmox-layout`
+- **Visibility-API:** `GET/PUT /api/dashboards/{id}/proxmox-visible-cards`
+- **Komponente:** `CardVisibilityPanel.jsx` (stats/) — Dropdown mit kategorisierten Checkboxen (Status/Usage/Storage/Ceph), Show All/Hide All
 
 ---
 

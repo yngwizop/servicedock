@@ -144,6 +144,7 @@ END $$;
 CREATE TABLE IF NOT EXISTS proxmox_dashboard_layouts (
     dashboard_id INT PRIMARY KEY REFERENCES dashboards(id) ON DELETE CASCADE,
     layout JSONB NOT NULL,
+    visible_cards JSONB DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -178,7 +179,7 @@ SET
 
 -- (Optional) Dummy-Daten (Unverändert)
 INSERT INTO services (name, description, url, icon, position) VALUES
-('Mein Mail', 'Postfach checken', 'https://mail.google.com', '✉️', 1)
+('Mein Gmail', 'Postfach checken', 'https://mail.google.com', '✉️', 1)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO shortcuts (name, url, icon, position) VALUES

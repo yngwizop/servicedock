@@ -278,3 +278,74 @@ async def reset_proxmox_layout(
             cur.close()
     
     return await run_in_threadpool(_reset_layout_sync)
+
+
+# Proxmox Visible Cards Routes
+@router.get("/{dashboard_id}/proxmox-visible-cards")
+@limiter.limit("60/minute")
+async def get_proxmox_visible_cards(
+    request: Request,
+    dashboard_id: int,
+    db = Depends(get_db),
+    _admin = Depends(require_role("admin"))
+):
+    """Get saved visible cards configuration"""
+    def _get_sync():
+        cur = db.cursor()
+        try:
+            cur.execute(
+                "SELECT visible_cards FROM proxmox_dashboard_layouts WHERE dashboard_id = %s;",
+                (dashboard_id,)
+            )
+            row = cur.fetchone()
+            if row and row[0]:
+                return {"visible_cards": row[0]}
+            return {"visible_cards": None}
+        finally:
+            cur.close()
+
+    return await run_in_threadpool(_get_sync)
+
+@router.put("/{dashboard_id}/proxmox-visible-cards")
+@limiter.limit("20/minute")
+async def save_proxmox_visible_cards(
+    request: Request,
+    dashboard_id: int,
+    token: dict = Depends(require_role("admin")),
+    db = Depends(get_db)
+):
+    """Save visible cards configuration"""
+    try:
+        cards = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+
+    if not isinstance(cards, list):
+        raise HTTPException(status_code=400, detail="Body must be a JSON array of card IDs")
+
+    if len(cards) > 50:
+        raise HTTPException(status_code=400, detail="Too many card entries")
+
+    def _save_sync():
+        cur = db.cursor()
+        try:
+            # Upsert: row may or may not exist yet
+            cur.execute(
+                """
+                INSERT INTO proxmox_dashboard_layouts (dashboard_id, layout, visible_cards, updated_at)
+                VALUES (%s, '[]'::jsonb, %s, NOW())
+                ON CONFLICT (dashboard_id)
+                DO UPDATE SET visible_cards = EXCLUDED.visible_cards, updated_at = NOW();
+                """,
+                (dashboard_id, json.dumps(cards))
+            )
+            db.commit()
+            return {"message": "Visible cards saved"}
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Save visible cards failed: {e}")
+            raise HTTPException(status_code=500, detail="Failed to save visible cards")
+        finally:
+            cur.close()
+
+    return await run_in_threadpool(_save_sync)
