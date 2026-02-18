@@ -632,10 +632,9 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
 
   return (
     <>
-      {/* Header mit Actions */}
-      <div className="flex items-center justify-end mb-6">
-        {/* Actions */}
-        <div className="flex items-center gap-3">
+      {/* Toolbar — einheitliche Glass-Bar mit Pill-Buttons */}
+      <div className="relative z-50 flex items-center justify-end mb-6">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/30 dark:bg-white/[0.04] backdrop-blur-md border border-gray-300/30 dark:border-white/[0.08] shadow-lg">
           {/* Card Visibility Toggle */}
           <CardVisibilityPanel
             visibleCards={visibleCards}
@@ -645,47 +644,60 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
             cephAvailable={stats?.ceph?.available === true}
           />
           
-          {/* Reset Layout Button */}
+          <div className="w-px h-5 bg-gray-300/40 dark:bg-white/10" />
+          
+          {/* Reset Layout */}
           <button
             onClick={resetLayout}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors"
+            className="glass-btn flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/40 dark:hover:bg-white/10 text-sm text-gray-700 dark:text-gray-300 transition-all"
             title={t('statusDashboard.reset_layout')}
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
           >
-            <ArrowCounterClockwise size={18} weight="bold" />
-            {t('statusDashboard.reset_layout')}
+            <ArrowCounterClockwise size={16} weight="bold" />
+            <span className="hidden sm:inline">{t('statusDashboard.reset_layout')}</span>
           </button>
           
-          {/* Save Layout Button */}
+          {/* Save Layout (nur bei Änderungen) */}
           {layoutModified && (
-            <button
-              onClick={saveLayout}
-              className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors shadow-lg"
-              title={t('statusDashboard.save_layout')}
-            >
-              <FloppyDisk size={18} weight="bold" />
-              {t('statusDashboard.save_layout')}
-            </button>
+            <>
+              <div className="w-px h-5 bg-gray-300/40 dark:bg-white/10" />
+              <button
+                onClick={saveLayout}
+                className="glass-btn flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500/15 dark:bg-blue-400/10 hover:bg-blue-500/25 dark:hover:bg-blue-400/20 text-sm text-blue-600 dark:text-blue-300 transition-all"
+                title={t('statusDashboard.save_layout')}
+                style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
+              >
+                <FloppyDisk size={16} weight="bold" />
+                <span className="hidden sm:inline">{t('statusDashboard.save_layout')}</span>
+              </button>
+            </>
           )}
           
-          {/* Auto-Refresh Toggle */}
-          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200 cursor-pointer">
+          <div className="w-px h-5 bg-gray-300/40 dark:bg-white/10" />
+          
+          {/* Auto-Refresh */}
+          <label className="glass-btn flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/40 dark:hover:bg-white/10">
             <input
               type="checkbox"
               checked={autoRefresh}
               onChange={(e) => setAutoRefresh(e.target.checked)}
-              className="rounded border-gray-300 dark:border-white/20"
+              className="w-3.5 h-3.5 rounded border-gray-400 dark:border-white/30 text-blue-500 focus:ring-blue-500/30"
             />
-            Auto-Refresh ({parseInt(localStorage.getItem('proxmox_refresh_interval') || '30')}s)
+            <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+              Auto-Refresh ({parseInt(localStorage.getItem('proxmox_refresh_interval') || '30')}s)
+            </span>
           </label>
           
-          {/* Refresh Button */}
+          <div className="w-px h-5 bg-gray-300/40 dark:bg-white/10" />
+          
+          {/* Refresh */}
           <button
             onClick={handleManualRefresh}
             disabled={refreshing}
-            className="p-2 rounded-lg bg-white/50 dark:bg-white/10 hover:bg-white/70 dark:hover:bg-white/20 backdrop-blur-md border border-gray-300/50 dark:border-white/10 transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
+            className="glass-btn p-2 rounded-lg hover:bg-white/40 dark:hover:bg-white/10 transition-all disabled:opacity-50"
             title={t('common.refresh')}
           >
-            <ArrowsClockwise size={20} weight="bold" className={`text-gray-700 dark:text-gray-200 transition-transform ${refreshing ? 'animate-spin' : ''}`} />
+            <ArrowsClockwise size={18} weight="bold" className={`text-gray-700 dark:text-gray-300 transition-transform ${refreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>

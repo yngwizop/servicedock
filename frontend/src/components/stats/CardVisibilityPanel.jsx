@@ -104,12 +104,13 @@ function CardVisibilityPanel({ visibleCards, onToggle, onShowAll, onHideAll, cep
       {/* Trigger Button */}
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all ${
+        className={`glass-btn flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all ${
           open
-            ? 'bg-blue-600 text-white shadow-lg'
-            : 'bg-white/50 dark:bg-white/10 hover:bg-white/70 dark:hover:bg-white/20 backdrop-blur-md border border-gray-300/50 dark:border-white/10 text-gray-700 dark:text-gray-200 shadow-lg hover:shadow-xl'
+            ? 'bg-blue-500/15 dark:bg-blue-400/10 text-blue-600 dark:text-blue-300'
+            : 'hover:bg-white/40 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300'
         }`}
         title={t('statusDashboard.visible_cards')}
+        style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
       >
         <GearSix size={18} weight="bold" />
         <span className="hidden sm:inline">{t('statusDashboard.visible_cards')}</span>

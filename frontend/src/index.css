@@ -90,6 +90,66 @@
   animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ===== Proxmox Dashboard Animations ===== */
+
+/* Staggered fade-up entrance for cards */
+@keyframes fadeUpIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUpIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Stagger delays for grid children */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.10s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.20s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.30s; }
+
+/* Crossfade for tab content */
+@keyframes contentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-content-in {
+  animation: contentFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Subtle pulse for active segment indicator */
+@keyframes segmentGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(59, 130, 246, 0.15); }
+  50% { box-shadow: 0 0 16px rgba(59, 130, 246, 0.25); }
+}
+
+/* Glass button hover lift */
+.glass-btn {
+  @apply transition-all duration-200;
+}
+.glass-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.glass-btn:active {
+  transform: translateY(0px);
+}
+
 /* Custom range slider styling */
 @layer components {
   input[type="range"]::-webkit-slider-thumb {

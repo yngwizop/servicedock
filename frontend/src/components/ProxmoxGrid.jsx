@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import ProxmoxCard from './ProxmoxCard';
 import ProxmoxStatsCards from './ProxmoxStatsCards';
@@ -18,6 +18,52 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
   const { t } = useTranslation();
   // Sub-Navigation State
   const [activeView, setActiveView] = useState('resources'); // 'resources' oder 'status'
+  const [pillStyle, setPillStyle] = useState(null); // null = noch nicht gemessen
+  
+  // Pill-Position messen — wird als ref-Callback genutzt UND bei activeView-Wechsel
+  const segmentContainerRef = useRef(null);
+  const measurePill = useCallback((view) => {
+    const container = segmentContainerRef.current;
+    if (!container) return;
+    // Finde den aktiven Button anhand data-view
+    const btn = container.querySelector(`[data-view="${view || activeView}"]`);
+    if (btn) {
+      const parentRect = container.getBoundingClientRect();
+      const btnRect = btn.getBoundingClientRect();
+      setPillStyle({
+        left: btnRect.left - parentRect.left,
+        width: btnRect.width,
+      });
+    }
+  }, [activeView]);
+
+  // Ref-Callback: Misst sofort wenn der Container erstmals ins DOM kommt
+  const segmentRefCallback = useCallback((node) => {
+    segmentContainerRef.current = node;
+    if (node) {
+      // Sofort messen
+      const btn = node.querySelector(`[data-view="${activeView}"]`);
+      if (btn) {
+        const parentRect = node.getBoundingClientRect();
+        const btnRect = btn.getBoundingClientRect();
+        setPillStyle({
+          left: btnRect.left - parentRect.left,
+          width: btnRect.width,
+        });
+      }
+    }
+  }, [activeView]);
+
+  // Bei Tab-Wechsel Pill neu messen
+  useEffect(() => {
+    measurePill(activeView);
+  }, [activeView, measurePill]);
+
+  // Tab-Wechsel mit Animation
+  const switchView = (view) => {
+    if (view === activeView) return;
+    setActiveView(view);
+  };
   
   const [resources, setResources] = useState([]);
   const [nodes, setNodes] = useState([]); // NEU: Node-Informationen
@@ -313,96 +359,92 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
 
   return (
     <div>
-      {/* Header - ÜBER den Stats Cards */}
-      <div className="flex items-center justify-between mb-6">
+      {/* Glass Control Bar — Segment Tabs + Cluster Badge + Controls */}
+      <div className="flex items-center justify-between mb-6 gap-4">
+        {/* Left: Glass Segment Control + Cluster Badge */}
         <div className="flex items-center gap-3">
-          <MonitorPlay size={40} weight="duotone" style={{ color: textColor }} />
-          <h2 
-            className="text-3xl font-bold transition-colors duration-300"
-            style={{ 
-              color: textColor,
-              textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
-            }}
-          >
-            Proxmox Monitoring{proxmoxName ? ` - ${proxmoxName}` : ''}
-          </h2>
+          {/* Segment Control */}
+          <div ref={segmentRefCallback} className="relative flex p-1 rounded-xl bg-white/40 dark:bg-white/[0.06] backdrop-blur-md border border-gray-300/40 dark:border-white/10 shadow-lg">
+            {/* Sliding Pill Indicator — misst echte Button-Breiten */}
+            {pillStyle && (
+              <div
+                className="absolute top-1 bottom-1 rounded-lg bg-white/80 dark:bg-white/15 shadow-md transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                style={{
+                  left: pillStyle.left,
+                  width: pillStyle.width,
+                }}
+              />
+            )}
+            
+            <button
+              data-view="resources"
+              onClick={() => switchView('resources')}
+              className={`relative z-10 flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors duration-200 ${
+                activeView === 'resources'
+                  ? 'text-gray-900 dark:text-white'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+              }`}
+            >
+              <Desktop size={18} weight={activeView === 'resources' ? 'fill' : 'regular'} />
+              <span>VM/LXC</span>
+            </button>
+
+            <button
+              data-view="status"
+              onClick={() => switchView('status')}
+              className={`relative z-10 flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors duration-200 ${
+                activeView === 'status'
+                  ? 'text-gray-900 dark:text-white'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+              }`}
+            >
+              <ChartBar size={18} weight={activeView === 'status' ? 'fill' : 'regular'} />
+              <span>{t('proxmox.status_overview')}</span>
+            </button>
+          </div>
+
+          {/* Cluster Badge */}
+          {proxmoxName && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/30 dark:bg-white/[0.04] backdrop-blur-md border border-gray-300/30 dark:border-white/[0.08]">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+                {proxmoxName}
+              </span>
+            </div>
+          )}
         </div>
-        
-        <div className="flex items-center gap-3">
-          {/* Auto-Refresh Toggle (nur bei VM/LXC View) */}
-          {activeView === 'resources' && (
-            <label className="flex items-center gap-2 cursor-pointer">
+
+        {/* Right: Controls Bar — wraps per-view controls in a glass bar */}
+        {activeView === 'resources' && (
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/30 dark:bg-white/[0.04] backdrop-blur-md border border-gray-300/30 dark:border-white/[0.08] shadow-lg">
+            <label className="glass-btn flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/40 dark:hover:bg-white/10">
               <input
                 type="checkbox"
                 checked={autoRefresh}
                 onChange={(e) => setAutoRefresh(e.target.checked)}
-                className="w-4 h-4"
+                className="w-3.5 h-3.5 rounded border-gray-400 dark:border-white/30 text-blue-500 focus:ring-blue-500/30"
               />
-              <span className="text-sm text-gray-600 dark:text-gray-400" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+              <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
                 {t('proxmox.auto_refresh', { seconds: 30 })}
               </span>
             </label>
-          )}
-          
-          {/* Manual Refresh Button (nur bei VM/LXC View) */}
-          {activeView === 'resources' && (
+            
+            <div className="w-px h-5 bg-gray-300/50 dark:bg-white/10" />
+            
             <button
               onClick={() => fetchProxmoxData(activeDashboard)}
-              className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-md p-2 rounded-lg shadow hover:shadow-lg transition-all hover:scale-105"
+              className="glass-btn p-2 rounded-lg hover:bg-white/40 dark:hover:bg-white/10"
               title={t('common.refresh')}
             >
-              <ArrowsClockwise size={20} className="text-gray-700 dark:text-gray-300" />
+              <ArrowsClockwise size={18} weight="bold" className="text-gray-700 dark:text-gray-300" />
             </button>
-          )}
-          
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Sub-Navigation Tabs */}
-      <div className="mb-6">
-        <div className="flex gap-2 border-b border-gray-300/50 dark:border-white/10">
-          <button
-            onClick={() => setActiveView('resources')}
-            className={`
-              px-6 py-3 font-semibold transition-all relative
-              ${activeView === 'resources' 
-                ? 'text-blue-600 dark:text-blue-400' 
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-              }
-            `}
-          >
-            <div className="flex items-center gap-2">
-              <Desktop size={20} weight={activeView === 'resources' ? 'fill' : 'regular'} />
-              <span>VM/LXC</span>
-            </div>
-            {activeView === 'resources' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"></div>
-            )}
-          </button>
+      {/* Content mit Crossfade-Animation */}
 
-          <button
-            onClick={() => setActiveView('status')}
-            className={`
-              px-6 py-3 font-semibold transition-all relative
-              ${activeView === 'status' 
-                ? 'text-blue-600 dark:text-blue-400' 
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-              }
-            `}
-          >
-            <div className="flex items-center gap-2">
-              <ChartBar size={20} weight={activeView === 'status' ? 'fill' : 'regular'} />
-              <span>{t('proxmox.status_overview')}</span>
-            </div>
-            {activeView === 'status' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"></div>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Content basierend auf aktiver View */}
-      {/* Status Dashboard - bleibt gemounted um Ladezeiten beim Tab-Wechsel zu vermeiden */}
+      {/* Status Dashboard - bleibt IMMER gemounted (display:none/block) */}
       <div style={{ display: activeView === 'status' ? 'block' : 'none' }}>
           {/* Hinweis wenn Suche aktiv aber in Status-View */}
           {searchTerm && activeView === 'status' && (
@@ -424,7 +466,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
 
       {/* VM/LXC View */}
       <div style={{ display: activeView !== 'status' ? 'block' : 'none' }}>
-          {/* System Stats Cards - NACH der Überschrift */}
+          {/* System Stats Cards */}
           <ProxmoxStatsCards resources={resources} nodes={nodes} />
 
       {/* Filter & Sort Bar */}
@@ -524,15 +566,20 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
-          {filteredResources.map((resource) => (
-            <ProxmoxCard
+          {filteredResources.map((resource, index) => (
+            <div 
               key={resource.id}
-              resource={resource}
-              onStart={handleStart}
-              onStop={handleStop}
-              onReboot={handleReboot}
-              isAdmin={isLoggedIn}
-            />
+              className="animate-fade-up"
+              style={{ animationDelay: `${Math.min(index * 0.04, 0.4)}s` }}
+            >
+              <ProxmoxCard
+                resource={resource}
+                onStart={handleStart}
+                onStop={handleStop}
+                onReboot={handleReboot}
+                isAdmin={isLoggedIn}
+              />
+            </div>
           ))}
         </div>
       )}
