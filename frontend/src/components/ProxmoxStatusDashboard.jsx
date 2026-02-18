@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MonitorPlay, Desktop, HardDrives, ArrowsClockwise, WarningCircle, FloppyDisk, Eye } from 'phosphor-react';
+import { MonitorPlay, Desktop, HardDrives, ArrowsClockwise, ArrowCounterClockwise, WarningCircle, FloppyDisk, Eye } from 'phosphor-react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -16,7 +16,7 @@ import StorageByNodeCard from './stats/StorageByNodeCard';
 import StorageByTypeCard from './stats/StorageByTypeCard';
 import CephHealthCard from './stats/CephHealthCard';
 import CephOSDCard from './stats/CephOSDCard';
-import CardVisibilityPanel, { CARD_DEFINITIONS, loadVisibleCards, saveVisibleCards, getDefaultVisibleCards } from './stats/CardVisibilityPanel';
+import CardVisibilityPanel, { CARD_DEFINITIONS, loadVisibleCards, saveVisibleCardsLocal, getDefaultVisibleCards } from './stats/CardVisibilityPanel';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -41,6 +41,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
   const [saveStatus, setSaveStatus] = useState({ type: '', message: '' });
   const layoutInitialized = useRef(false);
   const currentBreakpoint = useRef('lg');
+  const savedLayoutRef = useRef(null); // Baseline zum Vergleich ob User wirklich was geändert hat
   const cephAutoDetected = useRef(false);
 
   // Card Visibility State — null = noch nicht initialisiert (Auto-Detect)
@@ -154,6 +155,44 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
     setRefreshing(false);
   };
 
+  // Save visible cards to backend + localStorage cache
+  const saveVisibleCards = async (cardIds) => {
+    saveVisibleCardsLocal(cardIds); // sofortiger lokaler Cache
+    try {
+      await authenticatedFetch(
+        `${BACKEND_URL}/api/dashboards/${activeDashboard}/proxmox-visible-cards`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cardIds)
+        }
+      );
+    } catch (err) {
+      console.error('Error saving visible cards:', err);
+    }
+  };
+
+  // Load visible cards from backend
+  const loadVisibleCardsFromBackend = async () => {
+    try {
+      const res = await authenticatedFetch(
+        `${BACKEND_URL}/api/dashboards/${activeDashboard}/proxmox-visible-cards`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.visible_cards && Array.isArray(data.visible_cards)) {
+          setVisibleCards(data.visible_cards);
+          saveVisibleCardsLocal(data.visible_cards);
+          hasUserConfigured.current = true;
+          return true; // Loaded from backend
+        }
+      }
+    } catch (err) {
+      console.error('Error loading visible cards:', err);
+    }
+    return false; // Not found in backend
+  };
+
   // Statistiken laden
   const fetchStats = async () => {
     try {
@@ -231,22 +270,39 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
           
           // Add missing cards at the bottom
           const mergedLayout = [...updatedLayout, ...missingCards];
+          savedLayoutRef.current = mergedLayout.map(item => ({ ...item }));
           setLayout(mergedLayout);
         }
       }
+      // If no saved layout on backend, use current default as baseline
+      if (!savedLayoutRef.current) {
+        savedLayoutRef.current = getDefaultLayout().map(item => ({ ...item }));
+      }
     } catch (err) {
       console.error('Error loading layout:', err);
+      if (!savedLayoutRef.current) {
+        savedLayoutRef.current = getDefaultLayout().map(item => ({ ...item }));
+      }
     }
   };
+
+  const prevDashboard = useRef(null);
 
   // Initial load: Stats + Layout
   useEffect(() => {
     if (isLoggedIn && activeDashboard) {
-      setLoading(true);
-      setStats(null);
+      const dashboardChanged = prevDashboard.current !== activeDashboard;
+      prevDashboard.current = activeDashboard;
+      
+      // Nur Loading-Spinner zeigen wenn Dashboard wirklich wechselt oder erstmals lädt
+      if (dashboardChanged || !stats) {
+        setLoading(true);
+        setStats(null);
+      }
       layoutInitialized.current = false;
       fetchStats();
       loadLayout();
+      loadVisibleCardsFromBackend();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeDashboard, isLoggedIn]);
@@ -267,6 +323,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       const data = await res.json();
       console.log('Save response data:', data);
       if (res.ok) {
+        savedLayoutRef.current = layout.map(item => ({ ...item }));
         setLayoutModified(false);
         setSaveStatus({ type: 'success', message: t('statusDashboard.layout_saved') });
         setTimeout(() => setSaveStatus({ type: '', message: '' }), 3000);
@@ -292,6 +349,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       );
       if (res.ok) {
         const newLayout = getDefaultLayout();
+        savedLayoutRef.current = newLayout.map(item => ({ ...item }));
         setLayout(newLayout);
         setLayoutModified(false);
         setSaveStatus({ type: 'success', message: t('statusDashboard.layout_reset') });
@@ -308,6 +366,17 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
     }
   };
 
+  // Check if layout actually differs from saved baseline (position/size changes by user drag/resize)
+  const hasLayoutChanged = (currentLayout) => {
+    if (!savedLayoutRef.current) return false;
+    const baseMap = new Map(savedLayoutRef.current.map(item => [item.i, item]));
+    return currentLayout.some(item => {
+      const base = baseMap.get(item.i);
+      if (!base) return false; // new cards don't count as "modified"
+      return item.x !== base.x || item.y !== base.y || item.w !== base.w || item.h !== base.h;
+    });
+  };
+
   // Handle layout change (Drag or Resize)
   const handleLayoutChange = (newLayout) => {
     // Skip initial mount calls from react-grid-layout
@@ -321,9 +390,11 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       // (react-grid-layout only reports items currently rendered)
       setLayout(prev => {
         const updatedMap = new Map(newLayout.map(item => [item.i, item]));
-        return prev.map(item => updatedMap.get(item.i) || item);
+        const merged = prev.map(item => updatedMap.get(item.i) || item);
+        // Only show Save button if positions actually differ from saved layout
+        setLayoutModified(hasLayoutChanged(merged));
+        return merged;
       });
-      setLayoutModified(true);
     }
   };
 
@@ -580,7 +651,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
             className="flex items-center gap-2 px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors"
             title={t('statusDashboard.reset_layout')}
           >
-            <ArrowsClockwise size={18} weight="bold" />
+            <ArrowCounterClockwise size={18} weight="bold" />
             {t('statusDashboard.reset_layout')}
           </button>
           

@@ -37,7 +37,7 @@ const CATEGORIES = [
 const STORAGE_KEY = 'proxmox_visible_cards';
 
 /**
- * Lade sichtbare Cards aus localStorage.
+ * Lade sichtbare Cards aus localStorage (Fallback/Cache).
  * null = noch nie konfiguriert (Auto-Detect soll greifen)
  */
 export function loadVisibleCards() {
@@ -51,9 +51,9 @@ export function loadVisibleCards() {
 }
 
 /**
- * Speichere sichtbare Cards in localStorage
+ * Speichere sichtbare Cards in localStorage (als Cache)
  */
-export function saveVisibleCards(cardIds) {
+export function saveVisibleCardsLocal(cardIds) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cardIds));
 }
 

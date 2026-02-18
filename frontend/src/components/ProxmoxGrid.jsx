@@ -402,10 +402,10 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
       </div>
 
       {/* Content basierend auf aktiver View */}
-      {activeView === 'status' ? (
-        <>
+      {/* Status Dashboard - bleibt gemounted um Ladezeiten beim Tab-Wechsel zu vermeiden */}
+      <div style={{ display: activeView === 'status' ? 'block' : 'none' }}>
           {/* Hinweis wenn Suche aktiv aber in Status-View */}
-          {searchTerm && (
+          {searchTerm && activeView === 'status' && (
             <div className="mb-4 bg-yellow-500/20 dark:bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
               <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
@@ -420,9 +420,10 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
             isLoggedIn={isLoggedIn}
             textColor={textColor}
           />
-        </>
-      ) : (
-        <>
+      </div>
+
+      {/* VM/LXC View */}
+      <div style={{ display: activeView !== 'status' ? 'block' : 'none' }}>
           {/* System Stats Cards - NACH der Überschrift */}
           <ProxmoxStatsCards resources={resources} nodes={nodes} />
 
@@ -535,8 +536,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
           ))}
         </div>
       )}
-        </>
-      )}
+      </div>
     </div>
   );
 }
