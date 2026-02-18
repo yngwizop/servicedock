@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MonitorPlay, Desktop, HardDrives, ArrowsClockwise, WarningCircle, FloppyDisk } from 'phosphor-react';
+import { MonitorPlay, Desktop, HardDrives, ArrowsClockwise, WarningCircle, FloppyDisk, Eye } from 'phosphor-react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -16,6 +16,7 @@ import StorageByNodeCard from './stats/StorageByNodeCard';
 import StorageByTypeCard from './stats/StorageByTypeCard';
 import CephHealthCard from './stats/CephHealthCard';
 import CephOSDCard from './stats/CephOSDCard';
+import CardVisibilityPanel, { CARD_DEFINITIONS, loadVisibleCards, saveVisibleCards, getDefaultVisibleCards } from './stats/CardVisibilityPanel';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -35,10 +36,20 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [layoutModified, setLayoutModified] = useState(false);
   const [saveStatus, setSaveStatus] = useState({ type: '', message: '' });
   const layoutInitialized = useRef(false);
   const currentBreakpoint = useRef('lg');
+  const cephAutoDetected = useRef(false);
+
+  // Card Visibility State — null = noch nicht initialisiert (Auto-Detect)
+  const [visibleCards, setVisibleCards] = useState(() => {
+    const saved = loadVisibleCards();
+    // null = noch nie konfiguriert, wird nach erstem fetchStats gesetzt
+    return saved || CARD_DEFINITIONS.map(c => c.id);
+  });
+  const hasUserConfigured = useRef(loadVisibleCards() !== null);
 
   // Dynamische Card-Höhen basierend auf API-Daten berechnen
   // rowHeight=75px, margin=20px → Pixel = h*75 + (h-1)*20 = 95h - 20
@@ -136,6 +147,13 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
   
   const [layout, setLayout] = useState(getDefaultLayout());
 
+  // Manual refresh with visual feedback
+  const handleManualRefresh = async () => {
+    setRefreshing(true);
+    await fetchStats();
+    setRefreshing(false);
+  };
+
   // Statistiken laden
   const fetchStats = async () => {
     try {
@@ -153,6 +171,16 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       
       const data = await res.json();
       setStats(data);
+      
+      // Auto-Detect Ceph: Beim ersten Laden Ceph-Cards automatisch ausblenden wenn nicht verfügbar
+      if (!cephAutoDetected.current && !hasUserConfigured.current) {
+        cephAutoDetected.current = true;
+        const cephAvailable = data.ceph?.available === true;
+        const defaultCards = getDefaultVisibleCards(cephAvailable);
+        setVisibleCards(defaultCards);
+        saveVisibleCards(defaultCards);
+        hasUserConfigured.current = true;
+      }
       
       // Layout-Höhen dynamisch an Daten anpassen
       setLayout(currentLayout => applyDynamicHeights(currentLayout, data));
@@ -289,7 +317,12 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
     }
     // Only track changes for the lg breakpoint
     if (currentBreakpoint.current === 'lg') {
-      setLayout(newLayout);
+      // Merge visible layout changes back into the full layout
+      // (react-grid-layout only reports items currently rendered)
+      setLayout(prev => {
+        const updatedMap = new Map(newLayout.map(item => [item.i, item]));
+        return prev.map(item => updatedMap.get(item.i) || item);
+      });
       setLayoutModified(true);
     }
   };
@@ -331,6 +364,35 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRefresh, activeDashboard, isLoggedIn]);
+
+  // Card Visibility Handlers
+  const handleToggleCard = (cardId) => {
+    setVisibleCards(prev => {
+      const newVisible = prev.includes(cardId)
+        ? prev.filter(id => id !== cardId)
+        : [...prev, cardId];
+      saveVisibleCards(newVisible);
+      hasUserConfigured.current = true;
+      return newVisible;
+    });
+  };
+
+  const handleShowAll = () => {
+    const allIds = CARD_DEFINITIONS.map(c => c.id);
+    setVisibleCards(allIds);
+    saveVisibleCards(allIds);
+    hasUserConfigured.current = true;
+  };
+
+  const handleHideAll = () => {
+    setVisibleCards([]);
+    saveVisibleCards([]);
+    hasUserConfigured.current = true;
+  };
+
+  // Gefilterte Layout-Items (nur sichtbare Cards)
+  const visibleSet = new Set(visibleCards);
+  const filteredLayout = layout.filter(item => visibleSet.has(item.i));
 
   // Render Cards basierend auf Layout
   const renderCard = (cardType) => {
@@ -502,7 +564,16 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       {/* Header mit Actions */}
       <div className="flex items-center justify-end mb-6">
         {/* Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {/* Card Visibility Toggle */}
+          <CardVisibilityPanel
+            visibleCards={visibleCards}
+            onToggle={handleToggleCard}
+            onShowAll={handleShowAll}
+            onHideAll={handleHideAll}
+            cephAvailable={stats?.ceph?.available === true}
+          />
+          
           {/* Reset Layout Button */}
           <button
             onClick={resetLayout}
@@ -538,11 +609,12 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
           
           {/* Refresh Button */}
           <button
-            onClick={fetchStats}
-            className="p-2 rounded-lg bg-white/50 dark:bg-white/10 hover:bg-white/70 dark:hover:bg-white/20 backdrop-blur-md border border-gray-300/50 dark:border-white/10 transition-all shadow-lg hover:shadow-xl"
+            onClick={handleManualRefresh}
+            disabled={refreshing}
+            className="p-2 rounded-lg bg-white/50 dark:bg-white/10 hover:bg-white/70 dark:hover:bg-white/20 backdrop-blur-md border border-gray-300/50 dark:border-white/10 transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
             title={t('common.refresh')}
           >
-            <ArrowsClockwise size={20} weight="bold" className="text-gray-700 dark:text-gray-200" />
+            <ArrowsClockwise size={20} weight="bold" className={`text-gray-700 dark:text-gray-200 transition-transform ${refreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
@@ -559,27 +631,34 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       )}
 
       {/* React Grid Layout */}
-      <ResponsiveGridLayout
-        className="layout"
-        layouts={{ lg: layout }}
-        breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 0 }}
-        cols={{ lg: 4, md: 2, sm: 1, xs: 1 }}
-        rowHeight={75}
-        margin={[20, 20]}
-        containerPadding={[0, 0]}
-        isDraggable={true}
-        isResizable={true}
-        onLayoutChange={handleLayoutChange}
-        onBreakpointChange={handleBreakpointChange}
-        draggableHandle=".drag-handle"
-        compactType="vertical"
-      >
-        {layout.map(item => (
-          <div key={item.i}>
-            {renderCard(item.i)}
-          </div>
-        ))}
-      </ResponsiveGridLayout>
+      {filteredLayout.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-gray-400 dark:text-gray-500">
+          <Eye size={48} weight="duotone" className="mb-3 opacity-50" />
+          <p className="text-lg font-medium">{t('statusDashboard.no_cards_visible')}</p>
+        </div>
+      ) : (
+        <ResponsiveGridLayout
+          className="layout"
+          layouts={{ lg: filteredLayout }}
+          breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 0 }}
+          cols={{ lg: 4, md: 2, sm: 1, xs: 1 }}
+          rowHeight={75}
+          margin={[20, 20]}
+          containerPadding={[0, 0]}
+          isDraggable={true}
+          isResizable={true}
+          onLayoutChange={handleLayoutChange}
+          onBreakpointChange={handleBreakpointChange}
+          draggableHandle=".drag-handle"
+          compactType="vertical"
+        >
+          {filteredLayout.map(item => (
+            <div key={item.i}>
+              {renderCard(item.i)}
+            </div>
+          ))}
+        </ResponsiveGridLayout>
+      )}
     </>
   );
 }
