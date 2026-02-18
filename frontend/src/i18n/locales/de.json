@@ -496,6 +496,8 @@
     "mode_replace": "⚠️ Ersetzen (ACHTUNG!)",
     "mode_replace_desc": "Löscht ALLE bestehenden Dashboards und importiert die neuen. Nicht rückgängig machbar!",
     "select_file": "Config-Datei auswählen",
+    "choose_file": "Datei auswählen",
+    "no_file_selected": "Keine ausgewählt",
     "invalid_file": "Ungültige Config-Datei",
     "file_read_error": "Fehler beim Lesen der Datei: ",
     "file_valid": "✅ Config-Datei gültig",

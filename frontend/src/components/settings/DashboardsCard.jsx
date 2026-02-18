@@ -224,7 +224,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
       {/* Dashboard Liste */}
       <div>
         <h4 className="text-base font-semibold text-gray-800 dark:text-white mb-3">
-          📋 {t('dashboards.my_dashboards')}
+          {t('dashboards.my_dashboards')}
         </h4>
         
         {dashboards && dashboards.length > 0 ? (

@@ -494,6 +494,8 @@
     "mode_replace": "⚠️ Replace (CAUTION!)",
     "mode_replace_desc": "Deletes ALL existing dashboards and imports the new ones. Cannot be undone!",
     "select_file": "Select Config File",
+    "choose_file": "Choose File",
+    "no_file_selected": "No file selected",
     "invalid_file": "Invalid config file",
     "file_read_error": "Error reading file: ",
     "file_valid": "✅ Config file valid",

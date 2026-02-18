@@ -125,10 +125,22 @@ function ConfigAddon({
             <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('configAddon.select_file')}
             </label>
-            <div className="relative">
+            <div className="relative flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => document.getElementById('config-file-input').click()}
+                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap"
+              >
+                {t('configAddon.choose_file')}
+              </button>
+              <span className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                {importFile ? importFile.name : t('configAddon.no_file_selected')}
+              </span>
               <input
+                id="config-file-input"
                 type="file"
                 accept=".json,application/json"
+                className="hidden"
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
@@ -159,7 +171,6 @@ function ConfigAddon({
                     setImportError(t('configAddon.file_read_error') + err.message);
                   }
                 }}
-                className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white/70 dark:bg-white/5 text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300 cursor-pointer"
               />
             </div>
           </div>

@@ -133,7 +133,7 @@ function AddOnsCard() {
         <>
           <div>
             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2 flex items-center gap-2">
-              🧩 {t('addons.title')}
+              {t('addons.title')}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
               {t('addons.description')}
