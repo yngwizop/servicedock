@@ -255,7 +255,7 @@ function SettingsPage({
   const cardClass = "bg-white/40 dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-gray-300/50 dark:border-white/10 shadow-xl p-6";
 
   return (
-    <div>
+    <div className="max-w-[1400px] mx-auto">
       {/* Mobile Tab-Navigation */}
       <div className="lg:hidden flex gap-1 bg-white/70 dark:bg-white/10 backdrop-blur-xl rounded-2xl p-1.5 border border-gray-400/60 dark:border-white/20 shadow-lg mb-6">
         {sections.map((section) => (
