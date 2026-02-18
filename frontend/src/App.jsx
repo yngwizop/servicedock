@@ -365,7 +365,7 @@ function App() {
       </div>
 
       {/* FAB */}
-      {auth.isLoggedIn && activeTab === "services" && (
+      {auth.isLoggedIn && activeTab === "services" && editMode && (
         <AddItemFAB
           activeDashboard={activeDashboard}
           onItemAdded={fetchData}

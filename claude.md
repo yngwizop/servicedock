@@ -15,7 +15,7 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 - **Appearance-System** — Hintergrundbilder, Farben, Grid-Spaltenanzahl, Widget-Toggles (Wetter/Uhr/Spotify)
 - **Wetter & Uhr** — Open-Meteo API, konfigurierbares 12h/24h Format
 - **Config Import/Export** — JSON-Backup/Restore mit Validierung
-- **Edit Mode** — Toggle in Sidebar, kontrolliert Sichtbarkeit von Edit/Star/Drag auf Cards
+- **Edit Mode** — Toggle in Sidebar, kontrolliert Sichtbarkeit von Edit/Star/Drag auf Cards + AddItem-FAB
 - **Globale Suche** — Ctrl+F Overlay, filtert Services/Shortcuts/Proxmox je nach aktivem Tab
 - **Internationalisierung (i18n)** — Deutsch/Englisch mit react-i18next, Browser-Erkennung, Sprachwahl in Settings
 
@@ -151,9 +151,9 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 │   ├── tailwind.config.js          # Tailwind Config
 │   ├── nginx-frontend.conf         # SPA-Routing für Frontend-nginx
 │   └── src/
-│       ├── App.jsx                 # Root (~378 Zeilen) — Hooks, Routing, Layout
+│       ├── App.jsx                 # Root (~380 Zeilen) — Hooks, Routing, Layout
 │       ├── main.jsx                # React DOM Entry
-│       ├── index.css               # Tailwind Imports + Custom CSS
+│       ├── index.css               # Tailwind Imports + Custom CSS + Animations
 │       ├── hooks/
 │       │   ├── useAuth.js          # Login/Logout State + Client Rate-Limit
 │       │   ├── useDashboards.js    # Dashboard-Liste + Active Selection
@@ -168,9 +168,9 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 │       │   ├── ServiceCard.jsx     # Einzelne Service-Karte
 │       │   ├── ShortcutGrid.jsx    # Draggable Shortcut Links
 │       │   ├── ShortcutLink.jsx    # Einzelner Shortcut
-│       │   ├── ProxmoxGrid.jsx     # Proxmox-Hauptview (Filter, Tabs)
+│       │   ├── ProxmoxGrid.jsx     # Proxmox-Hauptview (Glass Segment Control, Tabs)
 │       │   ├── ProxmoxCard.jsx     # VM/CT Karte (Glasmorphismus + Akzent)
-│       │   ├── ProxmoxStatsCards.jsx  # Übersichts-Statistikkarten
+│       │   ├── ProxmoxStatsCards.jsx  # Statistikkarten (Animated Counter + Slide-in)
 │       │   ├── ProxmoxStatusDashboard.jsx  # react-grid-layout Dashboard
 │       │   ├── SecurityDashboard.jsx   # Audit-Logs + Analytics
 │       │   ├── SpotifyCard.jsx     # Now-Playing mit Controls
@@ -179,7 +179,7 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 │       │   ├── LoginModal.jsx      # Login-Dialog
 │       │   ├── EditModal.jsx       # Service/Shortcut Edit-Dialog
 │       │   ├── SettingsPage.jsx    # Settings-Container (Tabs)
-│       │   ├── AddItemFAB.jsx      # Floating Action Button
+│       │   ├── AddItemFAB.jsx      # Floating Action Button (nur im Edit Mode)
 │       │   ├── CustomSelect.jsx    # Portal-basiertes Dropdown
 │       │   ├── ErrorBoundary.jsx   # React Error Boundary
 │       │   ├── settings/           # Settings Sub-Komponenten
@@ -268,6 +268,12 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 - **Dark/Light Mode:** Via `document.documentElement.classList` + Body-Background-Gradients in `useAppearance.js`
 - **Icons:** phosphor-react (Duotone weight), teilweise Emoji für Service-Icons
 - **Proxmox VM Cards:** `border-left: 3px solid` mit Status-Farbe (grün/rot) via inline style
+- **Animationen (index.css):**
+  - `fadeUpIn` — Staggered Card-Entrance (fade + translateY)
+  - `slideInLeft` — Stats-Cards fliegen von links ein (translateX(-60px) → 0, 150ms Stagger)
+  - `segmentGlow` — Active Segment Pulse
+  - `.glass-btn` — Hover-Mikroanimation (translateY(-1px) + Shadow)
+  - `useAnimatedCounter` Hook — Zählt Werte hoch (2.2s, ease-out quart, gestaffelte Delays)
 
 ---
 
@@ -275,11 +281,14 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 
 Das Status-Dashboard (`ProxmoxStatusDashboard.jsx`) zeigt aggregierte Cluster-Statistiken in einem **draggable & resizable Widget-Grid** (react-grid-layout) — erreichbar über den "Status-Übersicht" Sub-Tab in Proxmox.
 
+- **Glass Segment Control** (`ProxmoxGrid.jsx`) — Glasmorphe Tab-Leiste mit dynamisch gemessener Sliding-Pill (ref callback + `data-view` Attribute + `getBoundingClientRect()`). Cluster-Badge mit Live-Green-Dot.
 - **12 Widget-Cards:** Node-Status, VM/LXC-Status, Task-Summary, Top CPU/Memory/Disk, Storage (Total/byNode/byType), Ceph Health/OSD
 - **Layout:** 4-Spalten Grid, Drag & Drop + Resize, pro Dashboard persistiert in `proxmox_dashboard_layouts`
-- **Card Visibility:** Gear-Dropdown im Header zum Ein-/Ausblenden einzelner Cards. Ceph-Cards werden bei Nicht-Ceph-Setups automatisch ausgeblendet. Persistiert in DB (`proxmox_dashboard_layouts.visible_cards` JSONB) + localStorage-Cache
+- **Card Visibility:** Gear-Dropdown (z-50, Toolbar hat `relative z-50`) zum Ein-/Ausblenden einzelner Cards. Ceph-Cards werden bei Nicht-Ceph-Setups automatisch ausgeblendet. Persistiert in DB (`proxmox_dashboard_layouts.visible_cards` JSONB) + localStorage-Cache
 - **Dynamische Höhen:** Storage/Task-Cards passen sich automatisch an Cluster-Größe an (`getDynamicCardHeight()`)
-- **Tab-Persistenz:** Status-Dashboard bleibt gemounted beim Tab-Wechsel (VM/LXC ↔ Status) — kein Neuladen beim Zurückwechseln
+- **Tab-Persistenz:** Beide Views (VM/LXC + Status) bleiben permanent gemounted via `display:none/block` — kein Neuladen beim Tab-Wechsel
+- **Unified Glass Toolbars** — Alle Buttons in Glass-Bar-Containern (`bg-white/30 backdrop-blur-md border rounded-xl`) mit `.glass-btn` Hover-Effekt und vertikalen Dividers
+- **Stats-Cards Animationen** (`ProxmoxStatsCards.jsx`) — `useAnimatedCounter` Hook (2.2s ease-out quart, gestaffelte Delays 100-700ms), `StatCard` als `React.memo` exterrn definiert (verhindert Remount-Flicker), Slide-in von links (`.animate-slide-in-left`, 150ms Stagger)
 - **Refresh:** Manueller Refresh-Button mit Spin-Animation, Auto-Refresh (konfigurierbar, Default 30s)
 - **Save-Detection:** "Save Layout"-Button erscheint nur bei echten Drag/Resize-Änderungen (Baseline-Vergleich via `savedLayoutRef`)
 - **Settings:** `localStorage` Keys: `proxmox_top_items` (Default: 10), `proxmox_task_hours` (48h), `proxmox_refresh_interval` (30s)
@@ -317,7 +326,7 @@ Das Status-Dashboard (`ProxmoxStatusDashboard.jsx`) zeigt aggregierte Cluster-St
 8. **Keine DB-Migrationen** — Schema-Änderungen erfordern manuelles SQL in `init.sql` + `docker compose down -v` oder manuelle ALTER TABLEs.
 
 ### Komplexe/Fragile Bereiche
-- **`ProxmoxGrid.jsx`** (~540 Zeilen) — Größte Einzelkomponente. Vereint Tabs, Filter, Sortierung, Auto-Refresh, VM-Actions, Cluster/Standalone-Detection. Refactoring-Kandidat.
+- **`ProxmoxGrid.jsx`** (~591 Zeilen) — Glass Segment Control mit Sliding Pill, Filter, Sortierung, Auto-Refresh, VM-Actions, Cluster/Standalone-Detection, display:none/block Tab-Persistenz.
 - **`ProxmoxStatusDashboard.jsx`** — react-grid-layout mit persistentem Layout. Viele Stats-Widgets, komplexer Datenfluss.
 - **`routers/proxmox.py`** — Dual-Modus (Cluster vs Standalone) mit verschiedenen API-Pfaden. Fehlerbehandlung für SSL/Auth/Token-Format komplex.
 - **`routers/spotify.py`** — OAuth2-Flow mit Thread-sicherem Token-Refresh + Double-Checked-Locking. CSRF-State-Token in Memory.
@@ -328,6 +337,6 @@ Das Status-Dashboard (`ProxmoxStatusDashboard.jsx`) zeigt aggregierte Cluster-St
 - **Cookie-basierte Auth** statt localStorage (httpOnly, Secure, SameSite=Strict) — besserer XSS-Schutz
 - **Glasmorphismus-Design** — Durchgängig `backdrop-blur + semi-transparent backgrounds + text-shadow`
 - **Farbige Akzent-Ränder** bei Proxmox Cards (grün/rot per inline style, da Tailwind Border-Utilities von Dark-Mode überschrieben werden)
-- **Edit Mode Toggle** — Sidebar-Button statt permanent sichtbare Edit-Controls
+- **Edit Mode Toggle** — Sidebar-Button statt permanent sichtbare Edit-Controls. FAB (AddItemFAB) wird nur im Edit Mode gerendert (kein Scroll-basiertes Einblenden mehr)
 - **Keine SPA-Routing-Library** — Tab-basierte Navigation via `activeTab` State (services, monitoring, security, settings)
 - **i18n via react-i18next** — Browser-Sprache wird automatisch erkannt (`i18next-browser-languagedetector`), Fallback auf Deutsch. Sprachwahl in Settings > Language Tab, persistiert in `localStorage` (`servicedock_language`)

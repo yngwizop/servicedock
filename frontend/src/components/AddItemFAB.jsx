@@ -24,35 +24,10 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
   const [shortcutUrl, setShortcutUrl] = useState('');
   const [shortcutIcon, setShortcutIcon] = useState('');
 
+  // Slide-in Animation beim Mounten (Edit Mode wird aktiviert)
   useEffect(() => {
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-      // Show FAB when scrolled within 100px of the bottom
-      const nearBottom = scrollTop + clientHeight >= scrollHeight - 100;
-      setShowFAB(nearBottom);
-    };
-
-    // Check if page is too short to scroll (then always show FAB)
-    const checkIfPageShort = () => {
-      const { scrollHeight, clientHeight } = document.documentElement;
-      if (scrollHeight <= clientHeight + 100) {
-        setShowFAB(true);
-      } else {
-        // Page is scrollable – only show when scrolled to bottom
-        handleScroll();
-      }
-    };
-
-    // Delay initial check so the DOM has time to render content
-    const timerId = setTimeout(checkIfPageShort, 500);
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', checkIfPageShort);
-    return () => {
-      clearTimeout(timerId);
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', checkIfPageShort);
-    };
+    const timerId = setTimeout(() => setShowFAB(true), 50);
+    return () => clearTimeout(timerId);
   }, []);
 
   const handleServiceSubmit = async (e) => {

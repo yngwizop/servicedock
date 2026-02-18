@@ -5,7 +5,7 @@ import { Desktop, PlayCircle, StopCircle, Cpu, HardDrives } from 'phosphor-react
  * Animated Counter Hook — Zählt von 0 bis target hoch
  * Startet von 0 beim ersten Mount, danach von altem Wert zum neuen
  */
-function useAnimatedCounter(target, duration = 1200, delay = 0) {
+function useAnimatedCounter(target, duration = 2200, delay = 0) {
   const [value, setValue] = useState(0);
   const hasAnimated = useRef(false);
   const prevTarget = useRef(0);
@@ -89,11 +89,11 @@ function ProxmoxStatsCards({ resources, nodes }) {
   const nodeCount = nodes?.length || 0;
 
   // Animated Counters — gestaffelt, damit sie nacheinander starten
-  const animTotal = useAnimatedCounter(total, 1200, 100);
-  const animRunning = useAnimatedCounter(running, 1200, 200);
-  const animStopped = useAnimatedCounter(stopped, 1200, 300);
-  const animCpu = useAnimatedCounter(totalCpuCores, 1200, 400);
-  const animNodes = useAnimatedCounter(nodeCount, 1200, 500);
+  const animTotal = useAnimatedCounter(total, 2200, 100);
+  const animRunning = useAnimatedCounter(running, 2200, 250);
+  const animStopped = useAnimatedCounter(stopped, 2200, 400);
+  const animCpu = useAnimatedCounter(totalCpuCores, 2200, 550);
+  const animNodes = useAnimatedCounter(nodeCount, 2200, 700);
 
   const cards = [
     { title: 'Total', value: animTotal, icon: Desktop, accentColor: 'text-gray-800 dark:text-white', iconBg: 'bg-gray-200/60 dark:bg-white/10' },
@@ -106,7 +106,7 @@ function ProxmoxStatsCards({ resources, nodes }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
       {cards.map((card, i) => (
-        <div key={card.title} className="animate-fade-up" style={{ animationDelay: `${i * 0.07}s` }}>
+        <div key={card.title} className="animate-slide-in-left" style={{ animationDelay: `${i * 0.15}s` }}>
           <StatCard {...card} />
         </div>
       ))}
