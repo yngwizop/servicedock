@@ -235,26 +235,11 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 - **Token Rotation** — Refresh Tokens werden bei jedem Refresh erneuert
 
 ### Datenfluss
-```
-User Browser
-    │
-    ├──[HTTPS]──▶ nginx :443
-    │               ├──▶ frontend :80 (Static SPA)
-    │               └──▶ backend :8000 /api/*
-    │                       │
-    │                       ├── Auth: httpOnly Cookie (JWT)
-    │                       ├── verify_token() / require_role("admin")
-    │                       ├── Rate Limit Check (slowapi + custom)
-    │                       ├── Audit Log (alle Aktionen)
-    │                       ├── DB: psycopg2 ThreadedConnectionPool
-    │                       │     └──▶ PostgreSQL :5432 (SSL)
-    │                       ├── Proxmox: proxmoxer
-    │                       │     └──▶ Proxmox VE API :8006
-    │                       └── Spotify: requests
-    │                             └──▶ Spotify Web API
-    │
-    ◀── JSON Response + Set-Cookie
-```
+- **Auth:** httpOnly Cookie (JWT) → `verify_token()` / `require_role("admin")`
+- **DB:** psycopg2 ThreadedConnectionPool → PostgreSQL :5432 (SSL)
+- **Extern:** Proxmox VE API (proxmoxer), Spotify Web API (requests), Open-Meteo (fetch)
+- **Rate Limiting:** slowapi (request-level) + Custom IP-Tracker (login-level)
+- **Audit:** Sicherheitsrelevante Aktionen → `audit_log` Tabelle (sensible Daten redacted)
 
 ---
 
@@ -279,154 +264,27 @@ User Browser
 
 ### Styling
 - **Tailwind CSS** als primäres Styling-System (Utility Classes)
-- **Design-Sprache:** Glasmorphismus (Dark Mode)
-  - Cards: `bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl border border-gray-300/50 dark:border-white/[0.12] shadow-xl`
-  - Proxmox VM Cards: Zusätzlich `border-left: 3px solid` mit Status-Farbe (grün=running, rot=stopped) via inline style
-  - Stats Cards: `bg-white/70 dark:bg-gray-900/70 backdrop-blur-md` mit farbigen Icon-Akzenten
-  - Text-Schatten: Auf allen glasmorphen Cards via inline `textShadow` Styles
+- **Design-Sprache:** Glasmorphismus — `bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl border shadow-xl` + `textShadow`
 - **Dark/Light Mode:** Via `document.documentElement.classList` + Body-Background-Gradients in `useAppearance.js`
-- **Keine CSS-Module** — Tailwind + wenig Custom CSS (`index.css`, `grid-layout.css`)
 - **Icons:** phosphor-react (Duotone weight), teilweise Emoji für Service-Icons
+- **Proxmox VM Cards:** `border-left: 3px solid` mit Status-Farbe (grün/rot) via inline style
 
 ---
 
-## 5. Setup & Befehle
+## 5. Proxmox Status-Dashboard (Kurzübersicht)
 
-### Development
-```bash
-# 1. Repository klonen
-git clone <repo-url> /home/servicedock && cd /home/servicedock
+Das Status-Dashboard (`ProxmoxStatusDashboard.jsx`) zeigt aggregierte Cluster-Statistiken in einem **draggable & resizable Widget-Grid** (react-grid-layout) — erreichbar über den "Status-Übersicht" Sub-Tab in Proxmox.
 
-# 2. SSL-Zertifikate generieren
-cd db/ssl && openssl req -new -x509 -days 3650 -nodes -out server.crt -keyout server.key -subj "/CN=postgres" && chmod 600 server.key && cd ../..
-./generate-ssl.sh   # Nginx SSL
-
-# 3. Environment konfigurieren
-cp .env.template .env   # Werte anpassen!
-
-# 4. Stack starten
-docker compose up --build -d
-
-# 5. Frontend Rebuild (nach Änderungen)
-docker compose up --build -d frontend
-```
-
-### Wichtige Scripts (Frontend)
-| Script | Befehl | Zweck |
-|---|---|---|
-| `dev` | `vite` | Dev Server (:5173) |
-| `build` | `vite build` | Production Build |
-| `lint` | `eslint .` | Linting |
-| `preview` | `vite preview` | Preview Production Build |
-
-### Umgebungsvariablen (.env)
-| Variable | Pflicht | Beschreibung |
-|---|---|---|
-| `ADMIN_PASSWORD` | ✅ | Admin-Login Passwort (min. 8 Zeichen) |
-| `POSTGRES_USER` | ✅ | DB Username |
-| `POSTGRES_PASSWORD` | ✅ | DB Passwort |
-| `POSTGRES_DB` | ✅ | DB Name |
-| `DATABASE_URL` | ✅ | Vollständige PostgreSQL Connection URL (?sslmode=require) |
-| `ENCRYPTION_KEY` | ✅ | Fernet Key für Token-Verschlüsselung (⚠️ NIEMALS ändern!) |
-| `JWT_SECRET_KEY` | ✅ | JWT Signing Key (kann rotiert werden) |
-| `FRONTEND_URL` | ✅ (Prod) | CORS Origin URL |
-| `ENVIRONMENT` | ❌ | `development` oder `production` (Default: production) |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | ❌ | JWT Access Token Laufzeit (Default: 15) |
-| `REFRESH_TOKEN_EXPIRE_DAYS` | ❌ | JWT Refresh Token Laufzeit (Default: 7) |
-| `MAX_FAILED_LOGIN_ATTEMPTS` | ❌ | Login-Versuche vor Sperre (Default: 5) |
-| `LOGIN_LOCKOUT_MINUTES` | ❌ | Sperrdauer in Minuten (Default: 15) |
-| `TRUST_FORWARDED_HEADERS` | ❌ | X-Forwarded-For vertrauen (Default: false) |
-| `TRUSTED_PROXIES` | ❌ | Komma-separierte Proxy-IPs |
+- **12 Widget-Cards:** Node-Status, VM/LXC-Status, Task-Summary, Top CPU/Memory/Disk, Storage (Total/byNode/byType), Ceph Health/OSD
+- **Layout:** 4-Spalten Grid, Drag & Drop + Resize, pro Dashboard persistiert in `proxmox_dashboard_layouts`
+- **Dynamische Höhen:** Storage/Task-Cards passen sich automatisch an Cluster-Größe an (`getDynamicCardHeight()`)
+- **Settings:** `localStorage` Keys: `proxmox_top_items` (Default: 10), `proxmox_task_hours` (48h), `proxmox_refresh_interval` (30s)
+- **API:** `GET /api/proxmox/cluster-stats?dashboard_id=X&top_n=10&task_hours=48` — Cluster-Modus oder Standalone-Modus
+- **Layout-API:** `GET/PUT/DELETE /api/dashboards/{id}/proxmox-layout`
 
 ---
 
-## 6. Proxmox Status-Dashboard (Datacenter-Übersicht)
-
-### Überblick
-Das Status-Dashboard (`ProxmoxStatusDashboard.jsx`, ~532 Zeilen) ist eine zweite Ansicht im Proxmox-Tab (erreichbar via "Status-Übersicht" Sub-Tab). Es zeigt aggregierte Cluster-Statistiken in einem **draggable & resizable Widget-Grid** (react-grid-layout).
-
-### Architektur
-```
-ProxmoxGrid.jsx (Tab-Container)
-  └── activeView === 'status'
-        └── ProxmoxStatusDashboard.jsx
-              ├── ResponsiveGridLayout (4-Spalten, rowHeight=75px)
-              │   ├── StatCard.jsx (Base-Wrapper mit Drag-Handle)
-              │   │   ├── NodeStatusCard
-              │   │   ├── VMStatusCard (×2: VMs + LXCs)
-              │   │   ├── TaskSummaryCard
-              │   │   ├── TopUsageCard (×2: CPU + Memory)
-              │   │   ├── TopDiskUsageCard
-              │   │   ├── StorageTotalCard
-              │   │   ├── StorageByNodeCard
-              │   │   ├── StorageByTypeCard
-              │   │   ├── CephHealthCard
-              │   │   └── CephOSDCard
-              └── API: GET /api/proxmox/cluster-stats
-```
-
-### Widget-Karten (12 Stück)
-| Widget | Datei | Daten | Visualisierung |
-|---|---|---|---|
-| **Node Status** | `NodeStatusCard.jsx` | online/offline/total, Health-Label | Farbige Health-Badge, Check/X Icons |
-| **VM Status** | `VMStatusCard.jsx` | running/stopped/total, Activity-Label | Activity-Badge, Play/Stop Icons |
-| **LXC Status** | `VMStatusCard.jsx` | (gleiche Komponente, anderer Typ) | (gleich, mit HardDrives-Icon) |
-| **Task Summary** | `TaskSummaryCard.jsx` | failed/running/success pro Node | Per-Node-Zeilen, 3-Spalten (X/↻/✓), Total-Zeile |
-| **Top CPU** | `TopUsageCard.jsx` | Ranked Liste mit Name, %, Cores | Nummerierte Liste, Farbcodes (<60 grün, <80 orange, ≥80 rot) |
-| **Top Memory** | `TopUsageCard.jsx` | Ranked Liste mit Name, %, GB | (gleich wie CPU) |
-| **Top Disk** | `TopDiskUsageCard.jsx` | Ranked Liste mit Name, %, used/total | Nummerierte Liste, GB-Anzeige |
-| **Storage Total** | `StorageTotalCard.jsx` | used/total/available, % | **SVG Donut-Chart** (Farbring), 3-Spalten-Grid |
-| **Storage by Node** | `StorageByNodeCard.jsx` | Pro Node: used/total, Storage-Namen | Progress-Bars, blaue Storage-Tags |
-| **Storage by Type** | `StorageByTypeCard.jsx` | Pro Typ: used/total, %, Anzahl | Emoji-Icons (💾/📀/🌐/🔷), Progress-Bars |
-| **Ceph Health** | `CephHealthCard.jsx` | Status (OK/WARN/ERR), OSD-Übersicht | Großes Status-Icon, Farb-Badge, 2×2 OSD-Grid |
-| **Ceph OSD** | `CephOSDCard.jsx` | total/up/in/down/out, healthyPercent | Große Zahl, 2×2 Farb-Grid, Legende |
-
-### Layout-System
-- **Default:** 4-Spalten, 5 Zeilen (Status → Top-Usage → Disk+Storage → Storage-Detail → Ceph)
-- **Drag & Drop:** Via `draggableHandle=".drag-handle"` (DotsSixVertical-Icon in StatCard)
-- **Resize:** Breite immer resizable. Höhe je nach Card-Typ:
-  - **Dynamisch (API-gesteuert):** Storage per Node, Storage by Type, Task Summary — Höhe = f(Anzahl Nodes/Typen), `minH=maxH`, nicht manuell änderbar
-  - **Settings-gesteuert:** Top CPU/Memory/Disk — Höhe folgt `proxmox_top_items` Setting
-  - **Manuell resizable:** Total Storage (h=4–7), Ceph Health (h=4–7), Ceph OSD (h=4–7)
-  - **Fix:** Nodes, VMs, LXCs (h=3)
-- **Dynamische Höhen-Berechnung:** `getDynamicCardHeight()` in ProxmoxStatusDashboard — berechnet nach `fetchStats()` und setzt `minH=maxH=berechnet`
-  - Storage per Node: `ceil(1 + nodeCount * 1.4)` (3 Nodes → h=6)
-  - Storage by Type: `ceil(1 + typeCount * 0.85)` (5 Types → h=6)
-  - Tasks: `ceil(1.2 + nodeCount * 0.45)` (3 Nodes → h=3)
-- **Persistenz:** Layout wird pro Dashboard in `proxmox_dashboard_layouts` gespeichert (JSON, max 100KB)
-- **Gespeicherte Werte:** Position (x,y) + Breite (w) + Höhe nur für manuell resizable Cards. Dynamische Höhen kommen immer frisch von API-Daten.
-- **API:** `GET/PUT/DELETE /api/dashboards/{id}/proxmox-layout`
-- **Save-Flow:** Layout-Änderung → "Layout speichern" Button erscheint → Manuelles Speichern → Toast-Feedback
-- **Reset:** "Layout zurücksetzen" löscht gespeichertes Layout, lädt Defaults
-- **Bug-Fixes:** `layoutInitialized` Ref verhindert false-positive "Save"-Button beim Mount; `onBreakpointChange` trackt Breakpoint, Layout-Änderungen nur für `lg` gespeichert
-
-### Konfigurierbare Parameter (in Settings)
-| Parameter | localStorage Key | Default | Effekt |
-|---|---|---|---|
-| Top-Items Anzahl | `proxmox_top_items` | 10 | Anzahl Einträge in Top-CPU/Memory/Disk Listen |
-| Task-Zeitraum | `proxmox_task_hours` | 48h | Zeitfenster für Task-Summary |
-| Refresh-Intervall | `proxmox_refresh_interval` | 30s | Auto-Refresh Interval |
-
-### Backend-Endpunkt
-`GET /api/proxmox/cluster-stats?dashboard_id=X&top_n=10&task_hours=48`
-
-Zwei Code-Pfade:
-- **Cluster-Modus:** `/cluster/resources`, `/cluster/tasks`, `/cluster/status` APIs
-- **Standalone-Modus:** Iteriert einzelne Node-APIs (`/nodes/<node>/qemu`, `/lxc`, `/status`, `/tasks`)
-
-Response-Model `ClusterStats`: `nodes`, `vms`, `lxcs`, `top_cpu_usage`, `top_memory_usage`, `top_disk_usage`, `tasks` (mit `by_node`), `storage_total`, `storage_by_node`, `storage_by_type`, `ceph`, `cluster_name`, `is_cluster`
-
-### Styling
-- **StatCard (Base):** `bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl border-gray-300/50 dark:border-white/[0.12]`
-- Alle Karten nutzen **identisches Glasmorphismus-Design** wie die VM/LXC-Cards
-- Innere Elemente: `bg-white/10 dark:bg-white/5` (Stat-Boxen), `bg-white/5 dark:bg-white/[0.03]` (Node-Cards), `border-gray-300/30 dark:border-white/10` (Dividers)
-- Drag-Handle: `text-gray-400 hover:text-gray-500 dark:hover:text-white/60`
-- Resize-Handle: Hover-to-Blue Transition, verbesserte Dark-Mode Sichtbarkeit
-- Ceph-Karten zeigen Placeholder-UI wenn kein Ceph im Cluster vorhanden
-
----
-
-## 7. Aktueller Status & Besonderheiten
+## 6. Aktueller Status & Besonderheiten
 
 ### API-Endpunkte (Übersicht)
 | Router | Prefix | Endpunkte | Auth |
@@ -467,60 +325,3 @@ Response-Model `ClusterStats`: `nodes`, `vms`, `lxcs`, `top_cpu_usage`, `top_mem
 - **Edit Mode Toggle** — Sidebar-Button statt permanent sichtbare Edit-Controls
 - **Keine SPA-Routing-Library** — Tab-basierte Navigation via `activeTab` State (services, monitoring, security, settings)
 - **i18n via react-i18next** — Browser-Sprache wird automatisch erkannt (`i18next-browser-languagedetector`), Fallback auf Deutsch. Sprachwahl in Settings > Language Tab, persistiert in `localStorage` (`servicedock_language`)
-
----
-
-## 8. Changelog
-
-### 2025-02-15 — Status-Dashboard Redesign & Drag/Resize Fixes
-
-**Glasmorphismus-Redesign (Status-Dashboard):**
-- StatCard Base + alle 10 Stat-Widgets von `slate-*`-Palette auf `gray-*`/Glass-Theme migriert
-- Neues Styling: `bg-white/70 dark:bg-gray-900/70 rounded-2xl border-white/[0.12]` — identisch mit VM/LXC-Cards
-- Innere Elemente: `bg-white/10`, `bg-white/5`, `border-white/10` statt opaker `slate`-Farben
-- ProxmoxStatusDashboard Header/Loading/Error States ebenfalls auf `gray-*` aktualisiert
-
-**Dynamische Card-Höhen:**
-- Storage per Node, Storage by Type, Task Summary: Höhe wird automatisch von API-Daten berechnet (Anzahl Nodes/Typen)
-- `getDynamicCardHeight()` + `applyDynamicHeights()` in ProxmoxStatusDashboard
-- Kein manuelles Resize nötig — Cards wachsen/schrumpfen mit Cluster-Größe
-- Total Storage, Ceph Health, Ceph OSD: Manuell resizable (h=4–7) — sinnvoll für Zeilen-Ausrichtung
-
-**Drag/Resize Bug-Fixes:**
-- `layoutInitialized` Ref: Verhindert false-positive "Save"-Button beim initialen Mount
-- `onBreakpointChange` + `currentBreakpoint` Ref: Layout-Änderungen nur für `lg` Breakpoint getrackt
-- `overflow: hidden` statt `visible` auf Grid-Items: Kein Content-Leak während Resize
-- Resize-Handle: Größer (6px), Hover-to-Blue Transition, verbesserte Dark-Mode Sichtbarkeit
-- Placeholder: `border-radius: 1rem` passend zu `rounded-2xl` Cards
-- Saved Layout Merge vereinfacht: Positionen + Breite aus Backend, Höhen immer dynamisch/frisch
-
-### 2025-02-16 — Internationalisierung (i18n)
-
-**i18n-Infrastruktur:**
-- `i18next` + `react-i18next` + `i18next-browser-languagedetector` als Dependencies
-- `src/i18n/index.js` — i18n-Konfiguration mit LanguageDetector (localStorage → navigator), Fallback `de`
-- `src/i18n/locales/de.json` — ~420 deutsche Übersetzungs-Keys in 25+ Namespaces
-- `src/i18n/locales/en.json` — ~420 englische Übersetzungs-Keys (gleiche Struktur)
-- `main.jsx` importiert `./i18n/index.js` beim App-Start
-
-**Konvertierte Komponenten (36 Dateien):**
-- Alle Komponenten nutzen `const { t } = useTranslation()` + `t('namespace.key')`
-- App, Sidebar, LoginModal, EditModal, ServiceCard, ServiceGrid, ShortcutGrid, AddItemFAB
-- SpotifyCard, WeatherWidget, ClockWidget, ProxmoxGrid, ProxmoxCard, SecurityDashboard
-- ProxmoxStatusDashboard + alle 8 Stats-Cards (TopUsage, TopDisk, Task, Storage×3, Ceph×2)
-- SettingsPage + alle Settings-Sub-Komponenten (Appearance, Dashboards, Proxmox×3, AddOns, Spotify, Config)
-- useAuth.js (Login-Fehlermeldungen mit Interpolation)
-
-**Language Settings Tab:**
-- Neuer Tab "Sprache" / "Language" in Settings (unter AddOns)
-- `settings/LanguageCard.jsx` — DE 🇩🇪 / EN 🇬🇧 als klickbare Karten mit Checkmark, violetter Akzent
-- Scroll-Spy + Tips-Panel Integration im Settings-Layout
-- Language-Toggle aus Sidebar entfernt → nur noch in Settings
-
-**Namespaces (Übersicht):**
-- `common` — Shared Buttons/Labels (Save, Cancel, Delete, etc.)
-- `sidebar`, `login`, `editModal`, `serviceGrid`, `shortcutGrid`, `addItem`
-- `proxmox`, `statusDashboard`, `stats`, `security`, `spotify`, `weather`, `clock`
-- `settings` (Tabs + Tips + Proxmox-Modals), `appearance`, `dashboards`
-- `proxmoxTab`, `proxmoxConnection`, `proxmoxDashboardSettings`
-- `addons`, `spotifyAddon`, `configAddon`, `language`, `errorBoundary`
