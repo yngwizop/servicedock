@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Palette, SquaresFour, Desktop, Plug, Lightbulb, Info, ShieldCheck, Lightning, Translate } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../utils/auth';
@@ -138,49 +138,6 @@ function SettingsPage({
     { id: 'language', label: t('settings.tabs.language'), icon: Translate },
   ];
 
-  // Refs for each section
-  const sectionRefs = useRef({});
-  const isScrollingTo = useRef(false);
-
-  // Scroll-spy: update activeSection based on scroll position
-  useEffect(() => {
-    const handleScroll = () => {
-      if (isScrollingTo.current) return;
-
-      // If scrolled to the very bottom, always activate the last section
-      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-      if (scrollTop + clientHeight >= scrollHeight - 50) {
-        setActiveSection(sections[sections.length - 1].id);
-        return;
-      }
-
-      const offset = 160; // header + some padding
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const el = sectionRefs.current[sections[i].id];
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= offset) {
-            setActiveSection(sections[i].id);
-            return;
-          }
-        }
-      }
-      setActiveSection(sections[0].id);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollToSection = useCallback((id) => {
-    const el = sectionRefs.current[id];
-    if (!el) return;
-    isScrollingTo.current = true;
-    setActiveSection(id);
-    const y = el.getBoundingClientRect().top + window.scrollY - 120;
-    window.scrollTo({ top: y, behavior: 'smooth' });
-    setTimeout(() => { isScrollingTo.current = false; }, 1200);
-  }, []);
-
   // Contextual tips per section
   const sectionTips = {
     appearance: {
@@ -261,10 +218,7 @@ function SettingsPage({
         {sections.map((section) => (
           <button
             key={section.id}
-            onClick={() => {
-              setActiveSection(section.id);
-              scrollToSection(section.id);
-            }}
+            onClick={() => setActiveSection(section.id)}
             className={`flex-1 py-2 px-2 transition-all duration-300 rounded-xl text-sm font-semibold ${
               activeSection === section.id
                 ? 'bg-blue-600 text-white shadow-md'
@@ -278,7 +232,7 @@ function SettingsPage({
         ))}
       </div>
 
-      {/* Desktop: Sidebar + All Sections */}
+      {/* Desktop: Sidebar + Active Section */}
       <div className="lg:flex gap-6">
         {/* Sticky Sidebar Nav */}
         <div className="hidden lg:block w-64 shrink-0">
@@ -289,7 +243,7 @@ function SettingsPage({
               return (
                 <button
                   key={section.id}
-                  onClick={() => scrollToSection(section.id)}
+                  onClick={() => setActiveSection(section.id)}
                   className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-xl text-base font-semibold transition-all duration-200 ${
                     isActive
                       ? 'bg-blue-600 text-white shadow-md'
@@ -305,25 +259,21 @@ function SettingsPage({
           </nav>
         </div>
 
-        {/* Content: All Sections stacked */}
-        <div className="flex-1 min-w-0 space-y-8">
-          {/* Appearance */}
-          <section ref={(el) => (sectionRefs.current['appearance'] = el)} id="settings-appearance">
-            <div className={cardClass}>
-              <AppearanceTab
-                editAppearance={editAppearance}
-                setEditAppearance={setEditAppearance}
-                currentTheme={currentTheme}
-                weatherLocationInfo={weatherLocationInfo}
-                isSavingAppearance={isSavingAppearance}
-                showSaved={showSaved}
-                onSaveAppearance={onSaveAppearance}
-              />
-            </div>
-          </section>
+        {/* Content: Only active section */}
+        <div className="flex-1 min-w-0">
+          {activeSection === 'appearance' && (
+            <AppearanceTab
+              editAppearance={editAppearance}
+              setEditAppearance={setEditAppearance}
+              currentTheme={currentTheme}
+              weatherLocationInfo={weatherLocationInfo}
+              isSavingAppearance={isSavingAppearance}
+              showSaved={showSaved}
+              onSaveAppearance={onSaveAppearance}
+            />
+          )}
 
-          {/* Dashboards */}
-          <section ref={(el) => (sectionRefs.current['dashboards'] = el)} id="settings-dashboards">
+          {activeSection === 'dashboards' && (
             <div className={cardClass}>
               <DashboardsCard
                 dashboards={dashboards}
@@ -331,10 +281,9 @@ function SettingsPage({
                 onDashboardsChange={onDashboardsChange}
               />
             </div>
-          </section>
+          )}
 
-          {/* Proxmox */}
-          <section ref={(el) => (sectionRefs.current['proxmox'] = el)} id="settings-proxmox">
+          {activeSection === 'proxmox' && (
             <div className={cardClass}>
               <ProxmoxTab
                 proxmoxConfig={proxmoxConfig}
@@ -351,21 +300,19 @@ function SettingsPage({
                 activeDashboard={activeDashboard}
               />
             </div>
-          </section>
+          )}
 
-          {/* AddOns */}
-          <section ref={(el) => (sectionRefs.current['addons'] = el)} id="settings-addons">
+          {activeSection === 'addons' && (
             <div className={cardClass}>
               <AddOnsCard />
             </div>
-          </section>
+          )}
 
-          {/* Language */}
-          <section ref={(el) => (sectionRefs.current['language'] = el)} id="settings-language">
+          {activeSection === 'language' && (
             <div className={cardClass}>
               <LanguageCard />
             </div>
-          </section>
+          )}
         </div>
 
         {/* Contextual Tips Panel */}

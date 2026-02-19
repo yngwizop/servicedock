@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Pencil } from 'phosphor-react';
+import { Pencil, SquaresFour } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
 import CustomSelect from '../CustomSelect';
@@ -107,8 +107,9 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1.5 flex items-center gap-2">
-          📊 {t('dashboards.title')}
+        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1.5 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+          <SquaresFour size={22} weight="duotone" className="text-blue-400" />
+          {t('dashboards.title')}
         </h3>
         <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
           {t('dashboards.description')}
@@ -118,7 +119,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
       {/* Dashboard erstellen/bearbeiten */}
       <form
         onSubmit={handleSubmit}
-        className="p-5 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-gray-400/60 dark:border-white/10"
+        className="p-5 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md shadow-xl rounded-2xl border border-gray-300/50 dark:border-white/[0.12]"
       >
         <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3.5 flex items-center gap-2">
           <span className="text-lg">{editingDashboard ? '✏️' : '➕'}</span>
@@ -169,7 +170,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
             />
           </div>
 
-          <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+          <div className="p-4 bg-white/40 dark:bg-white/5 rounded-xl border border-gray-300/50 dark:border-white/10">
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -320,7 +321,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
       </div>
 
       {/* Info-Hinweis */}
-      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 backdrop-blur-sm border border-blue-200 dark:border-blue-800 rounded-xl">
+      <div className="p-4 bg-blue-500/10 dark:bg-blue-500/10 backdrop-blur-sm border border-blue-500/20 rounded-xl">
         <p className="text-sm text-blue-900 dark:text-blue-200">
           {t('dashboards.tip')}
         </p>

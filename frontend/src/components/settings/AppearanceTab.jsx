@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sun } from 'phosphor-react';
+import { Image, Palette, SquaresFour, Eye, CloudSun } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 
 const WEATHER_FIELDS = [
@@ -10,6 +10,46 @@ const WEATHER_FIELDS = [
   { key: 'cloudCover', labelKey: 'appearance.cloud_cover', icon: '☁️' },
   { key: 'pressure', labelKey: 'appearance.pressure', icon: '🔽' }
 ];
+
+// Einheitliche glasmorphe Card-Klasse (wie Security/Proxmox)
+const sectionCard = "bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-300/50 dark:border-white/[0.12]";
+const inputClass = "w-full border border-gray-300/50 dark:border-white/10 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all text-sm";
+const labelClass = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2";
+
+function SectionHeader({ icon: Icon, title, color = "text-blue-400" }) {
+  return (
+    <h4 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2.5 mb-5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+      <Icon size={22} weight="duotone" className={color} />
+      {title}
+    </h4>
+  );
+}
+
+function ToggleSwitch({ checked, onChange, label, description }) {
+  return (
+    <div className="flex items-center justify-between py-3">
+      <div>
+        <div className="text-sm font-medium text-gray-800 dark:text-gray-200">{label}</div>
+        {description && <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{description}</div>}
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
+          checked ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+        }`}
+      >
+        <span
+          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
+            checked ? 'translate-x-6' : 'translate-x-1'
+          }`}
+        />
+      </button>
+    </div>
+  );
+}
 
 function AppearanceTab({
   editAppearance,
@@ -25,67 +65,62 @@ function AppearanceTab({
   return (
     <div className="space-y-6">
       {/* Sektion: Hintergrund */}
-      <div className="space-y-4 p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-gray-400/60 dark:border-white/10">
-        <h4 className="font-semibold text-lg text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-          {t('appearance.background')}
-        </h4>
+      <div className={sectionCard}>
+        <SectionHeader icon={Image} title={t('appearance.background')} />
         
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('appearance.bg_color')}
-          </label>
-          <div className="flex items-center gap-3">
-            <input
-              type="color"
-              value={editAppearance.bg_color || "#ffffff"}
-              onChange={(e) => setEditAppearance({ ...editAppearance, bg_color: e.target.value })}
-              className="w-16 h-12 p-1 border border-gray-300 dark:border-white/20 rounded-xl cursor-pointer bg-white/50 dark:bg-white/5 backdrop-blur-sm"
-            />
+        <div className="space-y-4">
+          <div>
+            <label className={labelClass}>{t('appearance.bg_color')}</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={editAppearance.bg_color || "#ffffff"}
+                onChange={(e) => setEditAppearance({ ...editAppearance, bg_color: e.target.value })}
+                className="w-14 h-11 p-1 border border-gray-300/50 dark:border-white/10 rounded-xl cursor-pointer bg-white/50 dark:bg-white/5 backdrop-blur-sm"
+              />
+              <input
+                type="text"
+                value={editAppearance.bg_color || "#ffffff"}
+                onChange={(e) => setEditAppearance({ ...editAppearance, bg_color: e.target.value })}
+                className={`${inputClass} font-mono`}
+                placeholder="#ffffff"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>{t('appearance.bg_image_url')}</label>
             <input
               type="text"
-              value={editAppearance.bg_color || "#ffffff"}
-              onChange={(e) => setEditAppearance({ ...editAppearance, bg_color: e.target.value })}
-              className="flex-1 border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono backdrop-blur-sm transition-all"
-              placeholder="#ffffff"
+              placeholder="https://..."
+              value={editAppearance.bg_image_url || ""}
+              onChange={(e) => setEditAppearance({ ...editAppearance, bg_image_url: e.target.value })}
+              className={inputClass}
             />
           </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('appearance.bg_image_url')}
-          </label>
-          <input
-            type="text"
-            placeholder="https://..."
-            value={editAppearance.bg_image_url || ""}
-            onChange={(e) => setEditAppearance({ ...editAppearance, bg_image_url: e.target.value })}
-            className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
-          />
-        </div>
-        
-        <div>
-          <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('appearance.bg_opacity')} <span className="font-mono text-blue-600 dark:text-blue-400">{editAppearance.bg_opacity}</span>
-          </label>
-          <input
-            type="range"
-            min="0" max="1" step="0.05"
-            value={editAppearance.bg_opacity}
-            onChange={(e) => setEditAppearance({ ...editAppearance, bg_opacity: parseFloat(e.target.value) })}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-          />
+          
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.bg_opacity')}</label>
+              <span className="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400">{editAppearance.bg_opacity}</span>
+            </div>
+            <input
+              type="range"
+              min="0" max="1" step="0.05"
+              value={editAppearance.bg_opacity}
+              onChange={(e) => setEditAppearance({ ...editAppearance, bg_opacity: parseFloat(e.target.value) })}
+              className="w-full h-2 bg-gray-300/30 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-600"
+            />
+          </div>
         </div>
       </div>
 
       {/* Sektion: Schriftfarben */}
-      <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-        <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-          {t('appearance.font_colors')}
-        </h4>
+      <div className={sectionCard}>
+        <SectionHeader icon={Palette} title={t('appearance.font_colors')} color="text-pink-400" />
         
-        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-700">
-          <p className="text-sm text-blue-800 dark:text-blue-300">
+        <div className="p-3 mb-5 bg-blue-500/10 dark:bg-blue-500/10 rounded-xl border border-blue-500/20">
+          <p className="text-sm text-blue-700 dark:text-blue-300">
             {t('appearance.mode_info', {
               mode: currentTheme === 'light' ? t('appearance.mode_light') : t('appearance.mode_dark'),
               icon: '☀/🌙'
@@ -93,248 +128,214 @@ function AppearanceTab({
           </p>
         </div>
 
-        {/* Light Mode Schriftfarbe */}
-        <div>
-          <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('appearance.light_mode')}
-          </label>
-          <div className="flex items-center gap-3">
-            <input
-              type="color"
-              value={editAppearance.text_color_light || "#1f2937"}
-              onChange={(e) => setEditAppearance({ ...editAppearance, text_color_light: e.target.value })}
-              className="w-16 h-10 p-1 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer"
-            />
-            <input
-              type="text"
-              value={editAppearance.text_color_light || "#1f2937"}
-              onChange={(e) => setEditAppearance({ ...editAppearance, text_color_light: e.target.value })}
-              className="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white p-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono"
-              placeholder="#1f2937"
-            />
-          </div>
-        </div>
-
-        {/* Dark Mode Schriftfarbe */}
-        <div>
-          <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('appearance.dark_mode')}
-          </label>
-          <div className="flex items-center gap-3">
-            <input
-              type="color"
-              value={editAppearance.text_color_dark || "#e5e7eb"}
-              onChange={(e) => setEditAppearance({ ...editAppearance, text_color_dark: e.target.value })}
-              className="w-16 h-10 p-1 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer"
-            />
-            <input
-              type="text"
-              value={editAppearance.text_color_dark || "#e5e7eb"}
-              onChange={(e) => setEditAppearance({ ...editAppearance, text_color_dark: e.target.value })}
-              className="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white p-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono"
-              placeholder="#e5e7eb"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Sektion: Layout */}
-      <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-        <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-          {t('appearance.layout')}
-        </h4>
-        
-        <div>
-          <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('appearance.service_cols')} <span className="font-mono text-blue-600 dark:text-blue-400">{editAppearance.service_cols}</span>
-          </label>
-          <input
-            type="range"
-            min="2" max="10" step="1"
-            value={editAppearance.service_cols}
-            onChange={(e) => setEditAppearance({ ...editAppearance, service_cols: parseInt(e.target.value) })}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-          />
-        </div>
-        
-        <div>
-          <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('appearance.shortcut_cols')} <span className="font-mono text-blue-600 dark:text-blue-400">{editAppearance.shortcut_cols}</span>
-          </label>
-          <input
-            type="range"
-            min="2" max="8" step="1"
-            value={editAppearance.shortcut_cols}
-            onChange={(e) => setEditAppearance({ ...editAppearance, shortcut_cols: parseInt(e.target.value) })}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-          />
-        </div>
-      </div>
-
-      {/* Sektion: Uhr */}
-      <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-        <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-          {t('appearance.clock_settings')}
-        </h4>
-        
-        <div>
-          <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-3">
-            {t('appearance.time_format')}
-          </label>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label className={labelClass}>{t('appearance.light_mode')}</label>
+            <div className="flex items-center gap-3">
               <input
-                type="radio"
-                name="clock_format"
-                value="24h"
-                checked={editAppearance.clock_format === '24h'}
-                onChange={(e) => setEditAppearance({ ...editAppearance, clock_format: e.target.value })}
-                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                type="color"
+                value={editAppearance.text_color_light || "#1f2937"}
+                onChange={(e) => setEditAppearance({ ...editAppearance, text_color_light: e.target.value })}
+                className="w-14 h-11 p-1 border border-gray-300/50 dark:border-white/10 rounded-xl cursor-pointer bg-white/50 dark:bg-white/5"
               />
-              <div>
-                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.format_24h')}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">14:30:45</div>
-              </div>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
               <input
-                type="radio"
-                name="clock_format"
-                value="12h"
-                checked={editAppearance.clock_format === '12h'}
-                onChange={(e) => setEditAppearance({ ...editAppearance, clock_format: e.target.value })}
-                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                type="text"
+                value={editAppearance.text_color_light || "#1f2937"}
+                onChange={(e) => setEditAppearance({ ...editAppearance, text_color_light: e.target.value })}
+                className={`${inputClass} font-mono`}
+                placeholder="#1f2937"
               />
-              <div>
-                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.format_12h')}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">2:30:45 PM</div>
-              </div>
-            </label>
+            </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>{t('appearance.dark_mode')}</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={editAppearance.text_color_dark || "#e5e7eb"}
+                onChange={(e) => setEditAppearance({ ...editAppearance, text_color_dark: e.target.value })}
+                className="w-14 h-11 p-1 border border-gray-300/50 dark:border-white/10 rounded-xl cursor-pointer bg-white/50 dark:bg-white/5"
+              />
+              <input
+                type="text"
+                value={editAppearance.text_color_dark || "#e5e7eb"}
+                onChange={(e) => setEditAppearance({ ...editAppearance, text_color_dark: e.target.value })}
+                className={`${inputClass} font-mono`}
+                placeholder="#e5e7eb"
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* NEU: Sektion: Widget Sichtbarkeit */}
-      <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-        <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-          {t('appearance.widgets')}
-        </h4>
+      {/* Sektion: Layout & Columns */}
+      <div className={sectionCard}>
+        <SectionHeader icon={SquaresFour} title={t('appearance.layout')} color="text-cyan-400" />
         
-        <div className="space-y-3">
-          <label className="flex items-center gap-3 cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
-            <input
-              type="checkbox"
-              checked={editAppearance.show_spotify ?? true}
-              onChange={(e) => setEditAppearance({ ...editAppearance, show_spotify: e.target.checked })}
-              className="appearance-none w-4 h-4 border-2 border-gray-300 dark:border-gray-600 rounded-full bg-transparent checked:bg-transparent checked:border-gray-300 dark:checked:border-gray-600 relative checked:before:content-[''] checked:before:absolute checked:before:top-1/2 checked:before:left-1/2 checked:before:transform checked:before:-translate-x-1/2 checked:before:-translate-y-1/2 checked:before:w-2 checked:before:h-2 checked:before:bg-blue-600 checked:before:rounded-full focus:ring-2 focus:ring-blue-500"
-            />
-            <span className="text-2xl flex-shrink-0">🎵</span>
-            <div className="flex-1">
-              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.spotify_widget')}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">{t('appearance.show_music')}</div>
+        <div className="space-y-5">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.service_cols')}</label>
+              <span className="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400">{editAppearance.service_cols}</span>
             </div>
-          </label>
-
-          <label className="flex items-center gap-3 cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
             <input
-              type="checkbox"
-              checked={editAppearance.show_weather ?? true}
-              onChange={(e) => setEditAppearance({ ...editAppearance, show_weather: e.target.checked })}
-              className="appearance-none w-4 h-4 border-2 border-gray-300 dark:border-gray-600 rounded-full bg-transparent checked:bg-transparent checked:border-gray-300 dark:checked:border-gray-600 relative checked:before:content-[''] checked:before:absolute checked:before:top-1/2 checked:before:left-1/2 checked:before:transform checked:before:-translate-x-1/2 checked:before:-translate-y-1/2 checked:before:w-2 checked:before:h-2 checked:before:bg-blue-600 checked:before:rounded-full focus:ring-2 focus:ring-blue-500"
+              type="range"
+              min="2" max="10" step="1"
+              value={editAppearance.service_cols}
+              onChange={(e) => setEditAppearance({ ...editAppearance, service_cols: parseInt(e.target.value) })}
+              className="w-full h-2 bg-gray-300/30 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-600"
             />
-            <span className="text-2xl flex-shrink-0">🌤️</span>
-            <div className="flex-1">
-              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.weather_widget')}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">{t('appearance.show_weather')}</div>
+          </div>
+          
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.shortcut_cols')}</label>
+              <span className="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400">{editAppearance.shortcut_cols}</span>
             </div>
-          </label>
-
-          <label className="flex items-center gap-3 cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
             <input
-              type="checkbox"
-              checked={editAppearance.show_clock ?? true}
-              onChange={(e) => setEditAppearance({ ...editAppearance, show_clock: e.target.checked })}
-              className="appearance-none w-4 h-4 border-2 border-gray-300 dark:border-gray-600 rounded-full bg-transparent checked:bg-transparent checked:border-gray-300 dark:checked:border-gray-600 relative checked:before:content-[''] checked:before:absolute checked:before:top-1/2 checked:before:left-1/2 checked:before:transform checked:before:-translate-x-1/2 checked:before:-translate-y-1/2 checked:before:w-2 checked:before:h-2 checked:before:bg-blue-600 checked:before:rounded-full focus:ring-2 focus:ring-2 focus:ring-blue-500"
+              type="range"
+              min="2" max="8" step="1"
+              value={editAppearance.shortcut_cols}
+              onChange={(e) => setEditAppearance({ ...editAppearance, shortcut_cols: parseInt(e.target.value) })}
+              className="w-full h-2 bg-gray-300/30 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-600"
             />
-            <span className="text-2xl flex-shrink-0">🕐</span>
-            <div className="flex-1">
-              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.clock_widget')}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">{t('appearance.show_clock')}</div>
-            </div>
-          </label>
+          </div>
         </div>
       </div>
 
-      {/* Sektion: Wetter */}
-      <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-        <h4 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-          {t('appearance.weather_section')}
-        </h4>
+      {/* Sektion: Widgets & Uhr */}
+      <div className={sectionCard}>
+        <SectionHeader icon={Eye} title={t('appearance.widgets')} color="text-violet-400" />
         
-        <div>
-          <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('appearance.city')}
-          </label>
-          <input
-            type="text"
-            value={editAppearance.weather_city || ''}
-            onChange={(e) => setEditAppearance({ ...editAppearance, weather_city: e.target.value })}
-            placeholder={t('appearance.city_placeholder')}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        <div className="divide-y divide-gray-200/50 dark:divide-white/[0.06]">
+          <ToggleSwitch
+            checked={editAppearance.show_clock ?? true}
+            onChange={(val) => setEditAppearance({ ...editAppearance, show_clock: val })}
+            label={t('appearance.clock_widget')}
+            description={t('appearance.show_clock')}
           />
-          {/* Geocoding Info Anzeige */}
-          {weatherLocationInfo && weatherLocationInfo.name && weatherLocationInfo.country && (
-            <div className="mt-2 text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-900/30 rounded px-2 py-1">
-              <span className="font-semibold">{t('appearance.found_location')}</span> {weatherLocationInfo.name}, {weatherLocationInfo.country}
-              {weatherLocationInfo.postal_code ? `${t('appearance.postal_code')}${weatherLocationInfo.postal_code}` : ''}
-              {typeof weatherLocationInfo.latitude === 'number' && typeof weatherLocationInfo.longitude === 'number' ?
-                `, (${weatherLocationInfo.latitude.toFixed(4)}, ${weatherLocationInfo.longitude.toFixed(4)})`
-                : ''}
-            </div>
-          )}
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {t('appearance.weather_cache_info')}
-          </p>
+          <ToggleSwitch
+            checked={editAppearance.show_weather ?? true}
+            onChange={(val) => setEditAppearance({ ...editAppearance, show_weather: val })}
+            label={t('appearance.weather_widget')}
+            description={t('appearance.show_weather')}
+          />
+          <ToggleSwitch
+            checked={editAppearance.show_spotify ?? true}
+            onChange={(val) => setEditAppearance({ ...editAppearance, show_spotify: val })}
+            label={t('appearance.spotify_widget')}
+            description={t('appearance.show_music')}
+          />
         </div>
 
-        {/* Wetterdaten Felder Auswahl */}
-        <div>
-          <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-3">
-            {t('appearance.weather_fields')}
-          </label>
-          <div className="grid grid-cols-1 gap-3">
-            {WEATHER_FIELDS.map(f => (
-              <label key={f.key} className="flex items-center gap-3 cursor-pointer p-3 border-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
+        {/* Clock Format */}
+        <div className="mt-5 pt-5 border-t border-gray-200/50 dark:border-white/[0.06]">
+          <label className={labelClass}>{t('appearance.time_format')}</label>
+          <div className="flex gap-3">
+            {[
+              { value: '24h', label: t('appearance.format_24h'), example: '14:30' },
+              { value: '12h', label: t('appearance.format_12h'), example: '2:30 PM' },
+            ].map(opt => (
+              <label
+                key={opt.value}
+                className={`flex-1 flex items-center gap-3 cursor-pointer p-3 rounded-xl border transition-all duration-200 ${
+                  editAppearance.clock_format === opt.value
+                    ? 'border-blue-500/50 bg-blue-500/10 dark:bg-blue-500/10'
+                    : 'border-gray-300/50 dark:border-white/10 hover:border-gray-400/70 dark:hover:border-white/20'
+                }`}
+              >
                 <input
-                  type="checkbox"
-                  checked={editAppearance.weather_fields?.includes(f.key) ?? (f.key === 'temperature' || f.key === 'humidity')}
-                  onChange={e => {
-                    const checked = e.target.checked;
-                    let newFields = editAppearance.weather_fields ? [...editAppearance.weather_fields] : ['temperature', 'humidity'];
-                    if (checked && !newFields.includes(f.key)) newFields.push(f.key);
-                    if (!checked) newFields = newFields.filter(k => k !== f.key);
-                    setEditAppearance({ ...editAppearance, weather_fields: newFields });
-                  }}
-                  className="appearance-none w-4 h-4 border-2 border-gray-300 dark:border-gray-600 rounded-full bg-transparent checked:bg-transparent checked:border-gray-300 dark:checked:border-gray-600 relative checked:before:content-[''] checked:before:absolute checked:before:top-1/2 checked:before:left-1/2 checked:before:transform checked:before:-translate-x-1/2 checked:before:-translate-y-1/2 checked:before:w-2 checked:before:h-2 checked:before:bg-blue-600 checked:before:rounded-full focus:ring-2 focus:ring-blue-500"
+                  type="radio"
+                  name="clock_format"
+                  value={opt.value}
+                  checked={editAppearance.clock_format === opt.value}
+                  onChange={(e) => setEditAppearance({ ...editAppearance, clock_format: e.target.value })}
+                  className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
                 />
-                <span className="text-2xl flex-shrink-0" aria-hidden="true">{f.icon}</span>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">{t(f.labelKey)}</span>
+                <div>
+                  <div className="text-sm font-medium text-gray-800 dark:text-gray-200">{opt.label}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">{opt.example}</div>
+                </div>
               </label>
             ))}
           </div>
         </div>
       </div>
+
+      {/* Sektion: Wetter */}
+      <div className={sectionCard}>
+        <SectionHeader icon={CloudSun} title={t('appearance.weather_section')} color="text-amber-400" />
+        
+        <div className="space-y-5">
+          <div>
+            <label className={labelClass}>{t('appearance.city')}</label>
+            <input
+              type="text"
+              value={editAppearance.weather_city || ''}
+              onChange={(e) => setEditAppearance({ ...editAppearance, weather_city: e.target.value })}
+              placeholder={t('appearance.city_placeholder')}
+              className={inputClass}
+            />
+            {weatherLocationInfo && weatherLocationInfo.name && weatherLocationInfo.country && (
+              <div className="mt-2 text-sm text-gray-700 dark:text-gray-200 bg-white/40 dark:bg-white/5 rounded-xl px-3 py-2 border border-gray-300/30 dark:border-white/[0.06]">
+                <span className="font-semibold">{t('appearance.found_location')}</span> {weatherLocationInfo.name}, {weatherLocationInfo.country}
+                {weatherLocationInfo.postal_code ? `${t('appearance.postal_code')}${weatherLocationInfo.postal_code}` : ''}
+                {typeof weatherLocationInfo.latitude === 'number' && typeof weatherLocationInfo.longitude === 'number' ?
+                  `, (${weatherLocationInfo.latitude.toFixed(4)}, ${weatherLocationInfo.longitude.toFixed(4)})`
+                  : ''}
+              </div>
+            )}
+            <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+              {t('appearance.weather_cache_info')}
+            </p>
+          </div>
+
+          <div>
+            <label className={labelClass}>{t('appearance.weather_fields')}</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {WEATHER_FIELDS.map(f => (
+                <label
+                  key={f.key}
+                  className={`flex items-center gap-3 cursor-pointer p-3 rounded-xl border transition-all duration-200 ${
+                    (editAppearance.weather_fields?.includes(f.key) ?? (f.key === 'temperature' || f.key === 'humidity'))
+                      ? 'border-blue-500/50 bg-blue-500/10 dark:bg-blue-500/10'
+                      : 'border-gray-300/50 dark:border-white/10 hover:border-gray-400/70 dark:hover:border-white/20'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={editAppearance.weather_fields?.includes(f.key) ?? (f.key === 'temperature' || f.key === 'humidity')}
+                    onChange={e => {
+                      const checked = e.target.checked;
+                      let newFields = editAppearance.weather_fields ? [...editAppearance.weather_fields] : ['temperature', 'humidity'];
+                      if (checked && !newFields.includes(f.key)) newFields.push(f.key);
+                      if (!checked) newFields = newFields.filter(k => k !== f.key);
+                      setEditAppearance({ ...editAppearance, weather_fields: newFields });
+                    }}
+                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-lg flex-shrink-0" aria-hidden="true">{f.icon}</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t(f.labelKey)}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
       
       {/* Save Button */}
-      <div>
-        <button
-          onClick={onSaveAppearance}
-          disabled={isSavingAppearance}
-          className={`bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg w-full font-medium transition-colors shadow-md hover:shadow-lg ${isSavingAppearance ? 'opacity-70 cursor-wait' : ''}`}
-        >
-          {isSavingAppearance ? t('common.saving') : showSaved ? t('common.saved') : t('common.save')}
-        </button>
-      </div>
+      <button
+        onClick={onSaveAppearance}
+        disabled={isSavingAppearance}
+        className={`w-full py-3 px-4 rounded-xl font-semibold text-white shadow-lg transition-all duration-200 ${
+          showSaved
+            ? 'bg-green-600'
+            : 'bg-blue-600 hover:bg-blue-700 hover:shadow-xl hover:scale-[1.01]'
+        } ${isSavingAppearance ? 'opacity-70 cursor-wait' : ''}`}
+      >
+        {isSavingAppearance ? t('common.saving') : showSaved ? `✓ ${t('common.saved')}` : t('common.save')}
+      </button>
     </div>
   );
 }

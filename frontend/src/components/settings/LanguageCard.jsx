@@ -39,7 +39,7 @@ function LanguageCard() {
         </div>
         <div>
           <h2 className="text-xl font-bold text-gray-800 dark:text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
-            🌐 {t('language.title')}
+            {t('language.title')}
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
             {t('language.description')}

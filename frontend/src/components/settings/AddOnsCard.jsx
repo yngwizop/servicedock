@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Plug } from 'phosphor-react';
 import { authenticatedFetch } from '../../utils/auth';
 import ConfigAddon from './ConfigAddon';
 import SpotifyAddon from './SpotifyAddon';
@@ -132,7 +133,8 @@ function AddOnsCard() {
       {!showConfigPage && !showSpotifyPage ? (
         <>
           <div>
-            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+              <Plug size={22} weight="duotone" className="text-green-400" />
               {t('addons.title')}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
@@ -146,7 +148,7 @@ function AddOnsCard() {
             onClick={() => setShowConfigPage(true)}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent dark:from-blue-400/30 dark:via-blue-500/20 dark:to-transparent" />
-            <div className="relative backdrop-blur-xl bg-white/70 dark:bg-gray-800/70 border border-white/20 dark:border-white/10 p-6">
+            <div className="relative backdrop-blur-xl bg-white/70 dark:bg-gray-800/70 border border-gray-300/50 dark:border-white/[0.12] p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
@@ -176,7 +178,7 @@ function AddOnsCard() {
             onClick={() => setShowSpotifyPage(true)}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent dark:from-green-400/30 dark:via-green-500/20 dark:to-transparent" />
-            <div className="relative backdrop-blur-xl bg-white/70 dark:bg-gray-800/70 border border-white/20 dark:border-white/10 p-6">
+            <div className="relative backdrop-blur-xl bg-white/70 dark:bg-gray-800/70 border border-gray-300/50 dark:border-white/[0.12] p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
