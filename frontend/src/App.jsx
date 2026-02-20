@@ -90,6 +90,9 @@ function App() {
 
   useEffect(() => {
     if (auth.isLoggedIn) {
+      // Bei Login: Tab auf Dashboard setzen + Edit-Mode aus
+      setActiveTab("services");
+      setEditMode(false);
       fetchDashboards();
       fetchData();
       fetchAppearance();

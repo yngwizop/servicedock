@@ -120,6 +120,10 @@ def ldap_authenticate(username: str, password: str) -> Optional[Dict[str, Any]]:
     if not config or not config["enabled"]:
         return None
     
+    # Domain-Suffix abschneiden falls User "user@domain" eingibt
+    if "@" in username:
+        username = username.split("@")[0]
+    
     try:
         server = _create_server(config)
         

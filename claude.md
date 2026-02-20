@@ -49,6 +49,7 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 | cryptography (Fernet) | latest | Verschlüsselung sensibler Daten |
 | slowapi | latest | Rate Limiting |
 | proxmoxer | latest | Proxmox VE API Client |
+| ldap3 | ≥2.9.1 | LDAP/Active Directory Authentifizierung |
 
 **API-Struktur:** REST, alle Routen unter `/api/*`, modulares Router-Pattern.
 
@@ -70,6 +71,7 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 | `dashboards` | Multi-Dashboard-Definitionen mit Name, Typ, show_proxmox |
 | `audit_log` | Sicherheits-Audit-Trail (Action, IP, Status, Details, User-Agent) |
 | `spotify_config` | Singleton (id=1) — OAuth-Tokens (verschlüsselt), Client-Credentials |
+| `ldap_config` | Singleton (id=1) — LDAP/AD-Verbindungsdaten, Gruppen-DNs, Bind-PW (Fernet) |
 | `proxmox_dashboard_layouts` | react-grid-layout JSON pro Dashboard |
 
 ### Infrastruktur
@@ -122,9 +124,10 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 │   │   ├── audit.py                # Audit-Log Schreiben (sanitized)
 │   │   ├── rate_limiting.py        # IP-basierter Failed-Login-Tracker
 │   │   ├── limiter.py              # Shared slowapi Limiter-Instanz
+│   │   ├── ldap_auth.py            # LDAP/AD Auth-Modul (Config-Cache, Bind, Rollenbestimmung)
 │   │   └── logging.py              # Logger-Config
 │   ├── dependencies/
-│   │   └── auth.py                 # verify_token, require_role, IP-Trust
+│   │   └── auth.py                 # verify_token, require_role, require_any_role, IP-Trust
 │   ├── middleware/
 │   │   └── security.py             # Security Headers (CSP, HSTS, etc.)
 │   ├── models/                     # Pydantic Request/Response Models
@@ -133,7 +136,7 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 │   │   ├── reorder.py, refresh_token.py, responses.py
 │   │   └── ...
 │   └── routers/                    # API-Endpunkte (modular)
-│       ├── auth.py                 # Login/Refresh/Logout
+│       ├── auth.py                 # Login/Refresh/Logout + /auth/mode (AD-Status)
 │       ├── services.py             # Service CRUD + Reorder
 │       ├── shortcuts.py            # Shortcut CRUD + Reorder
 │       ├── appearance.py           # Get/Update Appearance
@@ -190,6 +193,7 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 │       │   │   ├── DashboardsCard.jsx
 │       │   │   ├── AddOnsCard.jsx
 │       │   │   ├── SpotifyAddon.jsx
+│       │   │   ├── LdapAddon.jsx           # LDAP/AD Konfigurationsformular
 │       │   │   ├── ConfigAddon.jsx
 │       │   │   └── LanguageCard.jsx
 │       │   └── stats/              # Proxmox Status-Dashboard Widgets
@@ -279,7 +283,47 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 
 ---
 
-## 5. Proxmox Status-Dashboard (Kurzübersicht)
+## 5. AD/LDAP-Authentifizierung
+
+### Architektur
+- **Optionales AddOn** — Konfigurierbar über Settings → AddOns → LDAP/AD
+- **Dual-Auth:** AD-Login (wenn Username angegeben + AD enabled) mit Fallback auf lokalen Login (nur Passwort)
+- **Rollen:** `admin` (lokal + AD) und `viewer` (nur AD), gesteuert über AD-Gruppen (memberOf)
+- **Vollständige Doku:** Siehe `LDAP_INTEGRATION.md`
+
+### Kernmodule
+| Datei | Funktion |
+|-------|----------|
+| `backend/core/ldap_auth.py` | Config-Cache (60s TTL), `ldap_authenticate()` (4-Schritt-Flow), `_determine_role()`, `test_ldap_connection()` |
+| `backend/routers/auth.py` | `POST /api/login` (AD+Local), `GET /api/auth/mode` (public) |
+| `backend/routers/admin.py` | LDAP Config CRUD unter `/api/ldap/*` |
+| `backend/dependencies/auth.py` | `require_any_role("admin", "viewer")` — erlaubt Viewer auf GET-Endpunkte |
+| `frontend/src/hooks/useAuth.js` | `adEnabled`, `adDomain`, `userRole`, `isAdmin`, `isViewer`, `displayName`, `authMethod` |
+| `frontend/src/components/settings/LdapAddon.jsx` | Glasmorphismus-Konfigformular (Test/Save/Uninstall/Toggle) |
+
+### JWT-Payload (erweitert)
+```json
+{
+  "sub": "username",
+  "type": "admin|viewer",
+  "auth_method": "ad|local",
+  "display_name": "John Doe"
+}
+```
+
+### Wichtige Patterns
+- **DB-Pool Zugriff:** `import config.database as database_module` → `database_module.db_pool` zur Laufzeit (nicht Import-Zeit, da Pool dann noch `None`)
+- **UPN-Domain-Strip:** Wenn User `jdoe@domain.local` eingibt, wird `@domain.local` vor der sAMAccountName-Suche entfernt
+- **Relative Search Base:** `CN=Users` wird automatisch zu `CN=Users,DC=domain,DC=local` kombiniert
+- **Bind-Passwort:** Fernet-verschlüsselt in `ldap_config.bind_password`, entschlüsselt via `decrypt_value()` vor LDAP-Bind
+- **Cache-Invalidierung:** `invalidate_ldap_cache()` wird nach Config-Änderungen (Save/Delete/Toggle) aufgerufen
+- **Öffentliche Endpunkte:** `/api/auth/mode` (AD-Status für Login-Modal) und `/api/appearance/wallpaper` (Hintergrundbild für Login-Seite)
+- **Viewer-Guards Frontend:** `isAdmin` Prop → Edit Mode, FAB, Sidebar-Tabs (Proxmox, Security, Settings) werden für Viewer ausgeblendet
+- **Tab-Reset:** Bei jedem Login wird `activeTab="services"` und `editMode=false` gesetzt (verhindert Tab-Flash beim User-Wechsel)
+
+---
+
+## 6. Proxmox Status-Dashboard (Kurzübersicht)
 
 Das Status-Dashboard (`ProxmoxStatusDashboard.jsx`) zeigt aggregierte Cluster-Statistiken in einem **draggable & resizable Widget-Grid** (react-grid-layout) — erreichbar über den "Status-Übersicht" Sub-Tab in Proxmox.
 
@@ -301,25 +345,26 @@ Das Status-Dashboard (`ProxmoxStatusDashboard.jsx`) zeigt aggregierte Cluster-St
 
 ---
 
-## 6. Aktueller Status & Besonderheiten
+## 7. Aktueller Status & Besonderheiten
 
 ### API-Endpunkte (Übersicht)
 | Router | Prefix | Endpunkte | Auth |
 |---|---|---|---|
-| auth | `/api/` | login, refresh, logout | Nein (Login) |
-| services | `/api/services` | CRUD + Reorder | Admin |
-| shortcuts | `/api/shortcuts` | CRUD + Reorder | Admin |
-| appearance | `/api/appearance` | Get/Update | Admin |
+| auth | `/api/` | login, refresh, logout, auth/mode | Nein (Login, auth/mode) |
+| services | `/api/services` | CRUD + Reorder | GET: Admin+Viewer, Write: Admin |
+| shortcuts | `/api/shortcuts` | CRUD + Reorder | GET: Admin+Viewer, Write: Admin |
+| appearance | `/api/appearance` | Get/Update + /wallpaper (public) | Admin (GET: Admin+Viewer) |
 | proxmox | `/api/proxmox` | Config, Test, VMs, Start/Stop/Reboot | Admin |
 | proxmox_stats | `/api/proxmox/cluster-stats` | Aggregierte Cluster-Stats | Admin |
 | admin | `/api/admin` | Audit-Logs, Token-Rotation, Rate-Limits | Admin |
 | spotify | `/api/spotify` | OAuth, Now-Playing, Install/Uninstall | Admin |
-| dashboards | `/api/dashboards` | CRUD + Layouts | Admin |
+| dashboards | `/api/dashboards` | CRUD + Layouts | GET: Admin+Viewer, Write: Admin |
 | config | `/api/config` | Export/Import/Validate | Admin |
+| admin (ldap) | `/api/ldap` | Config CRUD, Test, Toggle | Admin |
 
 ### Bekannte technische Schulden
 1. **Kein ORM** — Raw SQL überall. Funktioniert, aber Schema-Migrationen sind manuell (`init.sql` anpassen, Container neu starten).
-2. **Single-User-System** — Nur ein Admin-Account (Passwort aus ENV). Kein User-Management, keine Rollen außer "admin".
+2. **~~Single-User-System~~** — Lokaler Admin + optionale AD-User. Rollen: `admin` (lokal + AD) und `viewer` (nur AD). Kein eigenes User-Management — User kommen aus AD.
 3. **In-Memory Rate-Limiting** — `failed_login_attempts` Dict geht bei Backend-Restart verloren. slowapi speichert ebenfalls in-memory.
 4. **Kein TypeScript** — Keine Compile-Zeit-Typprüfung im Frontend. prop-types installiert aber nicht flächendeckend genutzt.
 5. **Sync DB in Async Framework** — psycopg2 ist synchron, wird in `run_in_threadpool` gewrapped. Funktioniert, aber nicht ideal für hohe Concurrency.
