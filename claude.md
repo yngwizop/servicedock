@@ -203,7 +203,8 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 │       │       ├── StorageByTypeCard.jsx
 │       │       ├── StorageTotalCard.jsx
 │       │       ├── CephHealthCard.jsx
-│       │       └── CephOSDCard.jsx
+│       │       ├── CephOSDCard.jsx
+│       │       └── CardVisibilityPanel.jsx  # Dropdown: Cards ein-/ausblenden
 │       ├── i18n/
 │       │   ├── index.js             # i18n Config (LanguageDetector, fallback: de)
 │       │   └── locales/
@@ -253,7 +254,8 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 - **API-Aufrufe im Frontend:** Immer via `authenticatedFetch()` aus `utils/auth.js` (Cookie-basiert, Auto-Refresh)
 - **DB-Aufrufe im Backend:** Sync psycopg2 in `run_in_threadpool()` für async Kompatibilität
 - **Fehlerbehandlung:** Backend gibt HTTP-Statuscodes zurück (401, 403, 404, 500), Frontend zeigt lokalisierte Fehlermeldungen via `t()`
-- **i18n-Konvention:** Alle sichtbaren Strings in `src/i18n/locales/{de,en}.json`. Neue Strings immer in beide Dateien + `t('namespace.key')` in der Komponente
+- **i18n-Konvention:** Alle sichtbaren Strings in `src/i18n/locales/{de,en}.json`. Neue Strings immer in beide Dateien + `t('namespace.key')` in der Komponente. **Keine Emojis in i18n-Keys** — Icons werden ausschließlich über phosphor-react in JSX gerendert (verhindert Doppel-Icons)
+- **i18n-Imports:** In `i18n/index.js` als `deLocale`/`enLocale` importiert (nicht `de`/`en`) — vermeidet TDZ-Fehler durch Vite ESM-Minifier
 - **Verschlüsselung:** Alle sensiblen Daten (Proxmox Token, Spotify Secrets) werden mit Fernet verschlüsselt in DB gespeichert
 - **Audit:** Sicherheitsrelevante Aktionen werden in `audit_log` geschrieben, sensible Daten automatisch redacted
 
@@ -340,3 +342,6 @@ Das Status-Dashboard (`ProxmoxStatusDashboard.jsx`) zeigt aggregierte Cluster-St
 - **Edit Mode Toggle** — Sidebar-Button statt permanent sichtbare Edit-Controls. FAB (AddItemFAB) wird nur im Edit Mode gerendert (kein Scroll-basiertes Einblenden mehr)
 - **Keine SPA-Routing-Library** — Tab-basierte Navigation via `activeTab` State (services, monitoring, security, settings)
 - **i18n via react-i18next** — Browser-Sprache wird automatisch erkannt (`i18next-browser-languagedetector`), Fallback auf Deutsch. Sprachwahl in Settings > Language Tab, persistiert in `localStorage` (`servicedock_language`)
+- **Settings Tab-Navigation** — `SettingsPage.jsx` rendert nur die aktive Section via Conditional Rendering (`{activeSection === 'xxx' && ...}`), keine Scroll-Spy. Sidebar-Buttons setzen `activeSection` direkt. Sections: appearance, dashboards, proxmox, addons, language
+- **Settings Glasmorphism-Redesign** — `AppearanceTab.jsx` mit 5 Glasmorphismus-Sektionskarten. Wiederverwendbare `SectionHeader` (phosphor-Icon + Titel) und `ToggleSwitch` Helper-Komponenten. Einheitliche Konstanten: `sectionCard`, `inputClass`, `labelClass` für konsistentes Styling
+- **Settings Icon-Konvention** — Icons nur in JSX via phosphor-react (z.B. `Image`, `Palette`, `SquaresFour`, `Eye`, `CloudSun`), nie als Emoji in i18n-Strings

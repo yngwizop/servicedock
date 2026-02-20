@@ -104,6 +104,27 @@ CREATE TABLE IF NOT EXISTS spotify_config (
 -- Index für schnelle Token-Abfrage
 CREATE INDEX IF NOT EXISTS idx_spotify_connected ON spotify_config(connected);
 
+-- NEU: LDAP/Active Directory Konfigurationstabelle (AddOn)
+CREATE TABLE IF NOT EXISTS ldap_config (
+    id INT PRIMARY KEY DEFAULT 1,
+    enabled BOOLEAN DEFAULT FALSE,
+    host VARCHAR(255) NOT NULL,
+    port INT DEFAULT 389,
+    use_ssl BOOLEAN DEFAULT FALSE,
+    use_starttls BOOLEAN DEFAULT FALSE,
+    base_dn VARCHAR(500) NOT NULL,
+    user_search_base VARCHAR(500),
+    bind_dn VARCHAR(500),
+    bind_password TEXT,                   -- Verschlüsselt (Fernet)
+    user_attribute VARCHAR(100) DEFAULT 'sAMAccountName',
+    domain VARCHAR(255),                  -- z.B. 'homelab.local' (für user@domain Bind)
+    admin_group_dn VARCHAR(500),
+    viewer_group_dn VARCHAR(500),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT ldap_single_row CHECK (id = 1)
+);
+
 -- NEU: Multi-Dashboard Support
 CREATE TABLE IF NOT EXISTS dashboards (
     id SERIAL PRIMARY KEY,

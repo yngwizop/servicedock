@@ -4,6 +4,7 @@ import { Plug } from 'phosphor-react';
 import { authenticatedFetch } from '../../utils/auth';
 import ConfigAddon from './ConfigAddon';
 import SpotifyAddon from './SpotifyAddon';
+import LdapAddon from './LdapAddon';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
   (window.location.port === '' ? 
@@ -19,6 +20,7 @@ function AddOnsCard() {
   const { t } = useTranslation();
   const [showConfigPage, setShowConfigPage] = useState(false);
   const [showSpotifyPage, setShowSpotifyPage] = useState(false);
+  const [showLdapPage, setShowLdapPage] = useState(false);
 
   // Config Import/Export State
   const [importMode, setImportMode] = useState('append');
@@ -41,6 +43,32 @@ function AddOnsCard() {
   const [isSavingSpotify, setIsSavingSpotify] = useState(false);
   const [spotifySaved, setSpotifySaved] = useState(false);
 
+  // LDAP/AD State
+  const [ldapConfig, setLdapConfig] = useState({
+    enabled: false,
+    host: '',
+    port: 389,
+    use_ssl: false,
+    use_starttls: false,
+    base_dn: '',
+    user_search_base: '',
+    bind_dn: '',
+    bind_password: '',
+    user_attribute: 'sAMAccountName',
+    domain: '',
+    admin_group_dn: '',
+    viewer_group_dn: '',
+  });
+  const [ldapStatus, setLdapStatus] = useState({
+    configured: false,
+    enabled: false,
+    has_bind_password: false,
+  });
+  const [isSavingLdap, setIsSavingLdap] = useState(false);
+  const [ldapSaved, setLdapSaved] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState(null);
+
   // Lade Spotify Status
   useEffect(() => {
     const fetchSpotifyStatus = async () => {
@@ -60,6 +88,42 @@ function AddOnsCard() {
       }
     };
     fetchSpotifyStatus();
+  }, []);
+
+  // Lade LDAP Status
+  useEffect(() => {
+    const fetchLdapStatus = async () => {
+      try {
+        const res = await authenticatedFetch(`${BACKEND_URL}/api/ldap/config`);
+        const data = await res.json();
+        if (data.host) {
+          setLdapConfig(prev => ({
+            ...prev,
+            enabled: data.enabled,
+            host: data.host || '',
+            port: data.port || 389,
+            use_ssl: data.use_ssl || false,
+            use_starttls: data.use_starttls || false,
+            base_dn: data.base_dn || '',
+            user_search_base: data.user_search_base || '',
+            bind_dn: data.bind_dn || '',
+            bind_password: '', // Wird nie zurückgegeben
+            user_attribute: data.user_attribute || 'sAMAccountName',
+            domain: data.domain || '',
+            admin_group_dn: data.admin_group_dn || '',
+            viewer_group_dn: data.viewer_group_dn || '',
+          }));
+          setLdapStatus({
+            configured: true,
+            enabled: data.enabled,
+            has_bind_password: data.has_bind_password,
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load LDAP config:', err);
+      }
+    };
+    fetchLdapStatus();
   }, []);
 
   const handleSaveSpotify = async (e) => {
@@ -128,9 +192,91 @@ function AddOnsCard() {
     }
   };
 
+  // --- LDAP Handlers ---
+  const handleSaveLdap = async (e) => {
+    e.preventDefault();
+    setIsSavingLdap(true);
+    try {
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/ldap/config`, {
+        method: 'PUT',
+        body: JSON.stringify(ldapConfig),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLdapSaved(true);
+        setTimeout(() => setLdapSaved(false), 2000);
+        setLdapStatus({
+          configured: true,
+          enabled: data.enabled,
+          has_bind_password: data.has_bind_password,
+        });
+      } else {
+        const error = await res.json();
+        alert(error.detail || t('addons.ldap_save_error'));
+      }
+    } catch (err) {
+      console.error('Failed to save LDAP config:', err);
+      alert(t('addons.ldap_save_error'));
+    } finally {
+      setIsSavingLdap(false);
+    }
+  };
+
+  const handleTestLdap = async () => {
+    setIsTesting(true);
+    setTestResult(null);
+    try {
+      const testData = {
+        host: ldapConfig.host,
+        port: ldapConfig.port,
+        use_ssl: ldapConfig.use_ssl,
+        use_starttls: ldapConfig.use_starttls,
+        base_dn: ldapConfig.base_dn,
+        user_search_base: ldapConfig.user_search_base || null,
+        bind_dn: ldapConfig.bind_dn || null,
+        bind_password: ldapConfig.bind_password || null,
+        admin_group_dn: ldapConfig.admin_group_dn || null,
+        viewer_group_dn: ldapConfig.viewer_group_dn || null,
+      };
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/ldap/test`, {
+        method: 'POST',
+        body: JSON.stringify(testData),
+      });
+      const data = await res.json();
+      setTestResult(data);
+    } catch (err) {
+      console.error('Failed to test LDAP:', err);
+      setTestResult({ success: false, message: t('addons.ldap_test_error') });
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
+  const handleUninstallLdap = async () => {
+    if (!confirm(t('addons.ldap_remove_confirm'))) return;
+    try {
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/ldap/config`, { method: 'DELETE' });
+      if (res.ok) {
+        setLdapStatus({ configured: false, enabled: false, has_bind_password: false });
+        setLdapConfig({
+          enabled: false, host: '', port: 389, use_ssl: false, use_starttls: false,
+          base_dn: '', user_search_base: '', bind_dn: '', bind_password: '',
+          user_attribute: 'sAMAccountName', domain: '', admin_group_dn: '', viewer_group_dn: '',
+        });
+        setTestResult(null);
+        alert(t('addons.ldap_removed'));
+      } else {
+        alert(t('addons.ldap_remove_error'));
+      }
+    } catch (err) {
+      console.error('Failed to uninstall LDAP:', err);
+      alert(t('addons.ldap_remove_error'));
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {!showConfigPage && !showSpotifyPage ? (
+      {!showConfigPage && !showSpotifyPage && !showLdapPage ? (
         <>
           <div>
             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
@@ -215,6 +361,50 @@ function AddOnsCard() {
               </div>
             </div>
           </div>
+
+          {/* LDAP/Active Directory AddOn Card */}
+          <div 
+            className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl"
+            onClick={() => setShowLdapPage(true)}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-indigo-400/10 to-transparent dark:from-indigo-400/30 dark:via-indigo-500/20 dark:to-transparent" />
+            <div className="relative backdrop-blur-xl bg-white/70 dark:bg-gray-800/70 border border-gray-300/50 dark:border-white/[0.12] p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <span className="text-3xl">🔐</span>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.ldap_title')}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('addons.ldap_subtitle')}</p>
+                  </div>
+                </div>
+                <div>
+                  {ldapStatus.enabled ? (
+                    <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-semibold rounded-full">
+                      {t('addons.active')}
+                    </span>
+                  ) : ldapStatus.configured ? (
+                    <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-sm font-semibold rounded-full">
+                      {t('addons.configured')}
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 text-sm font-semibold rounded-full">
+                      {t('addons.not_installed')}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                {t('addons.ldap_description')}
+              </p>
+              <div className="flex gap-2">
+                <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">{t('addons.ldap_tag_ad')}</span>
+                <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">{t('addons.ldap_tag_roles')}</span>
+                <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">🔒 Encrypted</span>
+              </div>
+            </div>
+          </div>
         </>
       ) : showConfigPage ? (
         <ConfigAddon 
@@ -252,6 +442,28 @@ function AddOnsCard() {
             handleSaveSpotify={handleSaveSpotify}
             handleConnectSpotify={handleConnectSpotify}
             handleUninstallSpotify={handleUninstallSpotify}
+          />
+        </>
+      ) : showLdapPage ? (
+        <>
+          <button
+            onClick={() => setShowLdapPage(false)}
+            className="mb-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-300/50 dark:border-white/10 rounded-lg hover:bg-gray-100/70 dark:hover:bg-gray-700/70 transition-colors"
+          >
+            <span>←</span> {t('addons.back')}
+          </button>
+          <LdapAddon
+            BACKEND_URL={BACKEND_URL}
+            ldapConfig={ldapConfig}
+            setLdapConfig={setLdapConfig}
+            ldapStatus={ldapStatus}
+            isSavingLdap={isSavingLdap}
+            ldapSaved={ldapSaved}
+            handleSaveLdap={handleSaveLdap}
+            handleTestLdap={handleTestLdap}
+            handleUninstallLdap={handleUninstallLdap}
+            testResult={testResult}
+            isTesting={isTesting}
           />
         </>
       ) : null}

@@ -110,6 +110,61 @@ def require_role(required_role: str):
     
     return role_checker
 
+
+def require_any_role(*roles: str):
+    """
+    Dependency die mehrere Rollen erlaubt.
+    Z.B. für Endpunkte die Admin UND Viewer nutzen dürfen.
+    
+    Usage:
+        @app.get("/api/services")
+        def get_services(token: dict = Depends(require_any_role("admin", "viewer"))):
+            ...
+    """
+    def role_checker(
+        credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+        access_token: Optional[str] = Cookie(None)
+    ) -> dict:
+        token = None
+        
+        if access_token:
+            token = access_token
+        elif credentials:
+            token = credentials.credentials
+        
+        if not token:
+            raise HTTPException(
+                status_code=401,
+                detail="Authentication required"
+            )
+        
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            
+            username: str = payload.get("sub")
+            if username is None:
+                raise HTTPException(
+                    status_code=401,
+                    detail="Invalid authentication credentials"
+                )
+            
+            user_role = payload.get("type")
+            if user_role not in roles:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Access denied. Required role: {' or '.join(roles)}"
+                )
+            
+            return payload
+            
+        except JWTError:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid authentication credentials"
+            )
+    
+    return role_checker
+
 def get_client_ip(request: Request) -> str:
     """
     Extrahiert die Client-IP aus dem Request.

@@ -1,6 +1,6 @@
 """Dashboard routes"""
 from fastapi import APIRouter, Depends, HTTPException, Request
-from dependencies.auth import require_role
+from dependencies.auth import require_role, require_any_role
 from config.database import get_db
 from models.dashboard import Dashboard, DashboardCreate, DashboardResponse
 from core.limiter import limiter
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/dashboards", tags=["dashboards"])
 
 @router.get("", response_model=List[DashboardResponse])
 @limiter.limit("60/minute")
-async def get_dashboards(request: Request, db = Depends(get_db), _admin = Depends(require_role("admin"))) -> List[DashboardResponse]:
+async def get_dashboards(request: Request, db = Depends(get_db), _admin = Depends(require_any_role("admin", "viewer"))) -> List[DashboardResponse]:
     """Get all dashboards with counts"""
     def _get_dashboards_sync():
         cur = db.cursor()
@@ -186,9 +186,8 @@ async def get_proxmox_layout(
     request: Request,
     dashboard_id: int,
     db = Depends(get_db),
-    _admin = Depends(require_role("admin"))
+    _admin = Depends(require_any_role("admin", "viewer"))
 ):
-    """Get saved Proxmox dashboard layout"""
     def _get_layout_sync():
         cur = db.cursor()
         try:
@@ -287,7 +286,7 @@ async def get_proxmox_visible_cards(
     request: Request,
     dashboard_id: int,
     db = Depends(get_db),
-    _admin = Depends(require_role("admin"))
+    _admin = Depends(require_any_role("admin", "viewer"))
 ):
     """Get saved visible cards configuration"""
     def _get_sync():

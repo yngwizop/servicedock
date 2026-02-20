@@ -5,7 +5,7 @@ from fastapi.concurrency import run_in_threadpool
 
 from models.appearance import Appearance
 from models.responses import AppearanceResponse
-from dependencies.auth import require_role
+from dependencies.auth import require_role, require_any_role
 from config.database import get_db
 from core.limiter import limiter
 
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/appearance", tags=["appearance"])
 
 @router.get("", response_model=AppearanceResponse)
 @limiter.limit("60/minute")  # Read operations - generous limit
-async def get_appearance(request: Request, db = Depends(get_db), _admin = Depends(require_role("admin"))) -> AppearanceResponse:
+async def get_appearance(request: Request, db = Depends(get_db), _admin = Depends(require_any_role("admin", "viewer"))) -> AppearanceResponse:
     def _get_appearance_sync():
         cur = db.cursor()
         try:
@@ -42,6 +42,29 @@ async def get_appearance(request: Request, db = Depends(get_db), _admin = Depend
             cur.close()
     
     return await run_in_threadpool(_get_appearance_sync)
+
+
+@router.get("/wallpaper")
+@limiter.limit("30/minute")
+async def get_wallpaper(request: Request, db = Depends(get_db)):
+    """Public endpoint — gibt nur Wallpaper-Daten zurück (kein Auth nötig).
+    Wird vom Login-Screen verwendet um den Hintergrund zu zeigen."""
+    def _get_wallpaper_sync():
+        cur = db.cursor()
+        try:
+            cur.execute("SELECT bg_color, bg_image_url, bg_opacity FROM appearance WHERE id = 1;")
+            row = cur.fetchone()
+            if not row:
+                return {"bg_color": None, "bg_image_url": None, "bg_opacity": 1.0}
+            return {
+                "bg_color": row[0],
+                "bg_image_url": row[1],
+                "bg_opacity": float(row[2]) if row[2] is not None else 1.0,
+            }
+        finally:
+            cur.close()
+    return await run_in_threadpool(_get_wallpaper_sync)
+
 
 @router.put("")
 @limiter.limit("20/minute")  # Update operations - moderate limit (prevent UI spam)

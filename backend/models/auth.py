@@ -1,7 +1,9 @@
 """Authentication models"""
 from pydantic import BaseModel, Field, validator
+from typing import Optional
 
 class AdminLogin(BaseModel):
+    username: Optional[str] = Field(None, max_length=255)  # Optional: für AD-Login
     password: str = Field(..., min_length=1, max_length=1000)
     
     @validator('password')

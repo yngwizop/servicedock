@@ -1,8 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { LockKey } from 'phosphor-react';
+import { LockKey, User } from 'phosphor-react';
 
-function LoginModal({ onSubmit, password, setPassword, error, onClose, disabled = false, appearance = {} }) {
+function LoginModal({ onSubmit, password, setPassword, username, setUsername, error, onClose, disabled = false, appearance = {}, adEnabled = false, adDomain = null }) {
   const { t } = useTranslation();
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="loginmodal-title">
@@ -36,8 +36,31 @@ function LoginModal({ onSubmit, password, setPassword, error, onClose, disabled 
           </h3>
         </div>
         <p className="text-gray-600 dark:text-gray-400 mb-4">
-          {t('login.instruction')}
+          {adEnabled ? t('login.instruction_ad') : t('login.instruction')}
         </p>
+
+        {/* Username Input (nur wenn AD aktiv) */}
+        {adEnabled && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('login.username_label')}
+            </label>
+            <div className="relative">
+              <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <input
+                type="text"
+                placeholder={adDomain ? `${t('login.username_placeholder')}@${adDomain}` : t('login.username_placeholder')}
+                autoFocus
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-white/70 dark:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-all dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+              />
+            </div>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {t('login.username_hint')}
+            </p>
+          </div>
+        )}
 
         {/* Password Input */}
         <div className="mb-4">
@@ -47,7 +70,7 @@ function LoginModal({ onSubmit, password, setPassword, error, onClose, disabled 
           <input
             type="password"
             placeholder={t('login.password_placeholder')}
-            autoFocus
+            autoFocus={!adEnabled}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-4 py-2 bg-white/70 dark:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-all dark:text-white placeholder-gray-500 dark:placeholder-gray-400"

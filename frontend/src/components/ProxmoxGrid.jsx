@@ -14,7 +14,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
     `${window.location.protocol}//${window.location.hostname}:8000`
   );
 
-function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, searchTerm = "" }) {
+function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, searchTerm = "", isAdmin = true }) {
   const { t } = useTranslation();
   // Sub-Navigation State
   const [activeView, setActiveView] = useState('resources'); // 'resources' oder 'status'
@@ -577,7 +577,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
                 onStart={handleStart}
                 onStop={handleStop}
                 onReboot={handleReboot}
-                isAdmin={isLoggedIn}
+                isAdmin={isAdmin}
               />
             </div>
           ))}

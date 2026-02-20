@@ -36,7 +36,10 @@ function Sidebar({
   activeDashboard = 1,
   switchDashboard,
   editMode = false,
-  setEditMode
+  setEditMode,
+  isAdmin = true,
+  displayName = null,
+  authMethod = 'local'
 }) {
   const { t } = useTranslation();
   const [dashDropdownOpen, setDashDropdownOpen] = useState(false);
@@ -83,9 +86,9 @@ function Sidebar({
   }, [dashDropdownOpen]);
   const navItems = [
     { id: 'services', label: 'Dashboard', icon: SquaresFour },
-    ...(showProxmox ? [{ id: 'monitoring', label: 'Proxmox', icon: Desktop }] : []),
-    { id: 'security', label: 'Security', icon: ShieldCheck },
-    { id: 'settings', label: 'Settings', icon: Gear }
+    ...(showProxmox && isAdmin ? [{ id: 'monitoring', label: 'Proxmox', icon: Desktop }] : []),
+    ...(isAdmin ? [{ id: 'security', label: 'Security', icon: ShieldCheck }] : []),
+    ...(isAdmin ? [{ id: 'settings', label: 'Settings', icon: Gear }] : [])
   ];
 
   return (
@@ -217,7 +220,8 @@ function Sidebar({
 
       {/* Bottom Actions */}
       <div className="p-4 space-y-2">
-        {/* Edit Mode Toggle */}
+        {/* Edit Mode Toggle – nur für Admins */}
+        {isAdmin && (
         <button
           onClick={() => setEditMode && setEditMode(!editMode)}
           className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} ${collapsed ? 'px-2 py-3' : 'px-4 py-3'} rounded-xl ${
@@ -232,6 +236,7 @@ function Sidebar({
             {editMode ? t('sidebar.end_edit') : t('sidebar.edit')}
           </span>
         </button>
+        )}
 
         {/* Globale Suche */}
         <button

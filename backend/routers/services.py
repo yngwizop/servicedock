@@ -6,7 +6,7 @@ from fastapi.concurrency import run_in_threadpool
 from models.service import Service
 from models.reorder import ReorderRequest
 from models.responses import ServiceResponse
-from dependencies.auth import require_role
+from dependencies.auth import require_role, require_any_role
 from config.database import get_db
 from core.logging import logger
 from core.limiter import limiter
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/services", tags=["services"])
 
 @router.get("", response_model=List[ServiceResponse])
 @limiter.limit("60/minute")  # Read operations - generous limit
-async def get_services(request: Request, dashboard_id: int = 1, db = Depends(get_db), _admin = Depends(require_role("admin"))) -> List[ServiceResponse]:
+async def get_services(request: Request, dashboard_id: int = 1, db = Depends(get_db), _admin = Depends(require_any_role("admin", "viewer"))) -> List[ServiceResponse]:
     """Get all services for a specific dashboard (default: 1)"""
     def _get_services_sync():
         cur = db.cursor()

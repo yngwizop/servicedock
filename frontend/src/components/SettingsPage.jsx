@@ -22,7 +22,9 @@ function SettingsPage({
   dashboards,
   activeDashboard,
   onDashboardsChange,
-  textColor
+  textColor,
+  isAdmin = true,
+  userRole = 'admin'
 }) {
   const { t } = useTranslation();
 

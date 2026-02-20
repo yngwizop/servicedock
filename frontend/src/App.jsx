@@ -58,6 +58,19 @@ function App() {
   const [activeTab, setActiveTab] = useState("services");
   const [spotifyConfigured, setSpotifyConfigured] = useState(false);
   const [weatherLocationInfo, setWeatherLocationInfo] = useState(null);
+  
+  // Wallpaper für Login-Screen (public, kein Auth nötig)
+  const [loginWallpaper, setLoginWallpaper] = useState(null);
+
+  // === Wallpaper vor Login laden ===
+  useEffect(() => {
+    if (!auth.isLoggedIn) {
+      fetch(`${BACKEND_URL}/api/appearance/wallpaper`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => { if (data) setLoginWallpaper(data); })
+        .catch(() => {});
+    }
+  }, [auth.isLoggedIn]);
 
   // === Data Fetching on Login ===
   const fetchSpotifyStatus = async () => {
@@ -123,27 +136,30 @@ function App() {
   const serviceColsClass = gridColsLookup[appearance.service_cols] || 'lg:grid-cols-6';
   const shortcutColsClass = gridColsLookup[appearance.shortcut_cols] || 'lg:grid-cols-6';
 
+  // Background-Daten: nach Login aus appearance, davor aus loginWallpaper
+  const bg = auth.isLoggedIn ? appearance : (loginWallpaper || {});
+
   // === RENDER ===
   return (
     <ErrorBoundary>
     {/* Background-Layer */}
     <div className="fixed inset-0 w-full h-full -z-10">
-      {appearance.bg_color && appearance.bg_color !== 'transparent' && (
+      {bg.bg_color && bg.bg_color !== 'transparent' && (
         <div
           className="absolute inset-0 w-full h-full pointer-events-none"
           style={{ 
-            backgroundColor: appearance.bg_color,
-            opacity: appearance.bg_opacity || 0.3
+            backgroundColor: bg.bg_color,
+            opacity: bg.bg_opacity || 0.3
           }}
         ></div>
       )}
 
-      {appearance.bg_image_url && (
+      {bg.bg_image_url && (
         <div
           className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat pointer-events-none"
           style={{
-            backgroundImage: `url(${appearance.bg_image_url})`,
-            opacity: appearance.bg_opacity,
+            backgroundImage: `url(${bg.bg_image_url})`,
+            opacity: bg.bg_opacity,
             backgroundAttachment: 'fixed'
           }}
         ></div>
@@ -156,6 +172,10 @@ function App() {
         onSubmit={auth.handleLogin}
         password={auth.password}
         setPassword={auth.setPassword}
+        username={auth.username}
+        setUsername={auth.setUsername}
+        adEnabled={auth.adEnabled}
+        adDomain={auth.adDomain}
         error={auth.loginError}
         disabled={auth.loginDisabled}
         onClose={() => auth.setLoginError("")}
@@ -183,6 +203,9 @@ function App() {
         switchDashboard={switchDashboard}
         editMode={editMode}
         setEditMode={setEditMode}
+        isAdmin={auth.isAdmin}
+        displayName={auth.displayName}
+        authMethod={auth.authMethod}
       />
 
       {/* Main Content */}
@@ -333,6 +356,7 @@ function App() {
               activeDashboard={activeDashboard}
               searchTerm={searchTerm}
               onOpenSettings={() => setActiveTab('settings')}
+              isAdmin={auth.isAdmin}
             />
           )}
 
@@ -359,13 +383,15 @@ function App() {
               activeDashboard={activeDashboard}
               onDashboardsChange={fetchDashboards}
               textColor={getTextColor()}
+              isAdmin={auth.isAdmin}
+              userRole={auth.userRole}
             />
           )}
         </div>
       </div>
 
       {/* FAB */}
-      {auth.isLoggedIn && activeTab === "services" && editMode && (
+      {auth.isLoggedIn && auth.isAdmin && activeTab === "services" && editMode && (
         <AddItemFAB
           activeDashboard={activeDashboard}
           onItemAdded={fetchData}

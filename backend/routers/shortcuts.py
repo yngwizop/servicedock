@@ -6,7 +6,7 @@ from fastapi.concurrency import run_in_threadpool
 from models.shortcut import Shortcut
 from models.reorder import ReorderRequest
 from models.responses import ShortcutResponse
-from dependencies.auth import require_role
+from dependencies.auth import require_role, require_any_role
 from config.database import get_db
 from core.logging import logger
 from core.limiter import limiter
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/shortcuts", tags=["shortcuts"])
 
 @router.get("", response_model=List[ShortcutResponse])
 @limiter.limit("60/minute")  # Read operations - generous limit
-async def get_shortcuts(request: Request, dashboard_id: int = 1, db = Depends(get_db), _admin = Depends(require_role("admin"))) -> List[ShortcutResponse]:
+async def get_shortcuts(request: Request, dashboard_id: int = 1, db = Depends(get_db), _admin = Depends(require_any_role("admin", "viewer"))) -> List[ShortcutResponse]:
     """Get all shortcuts for a specific dashboard (default: 1)"""
     def _get_shortcuts_sync():
         cur = db.cursor()

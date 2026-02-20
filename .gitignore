@@ -30,6 +30,9 @@ frontend/dist/
 # Claude.md file for instructions (ignore repo-root file)
 /CLAUDE.md
 
+# Samba AD Test-Daten (Zugangsdaten, nicht committen!)
+/SAMBA_TEST_DATA.md
+
 # Generic secret file patterns - catch future accidental commits
 *.pem
 *.key
