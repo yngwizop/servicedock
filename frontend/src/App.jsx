@@ -6,6 +6,7 @@ import ProxmoxGrid from "./components/ProxmoxGrid";
 import SecurityDashboard from "./components/SecurityDashboard";
 import SpotifyCard from "./components/SpotifyCard";
 import LoginModal from "./components/LoginModal";
+import ChangePasswordModal from "./components/ChangePasswordModal";
 import SettingsPage from "./components/SettingsPage";
 import AddItemFAB from "./components/AddItemFAB";
 import ClockWidget from "./components/ClockWidget";
@@ -182,6 +183,11 @@ function App() {
         error={auth.loginError}
         disabled={auth.loginDisabled}
         onClose={() => auth.setLoginError("")}
+      />
+    ) : auth.forcePasswordChange ? (
+      <ChangePasswordModal
+        onComplete={() => auth.setForcePasswordChange(false)}
+        appearance={appearance}
       />
     ) : (
     <div className="relative min-h-screen">

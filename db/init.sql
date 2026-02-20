@@ -104,6 +104,21 @@ CREATE TABLE IF NOT EXISTS spotify_config (
 -- Index für schnelle Token-Abfrage
 CREATE INDEX IF NOT EXISTS idx_spotify_connected ON spotify_config(connected);
 
+-- NEU: Admin-Authentifizierung (Passwort in DB statt .env)
+CREATE TABLE IF NOT EXISTS admin_auth (
+    id INT PRIMARY KEY DEFAULT 1,
+    password_hash TEXT NOT NULL,
+    force_change BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT admin_auth_single_row CHECK (id = 1)
+);
+
+-- Default: "changeme" (bcrypt 12 rounds) — MUSS beim ersten Login geändert werden
+INSERT INTO admin_auth (id, password_hash, force_change)
+VALUES (1, '$2b$12$YU.qWhwL8Y2m0a0NDlD5nON0UE5QrtkDfUh47pYIKgtDg/yg9HF.m', TRUE)
+ON CONFLICT (id) DO NOTHING;
+
 -- NEU: LDAP/Active Directory Konfigurationstabelle (AddOn)
 CREATE TABLE IF NOT EXISTS ldap_config (
     id INT PRIMARY KEY DEFAULT 1,

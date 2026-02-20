@@ -6,18 +6,76 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 
 from config.settings import SECRET_KEY, ALGORITHM, ADMIN_PASSWORD
-from core.security import get_password_hash
+from core.security import get_password_hash, verify_password
 from core.logging import logger
+import config.database as database_module
 
 # HTTP Bearer token scheme
 security = HTTPBearer(auto_error=False)  # auto_error=False to check cookie fallback
 
-# Global admin password hash
-ADMIN_PASSWORD_HASH = None
-
 # X-Forwarded-For Trust Configuration
 TRUST_FORWARDED_HEADERS = os.getenv("TRUST_FORWARDED_HEADERS", "false").lower() == "true"
 TRUSTED_PROXIES = [ip.strip() for ip in os.getenv("TRUSTED_PROXIES", "").split(",") if ip.strip()]
+
+
+def get_admin_password_hash() -> str:
+    """Liest den Admin-Passwort-Hash aus der DB (admin_auth Tabelle)."""
+    pool = database_module.db_pool
+    if pool is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    db = pool.getconn()
+    try:
+        cur = db.cursor()
+        cur.execute("SELECT password_hash FROM admin_auth WHERE id = 1")
+        row = cur.fetchone()
+        cur.close()
+        if not row:
+            raise HTTPException(status_code=500, detail="Admin auth not configured")
+        return row[0]
+    finally:
+        pool.putconn(db)
+
+
+def get_admin_force_change() -> bool:
+    """Prüft ob Admin-Passwort geändert werden muss."""
+    pool = database_module.db_pool
+    if pool is None:
+        return False
+    
+    db = pool.getconn()
+    try:
+        cur = db.cursor()
+        cur.execute("SELECT force_change FROM admin_auth WHERE id = 1")
+        row = cur.fetchone()
+        cur.close()
+        return bool(row[0]) if row else False
+    finally:
+        pool.putconn(db)
+
+
+def update_admin_password(new_password: str) -> None:
+    """Setzt ein neues Admin-Passwort in der DB (gehashed)."""
+    if len(new_password) < 8:
+        raise ValueError("Password must be at least 8 characters")
+    
+    new_hash = get_password_hash(new_password)
+    pool = database_module.db_pool
+    if pool is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    db = pool.getconn()
+    try:
+        cur = db.cursor()
+        cur.execute(
+            "UPDATE admin_auth SET password_hash = %s, force_change = FALSE, updated_at = NOW() WHERE id = 1",
+            (new_hash,)
+        )
+        db.commit()
+        cur.close()
+        logger.info("Admin password updated successfully")
+    finally:
+        pool.putconn(db)
 
 def verify_token(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
@@ -195,25 +253,52 @@ def get_client_ip(request: Request) -> str:
 
 def initialize_admin_password():
     """
-    Initialisiert das Admin-Passwort beim ersten Start.
-    ADMIN_PASSWORD muss gesetzt sein - kein Fallback!
+    Migriert ADMIN_PASSWORD aus .env in die DB (einmalig).
+    Falls ADMIN_PASSWORD gesetzt und DB-Passwort noch 'changeme' ist → übernehmen.
+    Wird beim App-Start aufgerufen (main.py startup).
     """
-    global ADMIN_PASSWORD_HASH
-    
     if not ADMIN_PASSWORD:
-        raise ValueError(
-            "ADMIN_PASSWORD environment variable is required! "
-            "Set a strong password (min. 8 characters) in your .env file."
-        )
+        logger.info("No ADMIN_PASSWORD in .env — using DB-based auth (admin_auth table)")
+        return
     
-    if len(ADMIN_PASSWORD) < 8:
-        raise ValueError(
-            f"ADMIN_PASSWORD must be at least 8 characters long! "
-            f"Current length: {len(ADMIN_PASSWORD)}"
-        )
+    pool = database_module.db_pool
+    if pool is None:
+        logger.warning("DB pool not ready for admin password migration")
+        return
     
-    ADMIN_PASSWORD_HASH = get_password_hash(ADMIN_PASSWORD)
-    logger.info(f"Admin password initialized (hashed, length: {len(ADMIN_PASSWORD)} chars)")
-
-# Initialisiere beim Import
-initialize_admin_password()
+    db = pool.getconn()
+    try:
+        cur = db.cursor()
+        cur.execute("SELECT password_hash, force_change FROM admin_auth WHERE id = 1")
+        row = cur.fetchone()
+        cur.close()
+        
+        if row and row[1]:  # force_change == True → Noch Default
+            # Migriere .env Passwort in DB
+            new_hash = get_password_hash(ADMIN_PASSWORD)
+            cur = db.cursor()
+            cur.execute(
+                "UPDATE admin_auth SET password_hash = %s, force_change = FALSE, updated_at = NOW() WHERE id = 1",
+                (new_hash,)
+            )
+            db.commit()
+            cur.close()
+            logger.info(f"Migrated ADMIN_PASSWORD from .env to DB (length: {len(ADMIN_PASSWORD)} chars)")
+            logger.info("You can now remove ADMIN_PASSWORD from your .env file!")
+        elif not row:
+            # Keine admin_auth Zeile — Insert mit .env Passwort
+            new_hash = get_password_hash(ADMIN_PASSWORD)
+            cur = db.cursor()
+            cur.execute(
+                "INSERT INTO admin_auth (id, password_hash, force_change) VALUES (1, %s, FALSE)",
+                (new_hash,)
+            )
+            db.commit()
+            cur.close()
+            logger.info("Created admin_auth from .env ADMIN_PASSWORD")
+        else:
+            logger.info("Admin password already set in DB — ignoring .env ADMIN_PASSWORD")
+    except Exception as e:
+        logger.error(f"Error during admin password migration: {e}")
+    finally:
+        pool.putconn(db)

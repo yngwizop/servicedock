@@ -161,8 +161,9 @@ async def import_config(
     if mode == "replace":
         if not x_confirm_password:
             raise HTTPException(status_code=400, detail="Password confirmation required for replace mode. Send X-Confirm-Password header.")
-        from dependencies.auth import ADMIN_PASSWORD_HASH
-        if not bcrypt.checkpw(x_confirm_password.encode('utf-8'), ADMIN_PASSWORD_HASH.encode('utf-8')):
+        from dependencies.auth import get_admin_password_hash
+        admin_hash = get_admin_password_hash()
+        if not bcrypt.checkpw(x_confirm_password.encode('utf-8'), admin_hash.encode('utf-8')):
             raise HTTPException(status_code=403, detail="Password confirmation failed")
 
     # Limit number of dashboards to prevent abuse

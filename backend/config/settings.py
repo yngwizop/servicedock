@@ -25,12 +25,9 @@ if not ENCRYPTION_KEY:
     )
 
 # --- Admin Configuration ---
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
-if not ADMIN_PASSWORD:
-    raise ValueError(
-        "ADMIN_PASSWORD environment variable is required! "
-        "Set a secure password in .env file."
-    )
+# ADMIN_PASSWORD aus .env ist DEPRECATED — Passwort wird jetzt in der DB gespeichert.
+# Falls gesetzt, wird es beim Start als Migration verwendet (einmalig in DB geschrieben).
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")  # Optional — kann entfernt werden
 
 # --- Rate Limiting Configuration ---
 MAX_FAILED_ATTEMPTS = int(os.getenv("MAX_FAILED_LOGIN_ATTEMPTS", "5"))

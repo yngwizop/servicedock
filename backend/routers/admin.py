@@ -7,7 +7,7 @@ from models import DeleteLogsRequest, ProxmoxConfig
 from core.security import verify_password, encrypt_value
 from core.audit import log_audit
 from core.limiter import limiter
-from dependencies.auth import require_role, ADMIN_PASSWORD_HASH
+from dependencies.auth import require_role, get_admin_password_hash
 from config.database import get_db
 
 router = APIRouter()
@@ -205,7 +205,8 @@ def delete_all_audit_logs(request: Request, delete_request: DeleteLogsRequest, t
     """Löscht ALLE Audit-Logs (Admin-Passwort erforderlich)"""
     
     # Zusätzliche Passwort-Prüfung für diese kritische Operation
-    if not verify_password(delete_request.password, ADMIN_PASSWORD_HASH):
+    admin_hash = get_admin_password_hash()
+    if not verify_password(delete_request.password, admin_hash):
         raise HTTPException(status_code=403, detail="Falsches Admin-Passwort")
     
     cur = db.cursor()

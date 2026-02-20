@@ -49,6 +49,22 @@
     "wrong_password": "Wrong password. ({{attempts}}/3 attempts)",
     "backend_error": "Login error. Is the backend running?"
   },
+  "passwordChange": {
+    "title": "Change Password",
+    "instruction": "Your password must be changed before continuing.",
+    "current_password": "Current Password",
+    "current_placeholder": "Enter current password",
+    "new_password": "New Password",
+    "new_placeholder": "At least 8 characters",
+    "confirm_password": "Confirm New Password",
+    "confirm_placeholder": "Repeat new password",
+    "submit": "Change Password",
+    "mismatch": "Passwords do not match.",
+    "too_short": "Password must be at least 8 characters.",
+    "same_password": "New password must be different from current.",
+    "success": "Password changed successfully!",
+    "error": "Error changing password."
+  },
   "editModal": {
     "edit_service": "Edit Service",
     "edit_shortcut": "Edit Shortcut",

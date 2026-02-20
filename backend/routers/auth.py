@@ -2,14 +2,15 @@
 from datetime import timedelta
 from fastapi import APIRouter, Request, HTTPException, Depends, Response, Cookie
 from typing import Optional
+from pydantic import BaseModel, Field, validator
 
 from models.auth import AdminLogin
-from core.security import verify_password, create_access_token
+from core.security import verify_password, create_access_token, get_password_hash
 from core.rate_limiting import check_login_rate_limit, record_failed_login, reset_failed_login
 from core.audit import log_audit
 from core.limiter import limiter
 from core.ldap_auth import ldap_authenticate, get_ldap_config
-from dependencies.auth import get_client_ip, ADMIN_PASSWORD_HASH
+from dependencies.auth import get_client_ip, get_admin_password_hash, get_admin_force_change, update_admin_password, require_role
 from config.settings import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS, ENVIRONMENT, SECRET_KEY, ALGORITHM
 from jose import JWTError, jwt
 
@@ -137,7 +138,8 @@ def login(creds: AdminLogin, request: Request, response: Response):
             raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # --- Local Login (Passwort-only) ---
-    if not verify_password(creds.password, ADMIN_PASSWORD_HASH):
+    admin_hash = get_admin_password_hash()
+    if not verify_password(creds.password, admin_hash):
         record_failed_login(client_ip)
         
         log_audit(
@@ -173,6 +175,7 @@ def login(creds: AdminLogin, request: Request, response: Response):
         "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         "auth_method": "local",
         "role": "admin",
+        "force_password_change": get_admin_force_change(),
     }
 
 @router.post("/api/refresh")
@@ -270,3 +273,57 @@ def get_auth_mode(request: Request):
         "ad_enabled": ad_enabled,
         "domain": domain,  # z.B. "homelab.local" — Hinweis im Login-Modal
     }
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(..., min_length=1, max_length=1000)
+    new_password: str = Field(..., min_length=8, max_length=1000)
+    
+    @validator('new_password')
+    def password_strong_enough(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters')
+        return v
+
+
+@router.put("/api/auth/password")
+@limiter.limit("5/minute")
+def change_password(request: Request, body: ChangePasswordRequest, token: dict = Depends(require_role("admin"))):
+    """
+    Passwort ändern — nur für lokale Admins.
+    Prüft altes Passwort, setzt neues (bcrypt), force_change → FALSE.
+    """
+    client_ip = get_client_ip(request)
+    
+    # Nur local-Auth darf Passwort ändern
+    if token.get("auth_method") == "ad":
+        raise HTTPException(status_code=403, detail="AD users cannot change local password")
+    
+    # Altes Passwort verifizieren
+    admin_hash = get_admin_password_hash()
+    if not verify_password(body.current_password, admin_hash):
+        log_audit(
+            action="PASSWORD_CHANGE_FAILED",
+            status="failed",
+            user_type="admin",
+            ip_address=client_ip,
+            details={"reason": "wrong_current_password"}
+        )
+        raise HTTPException(status_code=403, detail="Current password is incorrect")
+    
+    # Neues Passwort darf nicht gleich dem alten sein
+    if body.current_password == body.new_password:
+        raise HTTPException(status_code=400, detail="New password must be different from current")
+    
+    # Neues Passwort setzen
+    update_admin_password(body.new_password)
+    
+    log_audit(
+        action="PASSWORD_CHANGED",
+        status="success",
+        user_type="admin",
+        ip_address=client_ip,
+        details={"auth_method": "local"}
+    )
+    
+    return {"message": "Password changed successfully"}

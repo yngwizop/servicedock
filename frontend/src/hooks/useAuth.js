@@ -33,6 +33,9 @@ export function useAuth() {
     () => localStorage.getItem('servicedock_auth_method') || 'local'
   );
   
+  // Force Password Change
+  const [forcePasswordChange, setForcePasswordChange] = useState(false);
+  
   const isAdmin = userRole === 'admin';
   const isViewer = userRole === 'viewer';
 
@@ -98,6 +101,11 @@ export function useAuth() {
         localStorage.setItem('servicedock_auth_method', method);
         if (name) localStorage.setItem('servicedock_display_name', name);
         else localStorage.removeItem('servicedock_display_name');
+        
+        // Force Password Change bei Default-Passwort
+        if (data.force_password_change) {
+          setForcePasswordChange(true);
+        }
       } else {
         const errorData = await res.json().catch(() => ({}));
         const newAttempts = failedLoginAttempts + 1;
@@ -172,5 +180,8 @@ export function useAuth() {
     isViewer,
     displayName,
     authMethod,
+    // Force Password Change
+    forcePasswordChange,
+    setForcePasswordChange,
   };
 }

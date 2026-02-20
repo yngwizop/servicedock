@@ -100,7 +100,6 @@ async def startup_event():
     critical_vars = {
         "JWT_SECRET_KEY": SECRET_KEY,
         "ENCRYPTION_KEY": ENCRYPTION_KEY,
-        "ADMIN_PASSWORD": ADMIN_PASSWORD,
         "DATABASE_URL": DATABASE_URL,
     }
     
@@ -126,15 +125,17 @@ async def startup_event():
     if ACCESS_TOKEN_EXPIRE_MINUTES > 120:
         warnings.append(f"ACCESS_TOKEN_EXPIRE_MINUTES is {ACCESS_TOKEN_EXPIRE_MINUTES} min (recommended: ≤120)")
     
-    if len(ADMIN_PASSWORD) < 12:
-        warnings.append(f"ADMIN_PASSWORD length is {len(ADMIN_PASSWORD)} chars (recommended: ≥12)")
-    
     if warnings:
         for warning in warnings:
             logger.warning(f"⚠️  {warning}")
     
     # Initialize database
     initialize_connection_pool()
+    
+    # Admin-Passwort Migration (.env → DB) bzw. Validierung
+    from dependencies.auth import initialize_admin_password
+    initialize_admin_password()
+    
     logger.info("✅ Application startup complete")
 
 # ===== Include ALL Routers =====

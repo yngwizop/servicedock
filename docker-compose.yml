@@ -65,7 +65,7 @@ services:
     environment:
       # Holt sich die Werte jetzt aus der .env-Datei
       - DATABASE_URL=${DATABASE_URL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
