@@ -164,6 +164,22 @@ https://your-ip
 
 MIT License — see [LICENSE](LICENSE) for details.
 
+## 📷 Photo Credits
+
+Bundled preset wallpapers are sourced from [Unsplash](https://unsplash.com) (free license):
+
+| Wallpaper | Photographer |
+|-----------|-------------|
+| Mountains | [Samuel Ferrara](https://unsplash.com/@samferrara) |
+| Ocean | [Sean Oulashin](https://unsplash.com/@oulashin) |
+| Forest | [Casey Horner](https://unsplash.com/@mischievous_penguins) |
+| Northern Lights | [Jonatan Pie](https://unsplash.com/@r3dmax) |
+| Starry Sky | [Benjamin Voros](https://unsplash.com/@vorosbenisop) |
+| Dark Peaks | [Nathan Anderson](https://unsplash.com/@nathananderson) |
+| Green Hills | [Qingbao Meng](https://unsplash.com/@ideasboom) |
+| Summit | [Daniel Leone](https://unsplash.com/@danielleone) |
+| Desert | [Keith Hardy](https://unsplash.com/@keithhardy2001) |
+
 ---
 
 **Made with ❤️ for the self-hosting community**

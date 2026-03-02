@@ -308,7 +308,8 @@
     "tips": {
       "appearance_title": "Appearance Tips",
       "appearance": [
-        "Background images from Unsplash work best with an opacity of 0.6–0.8 for good readability.",
+        "Choose from 9 bundled preset wallpapers or upload your own images (JPG/PNG/WebP, max 10MB).",
+        "Background images work best with an opacity of 0.6–0.8 for good readability.",
         "Font colors are saved separately per mode (Light/Dark) — switch the mode with the ☀/🌙 button to test both.",
         "Service columns (2–10) and shortcut columns (2–8) can be configured independently.",
         "Hex input and color picker are synchronized — you can type exact color values directly.",
@@ -565,6 +566,27 @@
     "note_appearance": "Appearance settings are always overwritten",
     "note_append": "With \"Append\" your existing data is preserved",
     "note_replace": "With \"Replace\" ALL data is deleted (Caution!)"
+  },
+  "wallpaper": {
+    "title": "Background Wallpaper",
+    "presets": "Preset Wallpapers",
+    "none": "None",
+    "custom_uploads": "Custom Wallpapers",
+    "upload": "Upload",
+    "uploading": "Uploading...",
+    "upload_hint": "JPG, PNG, or WebP. Maximum 10 MB.",
+    "custom_url": "Enter image URL",
+    "delete_confirm": "Really delete this wallpaper?",
+    "mountains": "Mountains",
+    "ocean": "Ocean",
+    "forest": "Forest",
+    "aurora": "Northern Lights",
+    "stars": "Starry Sky",
+    "dark_peaks": "Dark Peaks",
+    "green_hills": "Green Hills",
+    "summit": "Summit",
+    "desert": "Desert",
+    "photo_by": "Photo by"
   },
   "language": {
     "title": "Language",

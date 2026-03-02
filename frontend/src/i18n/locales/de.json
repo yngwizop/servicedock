@@ -308,7 +308,8 @@
     "tips": {
       "appearance_title": "Appearance Tipps",
       "appearance": [
-        "Hintergrundbilder von Unsplash funktionieren am besten mit einer Opacity von 0.6–0.8 für gute Lesbarkeit.",
+        "Wähle aus 9 gebundenen Preset-Wallpapers oder lade eigene Bilder hoch (JPG/PNG/WebP, max 10MB).",
+        "Hintergrundbilder funktionieren am besten mit einer Opacity von 0.6–0.8 für gute Lesbarkeit.",
         "Schriftfarben werden pro Modus (Light/Dark) getrennt gespeichert — wechsle den Modus mit dem ☀/🌙 Button um beide zu testen.",
         "Service-Spalten (2–10) und Shortcut-Spalten (2–8) lassen sich unabhängig konfigurieren.",
         "Hex-Eingabe und Color-Picker sind synchronisiert — du kannst exakte Farbwerte direkt eintippen.",
@@ -567,6 +568,27 @@
     "note_appearance": "Appearance-Einstellungen werden immer überschrieben",
     "note_append": "Bei \"Hinzufügen\" bleiben deine bestehenden Daten erhalten",
     "note_replace": "Bei \"Ersetzen\" werden ALLE Daten gelöscht (Vorsicht!)"
+  },
+  "wallpaper": {
+    "title": "Hintergrundbild",
+    "presets": "Preset-Wallpapers",
+    "none": "Keins",
+    "custom_uploads": "Eigene Wallpapers",
+    "upload": "Upload",
+    "uploading": "Lade hoch...",
+    "upload_hint": "JPG, PNG oder WebP. Maximal 10 MB.",
+    "custom_url": "Bild-URL eingeben",
+    "delete_confirm": "Dieses Wallpaper wirklich löschen?",
+    "mountains": "Berge",
+    "ocean": "Ozean",
+    "forest": "Wald",
+    "aurora": "Nordlichter",
+    "stars": "Sternenhimmel",
+    "dark_peaks": "Dunkle Gipfel",
+    "green_hills": "Grüne Hügel",
+    "summit": "Berggipfel",
+    "desert": "Wüste",
+    "photo_by": "Foto von"
   },
   "language": {
     "title": "Sprache",

@@ -75,6 +75,8 @@ services:
     security_opt:
       - no-new-privileges:true
     read_only: true
+    volumes:
+      - wallpaper_uploads:/app/uploads
     tmpfs:
       - /tmp
       - /app/__pycache__:uid=1000,gid=1000
@@ -127,3 +129,4 @@ services:
 
 volumes:
   postgres_data:
+  wallpaper_uploads:

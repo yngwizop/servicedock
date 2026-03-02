@@ -74,13 +74,20 @@ export function getAuthHeaders() {
  * Automatically refreshes token if expired (401)
  */
 export async function authenticatedFetch(url, options = {}) {
+  const headers = {
+    ...getAuthHeaders(),
+    ...(options.headers || {})
+  };
+  
+  // FormData benötigt automatisch gesetzten Content-Type (mit boundary)
+  if (options.body instanceof FormData) {
+    delete headers['Content-Type'];
+  }
+  
   let response = await fetch(url, {
     ...options,
     credentials: 'include', // Important: Send cookies with request
-    headers: {
-      ...getAuthHeaders(),
-      ...(options.headers || {})
-    }
+    headers
   });
   
   // If 401, try to refresh token once

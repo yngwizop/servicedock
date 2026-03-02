@@ -18,6 +18,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Application Code kopieren
 COPY . .
 
+# Upload-Verzeichnis erstellen (für Docker Volume Init)
+RUN mkdir -p /app/uploads/wallpapers
+
 # Ownership an appuser übergeben
 RUN chown -R appuser:appuser /app
 

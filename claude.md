@@ -12,7 +12,7 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 - **Proxmox Status-Dashboard** — Draggable/Resizable Widget-Grid (react-grid-layout) mit Node-Status, VM/LXC-Status, Top-Usage, Storage, Ceph Health, Task-Übersicht
 - **Spotify-AddOn** — OAuth2-Flow, Now-Playing-Anzeige mit Playback-Controls
 - **Security Dashboard** — Audit-Log-Viewer, Token-Rotation, Rate-Limit-Monitoring, Threat-Detection
-- **Appearance-System** — Hintergrundbilder, Farben, Grid-Spaltenanzahl, Widget-Toggles (Wetter/Uhr/Spotify)
+- **Appearance-System** — Preset-Wallpaper-Galerie (9 Bilder), Custom-Wallpaper-Upload, Farben, Grid-Spaltenanzahl, Widget-Toggles (Wetter/Uhr/Spotify)
 - **Wetter & Uhr** — Open-Meteo API, konfigurierbares 12h/24h Format
 - **Config Import/Export** — JSON-Backup/Restore mit Validierung
 - **Edit Mode** — Toggle in Sidebar, kontrolliert Sichtbarkeit von Edit/Star/Drag auf Cards + AddItem-FAB
@@ -49,6 +49,7 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 | cryptography (Fernet) | latest | Verschlüsselung sensibler Daten |
 | slowapi | latest | Rate Limiting |
 | proxmoxer | latest | Proxmox VE API Client |
+| python-multipart | latest | Multipart Form Upload (Wallpapers) |
 | ldap3 | ≥2.9.1 | LDAP/Active Directory Authentifizierung |
 
 **API-Struktur:** REST, alle Routen unter `/api/*`, modulares Router-Pattern.
@@ -145,6 +146,7 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 │       ├── admin.py                # Audit, Token-Rotation, Rate-Limits
 │       ├── spotify.py              # Spotify OAuth + Now-Playing
 │       ├── dashboards.py           # Multi-Dashboard CRUD + Layouts
+│       ├── wallpapers.py           # Wallpaper Upload/Serve/Delete
 │       └── config.py               # Import/Export
 │
 ├── frontend/
@@ -212,10 +214,14 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 │       ├── i18n/
 │       │   ├── index.js             # i18n Config (LanguageDetector, fallback: de)
 │       │   └── locales/
-│       │       ├── de.json           # Deutsche Übersetzungen (~420 Keys)
-│       │       └── en.json           # Englische Übersetzungen (~420 Keys)
+│       │       ├── de.json           # Deutsche Übersetzungen (~440 Keys)
+│       │       └── en.json           # Englische Übersetzungen (~440 Keys)
 │       └── styles/
 │           └── grid-layout.css     # react-grid-layout Overrides
+│
+├── frontend/public/wallpapers/       # 9 Preset-Wallpapers (Unsplash, 1920×1080, ~3.4MB gesamt)
+│   ├── mountains.jpg, ocean.jpg, forest.jpg, aurora.jpg, stars.jpg,
+│   ├── dark-peaks.jpg, green-hills.jpg, summit.jpg, desert.jpg
 │
 ├── db/
 │   ├── init.sql                    # Schema + Defaults + Indizes
@@ -360,6 +366,7 @@ Das Status-Dashboard (`ProxmoxStatusDashboard.jsx`) zeigt aggregierte Cluster-St
 | spotify | `/api/spotify` | OAuth, Now-Playing, Install/Uninstall | Admin |
 | dashboards | `/api/dashboards` | CRUD + Layouts | GET: Admin+Viewer, Write: Admin |
 | config | `/api/config` | Export/Import/Validate | Admin |
+| wallpapers | `/api/wallpapers` | Upload, List, Serve, Delete | Serve: Public, List: Admin+Viewer, Upload/Delete: Admin |
 | admin (ldap) | `/api/ldap` | Config CRUD, Test, Toggle | Admin |
 
 ### Bekannte technische Schulden
@@ -390,3 +397,5 @@ Das Status-Dashboard (`ProxmoxStatusDashboard.jsx`) zeigt aggregierte Cluster-St
 - **Settings Tab-Navigation** — `SettingsPage.jsx` rendert nur die aktive Section via Conditional Rendering (`{activeSection === 'xxx' && ...}`), keine Scroll-Spy. Sidebar-Buttons setzen `activeSection` direkt. Sections: appearance, dashboards, proxmox, addons, language
 - **Settings Glasmorphism-Redesign** — `AppearanceTab.jsx` mit 5 Glasmorphismus-Sektionskarten. Wiederverwendbare `SectionHeader` (phosphor-Icon + Titel) und `ToggleSwitch` Helper-Komponenten. Einheitliche Konstanten: `sectionCard`, `inputClass`, `labelClass` für konsistentes Styling
 - **Settings Icon-Konvention** — Icons nur in JSX via phosphor-react (z.B. `Image`, `Palette`, `SquaresFour`, `Eye`, `CloudSun`), nie als Emoji in i18n-Strings
+- **Wallpaper-System** — 9 gebundelte Preset-Wallpapers in `frontend/public/wallpapers/` (Unsplash, 1920×1080, ~3.4MB gesamt). Custom-Upload via `POST /api/wallpapers/upload` (max 10MB, JPG/PNG/WEBP). Uploaded Files auf Docker Volume (`wallpaper_uploads:/app/uploads`). Serve-Endpoint public (kein Auth, für Login-Screen). Dateinamen: `custom-{md5hash12}{ext}` (Duplikat-Vermeidung). `_ensure_upload_dir()` lazy statt module-level (wegen `read_only: true` Container). Backend Dockerfile erstellt `/app/uploads/wallpapers` vor `chown` für korrekte Volume-Init.
+- **authenticatedFetch FormData-Handling** — Wenn `body instanceof FormData`, wird `Content-Type` Header gelöscht, damit der Browser automatisch `multipart/form-data; boundary=...` setzt

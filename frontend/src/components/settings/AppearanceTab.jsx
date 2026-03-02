@@ -1,6 +1,13 @@
-import React from 'react';
-import { Image, Palette, SquaresFour, Eye, CloudSun } from 'phosphor-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Image, Palette, SquaresFour, Eye, CloudSun, UploadSimple, Trash, CheckCircle, Link as LinkIcon, CaretDown, CaretUp, XCircle } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
+import { authenticatedFetch } from '../../utils/auth';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
+  (window.location.port === '' ? 
+    `${window.location.protocol}//${window.location.hostname}` :
+    `${window.location.protocol}//${window.location.hostname}:8000`
+  );
 
 const WEATHER_FIELDS = [
   { key: 'temperature', labelKey: 'appearance.temperature', icon: '🌡️' },
@@ -9,6 +16,19 @@ const WEATHER_FIELDS = [
   { key: 'precipitation', labelKey: 'appearance.precipitation', icon: '🌧️' },
   { key: 'cloudCover', labelKey: 'appearance.cloud_cover', icon: '☁️' },
   { key: 'pressure', labelKey: 'appearance.pressure', icon: '🔽' }
+];
+
+// Gebundelte Preset-Wallpapers (Unsplash, lizenzfrei)
+const PRESET_WALLPAPERS = [
+  { id: 'mountains', nameKey: 'wallpaper.mountains', file: '/wallpapers/mountains.jpg', author: 'Samuel Ferrara', unsplash: 'https://unsplash.com/@samferrara' },
+  { id: 'ocean', nameKey: 'wallpaper.ocean', file: '/wallpapers/ocean.jpg', author: 'Sean Oulashin', unsplash: 'https://unsplash.com/@oulashin' },
+  { id: 'forest', nameKey: 'wallpaper.forest', file: '/wallpapers/forest.jpg', author: 'Casey Horner', unsplash: 'https://unsplash.com/@mischievous_penguins' },
+  { id: 'aurora', nameKey: 'wallpaper.aurora', file: '/wallpapers/aurora.jpg', author: 'Jonatan Pie', unsplash: 'https://unsplash.com/@r3dmax' },
+  { id: 'stars', nameKey: 'wallpaper.stars', file: '/wallpapers/stars.jpg', author: 'Benjamin Voros', unsplash: 'https://unsplash.com/@vorosbenisop' },
+  { id: 'dark-peaks', nameKey: 'wallpaper.dark_peaks', file: '/wallpapers/dark-peaks.jpg', author: 'Nathan Anderson', unsplash: 'https://unsplash.com/@nathananderson' },
+  { id: 'green-hills', nameKey: 'wallpaper.green_hills', file: '/wallpapers/green-hills.jpg', author: 'Qingbao Meng', unsplash: 'https://unsplash.com/@ideasboom' },
+  { id: 'summit', nameKey: 'wallpaper.summit', file: '/wallpapers/summit.jpg', author: 'Daniel Leone', unsplash: 'https://unsplash.com/@danielleone' },
+  { id: 'desert', nameKey: 'wallpaper.desert', file: '/wallpapers/desert.jpg', author: 'Keith Hardy', unsplash: 'https://unsplash.com/@keithhardy2001' },
 ];
 
 // Einheitliche glasmorphe Card-Klasse (wie Security/Proxmox)
@@ -61,14 +81,264 @@ function AppearanceTab({
   onSaveAppearance
 }) {
   const { t } = useTranslation();
+  const fileInputRef = useRef(null);
+  const [uploadedWallpapers, setUploadedWallpapers] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+
+  // Hochgeladene Wallpapers vom Backend laden
+  useEffect(() => {
+    const fetchUploaded = async () => {
+      try {
+        const res = await authenticatedFetch(`${BACKEND_URL}/api/wallpapers`);
+        if (res.ok) {
+          const data = await res.json();
+          setUploadedWallpapers(data);
+        }
+      } catch (err) {
+        console.error('Fehler beim Laden der Wallpapers:', err);
+      }
+    };
+    fetchUploaded();
+  }, []);
+
+  // Wallpaper Upload Handler
+  const handleUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/wallpapers/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        // Wallpaper direkt auswählen
+        setEditAppearance({ ...editAppearance, bg_image_url: data.url });
+        // Liste aktualisieren
+        setUploadedWallpapers(prev => [...prev, { filename: data.filename, url: data.url, size: data.size }]);
+      } else {
+        const err = await res.json().catch(() => ({ detail: 'Upload fehlgeschlagen' }));
+        alert(err.detail || 'Upload fehlgeschlagen');
+      }
+    } catch (err) {
+      console.error('Upload Fehler:', err);
+      alert('Upload fehlgeschlagen');
+    } finally {
+      setIsUploading(false);
+      // File Input zurücksetzen für erneuten Upload derselben Datei
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Hochgeladenes Wallpaper löschen
+  const handleDeleteUploaded = async (filename) => {
+    if (!confirm(t('wallpaper.delete_confirm'))) return;
+    try {
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/wallpapers/${filename}`, { method: 'DELETE' });
+      if (res.ok) {
+        setUploadedWallpapers(prev => prev.filter(w => w.filename !== filename));
+        // Falls das gelöschte Wallpaper aktiv war, URL leeren
+        if (editAppearance.bg_image_url === `/api/wallpapers/${filename}`) {
+          setEditAppearance({ ...editAppearance, bg_image_url: '' });
+        }
+      }
+    } catch (err) {
+      console.error('Fehler beim Löschen:', err);
+    }
+  };
+
+  // Prüfen ob ein Wallpaper aktiv (ausgewählt) ist
+  const isActiveWallpaper = (url) => {
+    return editAppearance.bg_image_url === url;
+  };
+
+  // URL initial als "extern" erkennen → URL-Input anzeigen
+  const isExternalUrl = editAppearance.bg_image_url && 
+    !editAppearance.bg_image_url.startsWith('/wallpapers/') && 
+    !editAppearance.bg_image_url.startsWith('/api/wallpapers/') &&
+    editAppearance.bg_image_url.startsWith('http');
 
   return (
     <div className="space-y-6">
-      {/* Sektion: Hintergrund */}
+      {/* Sektion: Wallpaper */}
       <div className={sectionCard}>
-        <SectionHeader icon={Image} title={t('appearance.background')} />
-        
-        <div className="space-y-4">
+        <SectionHeader icon={Image} title={t('wallpaper.title')} />
+
+        {/* Preset-Galerie */}
+        <div className="mb-5">
+          <label className={`${labelClass} mb-3`}>{t('wallpaper.presets')}</label>
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2.5">
+            {/* "Kein Wallpaper" Option */}
+            <button
+              type="button"
+              onClick={() => setEditAppearance({ ...editAppearance, bg_image_url: '' })}
+              className={`group relative rounded-xl overflow-hidden border-2 transition-all duration-200 aspect-[16/10] flex items-center justify-center ${
+                !editAppearance.bg_image_url
+                  ? 'border-blue-500 ring-2 ring-blue-500/30 shadow-lg shadow-blue-500/20'
+                  : 'border-gray-300/50 dark:border-white/10 hover:border-gray-400 dark:hover:border-white/20'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500">
+                <XCircle size={24} weight="duotone" />
+                <span className="text-[10px] font-medium">{t('wallpaper.none')}</span>
+              </div>
+              {!editAppearance.bg_image_url && (
+                <div className="absolute top-1 right-1">
+                  <CheckCircle size={18} weight="fill" className="text-blue-500 drop-shadow" />
+                </div>
+              )}
+            </button>
+
+            {/* Preset Wallpapers */}
+            {PRESET_WALLPAPERS.map(wp => (
+              <button
+                key={wp.id}
+                type="button"
+                onClick={() => setEditAppearance({ ...editAppearance, bg_image_url: wp.file })}
+                className={`group relative rounded-xl overflow-hidden border-2 transition-all duration-200 aspect-[16/10] ${
+                  isActiveWallpaper(wp.file)
+                    ? 'border-blue-500 ring-2 ring-blue-500/30 shadow-lg shadow-blue-500/20 scale-[1.02]'
+                    : 'border-gray-300/50 dark:border-white/10 hover:border-gray-400 dark:hover:border-white/20 hover:scale-[1.02]'
+                }`}
+              >
+                <img
+                  src={wp.file}
+                  alt={t(wp.nameKey)}
+                  loading="lazy"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-1.5 pb-1 pt-4">
+                  <span className="text-[10px] font-medium text-white drop-shadow-sm">{t(wp.nameKey)}</span>
+                  <a
+                    href={wp.unsplash}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="block text-[8px] text-white/0 group-hover:text-white/70 transition-all duration-200 hover:text-white hover:underline truncate"
+                    title={`${t('wallpaper.photo_by')} ${wp.author} (Unsplash)`}
+                  >
+                    {t('wallpaper.photo_by')} {wp.author}
+                  </a>
+                </div>
+                {isActiveWallpaper(wp.file) && (
+                  <div className="absolute top-1 right-1">
+                    <CheckCircle size={18} weight="fill" className="text-blue-500 drop-shadow" />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Custom Uploads */}
+        {(uploadedWallpapers.length > 0 || true) && (
+          <div className="mb-5">
+            <label className={`${labelClass} mb-3`}>{t('wallpaper.custom_uploads')}</label>
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2.5">
+              {/* Hochgeladene Wallpapers */}
+              {uploadedWallpapers.map(wp => (
+                <div key={wp.filename} className="relative group">
+                  <button
+                    type="button"
+                    onClick={() => setEditAppearance({ ...editAppearance, bg_image_url: wp.url })}
+                    className={`w-full rounded-xl overflow-hidden border-2 transition-all duration-200 aspect-[16/10] ${
+                      isActiveWallpaper(wp.url)
+                        ? 'border-blue-500 ring-2 ring-blue-500/30 shadow-lg shadow-blue-500/20 scale-[1.02]'
+                        : 'border-gray-300/50 dark:border-white/10 hover:border-gray-400 dark:hover:border-white/20 hover:scale-[1.02]'
+                    }`}
+                  >
+                    <img
+                      src={wp.url}
+                      alt={wp.filename}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    />
+                    {isActiveWallpaper(wp.url) && (
+                      <div className="absolute top-1 right-1">
+                        <CheckCircle size={18} weight="fill" className="text-blue-500 drop-shadow" />
+                      </div>
+                    )}
+                  </button>
+                  {/* Delete Button */}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); handleDeleteUploaded(wp.filename); }}
+                    className="absolute top-1 left-1 p-1 rounded-lg bg-red-500/80 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600"
+                    title={t('common.delete')}
+                  >
+                    <Trash size={12} weight="bold" />
+                  </button>
+                </div>
+              ))}
+
+              {/* Upload Button */}
+              <label
+                className={`relative rounded-xl overflow-hidden border-2 border-dashed transition-all duration-200 aspect-[16/10] flex flex-col items-center justify-center cursor-pointer ${
+                  isUploading
+                    ? 'border-blue-400 bg-blue-500/10'
+                    : 'border-gray-300/50 dark:border-white/15 hover:border-blue-400 dark:hover:border-blue-400/50 hover:bg-blue-500/5'
+                }`}
+              >
+                {isUploading ? (
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-[10px] font-medium text-blue-500">{t('wallpaper.uploading')}</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500">
+                    <UploadSimple size={22} weight="duotone" />
+                    <span className="text-[10px] font-medium">{t('wallpaper.upload')}</span>
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleUpload}
+                  className="hidden"
+                  disabled={isUploading}
+                />
+              </label>
+            </div>
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              {t('wallpaper.upload_hint')}
+            </p>
+          </div>
+        )}
+
+        {/* Custom URL (eingeklappt) */}
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => setShowUrlInput(!showUrlInput)}
+            className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+          >
+            <LinkIcon size={16} weight="duotone" />
+            {t('wallpaper.custom_url')}
+            {showUrlInput ? <CaretUp size={14} /> : <CaretDown size={14} />}
+          </button>
+          {(showUrlInput || isExternalUrl) && (
+            <div className="mt-3">
+              <input
+                type="text"
+                placeholder="https://..."
+                value={editAppearance.bg_image_url || ""}
+                onChange={(e) => setEditAppearance({ ...editAppearance, bg_image_url: e.target.value })}
+                className={inputClass}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Background Color */}
+        <div className="space-y-4 pt-4 border-t border-gray-200/50 dark:border-white/[0.06]">
           <div>
             <label className={labelClass}>{t('appearance.bg_color')}</label>
             <div className="flex items-center gap-3">
@@ -88,17 +358,6 @@ function AppearanceTab({
             </div>
           </div>
 
-          <div>
-            <label className={labelClass}>{t('appearance.bg_image_url')}</label>
-            <input
-              type="text"
-              placeholder="https://..."
-              value={editAppearance.bg_image_url || ""}
-              onChange={(e) => setEditAppearance({ ...editAppearance, bg_image_url: e.target.value })}
-              className={inputClass}
-            />
-          </div>
-          
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.bg_opacity')}</label>
