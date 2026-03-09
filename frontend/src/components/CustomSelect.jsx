@@ -74,9 +74,9 @@ function CustomSelect({ value, onChange, options, className = '' }) {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 border
-          bg-white/50 dark:bg-white/5 backdrop-blur-xl
+          bg-white/50 dark:bg-white/[0.12] backdrop-blur-xl
           border-gray-300/60 dark:border-white/15
-          hover:bg-white/70 dark:hover:bg-white/10
+          hover:bg-white/70 dark:hover:bg-white/20
           text-gray-900 dark:text-white
           ${isOpen ? 'ring-2 ring-blue-500 border-blue-500/50' : ''}
         `}

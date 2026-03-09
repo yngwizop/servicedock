@@ -20,7 +20,7 @@ function ServiceCard({ service, textColor, isFavorite }) {
       target="_blank"
       rel="noopener noreferrer"
       draggable={false}
-      className={`group relative flex items-start gap-4 bg-white/50 dark:bg-white/5 backdrop-blur-md rounded-2xl p-5 transition-all duration-300 hover:bg-white/70 dark:hover:bg-white/10 hover:scale-[1.02] shadow-xl hover:shadow-2xl hover:shadow-blue-500/30 dark:hover:shadow-purple-500/20 ${
+      className={`group relative flex items-start gap-4 bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl p-5 transition-all duration-300 hover:bg-white/70 dark:hover:bg-white/20 hover:scale-[1.02] shadow-xl hover:shadow-2xl hover:shadow-blue-500/30 dark:hover:shadow-purple-500/20 ${
         isFavorite 
           ? 'border-2 border-yellow-500 dark:border-yellow-400 hover:border-yellow-600 dark:hover:border-yellow-500' 
           : 'border border-gray-400/60 dark:border-white/10 hover:border-gray-500/70 dark:hover:border-white/20'

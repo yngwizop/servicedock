@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Play, Stop, ArrowsClockwise, Desktop, HardDrives } from 'phosphor-react';
 
-function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
+function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin, animationDelay = 0 }) {
   const { t } = useTranslation();
   const isRunning = resource.status === 'running';
   
@@ -64,8 +64,8 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin }) {
 
   return (
     <div
-      className="group relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl border border-gray-300/50 dark:border-white/[0.12] shadow-xl hover:shadow-2xl transition-all duration-200 p-5 flex flex-col gap-2 will-change-auto hover:border-gray-400/70 dark:hover:border-white/20 hover:scale-[1.025]"
-      style={{ borderLeftWidth: '3px', borderLeftColor: getAccentColor() }}
+      className="group relative bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl border border-gray-400/60 dark:border-white/10 shadow-xl hover:shadow-2xl transition-all duration-200 p-5 flex flex-col gap-2 hover:border-gray-500/70 dark:hover:border-white/20 hover:scale-[1.025] animate-fade-up"
+      style={{ borderLeftWidth: '3px', borderLeftColor: getAccentColor(), animationDelay: `${animationDelay}s` }}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-2">

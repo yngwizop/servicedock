@@ -104,7 +104,7 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       
       {/* Token Rotation Card */}
-      <div className="animate-slide-in-left bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-300/50 dark:border-white/[0.12] hover:scale-[1.02] hover:border-gray-400/70 dark:hover:border-white/20 transition-all duration-300 group" style={{ animationDelay: '0s' }}>
+      <div className="animate-slide-in-left bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-400/60 dark:border-white/10 hover:scale-[1.02] hover:border-gray-500/70 dark:hover:border-white/20 transition-all duration-300 group" style={{ animationDelay: '0s' }}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className={`p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 ${tokenInfo?.rotation_recommended ? 'bg-red-100/60 dark:bg-red-500/10' : 'bg-green-100/60 dark:bg-green-500/10'}`}>
@@ -171,7 +171,7 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
       </div>
 
       {/* Activity Card */}
-      <div className="animate-slide-in-left bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-300/50 dark:border-white/[0.12] hover:scale-[1.02] hover:border-gray-400/70 dark:hover:border-white/20 transition-all duration-300 group" style={{ animationDelay: '0.15s' }}>
+      <div className="animate-slide-in-left bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-400/60 dark:border-white/10 hover:scale-[1.02] hover:border-gray-500/70 dark:hover:border-white/20 transition-all duration-300 group" style={{ animationDelay: '0.15s' }}>
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-blue-100/60 dark:bg-blue-500/10 p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
             <ChartBar size={24} className="text-blue-500" weight="duotone" />
@@ -211,7 +211,7 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
       </div>
 
       {/* Security Threats Card */}
-      <div className="animate-slide-in-left bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-300/50 dark:border-white/[0.12] hover:scale-[1.02] hover:border-gray-400/70 dark:hover:border-white/20 transition-all duration-300 group" style={{ animationDelay: '0.3s' }}>
+      <div className="animate-slide-in-left bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-400/60 dark:border-white/10 hover:scale-[1.02] hover:border-gray-500/70 dark:hover:border-white/20 transition-all duration-300 group" style={{ animationDelay: '0.3s' }}>
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-red-100/60 dark:bg-red-500/10 p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
             <Detective size={24} className="text-red-500" weight="duotone" />
@@ -277,7 +277,7 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
       </div>
 
       {/* Rate Limiting Card */}
-      <div className="animate-slide-in-left bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-300/50 dark:border-white/[0.12] hover:scale-[1.02] hover:border-gray-400/70 dark:hover:border-white/20 transition-all duration-300 group" style={{ animationDelay: '0.45s' }}>
+      <div className="animate-slide-in-left bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-400/60 dark:border-white/10 hover:scale-[1.02] hover:border-gray-500/70 dark:hover:border-white/20 transition-all duration-300 group" style={{ animationDelay: '0.45s' }}>
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-purple-100/60 dark:bg-purple-500/10 p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
             <Clock size={24} className="text-purple-500" weight="duotone" />
@@ -625,7 +625,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
 
       {/* Logs View */}
       {activeView === 'logs' && (
-        <div className="animate-fade-up bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl border border-gray-300/50 dark:border-white/[0.12] overflow-hidden">
+        <div className="animate-fade-up bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl shadow-xl border border-gray-400/60 dark:border-white/10 overflow-hidden">
           <div className="p-6 border-b border-gray-300/50 dark:border-white/10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
@@ -732,7 +732,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* Top Actions */}
-          <div className="animate-slide-in-left bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-300/50 dark:border-white/[0.12] hover:border-gray-400/70 dark:hover:border-white/20 transition-all duration-300">
+          <div className="animate-slide-in-left bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-400/60 dark:border-white/10 hover:border-gray-500/70 dark:hover:border-white/20 transition-all duration-300">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
               {t('security.top_actions')}
             </h3>
@@ -755,7 +755,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
           </div>
 
           {/* Top IPs */}
-          <div className="animate-slide-in-left bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-300/50 dark:border-white/[0.12] hover:border-gray-400/70 dark:hover:border-white/20 transition-all duration-300" style={{ animationDelay: '0.15s' }}>
+          <div className="animate-slide-in-left bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-400/60 dark:border-white/10 hover:border-gray-500/70 dark:hover:border-white/20 transition-all duration-300" style={{ animationDelay: '0.15s' }}>
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
               {t('security.top_ips')}
             </h3>
@@ -782,7 +782,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-2xl max-w-md w-full p-6 border border-red-500/50 dark:border-red-500/30">
+          <div className="bg-white/70 dark:bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl max-w-md w-full p-6 border border-red-500/50 dark:border-red-500/30">
             <div className="flex items-center gap-3 mb-4">
               <Warning size={32} className="text-red-500" weight="fill" />
               <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">

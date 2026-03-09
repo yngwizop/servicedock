@@ -52,9 +52,12 @@ function useAnimatedCounter(target, duration = 2200, delay = 0) {
  * Einzelne Stat-Card — als eigene Komponente damit React sie stabil hält
  * und nicht bei jedem Counter-Update unmountet/remountet
  */
-const StatCard = React.memo(function StatCard({ title, value, icon: Icon, accentColor, iconBg }) {
+const StatCard = React.memo(function StatCard({ title, value, icon: Icon, accentColor, iconBg, animationDelay = 0 }) {
   return (
-    <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-300/50 dark:border-white/[0.12] hover:scale-[1.03] hover:border-gray-400/70 dark:hover:border-white/20 transition-all duration-300 group">
+    <div 
+      className="animate-slide-in-left bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-400/60 dark:border-white/10 hover:scale-[1.03] hover:border-gray-500/70 dark:hover:border-white/20 transition-all duration-300 group"
+      style={{ animationDelay: `${animationDelay}s` }}
+    >
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-semibold text-gray-600 dark:text-white/50 uppercase tracking-wider mb-2" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
@@ -106,9 +109,7 @@ function ProxmoxStatsCards({ resources, nodes }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
       {cards.map((card, i) => (
-        <div key={card.title} className="animate-slide-in-left" style={{ animationDelay: `${i * 0.15}s` }}>
-          <StatCard {...card} />
-        </div>
+        <StatCard key={card.title} {...card} animationDelay={i * 0.15} />
       ))}
     </div>
   );

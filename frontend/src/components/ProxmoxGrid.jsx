@@ -470,7 +470,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
           <ProxmoxStatsCards resources={resources} nodes={nodes} />
 
       {/* Filter & Sort Bar */}
-      <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-xl shadow-lg p-4 mb-6 border border-gray-300/50 dark:border-white/[0.12]">
+      <div className="bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-xl shadow-lg p-4 mb-6 border border-gray-400/60 dark:border-white/10">
         <div className="flex flex-wrap items-center gap-4">
           {/* Sort Icon */}
           <div className="flex items-center gap-2">
@@ -567,19 +567,15 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
           {filteredResources.map((resource, index) => (
-            <div 
+            <ProxmoxCard
               key={resource.id}
-              className="animate-fade-up"
-              style={{ animationDelay: `${Math.min(index * 0.04, 0.4)}s` }}
-            >
-              <ProxmoxCard
-                resource={resource}
-                onStart={handleStart}
-                onStop={handleStop}
-                onReboot={handleReboot}
-                isAdmin={isAdmin}
-              />
-            </div>
+              resource={resource}
+              onStart={handleStart}
+              onStop={handleStop}
+              onReboot={handleReboot}
+              isAdmin={isAdmin}
+              animationDelay={Math.min(index * 0.04, 0.4)}
+            />
           ))}
         </div>
       )}

@@ -26,7 +26,7 @@ function ShortcutLink({ shortcut, textColor }) {
       target="_blank"
       rel="noopener noreferrer"
       draggable={false}
-      className="group relative flex items-center gap-3 bg-white/50 dark:bg-white/5 backdrop-blur-md border border-gray-400/60 dark:border-white/10 rounded-xl p-3.5 transition-all duration-300 hover:bg-white/70 dark:hover:bg-white/10 hover:border-gray-500/70 dark:hover:border-white/20 hover:scale-[1.02] shadow-lg hover:shadow-xl hover:shadow-cyan-500/20 dark:hover:shadow-cyan-400/10"
+      className="group relative flex items-center gap-3 bg-white/50 dark:bg-white/[0.12] backdrop-blur-md border border-gray-400/60 dark:border-white/10 rounded-xl p-3.5 transition-all duration-300 hover:bg-white/70 dark:hover:bg-white/20 hover:border-gray-500/70 dark:hover:border-white/20 hover:scale-[1.02] shadow-lg hover:shadow-xl hover:shadow-cyan-500/20 dark:hover:shadow-cyan-400/10"
       aria-label={`Shortcut: ${safeName}, ${displayUrl(safeUrl)}`}
     >
       {/* Subtle Glow */}
