@@ -100,7 +100,7 @@ function CustomSelect({ value, onChange, options, className = '' }) {
             width: dropdownPos.width,
             zIndex: 9999,
           }}
-          className="bg-white/80 dark:bg-gray-900/90 backdrop-blur-2xl border border-gray-300/50 dark:border-white/15 rounded-xl shadow-2xl overflow-hidden"
+          className="bg-white/80 dark:bg-gray-900/90 backdrop-blur-2xl border border-gray-300/50 dark:border-white/15 rounded-xl shadow-2xl overflow-hidden animate-fade-in"
         >
           <div className="py-1 max-h-64 overflow-y-auto">
             {options.map((option) => {

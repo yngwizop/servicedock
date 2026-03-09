@@ -18,6 +18,11 @@
   opacity: 0;
 }
 
+/* Schnelle Fade-in Animation für Dropdowns (ohne Delay) */
+.animate-fade-in {
+  animation: fadeIn 0.15s ease-out forwards;
+}
+
 /* Moderne Scrollbar-Gestaltung */
 /* Scrollbar-Größe */
 ::-webkit-scrollbar {
@@ -153,6 +158,19 @@
 @keyframes segmentGlow {
   0%, 100% { box-shadow: 0 0 8px rgba(59, 130, 246, 0.15); }
   50% { box-shadow: 0 0 16px rgba(59, 130, 246, 0.25); }
+}
+
+/* Glassmorphism base card */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(209, 213, 219, 0.5);
+}
+
+.dark .glass {
+  background: rgba(17, 24, 39, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* Glass button hover lift */

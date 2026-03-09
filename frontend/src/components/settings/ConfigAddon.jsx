@@ -10,26 +10,33 @@ function ConfigAddon({
   isImporting, setIsImporting,
   importSuccess, setImportSuccess,
   importError, setImportError,
-  onBack 
+  onBack,
+  onClose,
+  isModal = false
 }) {
   const { t } = useTranslation();
 
+  const handleClose = () => {
+    setImportFile(null);
+    setImportPreview(null);
+    setImportError(null);
+    setImportSuccess(false);
+    if (onClose) onClose();
+    else if (onBack) onBack();
+  };
+
   return (
     <>
-      {/* Zurück-Button */}
-      <button
-        onClick={() => {
-          onBack();
-          setImportFile(null);
-          setImportPreview(null);
-          setImportError(null);
-          setImportSuccess(false);
-        }}
-        className="flex items-center gap-2 px-4 py-2 mb-4 bg-white/70 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/10 rounded-xl transition-all text-gray-700 dark:text-gray-300 font-medium shadow-lg"
-      >
-        <span className="text-xl">←</span>
-        {t('configAddon.back')}
-      </button>
+      {/* Zurück-Button - nur wenn nicht Modal */}
+      {!isModal && (
+        <button
+          onClick={handleClose}
+          className="flex items-center gap-2 px-4 py-2 mb-4 bg-white/70 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/10 rounded-xl transition-all text-gray-700 dark:text-gray-300 font-medium shadow-lg"
+        >
+          <span className="text-xl">←</span>
+          {t('configAddon.back')}
+        </button>
+      )}
 
       <div className="space-y-6">
         {/* Export Section */}

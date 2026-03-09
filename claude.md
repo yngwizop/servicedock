@@ -81,16 +81,16 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 │  Docker Compose Stack                           │
 │                                                 │
 │  ┌──────────┐    ┌──────────┐   ┌────────────┐  │
-│  │  nginx   │──▶│frontend │   │  backend   │  │
+│  │  nginx   │──▶│frontend  │   │  backend   │  │
 │  │ :80/:443 │──▶│ (SPA)    │   │ (FastAPI)  │  │
-│  │ reverse  │   │ :80      │   │ :8000      │  │
+│  │ reverse  │    │ :80      │   │ :8000      │  │
 │  │ proxy    │──▶│          │   │            │  │
 │  │ + SSL    │    └──────────┘   └──────┬─────┘  │
-│  └──────────┘                         │        │
-│                                ┌──────▼─────┐  │
-│                                │ PostgreSQL │  │
-│                                │ :5432 SSL  │  │
-│                                └────────────┘  │
+│  └──────────┘                          │        │
+│                                 ┌──────▼─────┐  │
+│                                 │ PostgreSQL │  │
+│                                 │ :5432 SSL  │  │
+│                                 └────────────┘  │
 │                                                 │
 │  Externe APIs: Open-Meteo, Spotify, Proxmox VE  │
 └─────────────────────────────────────────────────┘
@@ -105,135 +105,12 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 
 ## 3. Architektur & Dateistruktur
 
-### Verzeichnisbaum
-```
-/home/servicedock/
-├── docker-compose.yml              # Dev Compose (4 Services)
-├── docker-compose.production.yml   # Production Override
-├── .env.template                   # Env-Vorlage (→ cp zu .env)
-├── generate-ssl.sh                 # Nginx SSL-Cert Generator
-│
-├── backend/
-│   ├── Dockerfile                  # Python 3.11-slim, non-root user
-│   ├── main.py                     # FastAPI App, Router-Registration, Startup
-│   ├── requirements.txt            # 10 Dependencies
-│   ├── config/
-│   │   ├── settings.py             # ENV-Vars laden + validieren
-│   │   └── database.py             # ThreadedConnectionPool + get_db()
-│   ├── core/
-│   │   ├── security.py             # JWT, bcrypt, Fernet encrypt/decrypt
-│   │   ├── audit.py                # Audit-Log Schreiben (sanitized)
-│   │   ├── rate_limiting.py        # IP-basierter Failed-Login-Tracker
-│   │   ├── limiter.py              # Shared slowapi Limiter-Instanz
-│   │   ├── ldap_auth.py            # LDAP/AD Auth-Modul (Config-Cache, Bind, Rollenbestimmung)
-│   │   └── logging.py              # Logger-Config
-│   ├── dependencies/
-│   │   └── auth.py                 # verify_token, require_role, require_any_role, IP-Trust
-│   ├── middleware/
-│   │   └── security.py             # Security Headers (CSP, HSTS, etc.)
-│   ├── models/                     # Pydantic Request/Response Models
-│   │   ├── auth.py, service.py, shortcut.py, appearance.py,
-│   │   ├── proxmox.py, spotify.py, dashboard.py, config.py,
-│   │   ├── reorder.py, refresh_token.py, responses.py
-│   │   └── ...
-│   └── routers/                    # API-Endpunkte (modular)
-│       ├── auth.py                 # Login/Refresh/Logout + /auth/mode (AD-Status)
-│       ├── services.py             # Service CRUD + Reorder
-│       ├── shortcuts.py            # Shortcut CRUD + Reorder
-│       ├── appearance.py           # Get/Update Appearance
-│       ├── proxmox.py              # Proxmox Config + VM-Control
-│       ├── proxmox_stats.py        # Cluster-Stats API
-│       ├── admin.py                # Audit, Token-Rotation, Rate-Limits
-│       ├── spotify.py              # Spotify OAuth + Now-Playing
-│       ├── dashboards.py           # Multi-Dashboard CRUD + Layouts
-│       ├── wallpapers.py           # Wallpaper Upload/Serve/Delete
-│       └── config.py               # Import/Export
-│
-├── frontend/
-│   ├── Dockerfile                  # Multi-Stage: Node 20 Build → nginx:alpine
-│   ├── package.json                # React 19, Vite 7, Tailwind 3.4
-│   ├── vite.config.js              # Vite Config
-│   ├── tailwind.config.js          # Tailwind Config
-│   ├── nginx-frontend.conf         # SPA-Routing für Frontend-nginx
-│   └── src/
-│       ├── App.jsx                 # Root (~380 Zeilen) — Hooks, Routing, Layout
-│       ├── main.jsx                # React DOM Entry
-│       ├── index.css               # Tailwind Imports + Custom CSS + Animations
-│       ├── hooks/
-│       │   ├── useAuth.js          # Login/Logout State + Client Rate-Limit
-│       │   ├── useDashboards.js    # Dashboard-Liste + Active Selection
-│       │   ├── useAppearance.js    # Theme + Appearance Settings
-│       │   └── useServices.js      # Services/Shortcuts CRUD + Reorder
-│       ├── utils/
-│       │   ├── auth.js             # authenticatedFetch (Cookie-Auth + Auto-Refresh)
-│       │   └── sanitize.js         # DOMPurify Wrapper (HTML, Text, URL, Object)
-│       ├── components/
-│       │   ├── Sidebar.jsx         # Navigation, Theme, Search, Edit-Mode
-│       │   ├── ServiceGrid.jsx     # Draggable Service Cards
-│       │   ├── ServiceCard.jsx     # Einzelne Service-Karte
-│       │   ├── ShortcutGrid.jsx    # Draggable Shortcut Links
-│       │   ├── ShortcutLink.jsx    # Einzelner Shortcut
-│       │   ├── ProxmoxGrid.jsx     # Proxmox-Hauptview (Glass Segment Control, Tabs)
-│       │   ├── ProxmoxCard.jsx     # VM/CT Karte (Glasmorphismus + Akzent)
-│       │   ├── ProxmoxStatsCards.jsx  # Statistikkarten (Animated Counter + Slide-in)
-│       │   ├── ProxmoxStatusDashboard.jsx  # react-grid-layout Dashboard
-│       │   ├── SecurityDashboard.jsx   # Audit-Logs + Analytics
-│       │   ├── SpotifyCard.jsx     # Now-Playing mit Controls
-│       │   ├── ClockWidget.jsx     # Live-Uhr
-│       │   ├── WeatherWidget.jsx   # Open-Meteo Wetter
-│       │   ├── LoginModal.jsx      # Login-Dialog
-│       │   ├── EditModal.jsx       # Service/Shortcut Edit-Dialog
-│       │   ├── SettingsPage.jsx    # Settings-Container (Tabs)
-│       │   ├── AddItemFAB.jsx      # Floating Action Button (nur im Edit Mode)
-│       │   ├── CustomSelect.jsx    # Portal-basiertes Dropdown
-│       │   ├── ErrorBoundary.jsx   # React Error Boundary
-│       │   ├── settings/           # Settings Sub-Komponenten
-│       │   │   ├── AppearanceTab.jsx
-│       │   │   ├── ProxmoxConnectionCard.jsx
-│       │   │   ├── ProxmoxDashboardSettingsCard.jsx
-│       │   │   ├── ProxmoxTab.jsx
-│       │   │   ├── DashboardsCard.jsx
-│       │   │   ├── AddOnsCard.jsx
-│       │   │   ├── SpotifyAddon.jsx
-│       │   │   ├── LdapAddon.jsx           # LDAP/AD Konfigurationsformular
-│       │   │   ├── ConfigAddon.jsx
-│       │   │   └── LanguageCard.jsx
-│       │   └── stats/              # Proxmox Status-Dashboard Widgets
-│       │       ├── StatCard.jsx (Base)
-│       │       ├── NodeStatusCard.jsx
-│       │       ├── VMStatusCard.jsx
-│       │       ├── TopUsageCard.jsx
-│       │       ├── TopDiskUsageCard.jsx
-│       │       ├── TaskSummaryCard.jsx
-│       │       ├── StorageByNodeCard.jsx
-│       │       ├── StorageByTypeCard.jsx
-│       │       ├── StorageTotalCard.jsx
-│       │       ├── CephHealthCard.jsx
-│       │       ├── CephOSDCard.jsx
-│       │       └── CardVisibilityPanel.jsx  # Dropdown: Cards ein-/ausblenden
-│       ├── i18n/
-│       │   ├── index.js             # i18n Config (LanguageDetector, fallback: de)
-│       │   └── locales/
-│       │       ├── de.json           # Deutsche Übersetzungen (~440 Keys)
-│       │       └── en.json           # Englische Übersetzungen (~440 Keys)
-│       └── styles/
-│           └── grid-layout.css     # react-grid-layout Overrides
-│
-├── frontend/public/wallpapers/       # 9 Preset-Wallpapers (Unsplash, 1920×1080, ~3.4MB gesamt)
-│   ├── mountains.jpg, ocean.jpg, forest.jpg, aurora.jpg, stars.jpg,
-│   ├── dark-peaks.jpg, green-hills.jpg, summit.jpg, desert.jpg
-│
-├── db/
-│   ├── init.sql                    # Schema + Defaults + Indizes
-│   └── ssl/                        # PostgreSQL SSL Certs
-│
-├── nginx/
-│   ├── Dockerfile                  # (nicht genutzt, nginx:alpine direkt)
-│   ├── nginx.conf                  # Reverse Proxy (HTTP→HTTPS, Frontend+API)
-│   └── ssl/                        # Nginx SSL Certs
-│
-└── *.md                            # Dokumentation (README, Setup-Guides, etc.)
-```
+### Projektstruktur (Zusammenfassung)
+- **/backend:** Modulare FastAPI-Anwendung mit Routern für jeden Feature-Bereich, Pydantic-Modellen und Raw-SQL-Datenbankzugriff.
+- **/frontend:** Vite-basiertes React-Projekt mit Custom Hooks für das State-Management und Komponenten für die UI.
+- **/db:** Enthält das `init.sql`-Skript zur Initialisierung des Datenbankschemas.
+- **/nginx:** Konfiguration für den Nginx-Reverse-Proxy.
+- **Dokumentation:** Diverse Markdown-Dateien (`*.md`) im Root-Verzeichnis.
 
 ### Design Patterns
 - **Custom Hooks Pattern** — State-Management in `useAuth`, `useDashboards`, `useAppearance`, `useServices`
