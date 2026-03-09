@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { X } from 'phosphor-react';
 import ProxmoxConnectionCard from './ProxmoxConnectionCard';
@@ -100,10 +101,10 @@ function ProxmoxTab({
           </div>
 
       {/* Connection Modal */}
-      {showConnectionModal && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] p-4 bg-black/50 backdrop-blur-sm overflow-y-auto" onClick={() => setShowConnectionModal(false)}>
-          <div className="relative w-full max-w-2xl mb-[10vh]" onClick={(e) => e.stopPropagation()}>
-            <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 rounded-2xl border border-orange-200/50 dark:border-orange-500/30 shadow-2xl">
+      {showConnectionModal && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowConnectionModal(false)}>
+          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 rounded-2xl border border-orange-200/50 dark:border-orange-500/30 shadow-2xl flex flex-col max-h-[90vh]">
               {/* Modal Header */}
               <div className="relative overflow-hidden rounded-t-2xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-red-400/10 to-transparent dark:from-orange-400/30 dark:via-red-500/20 dark:to-transparent" />
@@ -130,7 +131,7 @@ function ProxmoxTab({
                 </div>
               </div>
               {/* Modal Content */}
-              <div className="p-6">
+              <div className="p-6 overflow-y-auto flex-1">
                 <ProxmoxConnectionCard 
                   activeDashboard={activeDashboard}
                   onSettingsChange={onSettingsChange}
@@ -139,14 +140,15 @@ function ProxmoxTab({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Dashboard Settings Modal */}
-      {showDashboardModal && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] p-4 bg-black/50 backdrop-blur-sm overflow-y-auto" onClick={() => setShowDashboardModal(false)}>
-          <div className="relative w-full max-w-2xl mb-[10vh]" onClick={(e) => e.stopPropagation()}>
-            <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 rounded-2xl border border-blue-200/50 dark:border-blue-500/30 shadow-2xl">
+      {showDashboardModal && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowDashboardModal(false)}>
+          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 rounded-2xl border border-blue-200/50 dark:border-blue-500/30 shadow-2xl flex flex-col max-h-[90vh]">
               {/* Modal Header */}
               <div className="relative overflow-hidden rounded-t-2xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-cyan-400/10 to-transparent dark:from-blue-400/30 dark:via-cyan-500/20 dark:to-transparent" />
@@ -173,12 +175,13 @@ function ProxmoxTab({
                 </div>
               </div>
               {/* Modal Content */}
-              <div className="p-6">
+              <div className="p-6 overflow-y-auto flex-1">
                 <ProxmoxDashboardSettingsCard onClose={() => setShowDashboardModal(false)} />
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
