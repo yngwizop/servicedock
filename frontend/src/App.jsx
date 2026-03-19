@@ -218,9 +218,9 @@ function App() {
       />
 
       {/* Main Content */}
-      <div className={`${sidebarCollapsed ? 'ml-20' : 'ml-52'} transition-all duration-300 relative z-10 flex flex-col min-h-screen pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2`}>
+      <div className={`${sidebarCollapsed ? 'ml-20' : 'ml-52'} transition-all duration-300 relative z-10 flex flex-col ${activeTab === 'settings' ? 'h-screen overflow-hidden' : 'min-h-screen'} pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2`}>
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center mb-6 gap-4">
+        <div className={`flex flex-col md:flex-row md:items-center mb-6 gap-4 ${activeTab === 'settings' ? 'shrink-0' : ''}`}>
           <div className="flex items-center gap-4">
             <h1 
               className="text-4xl font-bold"
@@ -322,7 +322,7 @@ function App() {
         )}
 
         {/* === CONTENT BASED ON ACTIVE TAB === */}
-        <div className="flex-grow relative z-[65]">
+        <div className={`${activeTab === 'settings' ? 'flex-1 min-h-0 overflow-y-auto settings-scroll-fade' : 'flex-grow'} relative z-[65]`}>
           {activeTab === "services" && (
             <>
               <ServiceGrid
