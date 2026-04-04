@@ -172,10 +172,10 @@ function SettingsPage({
       </div>
 
       {/* Desktop: Sidebar + Active Section */}
-      <div className="lg:flex gap-6">
+      <div className="lg:flex gap-6 items-start">
         {/* Sticky Sidebar Nav */}
         <div className="hidden lg:block w-64 shrink-0">
-          <nav className="glass rounded-2xl shadow-xl p-3 sticky top-6 space-y-1">
+          <nav className="glass rounded-2xl shadow-xl p-3 sticky top-0 space-y-1">
             {sections.map((section) => {
               const Icon = section.icon;
               const isActive = activeSection === section.id;
@@ -249,7 +249,7 @@ function SettingsPage({
 
         {/* Contextual Tips Panel */}
         <div className="hidden xl:block w-72 shrink-0">
-          <div className="glass rounded-2xl shadow-xl p-5 sticky top-6 transition-all duration-300">
+          <div className="glass rounded-2xl shadow-xl p-5 sticky top-0 transition-all duration-300">
             <div className="flex items-center gap-2.5 mb-4">
               <currentTips.icon size={22} weight="duotone" className={currentTips.color} />
               <h3 className="text-base font-bold text-gray-800 dark:text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>{currentTips.title}</h3>

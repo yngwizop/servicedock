@@ -167,6 +167,17 @@ function AppearanceTab({
 
   return (
     <div className="space-y-6">
+      {/* Tab Header */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+          <Palette size={22} weight="duotone" className="text-pink-400" />
+          {t('settings.tabs.appearance')}
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400 text-sm" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+          {t('appearance.description')}
+        </p>
+      </div>
+
       {/* Sektion: Wallpaper */}
       <div className={sectionCard}>
         <SectionHeader icon={Image} title={t('wallpaper.title')} />

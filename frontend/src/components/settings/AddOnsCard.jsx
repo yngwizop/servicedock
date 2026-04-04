@@ -278,11 +278,11 @@ function AddOnsCard() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
           <Plug size={22} weight="duotone" className="text-green-400" />
           {t('addons.title')}
         </h3>
-        <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
+        <p className="text-gray-600 dark:text-gray-400 text-sm" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
           {t('addons.description')}
         </p>
       </div>

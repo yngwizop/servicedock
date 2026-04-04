@@ -31,20 +31,16 @@ function LanguageCard() {
   const currentLang = i18n.language?.startsWith('en') ? 'en' : 'de';
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2.5 rounded-xl bg-violet-500/20 dark:bg-violet-500/10">
-          <Translate size={24} weight="duotone" className="text-violet-500" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-gray-800 dark:text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
-            {t('language.title')}
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-            {t('language.description')}
-          </p>
-        </div>
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+          <Translate size={22} weight="duotone" className="text-violet-400" />
+          {t('language.title')}
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400 text-sm" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+          {t('language.description')}
+        </p>
       </div>
 
       {/* Language Options */}

@@ -354,6 +354,7 @@
     }
   },
   "appearance": {
+    "description": "Customize background, colors, widgets and weather",
     "temperature": "Temperature",
     "humidity": "Humidity",
     "wind": "Wind",

@@ -356,6 +356,7 @@
     }
   },
   "appearance": {
+    "description": "Hintergrund, Farben, Widgets und Wetter anpassen",
     "temperature": "Temperatur",
     "humidity": "Luftfeuchtigkeit",
     "wind": "Wind",

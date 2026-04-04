@@ -1,7 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { X } from 'phosphor-react';
+import { X, Desktop } from 'phosphor-react';
 import ProxmoxConnectionCard from './ProxmoxConnectionCard';
 import ProxmoxDashboardSettingsCard from './ProxmoxDashboardSettingsCard';
 
@@ -21,10 +21,11 @@ function ProxmoxTab({
   return (
     <div className="space-y-6">
         <div>
-          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+            <Desktop size={22} weight="duotone" className="text-orange-400" />
             {t('proxmoxTab.title')}
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
+          <p className="text-gray-600 dark:text-gray-400 text-sm" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
             {t('proxmoxTab.description')}
           </p>
         </div>

@@ -163,7 +163,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header mit Add-Button */}
       <div className="flex items-start justify-between">
         <div>
@@ -171,7 +171,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
             <SquaresFour size={22} weight="duotone" className="text-blue-400" />
             {t('dashboards.title')}
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
+          <p className="text-gray-600 dark:text-gray-400 text-sm" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
             {t('dashboards.description')}
           </p>
         </div>
