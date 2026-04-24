@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Pencil, SquaresFour, Plus, Desktop, X, Trash, Tag, Package, Link as LinkIcon } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
@@ -10,7 +11,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
     `${window.location.protocol}//${window.location.hostname}:8000`
   );
 
-const inputClass = "w-full border border-gray-300/50 dark:border-white/10 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all text-sm";
+const inputClass = "w-full border border-gray-300/50 dark:border-white/15 bg-white/50 dark:bg-gray-700/70 dark:text-white dark:placeholder-gray-400 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm";
 const labelClass = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2";
 
 // Wiederverwendbarer Toggle-Schalter (wie in AppearanceTab)
@@ -292,11 +293,11 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
       </div>
 
       {/* ===== Create/Edit Modal ===== */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+      {showModal && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
           <div
             ref={modalRef}
-            className="glass rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-content-in"
+            className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 border border-gray-200/50 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-content-in"
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-200/30 dark:border-white/[0.06]">
@@ -390,13 +391,14 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ===== Delete Confirmation Modal ===== */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-          <div className="glass rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-content-in">
+      {showDeleteConfirm && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <div className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 border border-gray-200/50 dark:border-white/10 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-content-in">
             <div className="px-6 pt-5 pb-4">
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 bg-red-500/15 rounded-xl">
@@ -425,7 +427,8 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

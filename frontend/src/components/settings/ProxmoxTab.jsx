@@ -105,7 +105,7 @@ function ProxmoxTab({
       {showConnectionModal && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowConnectionModal(false)}>
           <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="backdrop-blur-xl bg-white/70 dark:bg-white/10 rounded-2xl border border-orange-200/50 dark:border-orange-500/30 shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 rounded-2xl border border-orange-200/50 dark:border-orange-500/30 shadow-2xl flex flex-col max-h-[90vh]">
               {/* Modal Header */}
               <div className="relative overflow-hidden rounded-t-2xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-red-400/10 to-transparent dark:from-orange-400/30 dark:via-red-500/20 dark:to-transparent" />
@@ -149,7 +149,7 @@ function ProxmoxTab({
       {showDashboardModal && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowDashboardModal(false)}>
           <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="backdrop-blur-xl bg-white/70 dark:bg-white/10 rounded-2xl border border-blue-200/50 dark:border-blue-500/30 shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 rounded-2xl border border-blue-200/50 dark:border-blue-500/30 shadow-2xl flex flex-col max-h-[90vh]">
               {/* Modal Header */}
               <div className="relative overflow-hidden rounded-t-2xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-cyan-400/10 to-transparent dark:from-blue-400/30 dark:via-cyan-500/20 dark:to-transparent" />

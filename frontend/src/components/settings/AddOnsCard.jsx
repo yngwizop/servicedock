@@ -411,7 +411,7 @@ function AddOnsCard() {
       {showConfigModal && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowConfigModal(false)}>
           <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="backdrop-blur-xl bg-white/70 dark:bg-white/10 rounded-2xl border border-blue-200/50 dark:border-blue-500/30 shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 rounded-2xl border border-blue-200/50 dark:border-blue-500/30 shadow-2xl flex flex-col max-h-[90vh]">
               {/* Modal Header */}
               <div className="relative overflow-hidden rounded-t-2xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent dark:from-blue-400/30 dark:via-blue-500/20 dark:to-transparent" />
@@ -467,7 +467,7 @@ function AddOnsCard() {
       {showSpotifyModal && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowSpotifyModal(false)}>
           <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="backdrop-blur-xl bg-white/70 dark:bg-white/10 rounded-2xl border border-green-200/50 dark:border-green-500/30 shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 rounded-2xl border border-green-200/50 dark:border-green-500/30 shadow-2xl flex flex-col max-h-[90vh]">
               {/* Modal Header */}
               <div className="relative overflow-hidden rounded-t-2xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent dark:from-green-400/30 dark:via-green-500/20 dark:to-transparent" />
@@ -520,7 +520,7 @@ function AddOnsCard() {
       {showLdapModal && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowLdapModal(false)}>
           <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="backdrop-blur-xl bg-white/70 dark:bg-white/10 rounded-2xl border border-indigo-200/50 dark:border-indigo-500/30 shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 rounded-2xl border border-indigo-200/50 dark:border-indigo-500/30 shadow-2xl flex flex-col max-h-[90vh]">
               {/* Modal Header */}
               <div className="relative overflow-hidden rounded-t-2xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-indigo-400/10 to-transparent dark:from-indigo-400/30 dark:via-indigo-500/20 dark:to-transparent" />
