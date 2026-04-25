@@ -292,8 +292,8 @@ function AddOnsCard() {
         className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ring-2 ring-blue-500/30 hover:ring-blue-500/50"
         onClick={() => setShowConfigModal(true)}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent dark:from-blue-400/30 dark:via-blue-500/20 dark:to-transparent" />
-        <div className="relative backdrop-blur-xl bg-white/30 dark:bg-white/[0.04] border border-gray-200/40 dark:border-white/[0.06] p-6">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent dark:from-blue-400/35 dark:via-blue-500/20 dark:to-transparent" />
+        <div className="relative backdrop-blur-xl bg-white/30 dark:bg-gray-800/70 border border-gray-200/40 dark:border-white/15 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
@@ -322,8 +322,8 @@ function AddOnsCard() {
         className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ring-2 ring-green-500/30 hover:ring-green-500/50"
         onClick={() => setShowSpotifyModal(true)}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent dark:from-green-400/30 dark:via-green-500/20 dark:to-transparent" />
-        <div className="relative backdrop-blur-xl bg-white/30 dark:bg-white/[0.04] border border-gray-200/40 dark:border-white/[0.06] p-6">
+        <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent dark:from-green-400/35 dark:via-green-500/20 dark:to-transparent" />
+        <div className="relative backdrop-blur-xl bg-white/30 dark:bg-gray-800/70 border border-gray-200/40 dark:border-white/15 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
@@ -367,8 +367,8 @@ function AddOnsCard() {
         className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ring-2 ring-indigo-500/30 hover:ring-indigo-500/50"
         onClick={() => setShowLdapModal(true)}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-indigo-400/10 to-transparent dark:from-indigo-400/30 dark:via-indigo-500/20 dark:to-transparent" />
-        <div className="relative backdrop-blur-xl bg-white/30 dark:bg-white/[0.04] border border-gray-200/40 dark:border-white/[0.06] p-6">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-indigo-400/10 to-transparent dark:from-indigo-400/35 dark:via-indigo-500/20 dark:to-transparent" />
+        <div className="relative backdrop-blur-xl bg-white/30 dark:bg-gray-800/70 border border-gray-200/40 dark:border-white/15 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">

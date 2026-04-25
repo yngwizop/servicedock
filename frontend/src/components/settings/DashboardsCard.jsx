@@ -199,10 +199,10 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
             >
               <div className={`absolute inset-0 ${
                 dashboard.id === activeDashboard
-                  ? 'bg-gradient-to-br from-blue-500/15 via-blue-400/5 to-transparent dark:from-blue-400/20 dark:via-blue-500/10 dark:to-transparent'
-                  : 'bg-gradient-to-br from-gray-500/5 via-transparent to-transparent dark:from-white/[0.03] dark:via-transparent dark:to-transparent'
+                  ? 'bg-gradient-to-br from-blue-500/15 via-blue-400/5 to-transparent dark:from-blue-400/35 dark:via-blue-500/15 dark:to-transparent'
+                  : 'bg-gradient-to-br from-gray-500/5 via-transparent to-transparent dark:from-white/[0.06] dark:via-transparent dark:to-transparent'
               }`} />
-              <div className="relative bg-white/30 dark:bg-white/[0.04] border border-gray-200/40 dark:border-white/[0.06] p-4">
+              <div className="relative bg-white/30 dark:bg-gray-800/65 border border-gray-200/40 dark:border-white/15 p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -363,7 +363,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
               </div>
 
               {/* Proxmox Toggle */}
-              <div className="bg-white/30 dark:bg-white/[0.04] rounded-xl p-4 border border-gray-200/40 dark:border-white/[0.06]">
+              <div className="bg-white/30 dark:bg-gray-800/45 rounded-xl p-4 border border-gray-200/40 dark:border-white/10">
                 <ToggleSwitch
                   checked={dashboardShowProxmox}
                   onChange={setDashboardShowProxmox}

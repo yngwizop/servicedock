@@ -32,7 +32,7 @@ const PRESET_WALLPAPERS = [
 ];
 
 // Leichtere Sub-Sektion innerhalb der äußeren Glass-Card (kein doppelter Glaseffekt)
-const sectionCard = "bg-white/30 dark:bg-white/[0.04] rounded-xl p-5 border border-gray-200/40 dark:border-white/[0.06]";
+const sectionCard = "bg-white/30 dark:bg-gray-800/65 rounded-xl p-5 border border-gray-200/40 dark:border-white/15";
 const inputClass = "w-full border border-gray-300/50 dark:border-white/10 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all text-sm";
 const labelClass = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2";
 

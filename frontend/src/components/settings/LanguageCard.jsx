@@ -54,7 +54,7 @@ function LanguageCard() {
               className={`relative flex items-center gap-4 p-5 rounded-xl border-2 transition-all duration-200 ${
                 isActive
                   ? 'border-violet-500 bg-violet-500/10 dark:bg-violet-500/10 shadow-lg shadow-violet-500/10'
-                  : 'border-gray-300/50 dark:border-white/10 bg-white/30 dark:bg-white/5 hover:border-violet-300 dark:hover:border-violet-500/30 hover:bg-violet-50/50 dark:hover:bg-violet-500/5'
+                  : 'border-gray-300/50 dark:border-white/15 bg-white/30 dark:bg-gray-800/60 hover:border-violet-300 dark:hover:border-violet-500/50 hover:bg-violet-50/50 dark:hover:bg-violet-500/10'
               }`}
             >
               <lang.Flag />
