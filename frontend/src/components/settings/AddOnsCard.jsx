@@ -282,7 +282,7 @@ function AddOnsCard() {
           <Plug size={22} weight="duotone" className="text-green-400" />
           {t('addons.title')}
         </h3>
-        <p className="text-gray-600 dark:text-gray-400 text-sm" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+        <p className="text-gray-700 dark:text-gray-300 text-sm" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6), 0 0 8px rgba(255,255,255,0.5)' }}>
           {t('addons.description')}
         </p>
       </div>
