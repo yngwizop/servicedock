@@ -35,25 +35,114 @@
   background: transparent;
 }
 
-/* Scrollbar-Thumb (der bewegliche Teil) - Light Mode */
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1; /* Helles Grau (slate-300) */
-  border-radius: 4px; /* Abgerundete Ecken */
+/* Scrollbars: html immer .dark; Nacht nur mit data-sd-theme="night" */
+html.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
 }
 
-/* Scrollbar-Thumb - Dark Mode */
-.dark ::-webkit-scrollbar-thumb {
-  background: #475569; /* Dunkles Grau (slate-600) */
+html.dark[data-sd-theme="night"] ::-webkit-scrollbar-thumb {
+  background: #475569;
 }
 
-/* Hover-Effekt - Light Mode */
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8; /* Mittleres Grau (slate-400) */
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
-/* Hover-Effekt - Dark Mode */
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #64748b; /* Slate-500 */
+html.dark[data-sd-theme="night"] ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+html.dark {
+  scrollbar-color: #475569 transparent;
+}
+html.dark[data-sd-theme="night"] {
+  scrollbar-color: #475569 transparent;
+  /*
+   * Zentrale Nacht-Palette (RGB ohne Kommas = Tailwind <alpha-value>).
+   * Flächen-Deckkraft: einheitlich dichter als früheres 12%-Glas (wie Service-Karten),
+   * Stufen behalten dasselbe Verhältnis zueinander wie zu Dim white/[0.12|0.06|0.04|…].
+   */
+  --sd-night-950: 22 32 52; /* Boden / tief */
+  --sd-night-900: 40 52 78; /* Standard-Panel */
+  --sd-night-800: 58 72 98; /* erhöht / Streifen */
+  --sd-night-700: 78 94 120; /* Hover */
+  --sd-night-surface-op: 0.55;
+  --sd-night-shade-op: 0.28;
+  --sd-night-tint-op: 0.18;
+  --sd-night-muted-op: 0.46;
+  --sd-night-veil-op: 0.23;
+  --sd-night-faint-op: 0.14;
+}
+
+/* Gemeinsame Nacht-Kartenfläche — Glas + leichter Randglanz */
+@layer components {
+  html.dark[data-sd-theme="night"] .sd-night-surface {
+    background-color: rgb(var(--sd-night-900) / var(--sd-night-surface-op)) !important;
+    backdrop-filter: blur(18px) saturate(1.15) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.15) !important;
+    box-shadow:
+      inset 0 1px 0 0 rgb(255 255 255 / 0.08),
+      0 10px 36px rgb(0 0 0 / 0.22);
+  }
+
+  html.dark[data-sd-theme="night"] .sd-night-shade {
+    background-color: rgb(var(--sd-night-950) / var(--sd-night-shade-op)) !important;
+    backdrop-filter: blur(18px) saturate(1.15) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.15) !important;
+    box-shadow:
+      inset 0 1px 0 0 rgb(255 255 255 / 0.06),
+      0 8px 28px rgb(0 0 0 / 0.16);
+  }
+
+  html.dark[data-sd-theme="night"] .sd-night-tint {
+    background-color: rgb(var(--sd-night-900) / var(--sd-night-tint-op)) !important;
+    backdrop-filter: blur(18px) saturate(1.15) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.15) !important;
+    box-shadow:
+      inset 0 1px 0 0 rgb(255 255 255 / 0.05),
+      0 6px 24px rgb(0 0 0 / 0.14);
+  }
+
+  html.dark[data-sd-theme="night"] .sd-night-muted {
+    background-color: rgb(var(--sd-night-900) / var(--sd-night-muted-op)) !important;
+    backdrop-filter: blur(12px) saturate(1.12) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(1.12) !important;
+  }
+
+  html.dark[data-sd-theme="night"] .sd-night-muted-flat {
+    background-color: rgb(var(--sd-night-900) / var(--sd-night-muted-op)) !important;
+  }
+
+  /* Nur Hintergrund, ohne Blur — große Layout-Flächen (Settings) */
+  html.dark[data-sd-theme="night"] .sd-night-shade-flat {
+    background-color: rgb(var(--sd-night-950) / var(--sd-night-shade-op)) !important;
+  }
+
+  html.dark[data-sd-theme="night"] .sd-night-veil-flat {
+    background-color: rgb(var(--sd-night-950) / var(--sd-night-veil-op)) !important;
+  }
+
+  html.dark[data-sd-theme="night"] .sd-night-tint-flat {
+    background-color: rgb(var(--sd-night-950) / var(--sd-night-tint-op)) !important;
+  }
+
+  html.dark[data-sd-theme="night"] .sd-night-faint-flat {
+    background-color: rgb(var(--sd-night-900) / var(--sd-night-faint-op)) !important;
+  }
+
+  /* Optional: gleiche Flächenfarbe, aber ohne Blur (z. B. Audit-Logs) */
+  html.dark[data-sd-theme="night"] .sd-night-surface.sd-night-surface--solid {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  html.dark[data-sd-theme="night"] .sd-night-shade.sd-night-surface--solid,
+  html.dark[data-sd-theme="night"] .sd-night-tint.sd-night-surface--solid,
+  html.dark[data-sd-theme="night"] .sd-night-muted.sd-night-surface--solid {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
 }
 
 /* Verhindert Layout-Shift durch Scrollbar */
@@ -161,26 +250,33 @@
   50% { box-shadow: 0 0 16px rgba(59, 130, 246, 0.25); }
 }
 
-/* Glassmorphism base card */
-.glass {
-  background: rgba(255, 255, 255, 0.7);
+/* Glass — Standard (dim): html.dark; Nacht: data-sd-theme="night" */
+html.dark .glass {
+  background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(209, 213, 219, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.dark .glass {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+html.dark[data-sd-theme="night"] .glass {
+  background: rgb(var(--sd-night-900) / var(--sd-night-surface-op));
+  backdrop-filter: blur(14px) saturate(1.12) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.12) !important;
+  border: 1px solid rgb(255 255 255 / 0.1);
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.05);
 }
 
 /* Glass button hover lift */
 .glass-btn {
   @apply transition-all duration-200;
 }
-.glass-btn:hover {
+html.dark .glass-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+html.dark[data-sd-theme="night"] .glass-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55), 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 .glass-btn:active {
   transform: translateY(0px);
@@ -203,6 +299,32 @@
   input[type="range"]:focus::-moz-range-thumb {
     @apply ring-2 ring-blue-500 ring-offset-2;
   }
+}
+
+/* Theme-Hintergrund-Mesh (App fixed layer — nicht von Appearance bg_color verdecken) */
+.sd-theme-mesh-dim {
+  background-color: #020617;
+  background-image:
+    radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0px, transparent 50%),
+    radial-gradient(at 50% 0%, hsla(225, 39%, 25%, 1) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsla(217, 71%, 35%, 1) 0px, transparent 50%),
+    radial-gradient(at 100% 50%, hsla(291, 44%, 28%, 1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(261, 48%, 32%, 1) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, hsla(228, 35%, 22%, 1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(203, 45%, 28%, 1) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+.sd-theme-mesh-night {
+  /* Basis = --sd-night-950; Verläufe etwas heller für stimmiges Glas-UI */
+  background-color: rgb(var(--sd-night-950));
+  background-image:
+    radial-gradient(ellipse 85% 55% at 50% -10%, hsla(217, 30%, 28%, 0.88) 0px, transparent 52%),
+    radial-gradient(ellipse 70% 45% at 100% 40%, hsla(215, 26%, 22%, 0.85) 0px, transparent 48%),
+    radial-gradient(ellipse 65% 50% at 0% 75%, hsla(215, 26%, 20%, 0.82) 0px, transparent 48%),
+    radial-gradient(ellipse 55% 40% at 80% 95%, hsla(220, 22%, 22%, 0.75) 0px, transparent 45%);
+  background-attachment: fixed;
 }
 
 /* Settings scroll — kein Fade, Inhalt voll sichtbar */

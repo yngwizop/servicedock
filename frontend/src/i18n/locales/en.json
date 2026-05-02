@@ -33,7 +33,9 @@
     "edit": "Edit",
     "search": "Search",
     "search_shortcut": "Search (Ctrl+F)",
-    "logout": "Log out"
+    "logout": "Log out",
+    "theme_switch_night": "Switch to night theme",
+    "theme_switch_standard": "Switch to standard theme"
   },
   "login": {
     "subtitle": "Your personal service dashboard",
@@ -311,7 +313,7 @@
       "appearance": [
         "Choose from 9 bundled preset wallpapers or upload your own images (JPG/PNG/WebP, max 10MB).",
         "Background images work best with an opacity of 0.6–0.8 for good readability.",
-        "Font colors are saved separately per mode (Light/Dark) — switch the mode with the ☀/🌙 button to test both.",
+        "Primary text color applies to the dim and night themes. A secondary color is still stored for optional use — switch themes with the ☀/🌙 control in the sidebar to preview.",
         "Service columns (2–10) and shortcut columns (2–8) can be configured independently.",
         "Hex input and color picker are synchronized — you can type exact color values directly.",
         "Weather widget: The city is resolved via geocoding — shows you country, postal code and coordinates for confirmation.",
@@ -367,9 +369,9 @@
     "bg_image_url": "Background Image URL",
     "bg_opacity": "Image Opacity:",
     "font_colors": "Font Colors",
-    "mode_info": "💡 Currently in {{mode}} Mode. Switch the mode with the {{icon}} button to test the colors.",
-    "mode_light": "Light",
-    "mode_dark": "Dark",
+    "mode_info": "💡 Active theme: {{mode}}. Toggle with the {{icon}} control in the sidebar (standard ↔ night).",
+    "mode_light": "Standard (dim)",
+    "mode_dark": "Night",
     "layout": "Layout & Columns",
     "service_cols": "Service Columns (Desktop):",
     "shortcut_cols": "Shortcut Columns (Desktop):",
@@ -390,8 +392,8 @@
     "postal_code": ", Postal Code: ",
     "weather_cache_info": "Weather data is automatically updated every 2 hours and cached. Manual refresh is available anytime via the widget button.",
     "weather_fields": "Displayed Weather Data",
-    "light_mode": "Light Mode",
-    "dark_mode": "Dark Mode",
+    "light_mode": "Secondary text color",
+    "dark_mode": "Primary text color",
     "spotify_widget": "Spotify Widget"
   },
   "dashboards": {

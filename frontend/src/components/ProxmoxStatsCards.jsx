@@ -55,7 +55,7 @@ function useAnimatedCounter(target, duration = 2200, delay = 0) {
 const StatCard = React.memo(function StatCard({ title, value, icon: Icon, accentColor, iconBg, animationDelay = 0 }) {
   return (
     <div 
-      className="animate-slide-in-left bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-400/60 dark:border-white/10 hover:scale-[1.03] hover:border-gray-500/70 dark:hover:border-white/20 transition-all duration-300 group"
+      className="animate-slide-in-left dark:bg-white/[0.12] sd-night-surface backdrop-blur-md rounded-xl shadow-lg night:shadow-black/40 p-6 border border-gray-400/60 dark:border-white/10 night:border-white/[0.07] hover:scale-[1.03] hover:border-gray-500/70 dark:hover:border-white/20 night:hover:border-white/12 transition-all duration-300 group"
       style={{ animationDelay: `${animationDelay}s` }}
     >
       <div className="flex items-center justify-between">
@@ -99,11 +99,11 @@ function ProxmoxStatsCards({ resources, nodes }) {
   const animNodes = useAnimatedCounter(nodeCount, 2200, 700);
 
   const cards = [
-    { title: 'Total', value: animTotal, icon: Desktop, accentColor: 'text-gray-800 dark:text-white', iconBg: 'bg-gray-200/60 dark:bg-white/10' },
-    { title: 'Running', value: animRunning, icon: PlayCircle, accentColor: 'text-emerald-600 dark:text-emerald-400', iconBg: 'bg-emerald-100/60 dark:bg-emerald-500/10' },
-    { title: 'Stopped', value: animStopped, icon: StopCircle, accentColor: 'text-rose-600 dark:text-rose-400', iconBg: 'bg-rose-100/60 dark:bg-rose-500/10' },
-    { title: 'CPU Cores', value: animCpu, icon: Cpu, accentColor: 'text-amber-600 dark:text-amber-400', iconBg: 'bg-amber-100/60 dark:bg-amber-500/10' },
-    { title: 'Nodes', value: animNodes, icon: HardDrives, accentColor: 'text-blue-600 dark:text-blue-400', iconBg: 'bg-blue-100/60 dark:bg-blue-500/10' },
+    { title: 'Total', value: animTotal, icon: Desktop, accentColor: 'text-gray-800 dark:text-white', iconBg: 'bg-gray-200/60 dark:bg-white/10 night:bg-sd-night-950/70' },
+    { title: 'Running', value: animRunning, icon: PlayCircle, accentColor: 'text-emerald-600 dark:text-emerald-400', iconBg: 'bg-emerald-100/60 dark:bg-emerald-500/10 night:bg-emerald-950/40' },
+    { title: 'Stopped', value: animStopped, icon: StopCircle, accentColor: 'text-rose-600 dark:text-rose-400', iconBg: 'bg-rose-100/60 dark:bg-rose-500/10 night:bg-rose-950/35' },
+    { title: 'CPU Cores', value: animCpu, icon: Cpu, accentColor: 'text-amber-600 dark:text-amber-400', iconBg: 'bg-amber-100/60 dark:bg-amber-500/10 night:bg-amber-950/35' },
+    { title: 'Nodes', value: animNodes, icon: HardDrives, accentColor: 'text-blue-600 dark:text-blue-400', iconBg: 'bg-blue-100/60 dark:bg-blue-500/10 night:bg-blue-950/40' },
   ];
 
   return (

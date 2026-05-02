@@ -100,18 +100,18 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
           {/* Modal Content */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
-              className="w-full max-w-md bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl rounded-2xl shadow-2xl border border-gray-300/50 dark:border-white/10 overflow-hidden"
+              className="w-full max-w-md bg-slate-900/75 dark:bg-slate-950/90 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/12 dark:border-white/8 overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200/50 dark:border-white/10">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Plus size={22} weight="bold" className="text-blue-500" />
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 dark:border-white/8">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Plus size={22} weight="bold" className="text-blue-400" />
                   {t('addItem.add_heading')}
                 </h2>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 rounded-full hover:bg-gray-200/70 dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-400"
+                  className="p-2 rounded-full hover:bg-white/10 dark:hover:bg-white/10 transition-colors text-gray-400"
                 >
                   <X size={20} weight="bold" />
                 </button>
@@ -119,13 +119,13 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
 
               {/* Tab Toggle */}
               <div className="px-6 pt-4">
-                <div className="flex gap-1 bg-gray-100/80 dark:bg-white/10 rounded-xl p-1">
+                <div className="flex gap-1 bg-white/10 dark:bg-white/5 rounded-xl p-1">
                   <button
                     onClick={() => setActiveForm('service')}
                     className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
                       activeForm === 'service'
                         ? 'bg-blue-600 text-white shadow-md'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-white/5'
+                        : 'text-gray-300 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/10'
                     }`}
                   >
                     📦 Service
@@ -135,7 +135,7 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
                     className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
                       activeForm === 'shortcut'
                         ? 'bg-blue-600 text-white shadow-md'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-white/5'
+                        : 'text-gray-300 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/10'
                     }`}
                   >
                     🔗 Shortcut
@@ -148,47 +148,47 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
                 {activeForm === 'service' ? (
                   <form onSubmit={handleServiceSubmit} className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      <label className="block text-sm font-medium text-gray-300 dark:text-gray-400 mb-1.5">
                         {t('addItem.service_name')}
                       </label>
                       <input
                         placeholder={t('addItem.service_name_placeholder')}
                         value={serviceName}
                         onChange={(e) => setServiceName(e.target.value)}
-                        className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+                        className="border border-white/20 dark:border-white/10 bg-white/10 dark:bg-white/5 text-white placeholder-gray-400 dark:placeholder-gray-500 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      <label className="block text-sm font-medium text-gray-300 dark:text-gray-400 mb-1.5">
                         {t('addItem.description')}
                       </label>
                       <input
                         placeholder={t('addItem.description_placeholder')}
                         value={serviceDesc}
                         onChange={(e) => setServiceDesc(e.target.value)}
-                        className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+                        className="border border-white/20 dark:border-white/10 bg-white/10 dark:bg-white/5 text-white placeholder-gray-400 dark:placeholder-gray-500 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      <label className="block text-sm font-medium text-gray-300 dark:text-gray-400 mb-1.5">
                         URL
                       </label>
                       <input
                         placeholder={t('addItem.url_placeholder_service')}
                         value={serviceUrl}
                         onChange={(e) => setServiceUrl(e.target.value)}
-                        className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+                        className="border border-white/20 dark:border-white/10 bg-white/10 dark:bg-white/5 text-white placeholder-gray-400 dark:placeholder-gray-500 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      <label className="block text-sm font-medium text-gray-300 dark:text-gray-400 mb-1.5">
                         Icon
                       </label>
                       <input
                         placeholder={t('addItem.icon_placeholder')}
                         value={serviceIcon}
                         onChange={(e) => setServiceIcon(e.target.value)}
-                        className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+                        className="border border-white/20 dark:border-white/10 bg-white/10 dark:bg-white/5 text-white placeholder-gray-400 dark:placeholder-gray-500 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
                       />
                     </div>
                     <button
@@ -197,9 +197,9 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
                     >
                       {t('addItem.add_service')}
                     </button>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
                       💡 {t('addItem.icons_tip')}{' '}
-                      <a href="https://selfh.st/icons/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-500 transition-colors">
+                      <a href="https://selfh.st/icons/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-300 transition-colors">
                         selfh.st/icons
                       </a>
                       {' '}{t('addItem.icons_tip_suffix')}
@@ -208,36 +208,36 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
                 ) : (
                   <form onSubmit={handleShortcutSubmit} className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      <label className="block text-sm font-medium text-gray-300 dark:text-gray-400 mb-1.5">
                         {t('addItem.shortcut_name')}
                       </label>
                       <input
                         placeholder={t('addItem.shortcut_name_placeholder')}
                         value={shortcutName}
                         onChange={(e) => setShortcutName(e.target.value)}
-                        className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+                        className="border border-white/20 dark:border-white/10 bg-white/10 dark:bg-white/5 text-white placeholder-gray-400 dark:placeholder-gray-500 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      <label className="block text-sm font-medium text-gray-300 dark:text-gray-400 mb-1.5">
                         URL
                       </label>
                       <input
                         placeholder={t('addItem.url_placeholder_shortcut')}
                         value={shortcutUrl}
                         onChange={(e) => setShortcutUrl(e.target.value)}
-                        className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+                        className="border border-white/20 dark:border-white/10 bg-white/10 dark:bg-white/5 text-white placeholder-gray-400 dark:placeholder-gray-500 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      <label className="block text-sm font-medium text-gray-300 dark:text-gray-400 mb-1.5">
                         Icon
                       </label>
                       <input
                         placeholder={t('addItem.icon_placeholder')}
                         value={shortcutIcon}
                         onChange={(e) => setShortcutIcon(e.target.value)}
-                        className="border border-gray-300 dark:border-white/20 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
+                        className="border border-white/20 dark:border-white/10 bg-white/10 dark:bg-white/5 text-white placeholder-gray-400 dark:placeholder-gray-500 p-3 w-full rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all"
                       />
                     </div>
                     <button
@@ -246,9 +246,9 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
                     >
                       {t('addItem.add_shortcut')}
                     </button>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
                       💡 {t('addItem.icons_tip')}{' '}
-                      <a href="https://selfh.st/icons/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-500 transition-colors">
+                      <a href="https://selfh.st/icons/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-300 transition-colors">
                         selfh.st/icons
                       </a>
                       {' '}{t('addItem.icons_tip_suffix')}

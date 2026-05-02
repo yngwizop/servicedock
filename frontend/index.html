@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark" data-sd-theme="dim">
   <head>
     <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/servicedock-icon.svg" />
@@ -7,6 +7,18 @@
   <title>Servicedock</title>
   </head>
   <body>
+    <script>
+      (function () {
+        try {
+          var root = document.documentElement;
+          root.classList.add('dark');
+          var t = localStorage.getItem('theme');
+          var night = t === 'dark';
+          root.setAttribute('data-sd-theme', night ? 'night' : 'dim');
+          document.body.style.backgroundColor = night ? '#010108' : '#020617';
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

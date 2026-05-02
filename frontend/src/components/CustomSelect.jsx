@@ -74,9 +74,9 @@ function CustomSelect({ value, onChange, options, className = '' }) {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 border
-          bg-white/50 dark:bg-white/[0.12] backdrop-blur-xl
-          border-gray-300/60 dark:border-white/15
-          hover:bg-white/70 dark:hover:bg-white/20
+          dark:bg-white/[0.12] sd-night-surface backdrop-blur-md
+          border-gray-300/60 dark:border-white/15 night:border-white/10
+          dark:hover:bg-white/20 night:hover:bg-sd-night-800/90
           text-gray-900 dark:text-white
           ${isOpen ? 'ring-2 ring-blue-500 border-blue-500/50' : ''}
         `}
@@ -100,7 +100,7 @@ function CustomSelect({ value, onChange, options, className = '' }) {
             width: dropdownPos.width,
             zIndex: 9999,
           }}
-          className="bg-white/80 dark:bg-gray-900/90 backdrop-blur-2xl border border-gray-300/50 dark:border-white/15 rounded-xl shadow-2xl overflow-hidden animate-fade-in"
+          className="bg-slate-900/92 dark:bg-slate-950/95 night:!bg-sd-night-950/96 backdrop-blur-2xl border border-white/12 dark:border-white/8 night:border-white/10 rounded-xl shadow-2xl overflow-hidden animate-fade-in"
         >
           <div className="py-1 max-h-64 overflow-y-auto">
             {options.map((option) => {
@@ -116,7 +116,7 @@ function CustomSelect({ value, onChange, options, className = '' }) {
                   className={`w-full text-left px-4 py-2.5 text-sm transition-all duration-150 flex items-center gap-2
                     ${isActive
                       ? 'bg-blue-600 text-white font-semibold'
-                      : 'text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-white/10 font-medium'
+                      : 'text-gray-200 hover:bg-white/10 dark:hover:bg-white/10 night:hover:bg-white/5 font-medium'
                     }
                   `}
                 >

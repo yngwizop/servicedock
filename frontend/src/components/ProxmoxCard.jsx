@@ -64,14 +64,14 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin, animationDe
 
   return (
     <div
-      className="group relative bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl border border-gray-400/60 dark:border-white/10 shadow-xl hover:shadow-2xl transition-all duration-200 p-5 flex flex-col gap-2 hover:border-gray-500/70 dark:hover:border-white/20 hover:scale-[1.025] animate-fade-up"
+      className="group relative bg-white/50 dark:bg-white/[0.12] sd-night-surface backdrop-blur-md rounded-2xl border border-gray-400/60 dark:border-white/10 night:border-white/[0.06] shadow-xl hover:shadow-2xl night:shadow-black/35 transition-all duration-200 p-5 flex flex-col gap-2 hover:border-gray-500/70 dark:hover:border-white/20 night:hover:border-white/10 hover:scale-[1.025] animate-fade-up"
       style={{ borderLeftWidth: '3px', borderLeftColor: getAccentColor(), animationDelay: `${animationDelay}s` }}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           {/* VM/LXC Icon */}
-          <div className={`p-2 rounded-xl shadow-sm ${resource.type === 'qemu' ? 'bg-blue-100/60 dark:bg-blue-500/10' : 'bg-purple-100/60 dark:bg-purple-500/10'}`}>
+          <div className={`p-2 rounded-xl shadow-sm ${resource.type === 'qemu' ? 'bg-blue-100/60 dark:bg-blue-500/10 night:bg-blue-950/45' : 'bg-purple-100/60 dark:bg-purple-500/10 night:bg-purple-950/40'}`}>
             {resource.type === 'qemu' ? (
               <Desktop size={20} className="text-blue-600 dark:text-blue-400" weight="duotone" />
             ) : (
@@ -104,9 +104,9 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin, animationDe
                 <span className="text-gray-600 dark:text-white/50 font-medium" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>CPU</span>
                 <span className="font-bold text-gray-950 dark:text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>{cpuPercent}%</span>
               </div>
-              <div className="w-full bg-gray-200/50 dark:bg-white/10 rounded-full h-1.5 overflow-hidden">
+              <div className="w-full bg-gray-200/50 dark:bg-white/10 night:bg-sd-night-950/90 rounded-full h-1.5 overflow-hidden">
                 <div 
-                  className="bg-gradient-to-r from-slate-400 to-slate-600 dark:from-slate-400 dark:to-slate-500 h-1.5 rounded-full transition-all duration-500"
+                  className="bg-gradient-to-r from-slate-400 to-slate-600 dark:from-slate-400 dark:to-slate-500 night:from-sd-night-700 night:to-sd-night-600 h-1.5 rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(cpuPercent, 100)}%` }}
                 ></div>
               </div>
@@ -118,7 +118,7 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin, animationDe
                 <span className="text-gray-600 dark:text-white/50 font-medium" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>RAM</span>
                 <span className="font-bold text-gray-950 dark:text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>{memPercent}%</span>
               </div>
-              <div className="w-full bg-gray-200/50 dark:bg-white/10 rounded-full h-1.5 overflow-hidden">
+              <div className="w-full bg-gray-200/50 dark:bg-white/10 night:bg-sd-night-950/90 rounded-full h-1.5 overflow-hidden">
                 <div 
                   className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-1.5 rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(memPercent, 100)}%` }}
@@ -132,7 +132,7 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin, animationDe
                 <span className="text-gray-600 dark:text-white/50 font-medium" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>Disk</span>
                 <span className="font-bold text-gray-950 dark:text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>{diskPercent}%</span>
               </div>
-              <div className="w-full bg-gray-200/50 dark:bg-white/10 rounded-full h-1.5 overflow-hidden">
+              <div className="w-full bg-gray-200/50 dark:bg-white/10 night:bg-sd-night-950/90 rounded-full h-1.5 overflow-hidden">
                 <div 
                   className="bg-gradient-to-r from-amber-500 to-amber-600 h-1.5 rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(diskPercent, 100)}%` }}
@@ -141,7 +141,7 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin, animationDe
             </div>
             
             {/* Uptime */}
-            <div className="flex justify-between items-center text-xs pt-2 border-t border-gray-300/30 dark:border-white/10">
+            <div className="flex justify-between items-center text-xs pt-2 border-t border-gray-300/30 dark:border-white/10 night:border-white/10">
               <span className="text-gray-600 dark:text-white/50 font-medium flex items-center gap-1" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
                 <svg xmlns='http://www.w3.org/2000/svg' className='inline w-3.5 h-3.5 text-blue-500 dark:text-blue-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>
                 Uptime

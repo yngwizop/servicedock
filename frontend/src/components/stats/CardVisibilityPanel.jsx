@@ -106,8 +106,8 @@ function CardVisibilityPanel({ visibleCards, onToggle, onShowAll, onHideAll, cep
         onClick={() => setOpen(!open)}
         className={`glass-btn flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all ${
           open
-            ? 'bg-blue-500/15 dark:bg-blue-400/10 text-blue-600 dark:text-blue-300'
-            : 'hover:bg-white/40 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300'
+            ? 'bg-blue-500/15 dark:bg-blue-400/10 night:bg-blue-950/50 text-blue-600 dark:text-blue-300 night:text-blue-200'
+            : 'hover:bg-white/40 dark:hover:bg-white/10 night:hover:bg-sd-night-800/90 text-gray-700 dark:text-gray-300'
         }`}
         title={t('statusDashboard.visible_cards')}
         style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
@@ -120,23 +120,23 @@ function CardVisibilityPanel({ visibleCards, onToggle, onShowAll, onHideAll, cep
 
       {/* Dropdown Panel */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-72 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-2xl border border-gray-300/50 dark:border-white/15 shadow-2xl z-50 overflow-hidden">
+        <div className="absolute right-0 top-full mt-2 w-72 bg-slate-900/95 dark:bg-slate-950/95 night:!bg-sd-night-950/96 backdrop-blur-xl rounded-2xl border border-white/12 dark:border-white/8 night:border-white/10 shadow-2xl z-50 overflow-hidden">
           {/* Header */}
-          <div className="px-4 pt-4 pb-2 border-b border-gray-200/50 dark:border-white/10">
+          <div className="px-4 pt-4 pb-2 border-b border-white/10 dark:border-white/8">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-bold text-gray-800 dark:text-white">
+              <h4 className="text-sm font-bold text-white">
                 {t('statusDashboard.visible_cards')}
               </h4>
               <div className="flex gap-1.5">
                 <button
                   onClick={onShowAll}
-                  className="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                  className="px-2 py-1 text-xs font-medium bg-blue-500/25 dark:bg-blue-900/40 text-blue-200 dark:text-blue-300 rounded-lg hover:bg-blue-500/35 dark:hover:bg-blue-900/55 transition-colors"
                 >
                   {t('statusDashboard.show_all')}
                 </button>
                 <button
                   onClick={onHideAll}
-                  className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  className="px-2 py-1 text-xs font-medium bg-white/10 dark:bg-white/5 night:!bg-sd-night-800/70 text-gray-300 dark:text-gray-400 night:text-slate-200 rounded-lg hover:bg-white/15 dark:hover:bg-white/10 night:hover:bg-sd-night-700/80 transition-colors"
                 >
                   {t('statusDashboard.hide_all')}
                 </button>
@@ -154,11 +154,11 @@ function CardVisibilityPanel({ visibleCards, onToggle, onShowAll, onHideAll, cep
                 <div key={category.id}>
                   {/* Kategorie Header */}
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-500">
                       {t(category.labelKey)}
                     </span>
                     {isCephCategory && !cephAvailable && (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 rounded">
+                      <span className="text-[10px] px-1.5 py-0.5 bg-white/10 dark:bg-white/5 night:!bg-sd-night-800/70 text-gray-400 dark:text-gray-500 night:text-slate-300 rounded">
                         N/A
                       </span>
                     )}
@@ -177,8 +177,8 @@ function CardVisibilityPanel({ visibleCards, onToggle, onShowAll, onHideAll, cep
                           onClick={() => onToggle(card.id)}
                           className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all ${
                             isVisible
-                              ? 'bg-blue-50 dark:bg-blue-900/20 text-gray-800 dark:text-white hover:bg-blue-100 dark:hover:bg-blue-900/30'
-                              : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/30'
+                              ? 'bg-blue-500/20 dark:bg-blue-900/25 text-white hover:bg-blue-500/30 dark:hover:bg-blue-900/35'
+                              : 'text-gray-500 dark:text-gray-500 hover:bg-white/5 dark:hover:bg-white/5 night:hover:bg-sd-night-700/60'
                           } ${dimmed ? 'opacity-50' : ''}`}
                         >
                           {isVisible ? (
@@ -200,8 +200,8 @@ function CardVisibilityPanel({ visibleCards, onToggle, onShowAll, onHideAll, cep
 
           {/* Ceph auto-hidden hint */}
           {!cephAvailable && !visibleCards.some(id => CEPH_CARD_IDS.includes(id)) && (
-            <div className="px-4 py-2.5 border-t border-gray-200/50 dark:border-white/10 bg-gray-50/50 dark:bg-gray-900/30">
-              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+            <div className="px-4 py-2.5 border-t border-white/10 dark:border-white/8 night:border-white/10 bg-white/5 dark:bg-white/5 sd-night-veil-flat">
+              <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
                 💡 {t('statusDashboard.ceph_auto_hidden')}
               </p>
             </div>

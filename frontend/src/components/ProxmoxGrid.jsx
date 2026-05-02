@@ -294,12 +294,12 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
   if (!isConfigured && !loading) {
     return (
       <div className="max-w-4xl mx-auto mt-12">
-        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg p-8 text-center">
+        <div className="bg-slate-900/85 dark:bg-slate-950/90 night:bg-sd-night-950/88 backdrop-blur-sm rounded-xl shadow-lg p-8 text-center border border-white/10 dark:border-white/8 night:border-white/[0.05]">
           <WarningCircle size={64} className="mx-auto mb-4 text-yellow-500" />
-          <h2 className="text-2xl font-bold mb-2 text-gray-800 dark:text-white">
+          <h2 className="text-2xl font-bold mb-2 text-white">
             {t('proxmox.not_configured')}
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-gray-400 dark:text-gray-500 mb-6">
             {t('proxmox.configure_hint')}
           </p>
           {isLoggedIn && (
@@ -329,7 +329,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
   if (error) {
     return (
       <div className="max-w-4xl mx-auto mt-12">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6">
+        <div className="bg-red-50 dark:bg-red-900/20 night:bg-red-950/40 border border-red-200 dark:border-red-800 night:border-red-900/50 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-2">
             <WarningCircle size={24} className="text-red-600 dark:text-red-400" />
             <h3 className="text-lg font-semibold text-red-800 dark:text-red-300">
@@ -364,11 +364,11 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
         {/* Left: Glass Segment Control + Cluster Badge */}
         <div className="flex items-center gap-3">
           {/* Segment Control */}
-          <div ref={segmentRefCallback} className="relative flex p-1 rounded-xl bg-white/40 dark:bg-white/[0.06] backdrop-blur-md border border-gray-300/40 dark:border-white/10 shadow-lg">
+          <div ref={segmentRefCallback} className="relative flex p-1 rounded-xl dark:bg-white/[0.06] sd-night-shade backdrop-blur-md border border-gray-300/40 dark:border-white/10 night:border-white/[0.08] shadow-lg">
             {/* Sliding Pill Indicator — misst echte Button-Breiten */}
             {pillStyle && (
               <div
-                className="absolute top-1 bottom-1 rounded-lg bg-white/80 dark:bg-white/15 shadow-md transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                className="absolute top-1 bottom-1 rounded-lg dark:bg-white/15 night:!bg-sd-night-950/90 shadow-md transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
                 style={{
                   left: pillStyle.left,
                   width: pillStyle.width,
@@ -405,7 +405,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
 
           {/* Cluster Badge */}
           {proxmoxName && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/30 dark:bg-white/[0.04] backdrop-blur-md border border-gray-300/30 dark:border-white/[0.08]">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl dark:bg-white/[0.04] sd-night-tint backdrop-blur-md border border-gray-300/30 dark:border-white/[0.08] night:border-white/[0.07]">
               <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
                 {proxmoxName}
@@ -416,8 +416,8 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
 
         {/* Right: Controls Bar — wraps per-view controls in a glass bar */}
         {activeView === 'resources' && (
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/30 dark:bg-white/[0.04] backdrop-blur-md border border-gray-300/30 dark:border-white/[0.08] shadow-lg">
-            <label className="glass-btn flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/40 dark:hover:bg-white/10">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl dark:bg-white/[0.04] sd-night-tint backdrop-blur-md border border-gray-300/30 dark:border-white/[0.08] night:border-white/[0.07] shadow-lg">
+            <label className="glass-btn flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/40 dark:hover:bg-white/10 night:hover:bg-sd-night-800/90">
               <input
                 type="checkbox"
                 checked={autoRefresh}
@@ -429,11 +429,11 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
               </span>
             </label>
             
-            <div className="w-px h-5 bg-gray-300/50 dark:bg-white/10" />
+            <div className="w-px h-5 bg-gray-300/50 dark:bg-white/10 night:bg-sd-night-800/80" />
             
             <button
               onClick={() => fetchProxmoxData(activeDashboard)}
-              className="glass-btn p-2 rounded-lg hover:bg-white/40 dark:hover:bg-white/10"
+              className="glass-btn p-2 rounded-lg hover:bg-white/40 dark:hover:bg-white/10 night:hover:bg-sd-night-800/90"
               title={t('common.refresh')}
             >
               <ArrowsClockwise size={18} weight="bold" className="text-gray-700 dark:text-gray-300" />
@@ -448,7 +448,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
       <div style={{ display: activeView === 'status' ? 'block' : 'none' }}>
           {/* Hinweis wenn Suche aktiv aber in Status-View */}
           {searchTerm && activeView === 'status' && (
-            <div className="mb-4 bg-yellow-500/20 dark:bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+            <div className="mb-4 bg-yellow-500/20 dark:bg-yellow-500/10 night:bg-yellow-950/30 border border-yellow-500/30 rounded-xl p-4">
               <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
@@ -470,7 +470,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
           <ProxmoxStatsCards resources={resources} nodes={nodes} />
 
       {/* Filter & Sort Bar */}
-      <div className="bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-xl shadow-lg p-4 mb-6 border border-gray-400/60 dark:border-white/10">
+      <div className="dark:bg-white/[0.12] sd-night-surface backdrop-blur-md rounded-xl shadow-lg night:shadow-black/40 p-4 mb-6 border border-gray-400/60 dark:border-white/10 night:border-white/[0.07]">
         <div className="flex flex-wrap items-center gap-4">
           {/* Sort Icon */}
           <div className="flex items-center gap-2">
@@ -533,7 +533,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
                 setFilterType('all');
                 setFilterStatus('all');
               }}
-              className="px-3 py-2 text-sm bg-white/40 dark:bg-white/10 backdrop-blur-md hover:bg-white/60 dark:hover:bg-white/20 text-gray-950 dark:text-white/90 rounded-lg transition-all border border-gray-300/50 dark:border-white/10"
+              className="px-3 py-2 text-sm dark:bg-white/10 sd-night-muted backdrop-blur-md hover:bg-white/60 dark:hover:bg-white/20 night:hover:bg-sd-night-800/95 text-gray-950 dark:text-white/90 rounded-lg transition-all border border-gray-300/50 dark:border-white/10 night:border-white/[0.07]"
             >
               Reset
             </button>

@@ -8,7 +8,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
   );
 
 export function useAppearance({ onSessionExpired }) {
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
 
   const [appearance, setAppearance] = useState({
     bg_color: "#f0f2f5",
@@ -25,37 +25,18 @@ export function useAppearance({ onSessionExpired }) {
   const [isSavingAppearance, setIsSavingAppearance] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
 
-  // Theme effect
+  // `html` bleibt immer `class="dark"` damit Tailwind `dark:` greift.
+  // `data-sd-theme` steuert Scrollbars / .glass / CSS-Variablen --sd-night-* (index.css); Mesh liegt im App-Stack.
   useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-      document.body.style.backgroundColor = '#020617';
-      document.body.style.backgroundImage = `
-        radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0px, transparent 50%),
-        radial-gradient(at 50% 0%, hsla(225, 39%, 25%, 1) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0px, transparent 50%),
-        radial-gradient(at 0% 50%, hsla(217, 71%, 35%, 1) 0px, transparent 50%),
-        radial-gradient(at 100% 50%, hsla(291, 44%, 28%, 1) 0px, transparent 50%),
-        radial-gradient(at 0% 100%, hsla(261, 48%, 32%, 1) 0px, transparent 50%),
-        radial-gradient(at 50% 100%, hsla(228, 35%, 22%, 1) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, hsla(203, 45%, 28%, 1) 0px, transparent 50%)
-      `;
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-      document.body.style.backgroundColor = '#e2e8f0';
-      document.body.style.backgroundImage = `
-        radial-gradient(at 0% 0%, hsla(210, 40%, 85%, 1) 0px, transparent 50%),
-        radial-gradient(at 50% 0%, hsla(215, 50%, 90%, 1) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, hsla(280, 45%, 88%, 1) 0px, transparent 50%),
-        radial-gradient(at 0% 50%, hsla(195, 60%, 82%, 1) 0px, transparent 50%),
-        radial-gradient(at 100% 50%, hsla(270, 50%, 85%, 1) 0px, transparent 50%),
-        radial-gradient(at 0% 100%, hsla(230, 55%, 86%, 1) 0px, transparent 50%),
-        radial-gradient(at 50% 100%, hsla(210, 50%, 88%, 1) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, hsla(185, 55%, 84%, 1) 0px, transparent 50%)
-      `;
-    }
+    const root = document.documentElement;
+    root.classList.add('dark');
+    const isNight = theme === 'dark';
+    root.setAttribute('data-sd-theme', isNight ? 'night' : 'dim');
+    localStorage.setItem('theme', theme);
+
+    /* Nacht: rgb(22,32,52) = --sd-night-950 in index.css */
+    document.body.style.backgroundColor = isNight ? '#162034' : '#020617';
+    document.body.style.backgroundImage = 'none';
     document.body.style.minHeight = '100vh';
     document.body.style.margin = '0';
     document.body.style.padding = '0';
@@ -65,9 +46,7 @@ export function useAppearance({ onSessionExpired }) {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
-  const getTextColor = () => {
-    return theme === 'light' ? appearance.text_color_light : appearance.text_color_dark;
-  };
+  const getTextColor = () => appearance.text_color_dark;
 
   const fetchAppearance = async () => {
     try {

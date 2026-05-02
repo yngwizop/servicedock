@@ -158,11 +158,12 @@ function SettingsPage({
 
   // Shell: hell = lesbar; dunkel = Slate-Glas (weniger „reines Schwarz“), weiterhin blur
   const settingsShell =
-    'rounded-3xl overflow-hidden border border-white/28 dark:border-white/[0.07] ' +
+    'rounded-3xl overflow-hidden border border-white/28 dark:border-white/[0.07] night:border-white/[0.05] ' +
     'bg-gradient-to-br from-white/[0.78] via-white/[0.65] to-white/[0.55] ' +
     'dark:from-slate-900/55 dark:via-slate-800/48 dark:to-slate-900/52 ' +
-    'backdrop-blur-2xl shadow-2xl dark:shadow-black/25 ' +
-    'ring-1 ring-black/[0.05] dark:ring-0';
+    'night:from-sd-night-900/92 night:via-sd-night-950/78 night:to-sd-night-900/95 ' +
+    'backdrop-blur-2xl shadow-2xl dark:shadow-black/25 night:shadow-black/50 ' +
+    'ring-1 ring-black/[0.05] dark:ring-0 night:ring-0';
   const rowDivider = 'lg:divide-x lg:divide-white/18 dark:lg:divide-white/[0.06]';
 
   return (
@@ -170,7 +171,7 @@ function SettingsPage({
       <div className={settingsShell}>
         {/* Mobile: Sub-Nav oben in der Shell */}
         <nav
-          className="lg:hidden border-b border-white/22 dark:border-white/[0.06] bg-white/35 dark:bg-white/[0.06] px-2 py-2 overflow-x-auto"
+          className="lg:hidden border-b border-white/22 dark:border-white/[0.06] night:border-white/[0.05] bg-white/35 dark:bg-white/[0.06] sd-night-shade-flat px-2 py-2 overflow-x-auto"
           aria-label={t('settings.nav_sections_aria')}
         >
           <div className="flex gap-1 min-w-min">
@@ -198,7 +199,7 @@ function SettingsPage({
 
         <div className={`lg:flex lg:items-stretch lg:min-h-[min(70vh,680px)] ${rowDivider}`}>
           {/* Desktop-Subnav */}
-          <div className="hidden lg:flex flex-col w-56 xl:w-60 shrink-0 bg-white/30 dark:bg-white/[0.05] p-3">
+          <div className="hidden lg:flex flex-col w-56 xl:w-60 shrink-0 bg-white/30 dark:bg-white/[0.05] sd-night-veil-flat p-3">
             <nav className="space-y-1 sticky top-4 self-start w-full" role="navigation" aria-label={t('settings.nav_sections_aria')}>
               {sections.map((section) => {
                 const Icon = section.icon;
@@ -223,7 +224,7 @@ function SettingsPage({
           </div>
 
           {/* Hauptinhalt */}
-          <main className="flex-1 min-w-0 bg-white/22 dark:bg-white/[0.04] px-5 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
+          <main className="flex-1 min-w-0 bg-white/22 dark:bg-white/[0.04] sd-night-tint-flat px-5 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
             {activeSection === 'appearance' && (
               <AppearanceTab
                 editAppearance={editAppearance}
@@ -258,8 +259,8 @@ function SettingsPage({
           </main>
 
           {/* Tipps: eigene Modul-Karte (kein extra border-l → kein schwarzer Naht-Rand) */}
-          <aside className="hidden xl:block w-64 2xl:w-72 shrink-0 bg-white/25 dark:bg-white/[0.05] p-3 sm:p-4">
-            <div className="sticky top-4 rounded-2xl border border-white/22 dark:border-white/[0.06] bg-white/28 dark:bg-slate-900/40 backdrop-blur-md shadow-inner dark:shadow-black/15 px-4 py-4 md:px-5 md:py-5">
+          <aside className="hidden xl:block w-64 2xl:w-72 shrink-0 bg-white/25 dark:bg-white/[0.05] sd-night-veil-flat p-3 sm:p-4">
+            <div className="sticky top-4 rounded-2xl border border-white/22 dark:border-white/[0.06] night:border-white/[0.05] bg-white/28 dark:bg-slate-900/40 sd-night-surface backdrop-blur-md shadow-inner dark:shadow-black/15 night:shadow-black/35 px-4 py-4 md:px-5 md:py-5">
               <div className="flex items-center gap-2.5 mb-4 pb-3 border-b border-gray-400/25 dark:border-white/[0.07]">
                 <TipsSectionIcon size={22} weight="duotone" className="text-blue-600 dark:text-blue-400 shrink-0" />
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-slate-50 leading-snug tracking-tight">

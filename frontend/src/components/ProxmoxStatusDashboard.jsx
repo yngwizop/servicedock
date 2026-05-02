@@ -634,7 +634,7 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
     <>
       {/* Toolbar — einheitliche Glass-Bar mit Pill-Buttons */}
       <div className="relative z-50 flex items-center justify-end mb-6">
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/30 dark:bg-white/[0.04] backdrop-blur-md border border-gray-300/30 dark:border-white/[0.08] shadow-lg">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl dark:bg-white/[0.04] sd-night-tint backdrop-blur-md border border-gray-300/30 dark:border-white/[0.08] night:border-white/[0.07] shadow-lg">
           {/* Card Visibility Toggle */}
           <CardVisibilityPanel
             visibleCards={visibleCards}
@@ -644,12 +644,12 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
             cephAvailable={stats?.ceph?.available === true}
           />
           
-          <div className="w-px h-5 bg-gray-300/40 dark:bg-white/10" />
+          <div className="w-px h-5 bg-gray-300/40 dark:bg-white/10 night:bg-sd-night-800/80" />
           
           {/* Reset Layout */}
           <button
             onClick={resetLayout}
-            className="glass-btn flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/40 dark:hover:bg-white/10 text-sm text-gray-700 dark:text-gray-300 transition-all"
+            className="glass-btn flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/40 dark:hover:bg-white/10 night:hover:bg-sd-night-800/90 text-sm text-gray-700 dark:text-gray-300 transition-all"
             title={t('statusDashboard.reset_layout')}
             style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
           >
@@ -660,10 +660,10 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
           {/* Save Layout (nur bei Änderungen) */}
           {layoutModified && (
             <>
-              <div className="w-px h-5 bg-gray-300/40 dark:bg-white/10" />
+              <div className="w-px h-5 bg-gray-300/40 dark:bg-white/10 night:bg-sd-night-800/80" />
               <button
                 onClick={saveLayout}
-                className="glass-btn flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500/15 dark:bg-blue-400/10 hover:bg-blue-500/25 dark:hover:bg-blue-400/20 text-sm text-blue-600 dark:text-blue-300 transition-all"
+                className="glass-btn flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500/15 dark:bg-blue-400/10 night:bg-blue-950/40 hover:bg-blue-500/25 dark:hover:bg-blue-400/20 night:hover:bg-blue-950/55 text-sm text-blue-600 dark:text-blue-300 transition-all"
                 title={t('statusDashboard.save_layout')}
                 style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
               >
@@ -673,10 +673,10 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
             </>
           )}
           
-          <div className="w-px h-5 bg-gray-300/40 dark:bg-white/10" />
+          <div className="w-px h-5 bg-gray-300/40 dark:bg-white/10 night:bg-sd-night-800/80" />
           
           {/* Auto-Refresh */}
-          <label className="glass-btn flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/40 dark:hover:bg-white/10">
+          <label className="glass-btn flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/40 dark:hover:bg-white/10 night:hover:bg-sd-night-800/90">
             <input
               type="checkbox"
               checked={autoRefresh}
@@ -688,13 +688,13 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
             </span>
           </label>
           
-          <div className="w-px h-5 bg-gray-300/40 dark:bg-white/10" />
+          <div className="w-px h-5 bg-gray-300/40 dark:bg-white/10 night:bg-sd-night-800/80" />
           
           {/* Refresh */}
           <button
             onClick={handleManualRefresh}
             disabled={refreshing}
-            className="glass-btn p-2 rounded-lg hover:bg-white/40 dark:hover:bg-white/10 transition-all disabled:opacity-50"
+            className="glass-btn p-2 rounded-lg hover:bg-white/40 dark:hover:bg-white/10 night:hover:bg-sd-night-800/90 transition-all disabled:opacity-50"
             title={t('common.refresh')}
           >
             <ArrowsClockwise size={18} weight="bold" className={`text-gray-700 dark:text-gray-300 transition-transform ${refreshing ? 'animate-spin' : ''}`} />
@@ -705,9 +705,9 @@ function ProxmoxStatusDashboard({ activeDashboard, isLoggedIn, textColor }) {
       {/* Status Messages */}
       {saveStatus.message && (
         <div className={`mb-4 p-3 rounded-lg text-sm ${
-          saveStatus.type === 'success' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
-          saveStatus.type === 'error' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
-          'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+          saveStatus.type === 'success' ? 'bg-green-100 dark:bg-green-900/30 night:bg-emerald-950/45 text-green-800 dark:text-green-300 night:text-emerald-200' :
+          saveStatus.type === 'error' ? 'bg-red-100 dark:bg-red-900/30 night:bg-red-950/45 text-red-800 dark:text-red-300 night:text-red-200' :
+          'bg-blue-100 dark:bg-blue-900/30 night:bg-blue-950/45 text-blue-800 dark:text-blue-300 night:text-blue-200'
         }`}>
           {saveStatus.message}
         </div>

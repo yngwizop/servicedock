@@ -20,31 +20,31 @@ function ServiceCard({ service, textColor, isFavorite }) {
       target="_blank"
       rel="noopener noreferrer"
       draggable={false}
-      className={`group relative flex items-start gap-4 bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl p-5 transition-all duration-300 hover:bg-white/70 dark:hover:bg-white/20 hover:scale-[1.02] shadow-xl hover:shadow-2xl hover:shadow-blue-500/30 dark:hover:shadow-purple-500/20 ${
+      className={`group relative flex items-start gap-4 bg-white/50 dark:bg-white/[0.12] sd-night-surface backdrop-blur-md rounded-2xl p-5 transition-all duration-300 hover:bg-white/70 dark:hover:bg-white/20 night:hover:!bg-sd-night-900/92 hover:scale-[1.02] shadow-xl hover:shadow-2xl hover:shadow-blue-500/30 dark:hover:shadow-purple-500/20 night:hover:shadow-black/40 ${
         isFavorite 
-          ? 'border-2 border-yellow-500 dark:border-yellow-400 hover:border-yellow-600 dark:hover:border-yellow-500' 
-          : 'border border-gray-400/60 dark:border-white/10 hover:border-gray-500/70 dark:hover:border-white/20'
+          ? 'border-2 border-yellow-500 dark:border-yellow-400 hover:border-yellow-600 dark:hover:border-yellow-500 night:border-yellow-500/80' 
+          : 'border border-gray-400/60 dark:border-white/10 night:border-white/[0.06] hover:border-gray-500/70 dark:hover:border-white/20 night:hover:border-white/10'
       }`}
       aria-label={`Service: ${safeName}${safeDescription ? ', ' + safeDescription : ''}${isFavorite ? ' ' + t('serviceGrid.favorite') : ''}`}
     >
       {/* Hover Glow Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-blue-500/10 group-hover:via-purple-500/5 group-hover:to-pink-500/10 rounded-2xl transition-all duration-500 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-blue-500/10 group-hover:via-purple-500/5 group-hover:to-pink-500/10 rounded-2xl transition-all duration-500 pointer-events-none night:hidden"></div>
       
       {/* Content */}
       <div className="relative z-10 flex items-start gap-4 w-full min-h-0">
         {service.icon && (
           isUrl ? (
-            <div className="flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/10 backdrop-blur-sm border border-gray-400 dark:border-white/20 rounded-xl p-3 w-14 h-14 flex items-center justify-center group-hover:from-white group-hover:to-gray-100 dark:group-hover:from-white/20 dark:group-hover:to-white/20 group-hover:border-gray-500 dark:group-hover:border-white/30 transition-all duration-300 shadow-md">
+            <div className="flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/10 night:from-white/[0.16] night:to-white/[0.11] backdrop-blur-sm border border-gray-400 dark:border-white/20 night:border-white/20 rounded-xl p-3 w-14 h-14 flex items-center justify-center group-hover:from-white group-hover:to-gray-100 dark:group-hover:from-white/20 dark:group-hover:to-white/20 night:group-hover:from-white/[0.22] night:group-hover:to-white/[0.15] group-hover:border-gray-500 dark:group-hover:border-white/30 night:group-hover:border-white/25 transition-all duration-300 shadow-md">
               <img 
                 src={safeIcon} 
                 alt={safeName} 
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain night:drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]"
                 draggable={false}
               />
             </div>
           ) : (
-            <div className="flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/10 backdrop-blur-sm border border-gray-400 dark:border-white/20 rounded-xl p-3 w-14 h-14 flex items-center justify-center group-hover:from-white group-hover:to-gray-100 dark:group-hover:from-white/20 dark:group-hover:to-white/20 group-hover:border-gray-500 dark:group-hover:border-white/30 transition-all duration-300 shadow-md">
-              <span className="text-3xl drop-shadow-sm">
+            <div className="flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/10 night:from-white/[0.16] night:to-white/[0.11] backdrop-blur-sm border border-gray-400 dark:border-white/20 night:border-white/20 rounded-xl p-3 w-14 h-14 flex items-center justify-center group-hover:from-white group-hover:to-gray-100 dark:group-hover:from-white/20 dark:group-hover:to-white/20 night:group-hover:from-white/[0.22] night:group-hover:to-white/[0.15] group-hover:border-gray-500 dark:group-hover:border-white/30 night:group-hover:border-white/25 transition-all duration-300 shadow-md">
+              <span className="text-3xl drop-shadow-sm night:drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">
                 {safeIcon}
               </span>
             </div>

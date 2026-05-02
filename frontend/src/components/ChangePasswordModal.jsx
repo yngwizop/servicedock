@@ -67,8 +67,8 @@ function ChangePasswordModal({ onComplete, appearance = {} }) {
     }
   };
 
-  const inputClass = "w-full px-4 py-2 bg-white/70 dark:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-all dark:text-white placeholder-gray-500 dark:placeholder-gray-400";
-  const labelClass = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1";
+  const inputClass = "w-full px-4 py-2 bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-white placeholder-gray-400 dark:placeholder-gray-500";
+  const labelClass = "block text-sm font-medium text-gray-300 dark:text-gray-400 mb-1";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
@@ -86,16 +86,16 @@ function ChangePasswordModal({ onComplete, appearance = {} }) {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white/55 dark:bg-gray-900/60 backdrop-blur-2xl rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-300/50 dark:border-white/20"
+        className="bg-slate-900/70 dark:bg-slate-950/85 backdrop-blur-2xl rounded-xl shadow-2xl max-w-md w-full p-6 border border-white/12 dark:border-white/8"
       >
         {/* Header */}
         <div className="flex items-center gap-3 mb-2">
-          <ShieldCheck size={32} className="text-amber-500 dark:text-amber-400" weight="fill" />
-          <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+          <ShieldCheck size={32} className="text-amber-400 dark:text-amber-300" weight="fill" />
+          <h3 className="text-xl font-bold text-gray-100">
             {t('passwordChange.title')}
           </h3>
         </div>
-        <p className="text-gray-600 dark:text-gray-400 mb-5 text-sm">
+        <p className="text-gray-400 dark:text-gray-500 mb-5 text-sm">
           {t('passwordChange.instruction')}
         </p>
 
@@ -159,7 +159,7 @@ function ChangePasswordModal({ onComplete, appearance = {} }) {
               disabled={loading}
               className={`w-full px-4 py-2.5 rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] font-medium ${
                 loading
-                  ? 'bg-gray-400 dark:bg-gray-600 text-gray-200 cursor-not-allowed'
+                  ? 'bg-gray-600 dark:bg-gray-700 text-gray-300 cursor-not-allowed'
                   : 'bg-amber-500 hover:bg-amber-600 text-white'
               }`}
             >

@@ -28,6 +28,15 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
     `${window.location.protocol}//${window.location.hostname}:8000`
   );
 
+/** Ohne Wallpaper: Standard-Hellgrau/Weiß aus der API würde das Theme-Mesh vollständig verdecken (opacity oft 1). */
+function shouldShowAppearanceColorTint(bg) {
+  if (!bg?.bg_color || bg.bg_color === 'transparent') return false;
+  const compact = String(bg.bg_color).trim().toLowerCase().replace(/^#/, '').replace(/\s/g, '');
+  const ignoredWhenNoImage = ['f0f2f5', 'ffffff', 'f5f5f5', 'fff'];
+  if (!bg.bg_image_url && ignoredWhenNoImage.includes(compact)) return false;
+  return true;
+}
+
 // --- Haupt-App ---
 function App() {
   const { t } = useTranslation();
@@ -146,27 +155,31 @@ function App() {
   // === RENDER ===
   return (
     <ErrorBoundary>
-    {/* Background-Layer */}
-    <div className="fixed inset-0 w-full h-full -z-10">
-      {bg.bg_color && bg.bg_color !== 'transparent' && (
+    {/* Background-Layer: Mesh unten, optional Tint, Wallpaper oben (Tint nicht undurchsichtig über Default-Grau) */}
+    <div className="fixed inset-0 w-full h-full -z-10 pointer-events-none">
+      <div
+        aria-hidden
+        className={`absolute inset-0 ${theme === 'dark' ? 'sd-theme-mesh-night' : 'sd-theme-mesh-dim'}`}
+      />
+      {shouldShowAppearanceColorTint(bg) && (
         <div
-          className="absolute inset-0 w-full h-full pointer-events-none"
-          style={{ 
+          className="absolute inset-0 w-full h-full"
+          style={{
             backgroundColor: bg.bg_color,
-            opacity: bg.bg_opacity || 0.3
+            opacity: bg.bg_opacity ?? 0.3,
           }}
-        ></div>
+        />
       )}
 
       {bg.bg_image_url && (
         <div
-          className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat pointer-events-none"
+          className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: `url(${bg.bg_image_url})`,
             opacity: bg.bg_opacity,
-            backgroundAttachment: 'fixed'
+            backgroundAttachment: 'fixed',
           }}
-        ></div>
+        />
       )}
     </div>
 
@@ -292,9 +305,9 @@ function App() {
               marginLeft: sidebarCollapsed ? '2.5rem' : '6.5rem'
             }}
           >
-            <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border border-gray-300/50 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden">
-              <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-300/50 dark:border-white/10">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-gray-600 dark:text-gray-400">
+            <div className="bg-slate-900/92 dark:bg-slate-950/95 backdrop-blur-xl border border-white/12 dark:border-white/8 rounded-2xl shadow-2xl overflow-hidden">
+              <div className="flex items-center gap-3 px-6 py-4 border-b border-white/10 dark:border-white/8">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-gray-400 dark:text-gray-500">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
                 </svg>
                 <input
@@ -303,14 +316,14 @@ function App() {
                   placeholder={activeTab === 'services' ? t('search.placeholder_services') : activeTab === 'monitoring' ? t('search.placeholder_monitoring') : t('search.placeholder_security')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 bg-transparent outline-none text-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  className="flex-1 bg-transparent outline-none text-xl text-white placeholder-gray-500 dark:placeholder-gray-500"
                   autoFocus
                 />
-                <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
+                <span className="text-xs text-gray-400 dark:text-gray-500 bg-white/10 dark:bg-white/5 px-2 py-1 rounded">
                   ESC
                 </span>
               </div>
-              <div className="px-6 py-3 text-sm text-gray-600 dark:text-gray-400">
+              <div className="px-6 py-3 text-sm text-gray-400 dark:text-gray-500">
                 {searchTerm ? (
                   <span>{t('search.filter_by')} <strong>"{searchTerm}"</strong></span>
                 ) : (

@@ -16,10 +16,10 @@ function StatCard({
   return (
     <div
       className={`
-        bg-white/50 dark:bg-white/[0.12] 
+        dark:bg-white/[0.12] sd-night-surface
         backdrop-blur-md
-        rounded-2xl shadow-xl 
-        border border-gray-400/60 dark:border-white/10
+        rounded-2xl shadow-xl night:shadow-black/40
+        border border-gray-400/60 dark:border-white/10 night:border-white/[0.07]
         transition-all duration-200
         h-full flex flex-col
         ${compact ? 'p-3' : 'p-6'}

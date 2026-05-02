@@ -67,7 +67,7 @@ function StorageByTypeCard({ storageByType }) {
               return (
                 <div 
                   key={typeData.type}
-                  className="p-2.5 rounded-lg bg-white/5 dark:bg-white/[0.03] hover:bg-white/10 dark:hover:bg-white/5 transition-colors"
+                  className="p-2.5 rounded-lg bg-white/5 dark:bg-white/[0.03] sd-night-faint-flat hover:bg-white/10 dark:hover:bg-white/5 night:hover:bg-sd-night-700/90 transition-colors"
                 >
                   {/* Type Header */}
                   <div className="flex items-center justify-between mb-1.5">
@@ -89,7 +89,7 @@ function StorageByTypeCard({ storageByType }) {
 
                   {/* Progress Bar */}
                   <div className="mb-1.5">
-                    <div className="w-full bg-gray-300/30 dark:bg-white/10 rounded-full h-2">
+                    <div className="w-full bg-gray-300/30 dark:bg-white/10 night:bg-sd-night-950/70 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(percent)}`}
                         style={{ width: `${Math.min(percent, 100)}%` }}

@@ -92,7 +92,7 @@ function Sidebar({
   ];
 
   return (
-    <div className={`sidebar-no-scrollbar fixed left-0 top-0 h-screen ${collapsed ? 'w-20' : 'w-52'} transition-all duration-300 ease-in-out flex flex-col z-50 overflow-clip`}>
+    <div className={`sidebar-no-scrollbar fixed left-0 top-0 h-screen ${collapsed ? 'w-20' : 'w-52'} transition-all duration-300 ease-in-out flex flex-col z-50 overflow-clip bg-transparent`}>
       {/* Logo/Header */}
       <div className="p-6">
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} transition-all duration-300 ease-in-out`}>
@@ -143,7 +143,7 @@ function Sidebar({
                 minWidth: collapsed ? undefined : dashTriggerRef.current?.getBoundingClientRect().width,
                 zIndex: 9999,
               }}
-              className="bg-white/10 dark:bg-gray-900/80 backdrop-blur-2xl border border-white/20 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden"
+              className="bg-white/10 dark:bg-gray-900/80 night:bg-sd-night-950/90 backdrop-blur-2xl border border-white/20 dark:border-white/10 night:border-white/[0.06] rounded-xl shadow-2xl overflow-hidden"
             >
               {dashboards.map((dashboard) => {
                 const isActive = dashboard.id === activeDashboard;
@@ -182,7 +182,7 @@ function Sidebar({
       <div className="px-4 py-3">
         <button
           onClick={onToggleCollapse}
-          className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} ${collapsed ? 'px-2 py-2' : 'px-4 py-2'} rounded-xl text-white dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10 transition-all duration-300 ease-in-out`}
+          className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} ${collapsed ? 'px-2 py-2' : 'px-4 py-2'} rounded-xl text-white dark:text-gray-300 hover:bg-white/15 dark:hover:bg-white/10 transition-all duration-300 ease-in-out`}
           title={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
         >
           {collapsed ? <CaretRight size={22} weight="bold" /> : <CaretLeft size={22} weight="bold" />}
@@ -205,7 +205,7 @@ function Sidebar({
               className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} ${collapsed ? 'px-2 py-2' : 'px-4 py-3'} rounded-xl transition-all duration-300 ease-in-out ${
                 isActive
                   ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
-                  : 'text-white dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10'
+                  : 'text-white dark:text-gray-300 hover:bg-white/15 dark:hover:bg-white/10'
               }`}
               title={collapsed ? item.label : ''}
             >
@@ -227,7 +227,7 @@ function Sidebar({
           className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} ${collapsed ? 'px-2 py-3' : 'px-4 py-3'} rounded-xl ${
             editMode
               ? 'bg-amber-500/80 text-white shadow-lg shadow-amber-500/30'
-              : 'text-white dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10'
+              : 'text-white dark:text-gray-300 hover:bg-white/15 dark:hover:bg-white/10'
           } transition-all duration-300 ease-in-out`}
           title={collapsed ? (editMode ? t('sidebar.end_edit') : t('sidebar.edit')) : ''}
         >
@@ -249,7 +249,7 @@ function Sidebar({
           className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} ${collapsed ? 'px-2 py-3' : 'px-4 py-3'} rounded-xl ${
             searchOpen
               ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
-              : 'text-white dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10'
+              : 'text-white dark:text-gray-300 hover:bg-white/15 dark:hover:bg-white/10'
           } transition-all duration-300 ease-in-out`}
           title={collapsed ? t('sidebar.search_shortcut') : ''}
         >
@@ -262,12 +262,12 @@ function Sidebar({
         {/* Theme Toggle */}
         <button
           onClick={toggleTheme}
-          className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} ${collapsed ? 'px-2 py-3' : 'px-4 py-3'} rounded-xl text-white dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10 transition-all duration-300 ease-in-out`}
-          title={collapsed ? (theme === 'light' ? 'Dark Mode' : 'Light Mode') : ''}
+          className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} ${collapsed ? 'px-2 py-3' : 'px-4 py-3'} rounded-xl text-white dark:text-gray-300 hover:bg-white/15 dark:hover:bg-white/10 transition-all duration-300 ease-in-out`}
+          title={collapsed ? (theme === 'light' ? t('sidebar.theme_switch_night') : t('sidebar.theme_switch_standard')) : ''}
         >
           {theme === 'light' ? <Moon size={22} /> : <Sun size={22} />}
           <span className={`font-medium transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden ${collapsed ? 'opacity-0 max-w-0' : 'opacity-100 max-w-xs'}`} style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-            {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+            {theme === 'light' ? t('sidebar.theme_switch_night') : t('sidebar.theme_switch_standard')}
           </span>
         </button>
 

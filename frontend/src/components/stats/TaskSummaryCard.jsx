@@ -39,7 +39,7 @@ function TaskSummaryCard({ stats }) {
               return (
                 <div 
                   key={nodeData.node}
-                  className="flex items-center justify-between p-1.5 rounded hover:bg-white/10 dark:hover:bg-white/5 transition-colors"
+                  className="flex items-center justify-between p-1.5 rounded hover:bg-white/10 dark:hover:bg-white/5 night:hover:bg-sd-night-950/50 transition-colors"
                 >
                   {/* Node Name */}
                   <div className="flex-1 min-w-0">

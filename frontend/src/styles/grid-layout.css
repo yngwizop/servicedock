@@ -131,6 +131,12 @@
   border-color: rgba(96, 165, 250, 0.4);
 }
 
+/* Nacht: Zwischenräume im Grid nicht hell durchs Wallpaper scheinen lassen */
+html.dark[data-sd-theme="night"] .react-grid-layout {
+  background: rgb(var(--sd-night-900) / 0.55);
+  border-radius: 1rem;
+}
+
 /* Drag handle styles */
 .drag-handle {
   cursor: grab;

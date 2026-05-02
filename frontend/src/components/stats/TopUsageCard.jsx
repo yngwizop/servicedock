@@ -53,7 +53,7 @@ function TopUsageCard({ title, items, usageType = "cpu" }) {
             return (
               <div 
                 key={`${item.type}-${item.vmid || item.node}-${index}`}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 dark:hover:bg-white/5 transition-colors"
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 dark:hover:bg-white/5 night:hover:bg-sd-night-950/55 transition-colors"
               >
                 {/* Rank */}
                 <div className="flex-shrink-0 w-6 text-center">

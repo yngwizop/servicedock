@@ -77,25 +77,25 @@ function CephHealthCard({ ceph }) {
               OSD Overview
             </div>
             <div className="grid grid-cols-2 gap-1.5">
-              <div className="p-1.5 rounded-lg bg-white/10 dark:bg-white/5 text-center">
+              <div className="p-1.5 rounded-lg bg-white/10 dark:bg-white/5 night:!bg-sd-night-800/75 text-center">
                 <div className="text-base font-bold text-green-600 dark:text-green-400">
                   {ceph.osd.up}
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400">Up</div>
               </div>
-              <div className="p-1.5 rounded-lg bg-white/10 dark:bg-white/5 text-center">
+              <div className="p-1.5 rounded-lg bg-white/10 dark:bg-white/5 night:!bg-sd-night-800/75 text-center">
                 <div className="text-base font-bold text-blue-600 dark:text-blue-400">
                   {ceph.osd.in_count}
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400">In</div>
               </div>
-              <div className="p-1.5 rounded-lg bg-white/10 dark:bg-white/5 text-center">
+              <div className="p-1.5 rounded-lg bg-white/10 dark:bg-white/5 night:!bg-sd-night-800/75 text-center">
                 <div className="text-base font-bold text-red-600 dark:text-red-400">
                   {ceph.osd.down}
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400">Down</div>
               </div>
-              <div className="p-1.5 rounded-lg bg-white/10 dark:bg-white/5 text-center">
+              <div className="p-1.5 rounded-lg bg-white/10 dark:bg-white/5 night:!bg-sd-night-800/75 text-center">
                 <div className="text-base font-bold text-orange-600 dark:text-orange-400">
                   {ceph.osd.out}
                 </div>

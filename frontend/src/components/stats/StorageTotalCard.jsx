@@ -99,19 +99,19 @@ function StorageTotalCard({ storageTotal }) {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="p-2 rounded-lg bg-white/10 dark:bg-white/5">
+          <div className="p-2 rounded-lg bg-white/10 dark:bg-white/5 night:!bg-sd-night-800/75">
             <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Used</div>
             <div className="text-sm font-semibold text-gray-800 dark:text-white">
               {formatBytes(storageTotal.used)}
             </div>
           </div>
-          <div className="p-2 rounded-lg bg-white/10 dark:bg-white/5">
+          <div className="p-2 rounded-lg bg-white/10 dark:bg-white/5 night:!bg-sd-night-800/75">
             <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Total</div>
             <div className="text-sm font-semibold text-gray-800 dark:text-white">
               {formatBytes(storageTotal.total)}
             </div>
           </div>
-          <div className="p-2 rounded-lg bg-white/10 dark:bg-white/5">
+          <div className="p-2 rounded-lg bg-white/10 dark:bg-white/5 night:!bg-sd-night-800/75">
             <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Free</div>
             <div className="text-sm font-semibold text-gray-800 dark:text-white">
               {formatBytes(storageTotal.available)}

@@ -33,7 +33,9 @@
     "edit": "Bearbeiten",
     "search": "Suche",
     "search_shortcut": "Suche (Strg+F)",
-    "logout": "Abmelden"
+    "logout": "Abmelden",
+    "theme_switch_night": "Zum Nacht-Theme wechseln",
+    "theme_switch_standard": "Zum Standard-Theme wechseln"
   },
   "login": {
     "subtitle": "Dein persönliches Service-Dashboard",
@@ -311,7 +313,7 @@
       "appearance": [
         "Wähle aus 9 gebundenen Preset-Wallpapers oder lade eigene Bilder hoch (JPG/PNG/WebP, max 10MB).",
         "Hintergrundbilder funktionieren am besten mit einer Opacity von 0.6–0.8 für gute Lesbarkeit.",
-        "Schriftfarben werden pro Modus (Light/Dark) getrennt gespeichert — wechsle den Modus mit dem ☀/🌙 Button um beide zu testen.",
+        "Die primäre Schriftfarbe gilt für Standard- und Nacht-Theme. Eine zweite Farbe bleibt gespeichert — mit ☀/🌙 in der Sidebar zwischen Standard und Nacht wechseln.",
         "Service-Spalten (2–10) und Shortcut-Spalten (2–8) lassen sich unabhängig konfigurieren.",
         "Hex-Eingabe und Color-Picker sind synchronisiert — du kannst exakte Farbwerte direkt eintippen.",
         "Wetter-Widget: Die Stadt wird per Geocoding aufgelöst — zeigt dir Land, PLZ und Koordinaten zur Bestätigung.",
@@ -369,9 +371,9 @@
     "bg_image_url": "Hintergrundbild URL",
     "bg_opacity": "Bild-Deckkraft:",
     "font_colors": "Schriftfarben",
-    "mode_info": "💡 Aktuell im {{mode}} Mode. Wechsle den Modus mit dem {{icon}} Button, um die Farben zu testen.",
-    "mode_light": "Light",
-    "mode_dark": "Dark",
+    "mode_info": "💡 Aktives Theme: {{mode}}. Umschalten mit {{icon}} in der Sidebar (Standard ↔ Nacht).",
+    "mode_light": "Standard (dim)",
+    "mode_dark": "Nacht",
     "layout": "Layout & Spalten",
     "service_cols": "Service-Spalten (Desktop):",
     "shortcut_cols": "Shortcut-Spalten (Desktop):",
@@ -392,8 +394,8 @@
     "postal_code": ", PLZ: ",
     "weather_cache_info": "Wetterdaten werden alle 2 Stunden automatisch aktualisiert und zwischengespeichert (Cache). Manuelle Aktualisierung ist jederzeit per Button im Widget möglich.",
     "weather_fields": "Angezeigte Wetterdaten",
-    "light_mode": "Light Mode",
-    "dark_mode": "Dark Mode",
+    "light_mode": "Sekundäre Schriftfarbe",
+    "dark_mode": "Primäre Schriftfarbe",
     "spotify_widget": "Spotify Widget"
   },
   "dashboards": {

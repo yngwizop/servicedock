@@ -64,7 +64,7 @@ const AnimatedBar = React.memo(function AnimatedBar({ percentage, colorClass, de
     return () => clearTimeout(timer);
   }, [percentage, delay]);
   return (
-    <div className="w-full bg-gray-300/30 dark:bg-white/10 rounded-full h-2.5 overflow-hidden">
+    <div className="w-full bg-gray-300/30 dark:bg-white/10 sd-night-muted-flat rounded-full h-2.5 overflow-hidden">
       <div
         className={`h-2.5 rounded-full transition-all duration-1000 ease-out ${colorClass}`}
         style={{ width: `${width}%` }}
@@ -104,10 +104,10 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       
       {/* Token Rotation Card */}
-      <div className="animate-slide-in-left bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-400/60 dark:border-white/10 hover:scale-[1.02] hover:border-gray-500/70 dark:hover:border-white/20 transition-all duration-300 group" style={{ animationDelay: '0s' }}>
+      <div className="animate-slide-in-left dark:bg-white/[0.12] sd-night-surface backdrop-blur-md rounded-2xl shadow-xl night:shadow-black/45 p-6 border border-gray-400/60 dark:border-white/10 night:border-white/[0.08] hover:scale-[1.02] hover:border-gray-500/70 dark:hover:border-white/20 night:hover:border-white/12 transition-all duration-300 group" style={{ animationDelay: '0s' }}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 ${tokenInfo?.rotation_recommended ? 'bg-red-100/60 dark:bg-red-500/10' : 'bg-green-100/60 dark:bg-green-500/10'}`}>
+            <div className={`p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 ${tokenInfo?.rotation_recommended ? 'bg-red-100/60 dark:bg-red-500/10 night:bg-red-950/45' : 'bg-green-100/60 dark:bg-green-500/10 night:bg-emerald-950/40'}`}>
               <ArrowsClockwise 
                 size={24} 
                 className={tokenInfo?.rotation_recommended ? 'text-red-500' : 'text-green-500'} 
@@ -147,8 +147,8 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
             )}
             <div className={`mt-4 p-3 rounded-xl flex items-center gap-2 ${
               tokenInfo.rotation_recommended 
-                ? 'bg-red-100 dark:bg-red-900/30' 
-                : 'bg-green-100 dark:bg-green-900/30'
+                ? 'bg-red-100 dark:bg-red-900/30 night:bg-red-950/50' 
+                : 'bg-green-100 dark:bg-green-900/30 night:bg-emerald-950/45'
             }`}>
               {tokenInfo.rotation_recommended 
                 ? <Warning size={16} weight="fill" className="text-red-600 dark:text-red-400" />
@@ -171,9 +171,9 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
       </div>
 
       {/* Activity Card */}
-      <div className="animate-slide-in-left bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-400/60 dark:border-white/10 hover:scale-[1.02] hover:border-gray-500/70 dark:hover:border-white/20 transition-all duration-300 group" style={{ animationDelay: '0.15s' }}>
+      <div className="animate-slide-in-left dark:bg-white/[0.12] sd-night-surface backdrop-blur-md rounded-2xl shadow-xl night:shadow-black/45 p-6 border border-gray-400/60 dark:border-white/10 night:border-white/[0.08] hover:scale-[1.02] hover:border-gray-500/70 dark:hover:border-white/20 night:hover:border-white/12 transition-all duration-300 group" style={{ animationDelay: '0.15s' }}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="bg-blue-100/60 dark:bg-blue-500/10 p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+          <div className="bg-blue-100/60 dark:bg-blue-500/10 night:bg-blue-950/40 p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
             <ChartBar size={24} className="text-blue-500" weight="duotone" />
           </div>
           <h3 className="text-lg font-bold text-gray-800 dark:text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
@@ -199,7 +199,7 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
             </div>
             
             {auditStats.error_stats.failed > 0 && (
-              <div className="bg-red-100 dark:bg-red-900/30 p-3 rounded-xl flex items-center gap-2">
+              <div className="bg-red-100 dark:bg-red-900/30 night:bg-red-950/50 p-3 rounded-xl flex items-center gap-2">
                 <XCircle size={16} weight="fill" className="text-red-600 dark:text-red-400" />
                 <p className="text-sm font-semibold text-red-800 dark:text-red-300">
                   {t('security.failed_requests', { count: animFailed })}
@@ -211,9 +211,9 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
       </div>
 
       {/* Security Threats Card */}
-      <div className="animate-slide-in-left bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-400/60 dark:border-white/10 hover:scale-[1.02] hover:border-gray-500/70 dark:hover:border-white/20 transition-all duration-300 group" style={{ animationDelay: '0.3s' }}>
+      <div className="animate-slide-in-left dark:bg-white/[0.12] sd-night-surface backdrop-blur-md rounded-2xl shadow-xl night:shadow-black/45 p-6 border border-gray-400/60 dark:border-white/10 night:border-white/[0.08] hover:scale-[1.02] hover:border-gray-500/70 dark:hover:border-white/20 night:hover:border-white/12 transition-all duration-300 group" style={{ animationDelay: '0.3s' }}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="bg-red-100/60 dark:bg-red-500/10 p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+          <div className="bg-red-100/60 dark:bg-red-500/10 night:bg-red-950/45 p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
             <Detective size={24} className="text-red-500" weight="duotone" />
           </div>
           <h3 className="text-lg font-bold text-gray-800 dark:text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
@@ -223,7 +223,7 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
         
         {auditStats?.security_threats ? (
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/30 dark:hover:bg-white/5 transition-colors">
+            <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/30 dark:hover:bg-white/5 night:hover:bg-sd-night-800/80 transition-colors">
               <div className="flex items-center gap-2.5">
                 <XCircle size={22} weight="fill" className="text-red-500 dark:text-red-400" />
                 <span className="text-sm text-gray-700 dark:text-gray-400">{t('security.failed_logins')}</span>
@@ -235,7 +235,7 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
               </span>
             </div>
             
-            <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/30 dark:hover:bg-white/5 transition-colors">
+            <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/30 dark:hover:bg-white/5 night:hover:bg-sd-night-800/80 transition-colors">
               <div className="flex items-center gap-2.5">
                 <ProhibitInset size={22} weight="fill" className="text-orange-500 dark:text-orange-400" />
                 <span className="text-sm text-gray-700 dark:text-gray-400">{t('security.ips_with_errors')}</span>
@@ -247,7 +247,7 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
               </span>
             </div>
             
-            <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/30 dark:hover:bg-white/5 transition-colors">
+            <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/30 dark:hover:bg-white/5 night:hover:bg-sd-night-800/80 transition-colors">
               <div className="flex items-center gap-2.5">
                 <ShieldWarning size={22} weight="fill" className="text-yellow-500 dark:text-yellow-400" />
                 <span className="text-sm text-gray-700 dark:text-gray-400">Permission Denied</span>
@@ -260,12 +260,12 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
             </div>
             
             {auditStats.security_threats.suspicious_activity ? (
-              <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center gap-2">
+              <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 night:bg-red-950/50 rounded-xl flex items-center gap-2">
                 <Warning size={18} weight="fill" className="text-red-600 dark:text-red-400" />
                 <p className="text-sm font-semibold text-red-800 dark:text-red-300">{t('security.threat_detected')}</p>
               </div>
             ) : (
-              <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center gap-2">
+              <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 night:bg-emerald-950/45 rounded-xl flex items-center gap-2">
                 <CheckCircle size={18} weight="fill" className="text-green-600 dark:text-green-400" />
                 <p className="text-sm font-semibold text-green-800 dark:text-green-300">{t('security.no_threats')}</p>
               </div>
@@ -277,9 +277,9 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
       </div>
 
       {/* Rate Limiting Card */}
-      <div className="animate-slide-in-left bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-400/60 dark:border-white/10 hover:scale-[1.02] hover:border-gray-500/70 dark:hover:border-white/20 transition-all duration-300 group" style={{ animationDelay: '0.45s' }}>
+      <div className="animate-slide-in-left dark:bg-white/[0.12] sd-night-surface backdrop-blur-md rounded-2xl shadow-xl night:shadow-black/45 p-6 border border-gray-400/60 dark:border-white/10 night:border-white/[0.08] hover:scale-[1.02] hover:border-gray-500/70 dark:hover:border-white/20 night:hover:border-white/12 transition-all duration-300 group" style={{ animationDelay: '0.45s' }}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="bg-purple-100/60 dark:bg-purple-500/10 p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+          <div className="bg-purple-100/60 dark:bg-purple-500/10 night:bg-purple-950/40 p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
             <Clock size={24} className="text-purple-500" weight="duotone" />
           </div>
           <h3 className="text-lg font-bold text-gray-800 dark:text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
@@ -322,7 +322,7 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
               <AnimatedBar percentage={rateLimitUsage.proxmox_control.percentage} colorClass={getBarColor(rateLimitUsage.proxmox_control.percentage)} delay={600} />
             </div>
             
-            <div className="mt-4 p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center gap-2">
+            <div className="mt-4 p-3 bg-blue-100 dark:bg-blue-900/30 night:bg-blue-950/50 rounded-xl flex items-center gap-2">
               <Clock size={16} weight="bold" className="text-blue-600 dark:text-blue-400" />
               <p className="text-xs text-blue-800 dark:text-blue-300">{t('security.live_data')}</p>
             </div>
@@ -337,7 +337,7 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
               <span className="text-sm text-gray-600 dark:text-gray-400">Proxmox Control</span>
               <span className="text-sm font-bold text-gray-800 dark:text-gray-100">30/min</span>
             </div>
-            <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
+            <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 night:bg-emerald-950/45 rounded-xl">
               <p className="text-sm font-semibold text-green-800 dark:text-green-300">{t('security.rate_limiting_active')}</p>
             </div>
           </div>
@@ -504,12 +504,12 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
 
   const getActionColor = (action) => {
     const colors = {
-      VIEW_VMS: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-      START_VM: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-      STOP_VM: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-      REBOOT_VM: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+      VIEW_VMS: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 night:bg-blue-950/50 night:text-blue-200',
+      START_VM: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 night:bg-emerald-950/45 night:text-emerald-200',
+      STOP_VM: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 night:bg-red-950/45 night:text-red-200',
+      REBOOT_VM: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 night:bg-orange-950/40 night:text-orange-200',
     };
-    return colors[action] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
+    return colors[action] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300 night:bg-sd-night-950/55 night:text-gray-200';
   };
 
   if (!isLoggedIn) {
@@ -553,11 +553,11 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
 
       {/* Glass Segment Control */}
       <div className="flex items-center gap-3 mb-2">
-        <div ref={segmentRefCallback} className="relative flex p-1 rounded-xl bg-white/40 dark:bg-white/[0.06] backdrop-blur-md border border-gray-300/40 dark:border-white/10 shadow-lg">
+        <div ref={segmentRefCallback} className="relative flex p-1 rounded-xl dark:bg-white/[0.06] sd-night-shade backdrop-blur-md border border-gray-300/40 dark:border-white/10 night:border-white/[0.08] shadow-lg">
           {/* Sliding Pill */}
           {pillStyle && (
             <div
-              className="absolute top-1 bottom-1 rounded-lg bg-white/80 dark:bg-white/15 shadow-md transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+              className="absolute top-1 bottom-1 rounded-lg dark:bg-white/15 night:!bg-sd-night-950/95 shadow-md transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
               style={{ left: pillStyle.left, width: pillStyle.width }}
             />
           )}
@@ -602,7 +602,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
 
       {/* Hinweis wenn Suche aktiv aber View nicht durchsuchbar */}
       {searchTerm && !isSearchRelevant && (
-        <div className="mb-4 bg-yellow-500/20 dark:bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+        <div className="mb-4 bg-yellow-500/20 dark:bg-yellow-500/10 night:bg-yellow-950/30 border border-yellow-500/30 rounded-xl p-4">
           <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
@@ -625,14 +625,14 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
 
       {/* Logs View */}
       {activeView === 'logs' && (
-        <div className="animate-fade-up bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl shadow-xl border border-gray-400/60 dark:border-white/10 overflow-hidden">
-          <div className="p-6 border-b border-gray-300/50 dark:border-white/10">
+        <div className="animate-fade-up dark:bg-white/[0.12] sd-night-surface sd-night-surface--solid backdrop-blur-md rounded-2xl shadow-xl night:shadow-black/60 border border-gray-400/60 dark:border-white/10 night:border-sd-night-900/40 overflow-hidden">
+          <div className="p-6 border-b border-gray-300/50 dark:border-white/10 night:border-sd-night-900/40 sd-night-surface">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white night:text-white">
                   Audit Logs
                 </h3>
-                <p className="text-sm text-gray-700 dark:text-gray-400 mt-1">
+                <p className="text-sm text-gray-700 dark:text-gray-400 night:text-gray-400 mt-1">
                   {filteredLogs.length} {t('security.entries_loaded')}
                 </p>
               </div>
@@ -666,31 +666,31 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
             </div>
           </div>
           
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto sd-night-surface">
             <table className="w-full">
-              <thead className="bg-white/20 dark:bg-white/5">
+              <thead className="dark:bg-white/5 sd-night-veil-flat">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 night:text-slate-400 uppercase tracking-wider">
                     {t('security.timestamp')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 night:text-slate-400 uppercase tracking-wider">
                     {t('security.action')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 night:text-slate-400 uppercase tracking-wider">
                     {t('security.ip_address')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 night:text-slate-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 night:text-slate-400 uppercase tracking-wider">
                     {t('security.details')}
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-300/30 dark:divide-white/10">
+              <tbody className="divide-y divide-gray-300/30 dark:divide-white/10 night:divide-sd-night-900/35 sd-night-surface">
                 {filteredLogs.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="px-6 py-8 text-center text-gray-700 dark:text-gray-400">
+                  <tr className="sd-night-surface">
+                    <td colSpan="5" className="px-6 py-8 text-center text-gray-700 dark:text-gray-400 night:text-slate-400">
                       {auditLogs.length === 0 
                         ? t('security.no_logs') 
                         : t('security.no_logs_filter')}
@@ -698,8 +698,8 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                   </tr>
                 ) : (
                   filteredLogs.map((log, index) => (
-                    <tr key={log.id} className="animate-fade-up hover:bg-white/20 dark:hover:bg-white/5 transition-colors" style={{ animationDelay: `${Math.min(index * 0.03, 0.6)}s` }}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-white">
+                    <tr key={log.id} className="animate-fade-up odd:night:!bg-sd-night-900/92 even:night:!bg-sd-night-950/95 dark:hover:bg-white/5 night:hover:!bg-sd-night-800 transition-colors" style={{ animationDelay: `${Math.min(index * 0.03, 0.6)}s` }}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-white night:text-slate-100">
                         {formatTimestamp(log.timestamp)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -707,13 +707,13 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                           {log.action}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-white night:text-slate-100">
                         {log.ip_address}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusIcon(log.status)}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-400">
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-400 night:text-slate-400">
                         {log.details && typeof log.details === 'object' 
                           ? JSON.stringify(log.details) 
                           : log.details || '-'}
@@ -732,7 +732,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* Top Actions */}
-          <div className="animate-slide-in-left bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-400/60 dark:border-white/10 hover:border-gray-500/70 dark:hover:border-white/20 transition-all duration-300">
+          <div className="animate-slide-in-left dark:bg-white/[0.12] sd-night-surface backdrop-blur-md rounded-2xl shadow-xl night:shadow-black/45 p-6 border border-gray-400/60 dark:border-white/10 night:border-white/[0.08] hover:border-gray-500/70 dark:hover:border-white/20 night:hover:border-white/12 transition-all duration-300">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
               {t('security.top_actions')}
             </h3>
@@ -741,7 +741,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                 <p className="text-gray-700 dark:text-gray-400">{t('security.no_activities')}</p>
               ) : (
                 auditStats.actions_24h.map((action, index) => (
-                  <div key={index} className="animate-fade-up flex items-center justify-between p-3 bg-white/30 dark:bg-white/5 rounded-xl hover:bg-white/50 dark:hover:bg-white/10 transition-all duration-200" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <div key={index} className="animate-fade-up flex items-center justify-between p-3 dark:bg-white/5 sd-night-veil-flat rounded-xl hover:bg-white/50 dark:hover:bg-white/10 night:hover:bg-sd-night-700/95 transition-all duration-200" style={{ animationDelay: `${index * 0.1}s` }}>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getActionColor(action.action)}`}>
                       {action.action}
                     </span>
@@ -755,7 +755,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
           </div>
 
           {/* Top IPs */}
-          <div className="animate-slide-in-left bg-white/50 dark:bg-white/[0.12] backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-400/60 dark:border-white/10 hover:border-gray-500/70 dark:hover:border-white/20 transition-all duration-300" style={{ animationDelay: '0.15s' }}>
+          <div className="animate-slide-in-left dark:bg-white/[0.12] sd-night-surface backdrop-blur-md rounded-2xl shadow-xl night:shadow-black/45 p-6 border border-gray-400/60 dark:border-white/10 night:border-white/[0.08] hover:border-gray-500/70 dark:hover:border-white/20 night:hover:border-white/12 transition-all duration-300" style={{ animationDelay: '0.15s' }}>
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
               {t('security.top_ips')}
             </h3>
@@ -764,7 +764,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                 <p className="text-gray-700 dark:text-gray-400">{t('security.no_access')}</p>
               ) : (
                 auditStats.top_ips.map((ip, index) => (
-                  <div key={index} className="animate-fade-up flex items-center justify-between p-3 bg-white/30 dark:bg-white/5 rounded-xl hover:bg-white/50 dark:hover:bg-white/10 transition-all duration-200" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <div key={index} className="animate-fade-up flex items-center justify-between p-3 dark:bg-white/5 sd-night-veil-flat rounded-xl hover:bg-white/50 dark:hover:bg-white/10 night:hover:bg-sd-night-700/95 transition-all duration-200" style={{ animationDelay: `${index * 0.1}s` }}>
                     <span className="text-sm font-mono text-gray-800 dark:text-white">
                       {ip.ip}
                     </span>
@@ -782,7 +782,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white/70 dark:bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl max-w-md w-full p-6 border border-red-500/50 dark:border-red-500/30">
+          <div className="dark:bg-white/10 sd-night-muted backdrop-blur-md rounded-2xl shadow-2xl max-w-md w-full p-6 border border-red-500/50 dark:border-red-500/30 night:border-red-900/50">
             <div className="flex items-center gap-3 mb-4">
               <Warning size={32} className="text-red-500" weight="fill" />
               <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
@@ -804,7 +804,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                 onChange={(e) => setDeletePassword(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleDeleteAllLogs()}
                 placeholder={t('security.password_placeholder')}
-                className="w-full px-4 py-2 border border-gray-300/50 dark:border-white/[0.12] rounded-lg bg-white/50 dark:bg-white/5 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300/50 dark:border-white/[0.12] night:border-white/10 rounded-lg dark:bg-white/5 sd-night-veil-flat text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 autoFocus
               />
               {deleteError && (
@@ -819,7 +819,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
                   setDeletePassword('');
                   setDeleteError('');
                 }}
-                className="flex-1 px-4 py-2 bg-white/30 dark:bg-white/10 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-white/50 dark:hover:bg-white/15 transition-colors"
+                className="flex-1 px-4 py-2 dark:bg-white/10 sd-night-muted-flat text-gray-800 dark:text-gray-100 rounded-lg hover:bg-white/50 dark:hover:bg-white/15 night:hover:bg-sd-night-800 transition-colors"
                 disabled={isDeleting}
               >
                 {t('common.cancel')}

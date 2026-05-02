@@ -26,24 +26,24 @@ function ShortcutLink({ shortcut, textColor }) {
       target="_blank"
       rel="noopener noreferrer"
       draggable={false}
-      className="group relative flex items-center gap-3 bg-white/50 dark:bg-white/[0.12] backdrop-blur-md border border-gray-400/60 dark:border-white/10 rounded-xl p-3.5 transition-all duration-300 hover:bg-white/70 dark:hover:bg-white/20 hover:border-gray-500/70 dark:hover:border-white/20 hover:scale-[1.02] shadow-lg hover:shadow-xl hover:shadow-cyan-500/20 dark:hover:shadow-cyan-400/10"
+      className="group relative flex items-center gap-3 bg-white/50 dark:bg-white/[0.12] sd-night-surface backdrop-blur-md border border-gray-400/60 dark:border-white/10 night:border-white/[0.06] rounded-xl p-3.5 transition-all duration-300 hover:bg-white/70 dark:hover:bg-white/20 night:hover:!bg-sd-night-900/92 hover:border-gray-500/70 dark:hover:border-white/20 night:hover:border-white/10 hover:scale-[1.02] shadow-lg hover:shadow-xl hover:shadow-cyan-500/20 dark:hover:shadow-cyan-400/10 night:hover:shadow-black/35"
       aria-label={`Shortcut: ${safeName}, ${displayUrl(safeUrl)}`}
     >
       {/* Subtle Glow */}
-      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 to-blue-500/0 group-hover:from-cyan-500/5 group-hover:to-blue-500/5 rounded-xl transition-all duration-500 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 to-blue-500/0 group-hover:from-cyan-500/5 group-hover:to-blue-500/5 rounded-xl transition-all duration-500 pointer-events-none night:hidden"></div>
       
       {/* Content */}
       <div className="relative z-10 flex items-center gap-3 w-full">
         {shortcut.icon && (
           <div className={`flex-shrink-0 rounded-lg p-2 w-10 h-10 flex items-center justify-center transition-all duration-300 shadow-sm ${
             isUrl 
-              ? 'bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/10 backdrop-blur-sm border border-gray-400 dark:border-white/20 group-hover:from-white group-hover:to-gray-100 dark:group-hover:from-white/20 dark:group-hover:to-white/20 group-hover:border-gray-500 dark:group-hover:border-white/30' 
-              : 'bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/10 backdrop-blur-sm border border-gray-400 dark:border-white/20 group-hover:from-white group-hover:to-gray-100 dark:group-hover:from-white/20 dark:group-hover:to-white/20 group-hover:border-gray-500 dark:group-hover:border-white/30'
+              ? 'bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/10 night:from-white/[0.16] night:to-white/[0.11] backdrop-blur-sm border border-gray-400 dark:border-white/20 night:border-white/20 group-hover:from-white group-hover:to-gray-100 dark:group-hover:from-white/20 dark:group-hover:to-white/20 night:group-hover:from-white/[0.22] night:group-hover:to-white/[0.15] group-hover:border-gray-500 dark:group-hover:border-white/30 night:group-hover:border-white/25' 
+              : 'bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/10 night:from-white/[0.16] night:to-white/[0.11] backdrop-blur-sm border border-gray-400 dark:border-white/20 night:border-white/20 group-hover:from-white group-hover:to-gray-100 dark:group-hover:from-white/20 dark:group-hover:to-white/20 night:group-hover:from-white/[0.22] night:group-hover:to-white/[0.15] group-hover:border-gray-500 dark:group-hover:border-white/30 night:group-hover:border-white/25'
           }`}>
             {isUrl ? (
-              <img src={safeIcon} alt={safeName} className="w-full h-full object-contain" draggable={false}/>
+              <img src={safeIcon} alt={safeName} className="w-full h-full object-contain night:drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]" draggable={false}/>
             ) : (
-              <span className="text-xl drop-shadow-sm">{safeIcon}</span>
+              <span className="text-xl drop-shadow-sm night:drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">{safeIcon}</span>
             )}
           </div>
         )}
