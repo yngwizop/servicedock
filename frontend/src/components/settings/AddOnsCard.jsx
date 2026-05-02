@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Plug, X } from 'phosphor-react';
+import { Plug } from 'phosphor-react';
 import { authenticatedFetch } from '../../utils/auth';
 import ConfigAddon from './ConfigAddon';
 import SpotifyAddon from './SpotifyAddon';
 import LdapAddon from './LdapAddon';
+import SettingsModalShell from './SettingsModalShell';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
   (window.location.port === '' ? 
@@ -413,168 +413,90 @@ function AddOnsCard() {
         </div>
       </div>
 
-      {/* Config Modal */}
-      {showConfigModal && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowConfigModal(false)}>
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 rounded-2xl border border-blue-200/50 dark:border-blue-500/30 shadow-2xl flex flex-col max-h-[90vh]">
-              {/* Modal Header */}
-              <div className="relative overflow-hidden rounded-t-2xl">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent dark:from-blue-400/30 dark:via-blue-500/20 dark:to-transparent" />
-                <div className="relative p-6 border-b border-gray-200/50 dark:border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-                        <span className="text-2xl">⚙️</span>
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-                        {t('addons.config_title')}
-                      </h3>
-                    </div>
-                    <button
-                      onClick={() => setShowConfigModal(false)}
-                      className="p-2 hover:bg-gray-200/50 dark:hover:bg-white/10 rounded-lg transition-colors"
-                    >
-                      <X size={24} className="text-gray-600 dark:text-gray-400" />
-                    </button>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">
-                    {t('addons.config_subtitle')}
-                  </p>
-                </div>
-              </div>
-              {/* Modal Content */}
-              <div className="p-6 overflow-y-auto flex-1">
-                <ConfigAddon 
-                  BACKEND_URL={BACKEND_URL}
-                  importMode={importMode}
-                  setImportMode={setImportMode}
-                  importFile={importFile}
-                  setImportFile={setImportFile}
-                  importPreview={importPreview}
-                  setImportPreview={setImportPreview}
-                  isImporting={isImporting}
-                  setIsImporting={setIsImporting}
-                  importSuccess={importSuccess}
-                  setImportSuccess={setImportSuccess}
-                  importError={importError}
-                  setImportError={setImportError}
-                  onClose={() => setShowConfigModal(false)}
-                  isModal={true}
-                />
-              </div>
-            </div>
+      <SettingsModalShell
+        open={showConfigModal}
+        onClose={() => setShowConfigModal(false)}
+        title={t('addons.config_title')}
+        subtitle={t('addons.config_subtitle')}
+        icon={
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shrink-0">
+            <span className="text-2xl">⚙️</span>
           </div>
-        </div>,
-        document.body
-      )}
+        }
+      >
+        <ConfigAddon
+          BACKEND_URL={BACKEND_URL}
+          importMode={importMode}
+          setImportMode={setImportMode}
+          importFile={importFile}
+          setImportFile={setImportFile}
+          importPreview={importPreview}
+          setImportPreview={setImportPreview}
+          isImporting={isImporting}
+          setIsImporting={setIsImporting}
+          importSuccess={importSuccess}
+          setImportSuccess={setImportSuccess}
+          importError={importError}
+          setImportError={setImportError}
+          onClose={() => setShowConfigModal(false)}
+          isModal={true}
+        />
+      </SettingsModalShell>
 
-      {/* Spotify Modal */}
-      {showSpotifyModal && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowSpotifyModal(false)}>
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 rounded-2xl border border-green-200/50 dark:border-green-500/30 shadow-2xl flex flex-col max-h-[90vh]">
-              {/* Modal Header */}
-              <div className="relative overflow-hidden rounded-t-2xl">
-                <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent dark:from-green-400/30 dark:via-green-500/20 dark:to-transparent" />
-                <div className="relative p-6 border-b border-gray-200/50 dark:border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
-                        <span className="text-2xl">🎵</span>
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-                        {t('addons.spotify_title')}
-                      </h3>
-                    </div>
-                    <button
-                      onClick={() => setShowSpotifyModal(false)}
-                      className="p-2 hover:bg-gray-200/50 dark:hover:bg-white/10 rounded-lg transition-colors"
-                    >
-                      <X size={24} className="text-gray-600 dark:text-gray-400" />
-                    </button>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">
-                    {t('addons.spotify_subtitle')}
-                  </p>
-                </div>
-              </div>
-              {/* Modal Content */}
-              <div className="p-6 overflow-y-auto flex-1">
-                <SpotifyAddon
-                  BACKEND_URL={BACKEND_URL}
-                  SPOTIFY_REDIRECT_URI={SPOTIFY_REDIRECT_URI}
-                  spotifyConfig={spotifyConfig}
-                  setSpotifyConfig={setSpotifyConfig}
-                  spotifyStatus={spotifyStatus}
-                  isSavingSpotify={isSavingSpotify}
-                  spotifySaved={spotifySaved}
-                  handleSaveSpotify={handleSaveSpotify}
-                  handleConnectSpotify={handleConnectSpotify}
-                  handleUninstallSpotify={handleUninstallSpotify}
-                  onClose={() => setShowSpotifyModal(false)}
-                  isModal={true}
-                />
-              </div>
-            </div>
+      <SettingsModalShell
+        open={showSpotifyModal}
+        onClose={() => setShowSpotifyModal(false)}
+        title={t('addons.spotify_title')}
+        subtitle={t('addons.spotify_subtitle')}
+        icon={
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg shrink-0">
+            <span className="text-2xl">🎵</span>
           </div>
-        </div>,
-        document.body
-      )}
+        }
+      >
+        <SpotifyAddon
+          BACKEND_URL={BACKEND_URL}
+          SPOTIFY_REDIRECT_URI={SPOTIFY_REDIRECT_URI}
+          spotifyConfig={spotifyConfig}
+          setSpotifyConfig={setSpotifyConfig}
+          spotifyStatus={spotifyStatus}
+          isSavingSpotify={isSavingSpotify}
+          spotifySaved={spotifySaved}
+          handleSaveSpotify={handleSaveSpotify}
+          handleConnectSpotify={handleConnectSpotify}
+          handleUninstallSpotify={handleUninstallSpotify}
+          onClose={() => setShowSpotifyModal(false)}
+          isModal={true}
+        />
+      </SettingsModalShell>
 
-      {/* LDAP Modal */}
-      {showLdapModal && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowLdapModal(false)}>
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 rounded-2xl border border-indigo-200/50 dark:border-indigo-500/30 shadow-2xl flex flex-col max-h-[90vh]">
-              {/* Modal Header */}
-              <div className="relative overflow-hidden rounded-t-2xl">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-indigo-400/10 to-transparent dark:from-indigo-400/30 dark:via-indigo-500/20 dark:to-transparent" />
-                <div className="relative p-6 border-b border-gray-200/50 dark:border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg">
-                        <span className="text-2xl">🔐</span>
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-                        {t('addons.ldap_title')}
-                      </h3>
-                    </div>
-                    <button
-                      onClick={() => setShowLdapModal(false)}
-                      className="p-2 hover:bg-gray-200/50 dark:hover:bg-white/10 rounded-lg transition-colors"
-                    >
-                      <X size={24} className="text-gray-600 dark:text-gray-400" />
-                    </button>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">
-                    {t('addons.ldap_subtitle')}
-                  </p>
-                </div>
-              </div>
-              {/* Modal Content */}
-              <div className="p-6 overflow-y-auto flex-1">
-                <LdapAddon
-                  BACKEND_URL={BACKEND_URL}
-                  ldapConfig={ldapConfig}
-                  setLdapConfig={setLdapConfig}
-                  ldapStatus={ldapStatus}
-                  isSavingLdap={isSavingLdap}
-                  ldapSaved={ldapSaved}
-                  handleSaveLdap={handleSaveLdap}
-                  handleTestLdap={handleTestLdap}
-                  handleUninstallLdap={handleUninstallLdap}
-                  testResult={testResult}
-                  isTesting={isTesting}
-                  onClose={() => setShowLdapModal(false)}
-                  isModal={true}
-                />
-              </div>
-            </div>
+      <SettingsModalShell
+        open={showLdapModal}
+        onClose={() => setShowLdapModal(false)}
+        title={t('addons.ldap_title')}
+        subtitle={t('addons.ldap_subtitle')}
+        icon={
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg shrink-0">
+            <span className="text-2xl">🔐</span>
           </div>
-        </div>,
-        document.body
-      )}
+        }
+      >
+        <LdapAddon
+          BACKEND_URL={BACKEND_URL}
+          ldapConfig={ldapConfig}
+          setLdapConfig={setLdapConfig}
+          ldapStatus={ldapStatus}
+          isSavingLdap={isSavingLdap}
+          ldapSaved={ldapSaved}
+          handleSaveLdap={handleSaveLdap}
+          handleTestLdap={handleTestLdap}
+          handleUninstallLdap={handleUninstallLdap}
+          testResult={testResult}
+          isTesting={isTesting}
+          onClose={() => setShowLdapModal(false)}
+          isModal={true}
+        />
+      </SettingsModalShell>
     </div>
   );
 }

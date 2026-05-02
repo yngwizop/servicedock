@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { Pencil, SquaresFour, Plus, Desktop, X, Trash, Tag, Package, Link as LinkIcon } from 'phosphor-react';
+import React, { useState } from 'react';
+import { Pencil, SquaresFour, Plus, Desktop, Trash, Tag, Package, Link as LinkIcon } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
 import CustomSelect from '../CustomSelect';
+import SettingsModalShell from './SettingsModalShell';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
   (window.location.port === '' ? 
@@ -51,7 +51,6 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
   const [showModal, setShowModal] = useState(false);
   const [isSavingDashboard, setIsSavingDashboard] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
-  const modalRef = useRef(null);
 
   // Modal öffnen für neues Dashboard
   const openCreateModal = () => {
@@ -81,25 +80,6 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
     setDashboardType('default');
     setDashboardShowProxmox(true);
   };
-
-  // Klick außerhalb des Modals → schließen
-  useEffect(() => {
-    if (!showModal) return;
-    const handleClickOutside = (e) => {
-      if (modalRef.current && !modalRef.current.contains(e.target)) {
-        closeModal();
-      }
-    };
-    const handleEsc = (e) => {
-      if (e.key === 'Escape') closeModal();
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEsc);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEsc);
-    };
-  }, [showModal]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -292,32 +272,24 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
         </p>
       </div>
 
-      {/* ===== Create/Edit Modal ===== */}
-      {showModal && createPortal(
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div
-            ref={modalRef}
-            className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 border border-gray-200/50 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-content-in"
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-200/30 dark:border-white/[0.06]">
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
-                {editingDashboard ? (
-                  <><Pencil size={20} weight="duotone" className="text-blue-400" /> {t('dashboards.edit_dashboard')}</>
-                ) : (
-                  <><Plus size={20} weight="duotone" className="text-blue-400" /> {t('dashboards.create_dashboard')}</>
-                )}
-              </h3>
-              <button
-                onClick={closeModal}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-white/20 dark:hover:bg-white/10 rounded-lg transition-all"
-              >
-                <X size={20} weight="bold" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+      <SettingsModalShell
+        open={showModal}
+        onClose={closeModal}
+        maxWidthClass="max-w-lg"
+        title={editingDashboard ? t('dashboards.edit_dashboard') : t('dashboards.create_dashboard')}
+        subtitle={null}
+        icon={
+          <div className="w-12 h-12 rounded-xl bg-blue-500/15 dark:bg-blue-400/20 flex items-center justify-center shrink-0">
+            {editingDashboard ? (
+              <Pencil size={24} weight="duotone" className="text-blue-600 dark:text-blue-300" />
+            ) : (
+              <Plus size={24} weight="duotone" className="text-blue-600 dark:text-blue-300" />
+            )}
+          </div>
+        }
+        contentClassName="px-6 py-5 overflow-y-auto flex-1 min-h-0"
+      >
+            <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name */}
               <div>
                 <label className={labelClass}>{t('dashboards.dashboard_name')}</label>
@@ -390,46 +362,42 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
                 </button>
               </div>
             </form>
-          </div>
-        </div>,
-        document.body
-      )}
+      </SettingsModalShell>
 
-      {/* ===== Delete Confirmation Modal ===== */}
-      {showDeleteConfirm && createPortal(
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 border border-gray-200/50 dark:border-white/10 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-content-in">
-            <div className="px-6 pt-5 pb-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-red-500/15 rounded-xl">
-                  <Trash size={22} weight="duotone" className="text-red-500" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-800 dark:text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
-                  {t('dashboards.delete_title')}
-                </h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line">
-                {t('dashboards.delete_confirm', { name: showDeleteConfirm.name })}
-              </p>
-            </div>
-            <div className="flex gap-3 px-6 pb-5">
-              <button
-                onClick={() => setShowDeleteConfirm(null)}
-                className="flex-1 px-4 py-2.5 bg-gray-200/60 dark:bg-white/10 text-gray-700 dark:text-gray-300 rounded-xl font-semibold text-sm hover:bg-gray-300/60 dark:hover:bg-white/15 transition-all"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={() => handleDelete(showDeleteConfirm)}
-                className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold text-sm transition-all shadow-lg"
-              >
-                {t('common.yes_delete')}
-              </button>
-            </div>
+      <SettingsModalShell
+        open={Boolean(showDeleteConfirm)}
+        onClose={() => setShowDeleteConfirm(null)}
+        maxWidthClass="max-w-md"
+        title={t('dashboards.delete_title')}
+        subtitle={
+          showDeleteConfirm
+            ? t('dashboards.delete_confirm', { name: showDeleteConfirm.name })
+            : ''
+        }
+        icon={
+          <div className="w-12 h-12 rounded-xl bg-red-500/15 dark:bg-red-500/20 flex items-center justify-center shrink-0">
+            <Trash size={24} weight="duotone" className="text-red-600 dark:text-red-400" />
           </div>
-        </div>,
-        document.body
-      )}
+        }
+        footer={
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(null)}
+              className="flex-1 px-4 py-2.5 bg-gray-200/60 dark:bg-white/10 text-gray-700 dark:text-gray-300 rounded-xl font-semibold text-sm hover:bg-gray-300/60 dark:hover:bg-white/15 transition-all"
+            >
+              {t('common.cancel')}
+            </button>
+            <button
+              type="button"
+              onClick={() => showDeleteConfirm && handleDelete(showDeleteConfirm)}
+              className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold text-sm transition-all shadow-lg"
+            >
+              {t('common.yes_delete')}
+            </button>
+          </div>
+        }
+      />
     </div>
   );
 }

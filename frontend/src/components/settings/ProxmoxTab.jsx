@@ -1,9 +1,9 @@
 import React from 'react';
-import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { X, Desktop } from 'phosphor-react';
+import { Desktop } from 'phosphor-react';
 import ProxmoxConnectionCard from './ProxmoxConnectionCard';
 import ProxmoxDashboardSettingsCard from './ProxmoxDashboardSettingsCard';
+import SettingsModalShell from './SettingsModalShell';
 
 /**
  * Proxmox Settings Tab - Haupt-Container mit Modal-Popups
@@ -105,89 +105,37 @@ function ProxmoxTab({
           </div>
         </div>
 
-      {/* Connection Modal */}
-      {showConnectionModal && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowConnectionModal(false)}>
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 rounded-2xl border border-orange-200/50 dark:border-orange-500/30 shadow-2xl flex flex-col max-h-[90vh]">
-              {/* Modal Header */}
-              <div className="relative overflow-hidden rounded-t-2xl">
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-red-400/10 to-transparent dark:from-orange-400/30 dark:via-red-500/20 dark:to-transparent" />
-                <div className="relative p-6 border-b border-gray-200/50 dark:border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg">
-                        <span className="text-2xl">🔗</span>
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-                        {t('proxmoxTab.connection')}
-                      </h3>
-                    </div>
-                    <button
-                      onClick={() => setShowConnectionModal(false)}
-                      className="p-2 hover:bg-gray-200/50 dark:hover:bg-white/10 rounded-lg transition-colors"
-                    >
-                      <X size={24} className="text-gray-600 dark:text-gray-400" />
-                    </button>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">
-                    {t('proxmoxTab.connection_header_desc')}
-                  </p>
-                </div>
-              </div>
-              {/* Modal Content */}
-              <div className="p-6 overflow-y-auto flex-1">
-                <ProxmoxConnectionCard 
-                  activeDashboard={activeDashboard}
-                  onSettingsChange={onSettingsChange}
-                  onClose={() => setShowConnectionModal(false)}
-                />
-              </div>
-            </div>
+      <SettingsModalShell
+        open={showConnectionModal}
+        onClose={() => setShowConnectionModal(false)}
+        title={t('proxmoxTab.connection')}
+        subtitle={t('proxmoxTab.connection_header_desc')}
+        icon={
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg shrink-0">
+            <span className="text-2xl">🔗</span>
           </div>
-        </div>,
-        document.body
-      )}
+        }
+      >
+        <ProxmoxConnectionCard
+          activeDashboard={activeDashboard}
+          onSettingsChange={onSettingsChange}
+          onClose={() => setShowConnectionModal(false)}
+        />
+      </SettingsModalShell>
 
-      {/* Dashboard Settings Modal */}
-      {showDashboardModal && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowDashboardModal(false)}>
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 rounded-2xl border border-blue-200/50 dark:border-blue-500/30 shadow-2xl flex flex-col max-h-[90vh]">
-              {/* Modal Header */}
-              <div className="relative overflow-hidden rounded-t-2xl">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-cyan-400/10 to-transparent dark:from-blue-400/30 dark:via-cyan-500/20 dark:to-transparent" />
-                <div className="relative p-6 border-b border-gray-200/50 dark:border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg">
-                        <span className="text-2xl">📊</span>
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-                        {t('proxmoxTab.monitoring_dashboard')}
-                      </h3>
-                    </div>
-                    <button
-                      onClick={() => setShowDashboardModal(false)}
-                      className="p-2 hover:bg-gray-200/50 dark:hover:bg-white/10 rounded-lg transition-colors"
-                    >
-                      <X size={24} className="text-gray-600 dark:text-gray-400" />
-                    </button>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">
-                    {t('proxmoxTab.dashboard_header_desc')}
-                  </p>
-                </div>
-              </div>
-              {/* Modal Content */}
-              <div className="p-6 overflow-y-auto flex-1">
-                <ProxmoxDashboardSettingsCard onClose={() => setShowDashboardModal(false)} />
-              </div>
-            </div>
+      <SettingsModalShell
+        open={showDashboardModal}
+        onClose={() => setShowDashboardModal(false)}
+        title={t('proxmoxTab.monitoring_dashboard')}
+        subtitle={t('proxmoxTab.dashboard_header_desc')}
+        icon={
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg shrink-0">
+            <span className="text-2xl">📊</span>
           </div>
-        </div>,
-        document.body
-      )}
+        }
+      >
+        <ProxmoxDashboardSettingsCard onClose={() => setShowDashboardModal(false)} />
+      </SettingsModalShell>
     </div>
   );
 }
