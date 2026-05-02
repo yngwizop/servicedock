@@ -4,6 +4,8 @@
   position: relative;
   transition: height 200ms ease;
   min-height: 400px;
+  /* Wallpaper soll durchscheinen — kein eigener Flächen-Ton unter dem Status-Grid */
+  background: transparent;
 }
 
 .react-grid-item {
@@ -131,10 +133,9 @@
   border-color: rgba(96, 165, 250, 0.4);
 }
 
-/* Nacht: Zwischenräume im Grid nicht hell durchs Wallpaper scheinen lassen */
+/* Nacht: kein zusätzlicher Grid-Hintergrund (sonst sichtbarer „Film“ neben/am Wallpaper) */
 html.dark[data-sd-theme="night"] .react-grid-layout {
-  background: rgb(var(--sd-night-900) / 0.55);
-  border-radius: 1rem;
+  background: transparent;
 }
 
 /* Drag handle styles */
