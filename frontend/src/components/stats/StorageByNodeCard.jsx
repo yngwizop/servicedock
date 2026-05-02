@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { HardDrives } from 'phosphor-react';
+import { HardDrives, Monitor } from 'phosphor-react';
 import StatCard from './StatCard';
 
 /**
@@ -50,7 +50,7 @@ function StorageByNodeCard({ storageByNode }) {
                   {/* Node Header */}
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">🖥️</span>
+                    <Monitor size={22} weight="duotone" className="shrink-0 text-gray-600 dark:text-gray-400" />
                     <span className="text-base font-semibold text-gray-800 dark:text-white">
                       {node.node}
                     </span>

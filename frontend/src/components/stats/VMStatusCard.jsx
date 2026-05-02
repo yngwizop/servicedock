@@ -29,15 +29,15 @@ function VMStatusCard({ title, icon, stats, type = "vm" }) {
       icon={<DefaultIcon size={28} weight="duotone" />}
       compact
     >
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col">
         {/* Mini Stat - Activity Indicator */}
         <div className={`mb-3 px-2 py-1 rounded-md ${health.bgColor} flex items-center justify-between`}>
           <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Activity</span>
           <span className={`text-xs font-bold ${health.color}`}>{health.label}</span>
         </div>
 
-        {/* Main Stats */}
-        <div className="space-y-3 flex-1">
+        {/* Main Stats — kein flex-1, sonst Leerraum in der Grid-Zelle */}
+        <div className="space-y-3">
           {/* Running */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

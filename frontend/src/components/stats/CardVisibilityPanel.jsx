@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { GearSix, Eye, EyeSlash, CaretDown } from 'phosphor-react';
+import { GearSix, Eye, EyeSlash, CaretDown, Lightbulb } from 'phosphor-react';
 
 /**
  * Card-Definitionen mit Kategorien für das Status-Dashboard
@@ -201,8 +201,9 @@ function CardVisibilityPanel({ visibleCards, onToggle, onShowAll, onHideAll, cep
           {/* Ceph auto-hidden hint */}
           {!cephAvailable && !visibleCards.some(id => CEPH_CARD_IDS.includes(id)) && (
             <div className="px-4 py-2.5 border-t border-white/10 dark:border-white/8 night:border-white/10 bg-white/5 dark:bg-white/5 sd-night-veil-flat">
-              <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
-                💡 {t('statusDashboard.ceph_auto_hidden')}
+              <p className="flex items-start gap-2 text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+                <Lightbulb size={16} weight="duotone" className="shrink-0 mt-0.5 text-amber-400/80" aria-hidden />
+                <span>{t('statusDashboard.ceph_auto_hidden')}</span>
               </p>
             </div>
           )}

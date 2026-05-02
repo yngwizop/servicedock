@@ -44,8 +44,8 @@ function StatCard({
         </h3>
       </div>
 
-      {/* Content - nimmt verfügbaren Raum */}
-      <div className="flex-1 flex flex-col text-gray-700 dark:text-gray-200">
+      {/* min-h-0: Flex-Kind darf schrumpfen; kein Scroll — Höhe kommt aus Grid-Berechnung (ProxmoxStatusDashboard) */}
+      <div className="flex-1 min-h-0 flex flex-col text-gray-700 dark:text-gray-200 overflow-hidden">
         {children}
       </div>
     </div>

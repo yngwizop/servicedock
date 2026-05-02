@@ -1,7 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Database, HardDrives, CloudArrowUp, Archive } from 'phosphor-react';
+import { Database } from 'phosphor-react';
 import StatCard from './StatCard';
+import { StorageBackendTypeIcon } from './StatusDashboardIcons';
 
 /**
  * Zeigt Storage nach Type an (local, lvm, nfs, ceph, zfs)
@@ -15,17 +16,6 @@ function StorageByTypeCard({ storageByType }) {
     if (tb >= 1) return `${tb.toFixed(2)} TB`;
     const gb = bytes / (1024 * 1024 * 1024);
     return `${gb.toFixed(1)} GB`;
-  };
-
-  // Icon basierend auf Storage-Type
-  const getTypeIcon = (type) => {
-    const lowerType = type.toLowerCase();
-    if (lowerType.includes('local')) return '💾';
-    if (lowerType.includes('lvm')) return '📀';
-    if (lowerType.includes('nfs')) return '🌐';
-    if (lowerType.includes('ceph')) return '🔷';
-    if (lowerType.includes('zfs')) return '🗄️';
-    return '💿';
   };
 
   // Farbe basierend auf Type
@@ -72,7 +62,7 @@ function StorageByTypeCard({ storageByType }) {
                   {/* Type Header */}
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-base">{getTypeIcon(typeData.type)}</span>
+                      <StorageBackendTypeIcon storageType={typeData.type} size={22} />
                       <div>
                         <span className="text-sm font-semibold text-gray-800 dark:text-white">
                           {typeData.type.toUpperCase()}

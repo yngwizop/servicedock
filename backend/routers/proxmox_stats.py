@@ -1,4 +1,6 @@
 """Proxmox Cluster Statistics - Aggregierte Daten für Status-Dashboard"""
+import time
+
 from fastapi import APIRouter, Request, HTTPException, Depends
 from typing import List
 
@@ -36,7 +38,7 @@ def get_cluster_stats(
     """
     client_ip = get_client_ip(request)
     proxmox, configured_node, is_cluster = get_proxmox_connection(dashboard_id)
-    
+
     if not proxmox:
         log_audit(
             action="VIEW_CLUSTER_STATS",
@@ -46,7 +48,7 @@ def get_cluster_stats(
             details={"error": "Proxmox not configured"}
         )
         raise HTTPException(status_code=404, detail="Proxmox nicht konfiguriert")
-    
+
     try:
         # Initialisiere Statistiken
         stats = ClusterStats(
@@ -61,7 +63,7 @@ def get_cluster_stats(
         )
         
         all_usage_items: List[TopUsageItem] = []
-        
+
         # ========================================
         # CLUSTER-MODUS
         # ========================================
@@ -82,7 +84,7 @@ def get_cluster_stats(
             except Exception as e:
                 logger.warning(f"Could not fetch cluster status: {e}")
                 stats.cluster_name = "Cluster"
-            
+
             # Alle Ressourcen abrufen
             try:
                 resources = proxmox.cluster.resources.get()
@@ -206,10 +208,9 @@ def get_cluster_stats(
                     status_code=503, 
                     detail="Cluster-Ressourcen konnten nicht abgerufen werden"
                 )
-            
+
             # Tasks abrufen (letzte X Stunden)
             try:
-                import time
                 # Hole alle Tasks ohne limit (Proxmox API unterstützt 'limit' Parameter nicht standardmäßig)
                 tasks = proxmox.cluster.tasks.get()
                 
@@ -250,13 +251,12 @@ def get_cluster_stats(
                     TaskByNode(node=node, **counts)
                     for node, counts in sorted(
                         tasks_by_node.items(),
-                        key=lambda x: x[1]['failed'],
-                        reverse=True
+                        key=lambda x: (-x[1]['failed'], (x[0] or '').lower()),
                     )
                 ]
             except Exception as e:
                 logger.warning(f"Could not fetch cluster tasks: {e}")
-        
+
         # ========================================
         # STANDALONE-MODUS
         # ========================================
@@ -388,7 +388,6 @@ def get_cluster_stats(
                     
                     # Tasks (per Node, letzte X Stunden)
                     try:
-                        import time
                         # Hole Tasks ohne limit
                         tasks = proxmox.nodes(node_name).tasks.get()
                         
@@ -424,19 +423,21 @@ def get_cluster_stats(
                     except Exception as e:
                         logger.warning(f"Could not fetch tasks from {node_name}: {e}")
                 
+                stats.tasks.by_node.sort(key=lambda x: (x.node or "").lower())
+
                 # Server-Name setzen
                 if nodes and len(nodes) > 0:
                     stats.cluster_name = nodes[0].get('node', 'Server')
                 else:
                     stats.cluster_name = 'Server'
-                    
+
             except Exception as e:
                 logger.error(f"Failed to fetch standalone server data: {e}")
                 raise HTTPException(
                     status_code=503, 
                     detail="Server-Daten konnten nicht abgerufen werden"
                 )
-        
+
         # ========================================
         # STORAGE-DATEN sammeln
         # ========================================
@@ -464,6 +465,9 @@ def get_cluster_stats(
                 # Standalone: Nutze configured_node
                 if configured_node:
                     nodes_to_check.append(configured_node)
+
+            # Feste Reihenfolge: API liefert Node-Reihenfolge nicht garantiert stabil
+            nodes_to_check.sort()
             
             # Hole Storage-Daten für jeden Node
             for node_name in nodes_to_check:
@@ -532,8 +536,9 @@ def get_cluster_stats(
                     available=total_avail
                 )
             
-            # Erstelle Storage By Node Liste
-            for node_name, node_storages in storage_by_node_dict.items():
+            # Erstelle Storage By Node Liste (sortiert nach Node-Name)
+            for node_name in sorted(storage_by_node_dict.keys()):
+                node_storages = storage_by_node_dict[node_name]
                 node_used = sum(s.used for s in node_storages)
                 node_total = sum(s.total for s in node_storages)
                 node_percent = (node_used / node_total * 100) if node_total > 0 else 0
@@ -559,10 +564,12 @@ def get_cluster_stats(
                     percent=type_percent,
                     count=len(type_storages)
                 ))
+
+            stats.storage_by_type.sort(key=lambda x: (x.type or "").lower())
             
         except Exception as e:
             logger.warning(f"Could not fetch storage data: {e}")
-        
+
         # ========================================
         # CEPH-DATEN sammeln
         # ========================================
@@ -625,14 +632,14 @@ def get_cluster_stats(
             # Ceph nicht verfügbar (normal bei Nicht-Ceph-Clustern)
             logger.info(f"Ceph not available: {str(e)}")
             stats.ceph = CephHealth(available=False)
-        
+
         # ========================================
         # Top-Listen sortieren
         # ========================================
         stats.top_cpu_usage = sorted(all_usage_items, key=lambda x: x.cpu_percent, reverse=True)[:top_n]
         stats.top_memory_usage = sorted(all_usage_items, key=lambda x: x.memory_percent, reverse=True)[:top_n]
         stats.top_disk_usage = sorted(all_usage_items, key=lambda x: x.disk_percent, reverse=True)[:top_n]
-        
+
         log_audit(
             action="VIEW_CLUSTER_STATS",
             status="success",
@@ -640,7 +647,7 @@ def get_cluster_stats(
             ip_address=client_ip,
             details={"dashboard_id": dashboard_id}
         )
-        
+
         return stats
         
     except HTTPException:

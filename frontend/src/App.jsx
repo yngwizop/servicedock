@@ -13,6 +13,7 @@ import ClockWidget from "./components/ClockWidget";
 import WeatherWidget from "./components/WeatherWidget";
 import Sidebar from "./components/Sidebar";
 import { authenticatedFetch } from './utils/auth';
+import { fetchProxmoxVmBundle, fetchProxmoxClusterStatsPrefetch } from './utils/fetchProxmoxBundle';
 import { useTranslation } from 'react-i18next';
 
 // Hooks
@@ -68,6 +69,8 @@ function App() {
   const [activeTab, setActiveTab] = useState("services");
   const [spotifyConfigured, setSpotifyConfigured] = useState(false);
   const [weatherLocationInfo, setWeatherLocationInfo] = useState(null);
+  /** Proxmox-Daten schon laden, bevor der VM/LXC-Tab geöffnet wird (entlastet ersten Klick). */
+  const [proxmoxWarm, setProxmoxWarm] = useState(null);
   
   // Wallpaper für Login-Screen (public, kein Auth nötig)
   const [loginWallpaper, setLoginWallpaper] = useState(null);
@@ -114,6 +117,49 @@ function App() {
   useEffect(() => {
     fetchData();
   }, [activeDashboard]);
+
+  // Proxmox-Warmup: parallel zu Homelab, solange Proxmox für das aktive Dashboard aktiv ist
+  useEffect(() => {
+    if (!auth.isLoggedIn) {
+      setProxmoxWarm(null);
+      return;
+    }
+    const row = dashboards.find((d) => d.id === activeDashboard);
+    if (!row?.show_proxmox) {
+      setProxmoxWarm(null);
+      return;
+    }
+
+    const rid = activeDashboard;
+    let cancelled = false;
+    setProxmoxWarm({ status: 'loading', dashboardId: rid });
+
+    (async () => {
+      const bundle = await fetchProxmoxVmBundle(rid);
+      if (cancelled) return;
+      setProxmoxWarm({
+        status: 'ready',
+        dashboardId: rid,
+        bundle: { ...bundle, clusterStatsPrefetch: null },
+      });
+      if (!bundle.configured || !bundle.ok) return;
+
+      void fetchProxmoxClusterStatsPrefetch(rid).then((pref) => {
+        if (cancelled || !pref) return;
+        setProxmoxWarm((prev) => {
+          if (prev?.dashboardId !== rid || prev?.status !== 'ready') return prev;
+          return {
+            ...prev,
+            bundle: { ...prev.bundle, clusterStatsPrefetch: pref },
+          };
+        });
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.isLoggedIn, activeDashboard, dashboards]);
 
   // Keyboard Shortcut für globale Suche (Strg+F / Cmd+F)
   useEffect(() => {
@@ -379,6 +425,7 @@ function App() {
               searchTerm={searchTerm}
               onOpenSettings={() => setActiveTab('settings')}
               isAdmin={auth.isAdmin}
+              proxmoxWarm={proxmoxWarm}
             />
           )}
 

@@ -25,7 +25,7 @@ function NodeStatusCard({ stats }) {
       icon={<HardDrives size={28} weight="duotone" />}
       compact
     >
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col">
         {/* Mini Stat - Health Indicator */}
         <div className={`mb-3 px-2 py-1 rounded-md ${health.bgColor} flex items-center justify-between`}>
           <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Health</span>
@@ -33,7 +33,7 @@ function NodeStatusCard({ stats }) {
         </div>
 
         {/* Main Stats */}
-        <div className="space-y-3 flex-1">
+        <div className="space-y-3">
           {/* Online Nodes */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

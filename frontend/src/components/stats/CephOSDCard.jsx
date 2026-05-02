@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { HardDrives, CheckCircle, XCircle } from 'phosphor-react';
+import { HardDrives, CheckCircle, XCircle, Disc } from 'phosphor-react';
 import StatCard from './StatCard';
 
 /**
@@ -16,7 +16,7 @@ function CephOSDCard({ ceph }) {
         icon={<HardDrives size={28} weight="duotone" />}
       >
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="text-6xl mb-3">💿</div>
+          <Disc size={72} weight="duotone" className="mb-3 text-gray-500/50 dark:text-gray-400/35" />
           <div className="text-sm text-gray-600 dark:text-gray-400">
             {t('stats.no_osd')}
           </div>
@@ -40,10 +40,10 @@ function CephOSDCard({ ceph }) {
       title="Ceph OSDs"
       icon={<HardDrives size={28} weight="duotone" />}
     >
-      <div className="flex flex-col h-full">
-        <div className="space-y-1.5">
+      <div className="flex flex-col">
+        <div className="space-y-1.5 text-center">
           {/* Total OSDs */}
-          <div className="text-center">
+          <div>
             <div className="text-3xl font-bold text-gray-800 dark:text-white">
               {osd.total}
             </div>
@@ -52,15 +52,16 @@ function CephOSDCard({ ceph }) {
             </div>
           </div>
 
-          {/* Health Percentage */}
-          <div className="text-center">
+          {/* Health Percentage — Abstand zur Kachel-Matrix */}
+          <div className="pb-1">
             <div className={`text-xl font-bold ${getHealthColor()}`}>
               {healthyPercent.toFixed(0)}% Healthy
             </div>
           </div>
+        </div>
 
-          {/* OSD Status Grid */}
-          <div className="grid grid-cols-2 gap-2">
+        {/* OSD Status Grid */}
+        <div className="mt-3 grid grid-cols-2 gap-2">
             {/* Up */}
             <div className="p-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
               <div className="flex items-center justify-between mb-0.5">
@@ -104,16 +105,15 @@ function CephOSDCard({ ceph }) {
                 {osd.out}
               </div>
             </div>
-          </div>
+        </div>
 
-        {/* Status Info */}
-        <div className="pt-1 mt-auto border-t border-gray-300/30 dark:border-white/10">
-            <div className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
-              <div>• <strong>Up:</strong> OSD is running and reachable</div>
-              <div>• <strong>In:</strong> OSD is part of the cluster</div>
-              <div>• <strong>Down:</strong> OSD is not responding</div>
-              <div>• <strong>Out:</strong> OSD is removed from data distribution</div>
-            </div>
+        {/* Legende — Abstand zum Grid + zur Trennlinie */}
+        <div className="mt-4 pt-3 border-t border-gray-300/30 dark:border-white/10">
+          <div className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
+            <div>• <strong>Up:</strong> OSD is running and reachable</div>
+            <div>• <strong>In:</strong> OSD is part of the cluster</div>
+            <div>• <strong>Down:</strong> OSD is not responding</div>
+            <div>• <strong>Out:</strong> OSD is removed from data distribution</div>
           </div>
         </div>
       </div>

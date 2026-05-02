@@ -30,9 +30,9 @@ function TaskSummaryCard({ stats }) {
       compact
     >
       {total > 0 && by_node && by_node.length > 0 ? (
-        <div className="flex flex-col h-full">
-          {/* Node Tasks - ohne Status Badge */}
-          <div className="space-y-2 flex-1">
+        <div className="flex flex-col">
+          {/* Kein flex-1/h-full: sonst streckt die Liste die Zelle und erzeugt Leerraum vor „Total“ */}
+          <div className="space-y-2">
             {by_node.map((nodeData, index) => {
               const nodeTotal = nodeData.failed + nodeData.running + nodeData.success;
               

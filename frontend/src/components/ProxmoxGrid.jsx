@@ -6,6 +6,7 @@ import ProxmoxStatusDashboard from './ProxmoxStatusDashboard';
 import { ArrowsClockwise, WarningCircle, GearSix, LockKey, FunnelSimple, SortAscending, MagnifyingGlass, MonitorPlay, Desktop, ChartBar } from 'phosphor-react';
 import CustomSelect from './CustomSelect';
 import { authenticatedFetch } from '../utils/auth';
+import { fetchProxmoxVmBundle, fetchProxmoxClusterStatsPrefetch } from '../utils/fetchProxmoxBundle';
 
 // Backend-URL: Mit Nginx kein Port, ohne Nginx Port 8000
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
@@ -14,7 +15,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
     `${window.location.protocol}//${window.location.hostname}:8000`
   );
 
-function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, searchTerm = "", isAdmin = true }) {
+function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, searchTerm = "", isAdmin = true, proxmoxWarm = null }) {
   const { t } = useTranslation();
   // Sub-Navigation State
   const [activeView, setActiveView] = useState('resources'); // 'resources' oder 'status'
@@ -73,84 +74,131 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [proxmoxName, setProxmoxName] = useState(''); // NEU: Cluster/Server Name
   const [isCluster, setIsCluster] = useState(false); // NEU: Ist es ein Cluster?
-  
+  /** Parallel zu VM-Liste geladene Cluster-Stats (Status Overview), damit der Tab nicht erst beim Klick 5s wartet */
+  const [clusterStatsPrefetch, setClusterStatsPrefetch] = useState(null);
+
   // Filter & Sort States
   const [sortBy, setSortBy] = useState('name-asc'); // name-asc, name-desc, status, type
   const [filterType, setFilterType] = useState('all'); // all, qemu, lxc
   const [filterStatus, setFilterStatus] = useState('all'); // all, running, stopped
 
-  // Lade Proxmox-Daten
-  const fetchProxmoxData = async (dashboardId) => {
-    // dashboardId als Parameter, um stale closure zu vermeiden
+  // VM/LXC zuerst (schnell), cluster-stats danach im Hintergrund (Status-Übersicht / Prefetch)
+  const fetchProxmoxData = async (dashboardId, options = {}) => {
+    const { resetForLoad = true } = options;
     const currentDashboard = dashboardId ?? activeDashboard;
-    
-    try {
+    let runStatsPrefetch = false;
+
+    if (resetForLoad) {
+      setClusterStatsPrefetch(null);
       setError(null);
-      
-      // Prüfe erst, ob Proxmox konfiguriert ist
-      const configRes = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/config?dashboard_id=${currentDashboard}`);
-      const configData = await configRes.json();
-      
-      if (!configData.configured) {
+    }
+
+    try {
+      const bundle = await fetchProxmoxVmBundle(currentDashboard);
+
+      if (!bundle.configured) {
         setIsConfigured(false);
-        setResources([]); // ✅ Leere die alten Daten
-        setNodes([]); // ✅ Leere die alten Node-Daten
-        setProxmoxName(''); // ✅ Leere den Namen
+        setResources([]);
+        setNodes([]);
+        setProxmoxName('');
         setIsCluster(false);
+        setClusterStatsPrefetch(null);
         setLoading(false);
         return;
       }
-      
+
       setIsConfigured(true);
-      setIsCluster(configData.is_cluster || false);
-      
-      // Hole VM/LXC Daten
-      const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vms?dashboard_id=${currentDashboard}`);
-      
-      if (!res.ok) {
-        // Versuche detaillierte Fehlermeldung vom Backend zu holen
-        try {
-          const errorData = await res.json();
-          throw new Error(errorData.detail || 'Failed to fetch Proxmox data');
-        } catch (jsonErr) {
-          throw new Error(`HTTP ${res.status}: Failed to fetch Proxmox data`);
-        }
+
+      if (!bundle.ok) {
+        setResources([]);
+        setNodes([]);
+        setProxmoxName('');
+        setIsCluster(false);
+        setClusterStatsPrefetch(null);
+        setError(bundle.error || 'Failed to load Proxmox');
+        setLoading(false);
+        return;
       }
-      
-      const data = await res.json();
-      setResources(data.resources || []);
-      setNodes(data.nodes || []); // NEU: Speichere Node-Daten
-      
-      // Setze den Namen basierend auf Modus und API-Daten
-      if (configData.is_cluster) {
-        // Cluster: Nutze Clusternamen vom Backend
-        setProxmoxName(data.cluster_name || 'Cluster');
-      } else {
-        // Standalone: Nutze ersten Node-Namen aus nodes array
-        if (data.nodes && data.nodes.length > 0) {
-          setProxmoxName(data.nodes[0].node || 'Server');
-        } else {
-          setProxmoxName('Server');
-        }
-      }
+
+      setIsCluster(bundle.isCluster);
+      setResources(bundle.resources);
+      setNodes(bundle.nodes);
+      setProxmoxName(bundle.proxmoxName);
+      setError(null);
+      runStatsPrefetch = true;
     } catch (err) {
       console.error('Error fetching Proxmox data:', err);
       setError(err.message || 'Failed to connect to Proxmox');
     } finally {
       setLoading(false);
     }
+
+    if (runStatsPrefetch) {
+      void fetchProxmoxClusterStatsPrefetch(currentDashboard).then((pref) => {
+        if (pref) setClusterStatsPrefetch(pref);
+      });
+    }
   };
 
-  // Initial load
+  // Initial load / Dashboard-Wechsel — bei fertigem App-Warmup sofort anzeigen, ohne leeren Zwischenstand
   useEffect(() => {
-    if (isLoggedIn) {
-      // ✅ Beim Dashboard-Wechsel sofort Daten zurücksetzen
-      setLoading(true);
-      setResources([]);
-      setNodes([]);
-      fetchProxmoxData(activeDashboard); // Explizit dashboard_id übergeben
+    if (!isLoggedIn) return;
+
+    const rid = activeDashboard;
+    const warm = proxmoxWarm;
+    const warmReady =
+      warm?.status === 'ready' &&
+      warm?.bundle &&
+      String(warm.dashboardId) === String(rid);
+
+    if (warmReady) {
+      const b = warm.bundle;
+      if (!b.configured) {
+        setIsConfigured(false);
+        setResources([]);
+        setNodes([]);
+        setProxmoxName('');
+        setIsCluster(false);
+        setClusterStatsPrefetch(null);
+        setError(null);
+        setLoading(false);
+        return;
+      }
+      if (!b.ok && b.error) {
+        setIsConfigured(true);
+        setResources([]);
+        setNodes([]);
+        setProxmoxName('');
+        setIsCluster(false);
+        setClusterStatsPrefetch(null);
+        setError(b.error);
+        setLoading(false);
+        return;
+      }
+      setIsConfigured(true);
+      setIsCluster(b.isCluster);
+      setResources(b.resources);
+      setNodes(b.nodes);
+      setProxmoxName(b.proxmoxName);
+      setClusterStatsPrefetch(b.clusterStatsPrefetch || null);
+      setError(null);
+      setLoading(false);
+      void fetchProxmoxData(rid, { resetForLoad: false });
+      return;
     }
-  }, [isLoggedIn, activeDashboard]);
+
+    setLoading(true);
+    setResources([]);
+    setNodes([]);
+    void fetchProxmoxData(rid, { resetForLoad: true });
+  }, [isLoggedIn, activeDashboard, proxmoxWarm?.status, proxmoxWarm?.dashboardId]);
+
+  // Warmup: cluster-stats trifft nach VM-Bundle ein — Prefetch in den Grid-State übernehmen
+  useEffect(() => {
+    const pref = proxmoxWarm?.bundle?.clusterStatsPrefetch;
+    if (!pref || String(pref.dashboardId) !== String(activeDashboard)) return;
+    setClusterStatsPrefetch(pref);
+  }, [proxmoxWarm?.bundle?.clusterStatsPrefetch, activeDashboard]);
 
   // Auto-refresh alle 30 Sekunden
   useEffect(() => {
@@ -319,8 +367,14 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
   // Loading
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 py-16 px-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-blue-500/30 border-t-blue-500" aria-hidden />
+        <p
+          className="text-sm text-gray-600 dark:text-gray-300 max-w-md text-center"
+          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.35)' }}
+        >
+          {t('proxmox.loading_proxmox')}
+        </p>
       </div>
     );
   }
@@ -461,6 +515,8 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
             activeDashboard={activeDashboard}
             isLoggedIn={isLoggedIn}
             textColor={textColor}
+            clusterStatsPrefetch={clusterStatsPrefetch}
+            onClusterStatsPrefetchConsumed={() => setClusterStatsPrefetch(null)}
           />
       </div>
 

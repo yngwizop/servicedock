@@ -125,6 +125,7 @@
     "configure_hint": "Please configure the Proxmox connection in the settings.",
     "open_settings": "Open Settings",
     "error_loading": "Error Loading",
+    "loading_proxmox": "Loading VM list… (status overview loads in the background)",
     "auto_refresh": "Auto-Refresh ({{seconds}}s)",
     "status_overview": "Status Overview",
     "search_unavailable": "Search is not available in the Status Overview. Switch to \"VM/LXC\" to search.",

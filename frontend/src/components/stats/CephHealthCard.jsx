@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Activity, CheckCircle, WarningCircle, XCircle } from 'phosphor-react';
+import { Activity, CheckCircle, WarningCircle, XCircle, Diamond } from 'phosphor-react';
 import StatCard from './StatCard';
 
 /**
@@ -16,7 +16,7 @@ function CephHealthCard({ ceph }) {
         icon={<Activity size={28} weight="duotone" />}
       >
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="text-6xl mb-3">🔷</div>
+          <Diamond size={72} weight="duotone" className="mb-3 text-cyan-600/35 dark:text-cyan-400/30" />
           <div className="text-sm text-gray-600 dark:text-gray-400">
             {t('stats.ceph_unavailable')}
           </div>

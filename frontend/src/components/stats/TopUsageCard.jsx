@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Cpu, Database } from 'phosphor-react';
 import StatCard from './StatCard';
+import { TopListResourceIcon } from './StatusDashboardIcons';
 
 /**
  * Zeigt Top CPU oder Memory Usage an
@@ -23,20 +24,6 @@ function TopUsageCard({ title, items, usageType = "cpu" }) {
     if (percent >= 80) return 'text-red-600 dark:text-red-400';
     if (percent >= 60) return 'text-orange-600 dark:text-orange-400';
     return 'text-green-600 dark:text-green-400';
-  };
-
-  // Icon basierend auf Typ
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case 'node':
-        return '🖥️';
-      case 'qemu':
-        return '💻';
-      case 'lxc':
-        return '📦';
-      default:
-        return '❓';
-    }
   };
 
   return (
@@ -63,8 +50,8 @@ function TopUsageCard({ title, items, usageType = "cpu" }) {
                 </div>
 
                 {/* Type Icon */}
-                <div className="flex-shrink-0 text-lg">
-                  {getTypeIcon(item.type)}
+                <div className="flex-shrink-0 flex items-center justify-center w-7">
+                  <TopListResourceIcon type={item.type} />
                 </div>
 
                 {/* Name & Node */}
