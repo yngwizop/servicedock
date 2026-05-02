@@ -32,7 +32,8 @@ const PRESET_WALLPAPERS = [
 ];
 
 // Leichtere Sub-Sektion innerhalb der äußeren Glass-Card (kein doppelter Glaseffekt)
-const sectionCard = "bg-white/30 dark:bg-gray-800/65 rounded-xl p-5 border border-gray-200/40 dark:border-white/15";
+const sectionCard =
+  'bg-white/30 dark:bg-gray-800/55 rounded-2xl p-5 border border-gray-200/25 dark:border-white/[0.07] shadow-sm shadow-black/[0.03] dark:shadow-black/20';
 const inputClass = "w-full border border-gray-300/50 dark:border-white/10 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all text-sm";
 const labelClass = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2";
 
@@ -190,9 +191,9 @@ function AppearanceTab({
             <button
               type="button"
               onClick={() => setEditAppearance({ ...editAppearance, bg_image_url: '' })}
-              className={`group relative rounded-xl overflow-hidden border-2 transition-all duration-200 aspect-[16/10] flex items-center justify-center ${
+              className={`group relative isolate rounded-xl overflow-hidden border-2 transition-all duration-200 aspect-[16/10] flex items-center justify-center ${
                 !editAppearance.bg_image_url
-                  ? 'border-blue-500 ring-2 ring-blue-500/30 shadow-lg shadow-blue-500/20'
+                  ? 'border-blue-500 ring-2 ring-inset ring-blue-500/35 shadow-lg shadow-blue-500/15'
                   : 'border-gray-300/50 dark:border-white/10 hover:border-gray-400 dark:hover:border-white/20'
               }`}
             >
@@ -213,17 +214,17 @@ function AppearanceTab({
                 key={wp.id}
                 type="button"
                 onClick={() => setEditAppearance({ ...editAppearance, bg_image_url: wp.file })}
-                className={`group relative rounded-xl overflow-hidden border-2 transition-all duration-200 aspect-[16/10] bg-gray-200 dark:bg-gray-700 ${
+                className={`group relative isolate rounded-xl overflow-hidden border-2 transition-all duration-200 aspect-[16/10] bg-gray-200 dark:bg-gray-700 ${
                   isActiveWallpaper(wp.file)
-                    ? 'border-blue-500 ring-2 ring-blue-500/30 shadow-lg shadow-blue-500/20 scale-[1.02]'
-                    : 'border-gray-300/50 dark:border-white/10 hover:border-gray-400 dark:hover:border-white/20 hover:scale-[1.02]'
+                    ? 'border-blue-500 ring-2 ring-inset ring-blue-500/35 shadow-lg shadow-blue-500/15'
+                    : 'border-gray-300/50 dark:border-white/10 hover:border-gray-400 dark:hover:border-white/20'
                 }`}
               >
                 <img
                   src={wp.file}
                   alt={t(wp.nameKey)}
                   loading={index < 5 ? "eager" : "lazy"}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  className="h-full w-full rounded-xl object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-1.5 pb-1 pt-4">
                   <span className="text-[10px] font-medium text-white drop-shadow-sm">{t(wp.nameKey)}</span>
@@ -259,17 +260,17 @@ function AppearanceTab({
                   <button
                     type="button"
                     onClick={() => setEditAppearance({ ...editAppearance, bg_image_url: wp.url })}
-                    className={`w-full rounded-xl overflow-hidden border-2 transition-all duration-200 aspect-[16/10] ${
+                    className={`isolate w-full rounded-xl overflow-hidden border-2 transition-all duration-200 aspect-[16/10] ${
                       isActiveWallpaper(wp.url)
-                        ? 'border-blue-500 ring-2 ring-blue-500/30 shadow-lg shadow-blue-500/20 scale-[1.02]'
-                        : 'border-gray-300/50 dark:border-white/10 hover:border-gray-400 dark:hover:border-white/20 hover:scale-[1.02]'
+                        ? 'border-blue-500 ring-2 ring-inset ring-blue-500/35 shadow-lg shadow-blue-500/15'
+                        : 'border-gray-300/50 dark:border-white/10 hover:border-gray-400 dark:hover:border-white/20'
                     }`}
                   >
                     <img
                       src={wp.url}
                       alt={wp.filename}
                       loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      className="h-full w-full rounded-xl object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                     {isActiveWallpaper(wp.url) && (
                       <div className="absolute top-1 right-1">
@@ -291,7 +292,7 @@ function AppearanceTab({
 
               {/* Upload Button */}
               <label
-                className={`relative rounded-xl overflow-hidden border-2 border-dashed transition-all duration-200 aspect-[16/10] flex flex-col items-center justify-center cursor-pointer ${
+                className={`relative isolate rounded-xl overflow-hidden border-2 border-dashed transition-all duration-200 aspect-[16/10] flex flex-col items-center justify-center cursor-pointer ${
                   isUploading
                     ? 'border-blue-400 bg-blue-500/10'
                     : 'border-gray-300/50 dark:border-white/15 hover:border-blue-400 dark:hover:border-blue-400/50 hover:bg-blue-500/5'

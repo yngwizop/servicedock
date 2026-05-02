@@ -287,6 +287,7 @@
     "help": "Wenn das Problem bestehen bleibt, wende dich an den Support."
   },
   "settings": {
+    "nav_sections_aria": "Einstellungsbereiche",
     "tabs": {
       "appearance": "Appearance",
       "dashboards": "Dashboards",

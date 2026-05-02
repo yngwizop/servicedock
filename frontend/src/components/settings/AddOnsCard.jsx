@@ -287,123 +287,129 @@ function AddOnsCard() {
         </p>
       </div>
 
-      {/* Config Import/Export Card */}
-      <div 
-        className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ring-2 ring-blue-500/30 hover:ring-blue-500/50"
+      {/* Config — gleiche Flächen-Farbe wie LDAP-Karte (nur Icon/Tags bleiben blau) */}
+      <div
+        className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.01] backdrop-blur-xl p-6
+          bg-gradient-to-br from-violet-200/38 via-slate-200/58 to-indigo-200/42
+          dark:from-indigo-950/64 dark:via-slate-900/74 dark:to-slate-950/82
+          ring-1 ring-inset ring-violet-300/35 dark:ring-indigo-400/18
+          shadow-lg shadow-violet-900/[0.06] dark:shadow-black/30
+          hover:ring-violet-400/45 dark:hover:ring-indigo-300/28 hover:shadow-xl"
         onClick={() => setShowConfigModal(true)}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent dark:from-blue-400/35 dark:via-blue-500/20 dark:to-transparent" />
-        <div className="relative backdrop-blur-xl bg-white/30 dark:bg-gray-800/70 border border-gray-200/40 dark:border-white/15 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                <span className="text-3xl">⚙️</span>
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.config_title')}</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{t('addons.config_subtitle')}</p>
-              </div>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+              <span className="text-3xl">⚙️</span>
             </div>
-            <div className="text-2xl text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">→</div>
+            <div>
+              <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.config_title')}</h4>
+              <p className="text-sm text-gray-600 dark:text-slate-300">{t('addons.config_subtitle')}</p>
+            </div>
           </div>
-          <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-            {t('addons.config_description')}
-          </p>
-          <div className="flex gap-2">
-            <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">📥 Export</span>
-            <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">📤 Import</span>
-            <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">🔒 Admin-only</span>
-          </div>
+          <div className="text-2xl text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">→</div>
+        </div>
+        <p className="text-sm text-gray-700 dark:text-slate-200/95 mb-4">
+          {t('addons.config_description')}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/12 dark:bg-blue-400/15 text-blue-800 dark:text-blue-200">📥 Export</span>
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/12 dark:bg-blue-400/15 text-blue-800 dark:text-blue-200">📤 Import</span>
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/12 dark:bg-blue-400/15 text-blue-800 dark:text-blue-200">🔒 Admin-only</span>
         </div>
       </div>
 
-      {/* Spotify AddOn Card */}
-      <div 
-        className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ring-2 ring-green-500/30 hover:ring-green-500/50"
+      {/* Spotify */}
+      <div
+        className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.01] backdrop-blur-xl p-6
+          bg-gradient-to-br from-emerald-200/40 via-slate-200/58 to-teal-200/42
+          dark:from-emerald-950/55 dark:via-slate-900/72 dark:to-slate-950/80
+          ring-1 ring-inset ring-emerald-300/35 dark:ring-emerald-400/18
+          shadow-lg shadow-emerald-900/[0.06] dark:shadow-black/30
+          hover:ring-emerald-400/45 dark:hover:ring-emerald-300/28 hover:shadow-xl"
         onClick={() => setShowSpotifyModal(true)}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent dark:from-green-400/35 dark:via-green-500/20 dark:to-transparent" />
-        <div className="relative backdrop-blur-xl bg-white/30 dark:bg-gray-800/70 border border-gray-200/40 dark:border-white/15 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                <span className="text-3xl">🎵</span>
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.spotify_title')}</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{t('addons.spotify_subtitle')}</p>
-              </div>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+              <span className="text-3xl">🎵</span>
             </div>
-            <div className="flex items-center gap-3">
-              {spotifyStatus.connected ? (
-                <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm font-semibold rounded-full">
-                  {t('addons.connected')}
-                </span>
-              ) : spotifyStatus.configured ? (
-                <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-sm font-semibold rounded-full">
-                  {t('addons.configured')}
-                </span>
-              ) : (
-                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 text-sm font-semibold rounded-full">
-                  {t('addons.not_installed')}
-                </span>
-              )}
-              <div className="text-2xl text-green-600 dark:text-green-400 group-hover:translate-x-1 transition-transform">→</div>
+            <div>
+              <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.spotify_title')}</h4>
+              <p className="text-sm text-gray-600 dark:text-slate-300">{t('addons.spotify_subtitle')}</p>
             </div>
           </div>
-          <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-            {t('addons.spotify_description')}
-          </p>
-          <div className="flex gap-2">
-            <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">🎵 Widget</span>
-            <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">🔗 OAuth</span>
-            <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">🔒 Encrypted</span>
+          <div className="flex items-center gap-3">
+            {spotifyStatus.connected ? (
+              <span className="px-3 py-1 bg-green-500/15 dark:bg-green-400/20 text-green-800 dark:text-green-200 text-sm font-semibold rounded-full">
+                {t('addons.connected')}
+              </span>
+            ) : spotifyStatus.configured ? (
+              <span className="px-3 py-1 bg-amber-500/15 dark:bg-amber-400/18 text-amber-900 dark:text-amber-200 text-sm font-semibold rounded-full">
+                {t('addons.configured')}
+              </span>
+            ) : (
+              <span className="px-3 py-1 bg-white/40 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-full">
+                {t('addons.not_installed')}
+              </span>
+            )}
+            <div className="text-2xl text-green-600 dark:text-green-400 group-hover:translate-x-1 transition-transform">→</div>
           </div>
+        </div>
+        <p className="text-sm text-gray-700 dark:text-slate-200/95 mb-4">
+          {t('addons.spotify_description')}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/12 dark:bg-emerald-400/15 text-emerald-900 dark:text-emerald-200">🎵 Widget</span>
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/12 dark:bg-emerald-400/15 text-emerald-900 dark:text-emerald-200">🔗 OAuth</span>
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/12 dark:bg-emerald-400/15 text-emerald-900 dark:text-emerald-200">🔒 Encrypted</span>
         </div>
       </div>
 
-      {/* LDAP/Active Directory AddOn Card */}
-      <div 
-        className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ring-2 ring-indigo-500/30 hover:ring-indigo-500/50"
+      {/* LDAP */}
+      <div
+        className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.01] backdrop-blur-xl p-6
+          bg-gradient-to-br from-violet-200/38 via-slate-200/58 to-indigo-200/42
+          dark:from-indigo-950/64 dark:via-slate-900/74 dark:to-slate-950/82
+          ring-1 ring-inset ring-violet-300/35 dark:ring-indigo-400/18
+          shadow-lg shadow-violet-900/[0.06] dark:shadow-black/30
+          hover:ring-violet-400/45 dark:hover:ring-indigo-300/28 hover:shadow-xl"
         onClick={() => setShowLdapModal(true)}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-indigo-400/10 to-transparent dark:from-indigo-400/35 dark:via-indigo-500/20 dark:to-transparent" />
-        <div className="relative backdrop-blur-xl bg-white/30 dark:bg-gray-800/70 border border-gray-200/40 dark:border-white/15 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                <span className="text-3xl">🔐</span>
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.ldap_title')}</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{t('addons.ldap_subtitle')}</p>
-              </div>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+              <span className="text-3xl">🔐</span>
             </div>
-            <div className="flex items-center gap-3">
-              {ldapStatus.enabled ? (
-                <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-semibold rounded-full">
-                  {t('addons.active')}
-                </span>
-              ) : ldapStatus.configured ? (
-                <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-sm font-semibold rounded-full">
-                  {t('addons.configured')}
-                </span>
-              ) : (
-                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 text-sm font-semibold rounded-full">
-                  {t('addons.not_installed')}
-                </span>
-              )}
-              <div className="text-2xl text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform">→</div>
+            <div>
+              <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.ldap_title')}</h4>
+              <p className="text-sm text-gray-600 dark:text-slate-300">{t('addons.ldap_subtitle')}</p>
             </div>
           </div>
-          <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-            {t('addons.ldap_description')}
-          </p>
-          <div className="flex gap-2">
-            <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">{t('addons.ldap_tag_ad')}</span>
-            <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">{t('addons.ldap_tag_roles')}</span>
-            <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">🔒 Encrypted</span>
+          <div className="flex items-center gap-3">
+            {ldapStatus.enabled ? (
+              <span className="px-3 py-1 bg-blue-500/15 dark:bg-blue-400/20 text-blue-800 dark:text-blue-200 text-sm font-semibold rounded-full">
+                {t('addons.active')}
+              </span>
+            ) : ldapStatus.configured ? (
+              <span className="px-3 py-1 bg-amber-500/15 dark:bg-amber-400/18 text-amber-900 dark:text-amber-200 text-sm font-semibold rounded-full">
+                {t('addons.configured')}
+              </span>
+            ) : (
+              <span className="px-3 py-1 bg-white/40 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-full">
+                {t('addons.not_installed')}
+              </span>
+            )}
+            <div className="text-2xl text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform">→</div>
           </div>
+        </div>
+        <p className="text-sm text-gray-700 dark:text-slate-200/95 mb-4">
+          {t('addons.ldap_description')}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-500/12 dark:bg-indigo-400/15 text-indigo-900 dark:text-indigo-200">{t('addons.ldap_tag_ad')}</span>
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-500/12 dark:bg-indigo-400/15 text-indigo-900 dark:text-indigo-200">{t('addons.ldap_tag_roles')}</span>
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-500/12 dark:bg-indigo-400/15 text-indigo-900 dark:text-indigo-200">🔒 Encrypted</span>
         </div>
       </div>
 

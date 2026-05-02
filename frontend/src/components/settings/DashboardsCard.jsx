@@ -191,10 +191,10 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
           {dashboards.map(dashboard => (
             <div
               key={dashboard.id}
-              className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${
+              className={`group relative isolate overflow-hidden rounded-2xl transition-all duration-300 ${
                 dashboard.id === activeDashboard
-                  ? 'ring-2 ring-blue-500/70'
-                  : 'hover:scale-[1.005]'
+                  ? 'ring-1 ring-inset ring-blue-400/30 dark:ring-blue-400/25'
+                  : ''
               }`}
             >
               <div className={`absolute inset-0 ${
@@ -202,7 +202,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
                   ? 'bg-gradient-to-br from-blue-500/15 via-blue-400/5 to-transparent dark:from-blue-400/35 dark:via-blue-500/15 dark:to-transparent'
                   : 'bg-gradient-to-br from-gray-500/5 via-transparent to-transparent dark:from-white/[0.06] dark:via-transparent dark:to-transparent'
               }`} />
-              <div className="relative bg-white/30 dark:bg-gray-800/65 border border-gray-200/40 dark:border-white/15 p-4">
+              <div className="relative rounded-2xl bg-white/30 dark:bg-gray-800/55 border border-gray-200/25 dark:border-white/[0.07] p-4 shadow-sm shadow-black/[0.03] dark:shadow-black/15">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">

@@ -287,6 +287,7 @@
     "help": "If the problem persists, please contact support."
   },
   "settings": {
+    "nav_sections_aria": "Settings sections",
     "tabs": {
       "appearance": "Appearance",
       "dashboards": "Dashboards",

@@ -30,76 +30,80 @@ function ProxmoxTab({
           </p>
         </div>
 
-        {/* Proxmox Verbindung Card */}
-        <div 
-          className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ring-2 ring-orange-500/30 hover:ring-orange-500/50"
+        {/* Proxmox Verbindung */}
+        <div
+          className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.01] backdrop-blur-xl p-6
+            bg-gradient-to-br from-orange-200/40 via-slate-200/58 to-amber-200/42
+            dark:from-orange-950/58 dark:via-slate-900/74 dark:to-slate-950/82
+            ring-1 ring-inset ring-orange-300/40 dark:ring-orange-400/18
+            shadow-lg shadow-orange-900/[0.06] dark:shadow-black/30
+            hover:ring-orange-400/50 dark:hover:ring-orange-300/28 hover:shadow-xl"
           onClick={() => setShowConnectionModal(true)}
         >
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-red-400/10 to-transparent dark:from-orange-400/35 dark:via-red-500/20 dark:to-transparent" />
-            <div className="relative backdrop-blur-xl bg-white/30 dark:bg-gray-800/70 border border-gray-200/40 dark:border-white/15 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <span className="text-3xl">🔗</span>
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('proxmoxTab.connection')}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('proxmoxTab.connection_desc')}</p>
-                  </div>
-                </div>
-                <div className="text-2xl text-orange-600 dark:text-orange-400 group-hover:translate-x-1 transition-transform">→</div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                <span className="text-3xl">🔗</span>
               </div>
-              <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                {t('proxmoxTab.connection_body')}
-              </p>
-              <div className="flex items-center gap-2">
-                {savedTokenName ? (
-                  <>
-                    <span className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5">
-                    <span>✓</span> {t('proxmoxTab.configured')}
-                  </span>
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    Token: {savedTokenName}
-                  </span>
-                </>
-                ) : (
-                  <span className="text-xs bg-gray-500 text-white px-3 py-1.5 rounded-full font-medium">
-                    {t('common.not_configured')}
-                  </span>
-                )}
+              <div>
+                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('proxmoxTab.connection')}</h4>
+                <p className="text-sm text-gray-600 dark:text-slate-300">{t('proxmoxTab.connection_desc')}</p>
               </div>
             </div>
+            <div className="text-2xl text-orange-600 dark:text-orange-400 group-hover:translate-x-1 transition-transform">→</div>
           </div>
+          <p className="text-sm text-gray-700 dark:text-slate-200/95 mb-4">
+            {t('proxmoxTab.connection_body')}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {savedTokenName ? (
+              <>
+                <span className="text-xs bg-emerald-600/90 text-white px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5">
+                  <span>✓</span> {t('proxmoxTab.configured')}
+                </span>
+                <span className="text-xs text-slate-600 dark:text-slate-300">
+                  Token: {savedTokenName}
+                </span>
+              </>
+            ) : (
+              <span className="text-xs bg-white/50 dark:bg-white/12 text-gray-800 dark:text-gray-200 px-3 py-1.5 rounded-full font-medium">
+                {t('common.not_configured')}
+              </span>
+            )}
+          </div>
+        </div>
 
-        {/* Proxmox Dashboard Settings Card */}
-        <div 
-          className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ring-2 ring-blue-500/30 hover:ring-blue-500/50"
+        {/* Proxmox Dashboard Settings */}
+        <div
+          className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.01] backdrop-blur-xl p-6
+            bg-gradient-to-br from-sky-200/38 via-slate-200/58 to-cyan-200/40
+            dark:from-sky-950/58 dark:via-slate-900/74 dark:to-slate-950/82
+            ring-1 ring-inset ring-sky-300/38 dark:ring-sky-400/16
+            shadow-lg shadow-sky-900/[0.06] dark:shadow-black/30
+            hover:ring-sky-400/48 dark:hover:ring-sky-300/26 hover:shadow-xl"
           onClick={() => setShowDashboardModal(true)}
         >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-cyan-400/10 to-transparent dark:from-blue-400/35 dark:via-cyan-500/20 dark:to-transparent" />
-            <div className="relative backdrop-blur-xl bg-white/30 dark:bg-gray-800/70 border border-gray-200/40 dark:border-white/15 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <span className="text-3xl">📊</span>
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('proxmoxTab.monitoring_dashboard')}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('proxmoxTab.dashboard_desc')}</p>
-                  </div>
-                </div>
-                <div className="text-2xl text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">→</div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                <span className="text-3xl">📊</span>
               </div>
-              <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                {t('proxmoxTab.dashboard_body')}
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium">
-                  {t('proxmoxTab.dashboard_settings')}
-                </span>
+              <div>
+                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('proxmoxTab.monitoring_dashboard')}</h4>
+                <p className="text-sm text-gray-600 dark:text-slate-300">{t('proxmoxTab.dashboard_desc')}</p>
               </div>
             </div>
+            <div className="text-2xl text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">→</div>
           </div>
+          <p className="text-sm text-gray-700 dark:text-slate-200/95 mb-4">
+            {t('proxmoxTab.dashboard_body')}
+          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-xs bg-blue-600/90 text-white px-3 py-1.5 rounded-full font-medium">
+              {t('proxmoxTab.dashboard_settings')}
+            </span>
+          </div>
+        </div>
 
       {/* Connection Modal */}
       {showConnectionModal && createPortal(

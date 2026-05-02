@@ -148,60 +148,83 @@ function SettingsPage({
   };
 
   const currentTips = sectionTips[activeSection] || sectionTips.appearance;
-  const cardClass = "glass rounded-2xl shadow-xl p-6";
+  const TipsSectionIcon = currentTips.icon;
+
+  // Sub-Nav: gleiche aktive Fläche wie Sidebar
+  const navButtonActive =
+    'bg-blue-500 text-white shadow-lg shadow-blue-500/30';
+  const navButtonInactive =
+    'text-gray-800 dark:text-gray-100 hover:bg-white/60 dark:hover:bg-white/[0.12]';
+
+  // Shell: hell = lesbar; dunkel = Slate-Glas (weniger „reines Schwarz“), weiterhin blur
+  const settingsShell =
+    'rounded-3xl overflow-hidden border border-white/28 dark:border-white/[0.07] ' +
+    'bg-gradient-to-br from-white/[0.78] via-white/[0.65] to-white/[0.55] ' +
+    'dark:from-slate-900/55 dark:via-slate-800/48 dark:to-slate-900/52 ' +
+    'backdrop-blur-2xl shadow-2xl dark:shadow-black/25 ' +
+    'ring-1 ring-black/[0.05] dark:ring-0';
+  const rowDivider = 'lg:divide-x lg:divide-white/18 dark:lg:divide-white/[0.06]';
 
   return (
-    <div className="max-w-[1400px] mx-auto">
-      {/* Mobile Tab-Navigation */}
-      <div className="lg:hidden flex gap-1 bg-white/70 dark:bg-white/10 backdrop-blur-xl rounded-2xl p-1.5 border border-gray-400/60 dark:border-white/20 shadow-lg mb-6">
-        {sections.map((section) => (
-          <button
-            key={section.id}
-            onClick={() => setActiveSection(section.id)}
-            className={`flex-1 py-2 px-2 transition-all duration-300 rounded-xl text-sm font-semibold ${
-              activeSection === section.id
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-white/10'
-            }`}
-            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
-          >
-            <section.icon size={16} weight="bold" className="inline mr-1 -mt-0.5" />
-            {section.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Desktop: Sidebar + Active Section */}
-      <div className="lg:flex gap-6 items-start">
-        {/* Sticky Sidebar Nav */}
-        <div className="hidden lg:block w-64 shrink-0">
-          <nav className="glass rounded-2xl shadow-xl p-3 sticky top-0 space-y-1">
+    <div className="max-w-[1400px] mx-auto pb-2">
+      <div className={settingsShell}>
+        {/* Mobile: Sub-Nav oben in der Shell */}
+        <nav
+          className="lg:hidden border-b border-white/22 dark:border-white/[0.06] bg-white/35 dark:bg-white/[0.06] px-2 py-2 overflow-x-auto"
+          aria-label={t('settings.nav_sections_aria')}
+        >
+          <div className="flex gap-1 min-w-min">
             {sections.map((section) => {
               const Icon = section.icon;
               const isActive = activeSection === section.id;
               return (
                 <button
                   key={section.id}
+                  type="button"
                   onClick={() => setActiveSection(section.id)}
-                  className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-xl text-base font-semibold transition-all duration-200 ${
-                    isActive
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-white/10'
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`flex items-center gap-2 shrink-0 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ease-in-out ${
+                    isActive ? navButtonActive : navButtonInactive
                   }`}
-                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
+                  style={isActive ? { textShadow: '0 1px 4px rgba(0,0,0,0.35)' } : undefined}
                 >
-                  <Icon size={22} weight={isActive ? 'fill' : 'duotone'} />
+                  <Icon size={20} weight={isActive ? 'fill' : 'regular'} className="shrink-0" />
                   {section.label}
                 </button>
               );
             })}
-          </nav>
-        </div>
+          </div>
+        </nav>
 
-        {/* Content: Only active section */}
-        <div className="flex-1 min-w-0">
-          {activeSection === 'appearance' && (
-            <div className={cardClass}>
+        <div className={`lg:flex lg:items-stretch lg:min-h-[min(70vh,680px)] ${rowDivider}`}>
+          {/* Desktop-Subnav */}
+          <div className="hidden lg:flex flex-col w-56 xl:w-60 shrink-0 bg-white/30 dark:bg-white/[0.05] p-3">
+            <nav className="space-y-1 sticky top-4 self-start w-full" role="navigation" aria-label={t('settings.nav_sections_aria')}>
+              {sections.map((section) => {
+                const Icon = section.icon;
+                const isActive = activeSection === section.id;
+                return (
+                  <button
+                    key={section.id}
+                    type="button"
+                    onClick={() => setActiveSection(section.id)}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[15px] font-medium transition-all duration-200 ease-in-out ${
+                      isActive ? navButtonActive : navButtonInactive
+                    }`}
+                    style={isActive ? { textShadow: '0 1px 4px rgba(0,0,0,0.35)' } : undefined}
+                  >
+                    <Icon size={22} weight={isActive ? 'fill' : 'regular'} className="shrink-0" />
+                    <span className="text-left truncate">{section.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Hauptinhalt */}
+          <main className="flex-1 min-w-0 bg-white/22 dark:bg-white/[0.04] px-5 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
+            {activeSection === 'appearance' && (
               <AppearanceTab
                 editAppearance={editAppearance}
                 setEditAppearance={setEditAppearance}
@@ -211,61 +234,58 @@ function SettingsPage({
                 showSaved={showSaved}
                 onSaveAppearance={onSaveAppearance}
               />
-            </div>
-          )}
+            )}
 
-          {activeSection === 'dashboards' && (
-            <div className={cardClass}>
+            {activeSection === 'dashboards' && (
               <DashboardsCard
                 dashboards={dashboards}
                 activeDashboard={activeDashboard}
                 onDashboardsChange={onDashboardsChange}
               />
-            </div>
-          )}
+            )}
 
-          {activeSection === 'proxmox' && (
-            <div className={cardClass}>
+            {activeSection === 'proxmox' && (
               <ProxmoxTab
                 activeDashboard={activeDashboard}
                 savedTokenName={savedTokenName}
                 onSettingsChange={handleProxmoxSettingsChange}
               />
-            </div>
-          )}
+            )}
 
-          {activeSection === 'addons' && (
-            <div className={cardClass}>
-              <AddOnsCard />
-            </div>
-          )}
+            {activeSection === 'addons' && <AddOnsCard />}
 
-          {activeSection === 'language' && (
-            <div className={cardClass}>
-              <LanguageCard />
-            </div>
-          )}
-        </div>
+            {activeSection === 'language' && <LanguageCard />}
+          </main>
 
-        {/* Contextual Tips Panel */}
-        <div className="hidden xl:block w-72 shrink-0">
-          <div className="glass rounded-2xl shadow-xl p-5 sticky top-0 transition-all duration-300">
-            <div className="flex items-center gap-2.5 mb-4">
-              <currentTips.icon size={22} weight="duotone" className={currentTips.color} />
-              <h3 className="text-base font-bold text-gray-800 dark:text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>{currentTips.title}</h3>
+          {/* Tipps: eigene Modul-Karte (kein extra border-l → kein schwarzer Naht-Rand) */}
+          <aside className="hidden xl:block w-64 2xl:w-72 shrink-0 bg-white/25 dark:bg-white/[0.05] p-3 sm:p-4">
+            <div className="sticky top-4 rounded-2xl border border-white/22 dark:border-white/[0.06] bg-white/28 dark:bg-slate-900/40 backdrop-blur-md shadow-inner dark:shadow-black/15 px-4 py-4 md:px-5 md:py-5">
+              <div className="flex items-center gap-2.5 mb-4 pb-3 border-b border-gray-400/25 dark:border-white/[0.07]">
+                <TipsSectionIcon size={22} weight="duotone" className="text-blue-600 dark:text-blue-400 shrink-0" />
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-slate-50 leading-snug tracking-tight">
+                  {currentTips.title}
+                </h3>
+              </div>
+              <ul className="space-y-3.5 list-none m-0 p-0">
+                {currentTips.tips.map((tip, i) => {
+                  const TipIcon = tip.icon;
+                  return (
+                    <li key={i} className="flex gap-2.5 items-start">
+                      <TipIcon
+                        size={17}
+                        weight="duotone"
+                        className="text-blue-600/90 dark:text-blue-300 shrink-0 mt-0.5"
+                        aria-hidden
+                      />
+                      <p className="text-sm text-gray-800 dark:text-slate-100/95 leading-relaxed m-0">
+                        {tip.text}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
-            <div className="space-y-3">
-              {currentTips.tips.map((tip, i) => {
-                const TipIcon = tip.icon;
-                return (
-                  <div key={i} className="flex gap-2.5 items-start">
-                    <TipIcon size={16} weight="duotone" className="text-blue-400 shrink-0 mt-0.5" />
-                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>{tip.text}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          </aside>
         </div>
       </div>
     </div>
