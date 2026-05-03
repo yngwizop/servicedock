@@ -383,7 +383,13 @@ function App() {
         )}
 
         {/* === CONTENT BASED ON ACTIVE TAB === */}
-        <div className={`${activeTab === 'settings' ? 'flex-1 min-h-0 overflow-y-auto settings-scroll-fade' : 'flex-grow'} relative z-[65]`}>
+        <div
+          className={`${
+            activeTab === 'settings'
+              ? 'flex-1 min-h-0 overflow-y-auto [scrollbar-gutter:stable] settings-scroll-fade'
+              : 'flex-grow'
+          } relative z-[65]`}
+        >
           {activeTab === "services" && (
             <>
               <ServiceGrid

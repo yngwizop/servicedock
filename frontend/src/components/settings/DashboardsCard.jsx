@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState, useLayoutEffect } from 'react';
 import { Pencil, SquaresFour, Plus, Desktop, Trash, Tag, Package, Link as LinkIcon } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
 import CustomSelect from '../CustomSelect';
 import SettingsModalShell from './SettingsModalShell';
+import SettingsTopicLayout from './SettingsTopicLayout';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
   (window.location.port === '' ? 
@@ -41,8 +42,23 @@ function ToggleSwitch({ checked, onChange, label, description }) {
   );
 }
 
-function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
+function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTipsTopicChange }) {
   const { t } = useTranslation();
+  const [activeTopic, setActiveTopic] = useState('overview');
+
+  useLayoutEffect(() => {
+    onTipsTopicChange?.('dashboards', activeTopic);
+  }, [activeTopic, onTipsTopicChange]);
+  const dashboardTopicGroups = useMemo(
+    () => [
+      {
+        key: 'dashboards',
+        label: t('dashboards.title'),
+        items: [{ id: 'overview', label: t('settings.topicNav.dashboards_overview_item') }],
+      },
+    ],
+    [t]
+  );
   const [dashboardName, setDashboardName] = useState('');
   const [dashboardDesc, setDashboardDesc] = useState('');
   const [dashboardType, setDashboardType] = useState('default');
@@ -145,132 +161,137 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange }) {
 
   return (
     <div className="space-y-6">
-      {/* Header mit Add-Button */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
-            <SquaresFour size={22} weight="duotone" className="text-blue-400" />
-            {t('dashboards.title')}
-          </h3>
-          <p className="text-gray-700 dark:text-gray-300 text-sm" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6), 0 0 8px rgba(255,255,255,0.5)' }}>
-            {t('dashboards.description')}
-          </p>
-        </div>
-        <button
-          onClick={openCreateModal}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] shrink-0"
-        >
-          <Plus size={18} weight="bold" />
-          {t('dashboards.add')}
-        </button>
-      </div>
-
-      {/* Dashboard-Liste */}
-      {dashboards && dashboards.length > 0 ? (
-        <div className="space-y-3">
-          {dashboards.map(dashboard => (
-            <div
-              key={dashboard.id}
-              className={`group relative isolate overflow-hidden rounded-2xl transition-all duration-300 ${
-                dashboard.id === activeDashboard
-                  ? 'ring-1 ring-inset ring-blue-400/30 dark:ring-blue-400/25'
-                  : ''
-              }`}
-            >
-              <div className={`absolute inset-0 ${
-                dashboard.id === activeDashboard
-                  ? 'bg-gradient-to-br from-blue-500/15 via-blue-400/5 to-transparent dark:from-blue-400/35 dark:via-blue-500/15 dark:to-transparent'
-                  : 'bg-gradient-to-br from-gray-500/5 via-transparent to-transparent dark:from-white/[0.06] dark:via-transparent dark:to-transparent'
-              }`} />
-              <div className="relative rounded-2xl bg-white/30 dark:bg-gray-800/55 sd-night-surface border border-gray-200/25 dark:border-white/[0.07] night:border-white/[0.06] p-4 shadow-sm shadow-black/[0.03] dark:shadow-black/15 night:shadow-black/40">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h5 className="text-base font-semibold text-gray-900 dark:text-white truncate">
-                        {dashboard.name}
-                      </h5>
-                      {dashboard.id === activeDashboard && (
-                        <span className="text-[11px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium shrink-0">
-                          {t('dashboards.active')}
-                        </span>
-                      )}
-                      {dashboard.id === 1 && (
-                        <span className="text-[11px] bg-gray-500/80 text-white px-2 py-0.5 rounded-full font-medium shrink-0">
-                          {t('dashboards.default')}
-                        </span>
-                      )}
-                    </div>
-                    {dashboard.description && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                        {dashboard.description}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-1.5 ml-3 shrink-0">
-                    <button
-                      onClick={() => openEditModal(dashboard)}
-                      className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
-                      title={t('common.edit')}
-                    >
-                      <Pencil size={16} weight="bold" />
-                    </button>
-                    
-                    {dashboards.length > 1 && (
-                      <button
-                        onClick={() => setShowDeleteConfirm(dashboard)}
-                        className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
-                        title={t('common.delete')}
-                      >
-                        <Trash size={16} weight="bold" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex flex-wrap gap-2">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-blue-500/10 text-blue-700 dark:text-blue-300">
-                    <Package size={13} weight="duotone" />
-                    {dashboard.service_count} Services
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-300">
-                    <LinkIcon size={13} weight="duotone" />
-                    {dashboard.shortcut_count} Shortcuts
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-gray-500/10 text-gray-600 dark:text-gray-300 capitalize">
-                    <Tag size={13} weight="duotone" />
-                    {dashboard.type}
-                  </span>
-                  {dashboard.show_proxmox && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-orange-500/10 text-orange-700 dark:text-orange-300">
-                      <Desktop size={13} weight="duotone" />
-                      Proxmox
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-10">
-          <SquaresFour size={40} weight="duotone" className="text-gray-400 dark:text-gray-500 mx-auto mb-3" />
-          <p className="text-gray-500 dark:text-gray-400 text-sm">{t('dashboards.no_dashboards')}</p>
-          <button
-            onClick={openCreateModal}
-            className="mt-3 text-blue-600 dark:text-blue-400 text-sm font-semibold hover:underline"
-          >
-            {t('dashboards.create_first')}
-          </button>
-        </div>
-      )}
-
-      {/* Info-Hinweis */}
-      <div className="p-3.5 bg-blue-500/8 dark:bg-blue-500/8 border border-blue-500/15 rounded-xl">
-        <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
-          {t('dashboards.tip')}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+          <SquaresFour size={22} weight="duotone" className="text-blue-400" />
+          {t('dashboards.title')}
+        </h3>
+        <p className="text-gray-700 dark:text-gray-300 text-sm" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6), 0 0 8px rgba(255,255,255,0.5)' }}>
+          {t('dashboards.description')}
         </p>
       </div>
+
+      <SettingsTopicLayout
+        groups={dashboardTopicGroups}
+        activeId={activeTopic}
+        onSelect={setActiveTopic}
+        navAriaLabel={t('settings.topicNav.dashboards_nav_aria')}
+      >
+        {activeTopic === 'overview' && (
+          <div className="space-y-5">
+            <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed">{t('settings.topicNav.dashboards_overview_detail')}</p>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{t('settings.topicNav.dashboards_overview_item')}</span>
+              <button
+                type="button"
+                onClick={openCreateModal}
+                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm transition-all shadow-lg hover:shadow-xl shrink-0"
+              >
+                <Plus size={18} weight="bold" />
+                {t('dashboards.add')}
+              </button>
+            </div>
+
+            {dashboards && dashboards.length > 0 ? (
+              <div className="space-y-3">
+                {dashboards.map((dashboard) => (
+                  <div
+                    key={dashboard.id}
+                    className={`group relative isolate overflow-hidden rounded-2xl transition-all duration-300 ${
+                      dashboard.id === activeDashboard ? 'ring-1 ring-inset ring-blue-400/30 dark:ring-blue-400/25' : ''
+                    }`}
+                  >
+                    <div
+                      className={`absolute inset-0 ${
+                        dashboard.id === activeDashboard
+                          ? 'bg-gradient-to-br from-blue-500/15 via-blue-400/5 to-transparent dark:from-blue-400/35 dark:via-blue-500/15 dark:to-transparent'
+                          : 'bg-gradient-to-br from-gray-500/5 via-transparent to-transparent dark:from-white/[0.06] dark:via-transparent dark:to-transparent'
+                      }`}
+                    />
+                    <div className="relative rounded-2xl bg-white/30 dark:bg-gray-800/55 sd-night-surface border border-gray-200/25 dark:border-white/[0.07] night:border-white/[0.06] p-4 shadow-sm shadow-black/[0.03] dark:shadow-black/15 night:shadow-black/40">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h5 className="text-base font-semibold text-gray-900 dark:text-white truncate">{dashboard.name}</h5>
+                            {dashboard.id === activeDashboard && (
+                              <span className="text-[11px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium shrink-0">
+                                {t('dashboards.active')}
+                              </span>
+                            )}
+                            {dashboard.id === 1 && (
+                              <span className="text-[11px] bg-gray-500/80 text-white px-2 py-0.5 rounded-full font-medium shrink-0">
+                                {t('dashboards.default')}
+                              </span>
+                            )}
+                          </div>
+                          {dashboard.description && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{dashboard.description}</p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1.5 ml-3 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(dashboard)}
+                            className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
+                            title={t('common.edit')}
+                          >
+                            <Pencil size={16} weight="bold" />
+                          </button>
+
+                          {dashboards.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => setShowDeleteConfirm(dashboard)}
+                              className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                              title={t('common.delete')}
+                            >
+                              <Trash size={16} weight="bold" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-blue-500/10 text-blue-700 dark:text-blue-300">
+                          <Package size={13} weight="duotone" />
+                          {dashboard.service_count} Services
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-300">
+                          <LinkIcon size={13} weight="duotone" />
+                          {dashboard.shortcut_count} Shortcuts
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-gray-500/10 text-gray-600 dark:text-gray-300 capitalize">
+                          <Tag size={13} weight="duotone" />
+                          {dashboard.type}
+                        </span>
+                        {dashboard.show_proxmox && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-orange-500/10 text-orange-700 dark:text-orange-300">
+                            <Desktop size={13} weight="duotone" />
+                            Proxmox
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-8 text-center">
+                <SquaresFour size={40} weight="duotone" className="text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+                <p className="text-gray-500 dark:text-gray-400 text-sm">{t('dashboards.no_dashboards')}</p>
+                <button type="button" onClick={openCreateModal} className="mt-3 text-blue-600 dark:text-blue-400 text-sm font-semibold hover:underline">
+                  {t('dashboards.create_first')}
+                </button>
+              </div>
+            )}
+
+            <div className="p-3.5 bg-blue-500/8 dark:bg-blue-500/8 border border-blue-500/15 rounded-xl">
+              <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">{t('dashboards.tip')}</p>
+            </div>
+          </div>
+        )}
+      </SettingsTopicLayout>
 
       <SettingsModalShell
         open={showModal}

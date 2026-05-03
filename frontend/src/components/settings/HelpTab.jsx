@@ -169,7 +169,7 @@ function HelpTab({ textColor }) {
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
       <nav
-        className="flex min-w-0 shrink-0 flex-col gap-1 rounded-xl border border-gray-300/40 bg-white/40 p-2 dark:border-white/10 dark:bg-white/[0.04] lg:w-[min(100%,15.5rem)] night:border-white/[0.07]"
+        className="flex w-full min-w-0 shrink-0 flex-col gap-1 rounded-xl border border-gray-300/40 bg-white/40 p-2 dark:border-white/10 dark:bg-white/[0.04] lg:w-56 xl:w-60 night:border-white/[0.07]"
         aria-label={t('settings.help.nav_aria')}
       >
         <div className="mb-1 flex items-center gap-2 px-2 py-1.5">

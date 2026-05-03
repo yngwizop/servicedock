@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plug } from 'phosphor-react';
 import { authenticatedFetch } from '../../utils/auth';
@@ -6,6 +6,7 @@ import ConfigAddon from './ConfigAddon';
 import SpotifyAddon from './SpotifyAddon';
 import LdapAddon from './LdapAddon';
 import SettingsModalShell from './SettingsModalShell';
+import SettingsTopicLayout from './SettingsTopicLayout';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
   (window.location.port === '' ? 
@@ -28,8 +29,13 @@ async function broadcastAuthModeFromServer() {
   }
 }
 
-function AddOnsCard() {
+function AddOnsCard({ onTipsTopicChange }) {
   const { t } = useTranslation();
+  const [activeTopic, setActiveTopic] = useState('config');
+
+  useLayoutEffect(() => {
+    onTipsTopicChange?.('addons', activeTopic);
+  }, [activeTopic, onTipsTopicChange]);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showSpotifyModal, setShowSpotifyModal] = useState(false);
   const [showLdapModal, setShowLdapModal] = useState(false);
@@ -288,6 +294,27 @@ function AddOnsCard() {
     }
   };
 
+  const addonGroups = useMemo(
+    () => [
+      {
+        key: 'addons',
+        label: t('addons.title'),
+        items: [
+          { id: 'config', label: t('addons.config_title') },
+          { id: 'spotify', label: t('addons.spotify_title') },
+          { id: 'ldap', label: t('addons.ldap_title') },
+        ],
+      },
+    ],
+    [t]
+  );
+
+  const openModalForTopic = (id) => {
+    if (id === 'config') setShowConfigModal(true);
+    if (id === 'spotify') setShowSpotifyModal(true);
+    if (id === 'ldap') setShowLdapModal(true);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -300,131 +327,100 @@ function AddOnsCard() {
         </p>
       </div>
 
-      {/* Config — gleiche Flächen-Farbe wie LDAP-Karte (nur Icon/Tags bleiben blau) */}
-      <div
-        className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.01] backdrop-blur-xl p-6
-          bg-gradient-to-br from-violet-200/38 via-slate-200/58 to-indigo-200/42
-          dark:from-indigo-950/64 dark:via-slate-900/74 dark:to-slate-950/82
-          ring-1 ring-inset ring-violet-300/35 dark:ring-indigo-400/18
-          shadow-lg shadow-violet-900/[0.06] dark:shadow-black/30
-          hover:ring-violet-400/45 dark:hover:ring-indigo-300/28 hover:shadow-xl"
-        onClick={() => setShowConfigModal(true)}
+      <SettingsTopicLayout
+        groups={addonGroups}
+        activeId={activeTopic}
+        onSelect={setActiveTopic}
+        navAriaLabel={t('settings.topicNav.addons_nav_aria')}
       >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-              <span className="text-3xl">⚙️</span>
+        {activeTopic === 'config' && (
+          <div>
+            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.config_title')}</h4>
+            <p className="text-sm text-gray-600 dark:text-slate-300 mb-3">{t('addons.config_subtitle')}</p>
+            <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed mb-4">{t('addons.config_description')}</p>
+            <div className="flex flex-wrap gap-2 mb-6">
+              <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/12 dark:bg-blue-400/15 text-blue-800 dark:text-blue-200">📥 Export</span>
+              <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/12 dark:bg-blue-400/15 text-blue-800 dark:text-blue-200">📤 Import</span>
+              <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/12 dark:bg-blue-400/15 text-blue-800 dark:text-blue-200">🔒 Admin-only</span>
             </div>
-            <div>
-              <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.config_title')}</h4>
-              <p className="text-sm text-gray-600 dark:text-slate-300">{t('addons.config_subtitle')}</p>
-            </div>
+            <button
+              type="button"
+              onClick={() => openModalForTopic('config')}
+              className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-blue-700"
+            >
+              {t('settings.topicNav.cta_configure')}
+            </button>
           </div>
-          <div className="text-2xl text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">→</div>
-        </div>
-        <p className="text-sm text-gray-700 dark:text-slate-200/95 mb-4">
-          {t('addons.config_description')}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/12 dark:bg-blue-400/15 text-blue-800 dark:text-blue-200">📥 Export</span>
-          <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/12 dark:bg-blue-400/15 text-blue-800 dark:text-blue-200">📤 Import</span>
-          <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/12 dark:bg-blue-400/15 text-blue-800 dark:text-blue-200">🔒 Admin-only</span>
-        </div>
-      </div>
-
-      {/* Spotify */}
-      <div
-        className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.01] backdrop-blur-xl p-6
-          bg-gradient-to-br from-emerald-200/40 via-slate-200/58 to-teal-200/42
-          dark:from-emerald-950/55 dark:via-slate-900/72 dark:to-slate-950/80
-          ring-1 ring-inset ring-emerald-300/35 dark:ring-emerald-400/18
-          shadow-lg shadow-emerald-900/[0.06] dark:shadow-black/30
-          hover:ring-emerald-400/45 dark:hover:ring-emerald-300/28 hover:shadow-xl"
-        onClick={() => setShowSpotifyModal(true)}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-              <span className="text-3xl">🎵</span>
+        )}
+        {activeTopic === 'spotify' && (
+          <div>
+            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.spotify_title')}</h4>
+            <p className="text-sm text-gray-600 dark:text-slate-300 mb-3">{t('addons.spotify_subtitle')}</p>
+            <div className="mb-3 flex flex-wrap gap-2">
+              {spotifyStatus.connected ? (
+                <span className="px-3 py-1 bg-green-500/15 dark:bg-green-400/20 text-green-800 dark:text-green-200 text-sm font-semibold rounded-full">
+                  {t('addons.connected')}
+                </span>
+              ) : spotifyStatus.configured ? (
+                <span className="px-3 py-1 bg-amber-500/15 dark:bg-amber-400/18 text-amber-900 dark:text-amber-200 text-sm font-semibold rounded-full">
+                  {t('addons.configured')}
+                </span>
+              ) : (
+                <span className="px-3 py-1 bg-white/40 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-full">
+                  {t('addons.not_installed')}
+                </span>
+              )}
             </div>
-            <div>
-              <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.spotify_title')}</h4>
-              <p className="text-sm text-gray-600 dark:text-slate-300">{t('addons.spotify_subtitle')}</p>
+            <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed mb-4">{t('addons.spotify_description')}</p>
+            <div className="flex flex-wrap gap-2 mb-6">
+              <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/12 dark:bg-emerald-400/15 text-emerald-900 dark:text-emerald-200">🎵 Widget</span>
+              <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/12 dark:bg-emerald-400/15 text-emerald-900 dark:text-emerald-200">🔗 OAuth</span>
+              <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/12 dark:bg-emerald-400/15 text-emerald-900 dark:text-emerald-200">🔒 Encrypted</span>
             </div>
+            <button
+              type="button"
+              onClick={() => openModalForTopic('spotify')}
+              className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-emerald-700"
+            >
+              {t('settings.topicNav.cta_configure')}
+            </button>
           </div>
-          <div className="flex items-center gap-3">
-            {spotifyStatus.connected ? (
-              <span className="px-3 py-1 bg-green-500/15 dark:bg-green-400/20 text-green-800 dark:text-green-200 text-sm font-semibold rounded-full">
-                {t('addons.connected')}
-              </span>
-            ) : spotifyStatus.configured ? (
-              <span className="px-3 py-1 bg-amber-500/15 dark:bg-amber-400/18 text-amber-900 dark:text-amber-200 text-sm font-semibold rounded-full">
-                {t('addons.configured')}
-              </span>
-            ) : (
-              <span className="px-3 py-1 bg-white/40 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-full">
-                {t('addons.not_installed')}
-              </span>
-            )}
-            <div className="text-2xl text-green-600 dark:text-green-400 group-hover:translate-x-1 transition-transform">→</div>
-          </div>
-        </div>
-        <p className="text-sm text-gray-700 dark:text-slate-200/95 mb-4">
-          {t('addons.spotify_description')}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/12 dark:bg-emerald-400/15 text-emerald-900 dark:text-emerald-200">🎵 Widget</span>
-          <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/12 dark:bg-emerald-400/15 text-emerald-900 dark:text-emerald-200">🔗 OAuth</span>
-          <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/12 dark:bg-emerald-400/15 text-emerald-900 dark:text-emerald-200">🔒 Encrypted</span>
-        </div>
-      </div>
-
-      {/* LDAP */}
-      <div
-        className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.01] backdrop-blur-xl p-6
-          bg-gradient-to-br from-violet-200/38 via-slate-200/58 to-indigo-200/42
-          dark:from-indigo-950/64 dark:via-slate-900/74 dark:to-slate-950/82
-          ring-1 ring-inset ring-violet-300/35 dark:ring-indigo-400/18
-          shadow-lg shadow-violet-900/[0.06] dark:shadow-black/30
-          hover:ring-violet-400/45 dark:hover:ring-indigo-300/28 hover:shadow-xl"
-        onClick={() => setShowLdapModal(true)}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-              <span className="text-3xl">🔐</span>
+        )}
+        {activeTopic === 'ldap' && (
+          <div>
+            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.ldap_title')}</h4>
+            <p className="text-sm text-gray-600 dark:text-slate-300 mb-3">{t('addons.ldap_subtitle')}</p>
+            <div className="mb-3 flex flex-wrap gap-2">
+              {ldapStatus.enabled ? (
+                <span className="px-3 py-1 bg-blue-500/15 dark:bg-blue-400/20 text-blue-800 dark:text-blue-200 text-sm font-semibold rounded-full">
+                  {t('addons.active')}
+                </span>
+              ) : ldapStatus.configured ? (
+                <span className="px-3 py-1 bg-amber-500/15 dark:bg-amber-400/18 text-amber-900 dark:text-amber-200 text-sm font-semibold rounded-full">
+                  {t('addons.configured')}
+                </span>
+              ) : (
+                <span className="px-3 py-1 bg-white/40 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-full">
+                  {t('addons.not_installed')}
+                </span>
+              )}
             </div>
-            <div>
-              <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.ldap_title')}</h4>
-              <p className="text-sm text-gray-600 dark:text-slate-300">{t('addons.ldap_subtitle')}</p>
+            <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed mb-4">{t('addons.ldap_description')}</p>
+            <div className="flex flex-wrap gap-2 mb-6">
+              <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-500/12 dark:text-indigo-200">{t('addons.ldap_tag_ad')}</span>
+              <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-500/12 dark:text-indigo-200">{t('addons.ldap_tag_roles')}</span>
+              <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-500/12 dark:text-indigo-200">🔒 Encrypted</span>
             </div>
+            <button
+              type="button"
+              onClick={() => openModalForTopic('ldap')}
+              className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-indigo-700"
+            >
+              {t('settings.topicNav.cta_configure')}
+            </button>
           </div>
-          <div className="flex items-center gap-3">
-            {ldapStatus.enabled ? (
-              <span className="px-3 py-1 bg-blue-500/15 dark:bg-blue-400/20 text-blue-800 dark:text-blue-200 text-sm font-semibold rounded-full">
-                {t('addons.active')}
-              </span>
-            ) : ldapStatus.configured ? (
-              <span className="px-3 py-1 bg-amber-500/15 dark:bg-amber-400/18 text-amber-900 dark:text-amber-200 text-sm font-semibold rounded-full">
-                {t('addons.configured')}
-              </span>
-            ) : (
-              <span className="px-3 py-1 bg-white/40 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-full">
-                {t('addons.not_installed')}
-              </span>
-            )}
-            <div className="text-2xl text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform">→</div>
-          </div>
-        </div>
-        <p className="text-sm text-gray-700 dark:text-slate-200/95 mb-4">
-          {t('addons.ldap_description')}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-500/12 dark:bg-indigo-400/15 text-indigo-900 dark:text-indigo-200">{t('addons.ldap_tag_ad')}</span>
-          <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-500/12 dark:bg-indigo-400/15 text-indigo-900 dark:text-indigo-200">{t('addons.ldap_tag_roles')}</span>
-          <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-500/12 dark:bg-indigo-400/15 text-indigo-900 dark:text-indigo-200">🔒 Encrypted</span>
-        </div>
-      </div>
+        )}
+      </SettingsTopicLayout>
 
       <SettingsModalShell
         open={showConfigModal}

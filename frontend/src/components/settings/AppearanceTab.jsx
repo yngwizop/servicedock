@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import { Image, Palette, SquaresFour, Eye, CloudSun, UploadSimple, Trash, CheckCircle, Link as LinkIcon, CaretDown, CaretUp, XCircle } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
+import SettingsTopicLayout from './SettingsTopicLayout';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
   (window.location.port === '' ? 
@@ -79,13 +80,36 @@ function AppearanceTab({
   weatherLocationInfo,
   isSavingAppearance,
   showSaved,
-  onSaveAppearance
+  onSaveAppearance,
+  onTipsTopicChange,
 }) {
   const { t } = useTranslation();
   const fileInputRef = useRef(null);
   const [uploadedWallpapers, setUploadedWallpapers] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
+  const [activeTopic, setActiveTopic] = useState('wallpaper');
+
+  useLayoutEffect(() => {
+    onTipsTopicChange?.('appearance', activeTopic);
+  }, [activeTopic, onTipsTopicChange]);
+
+  const appearanceTopicGroups = useMemo(
+    () => [
+      {
+        key: 'appearance',
+        label: t('settings.tabs.appearance'),
+        items: [
+          { id: 'wallpaper', label: t('wallpaper.title') },
+          { id: 'colors', label: t('appearance.font_colors') },
+          { id: 'layout', label: t('appearance.layout') },
+          { id: 'widgets', label: t('appearance.widgets') },
+          { id: 'weather', label: t('appearance.weather_section') },
+        ],
+      },
+    ],
+    [t]
+  );
 
   // Hochgeladene Wallpapers vom Backend laden
   useEffect(() => {
@@ -179,9 +203,30 @@ function AppearanceTab({
         </p>
       </div>
 
-      {/* Sektion: Wallpaper */}
+      <SettingsTopicLayout
+        groups={appearanceTopicGroups}
+        activeId={activeTopic}
+        onSelect={setActiveTopic}
+        navAriaLabel={t('settings.topicNav.appearance_nav_aria')}
+        footer={
+          <button
+            type="button"
+            onClick={onSaveAppearance}
+            disabled={isSavingAppearance}
+            className={`w-full py-3 px-4 rounded-xl font-semibold text-white shadow-lg transition-all duration-200 ${
+              showSaved
+                ? 'bg-green-600'
+                : 'bg-blue-600 hover:bg-blue-700 hover:shadow-xl hover:scale-[1.01]'
+            } ${isSavingAppearance ? 'opacity-70 cursor-wait' : ''}`}
+          >
+            {isSavingAppearance ? t('common.saving') : showSaved ? `✓ ${t('common.saved')}` : t('common.save')}
+          </button>
+        }
+      >
+      {activeTopic === 'wallpaper' && (
       <div className={sectionCard}>
         <SectionHeader icon={Image} title={t('wallpaper.title')} />
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">{t('settings.topicNav.appearance_wallpaper_detail')}</p>
 
         {/* Preset-Galerie */}
         <div className="mb-5">
@@ -385,11 +430,13 @@ function AppearanceTab({
           </div>
         </div>
       </div>
+      )}
 
-      {/* Sektion: Schriftfarben */}
+      {activeTopic === 'colors' && (
       <div className={sectionCard}>
         <SectionHeader icon={Palette} title={t('appearance.font_colors')} color="text-pink-400" />
-        
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">{t('settings.topicNav.appearance_colors_detail')}</p>
+
         <div className="p-3 mb-5 bg-blue-500/10 dark:bg-blue-500/10 rounded-xl border border-blue-500/20">
           <p className="text-sm text-blue-700 dark:text-blue-300">
             {t('appearance.mode_info', {
@@ -439,11 +486,13 @@ function AppearanceTab({
           </div>
         </div>
       </div>
+      )}
 
-      {/* Sektion: Layout & Columns */}
+      {activeTopic === 'layout' && (
       <div className={sectionCard}>
         <SectionHeader icon={SquaresFour} title={t('appearance.layout')} color="text-cyan-400" />
-        
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">{t('settings.topicNav.appearance_layout_detail')}</p>
+
         <div className="space-y-5">
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -474,11 +523,13 @@ function AppearanceTab({
           </div>
         </div>
       </div>
+      )}
 
-      {/* Sektion: Widgets & Uhr */}
+      {activeTopic === 'widgets' && (
       <div className={sectionCard}>
         <SectionHeader icon={Eye} title={t('appearance.widgets')} color="text-violet-400" />
-        
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">{t('settings.topicNav.appearance_widgets_detail')}</p>
+
         <div className="divide-y divide-gray-200/50 dark:divide-white/[0.06]">
           <ToggleSwitch
             checked={editAppearance.show_clock ?? true}
@@ -533,11 +584,13 @@ function AppearanceTab({
           </div>
         </div>
       </div>
+      )}
 
-      {/* Sektion: Wetter */}
+      {activeTopic === 'weather' && (
       <div className={sectionCard}>
         <SectionHeader icon={CloudSun} title={t('appearance.weather_section')} color="text-amber-400" />
-        
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">{t('settings.topicNav.appearance_weather_detail')}</p>
+
         <div className="space-y-5">
           <div>
             <label className={labelClass}>{t('appearance.city')}</label>
@@ -594,19 +647,8 @@ function AppearanceTab({
           </div>
         </div>
       </div>
-      
-      {/* Save Button */}
-      <button
-        onClick={onSaveAppearance}
-        disabled={isSavingAppearance}
-        className={`w-full py-3 px-4 rounded-xl font-semibold text-white shadow-lg transition-all duration-200 ${
-          showSaved
-            ? 'bg-green-600'
-            : 'bg-blue-600 hover:bg-blue-700 hover:shadow-xl hover:scale-[1.01]'
-        } ${isSavingAppearance ? 'opacity-70 cursor-wait' : ''}`}
-      >
-        {isSavingAppearance ? t('common.saving') : showSaved ? `✓ ${t('common.saved')}` : t('common.save')}
-      </button>
+      )}
+      </SettingsTopicLayout>
     </div>
   );
 }

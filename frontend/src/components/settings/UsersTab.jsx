@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
+import SettingsTopicLayout from './SettingsTopicLayout';
 import { useTranslation } from 'react-i18next';
 import { Users, Plus, Trash, Key, WarningCircle } from 'phosphor-react';
 import { authenticatedFetch } from '../../utils/auth';
@@ -18,7 +19,7 @@ const BACKEND_URL =
     ? `${window.location.protocol}//${window.location.hostname}`
     : `${window.location.protocol}//${window.location.hostname}:8000`);
 
-function UsersTab() {
+function UsersTab({ onTipsTopicChange }) {
   const { t } = useTranslation();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +31,22 @@ function UsersTab() {
   const [newRole, setNewRole] = useState('viewer');
   const [newDisplayName, setNewDisplayName] = useState('');
   const [adEnabled, setAdEnabled] = useState(false);
+  const [activeTopic, setActiveTopic] = useState('accounts');
+
+  useLayoutEffect(() => {
+    onTipsTopicChange?.('users', activeTopic);
+  }, [activeTopic, onTipsTopicChange]);
+
+  const usersTopicGroups = useMemo(
+    () => [
+      {
+        key: 'users',
+        label: t('settings.users.title'),
+        items: [{ id: 'accounts', label: t('settings.users.list_heading') }],
+      },
+    ],
+    [t]
+  );
 
   useEffect(() => {
     const loadMode = async () => {
@@ -182,31 +199,41 @@ function UsersTab() {
         </div>
       </div>
 
-      {error && (
-        <div
-          className="rounded-xl border border-red-400/50 bg-red-500/10 px-4 py-3 text-sm text-red-800 dark:text-red-200"
-          role="alert"
-        >
-          {error}
-        </div>
-      )}
+      <SettingsTopicLayout
+        groups={usersTopicGroups}
+        activeId={activeTopic}
+        onSelect={setActiveTopic}
+        navAriaLabel={t('settings.topicNav.users_nav_aria')}
+      >
+        {activeTopic === 'accounts' && (
+          <div className="space-y-6">
+            <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed">{t('settings.topicNav.users_accounts_detail')}</p>
 
-      {ldapBlocksLocal && (
-        <div
-          className="rounded-xl border border-amber-500/45 bg-amber-500/10 dark:bg-amber-500/15 px-4 py-3 text-sm text-amber-950 dark:text-amber-100 flex gap-3 items-start"
-          role="status"
-        >
-          <WarningCircle className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" size={22} weight="fill" />
-          <div>
-            <p className="font-semibold text-amber-950 dark:text-amber-50">{t('settings.users.ldap_active_title')}</p>
-            <p className="mt-1 text-amber-900/90 dark:text-amber-100/90 leading-relaxed">
-              {t('settings.users.ldap_active_notice', { addonsTab: t('settings.tabs.addons') })}
-            </p>
-          </div>
-        </div>
-      )}
+            {error && (
+              <div
+                className="rounded-xl border border-red-400/50 bg-red-500/10 px-4 py-3 text-sm text-red-800 dark:text-red-200"
+                role="alert"
+              >
+                {error}
+              </div>
+            )}
 
-      <form onSubmit={createUser} className={`${sectionCard} space-y-4 ${ldapBlocksLocal ? 'opacity-75' : ''}`}>
+            {ldapBlocksLocal && (
+              <div
+                className="rounded-xl border border-amber-500/45 bg-amber-500/10 dark:bg-amber-500/15 px-4 py-3 text-sm text-amber-950 dark:text-amber-100 flex gap-3 items-start"
+                role="status"
+              >
+                <WarningCircle className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" size={22} weight="fill" />
+                <div>
+                  <p className="font-semibold text-amber-950 dark:text-amber-50">{t('settings.users.ldap_active_title')}</p>
+                  <p className="mt-1 text-amber-900/90 dark:text-amber-100/90 leading-relaxed">
+                    {t('settings.users.ldap_active_notice', { addonsTab: t('settings.tabs.addons') })}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={createUser} className={`${sectionCard} space-y-4 ${ldapBlocksLocal ? 'opacity-75' : ''}`}>
         <fieldset disabled={ldapBlocksLocal} className="space-y-4 min-w-0 border-0 p-0 m-0 disabled:pointer-events-none">
           <h3 className="text-sm font-semibold text-gray-800 dark:text-white flex items-center gap-2">
             <Plus size={18} weight="bold" className="text-blue-500 dark:text-blue-400" />
@@ -345,6 +372,9 @@ function UsersTab() {
           </div>
         )}
       </div>
+          </div>
+        )}
+      </SettingsTopicLayout>
     </div>
   );
 }

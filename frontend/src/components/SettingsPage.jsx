@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Palette, SquaresFour, Desktop, Plug, Lightbulb, Info, ShieldCheck, Lightning, Translate, Lifebuoy, BookOpen, Users } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../utils/auth';
@@ -15,6 +15,51 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
     `${window.location.protocol}//${window.location.hostname}` :
     `${window.location.protocol}//${window.location.hostname}:8000`
   );
+
+const TIP_ICON_CYCLE = [Lightbulb, Info, Lightning, ShieldCheck, BookOpen];
+
+const SECTION_TIP_META = {
+  appearance: { icon: Palette, color: 'text-pink-400' },
+  dashboards: { icon: SquaresFour, color: 'text-blue-400' },
+  proxmox: { icon: Desktop, color: 'text-orange-400' },
+  addons: { icon: Plug, color: 'text-green-400' },
+  language: { icon: Translate, color: 'text-violet-400' },
+  users: { icon: Users, color: 'text-emerald-400' },
+  help: { icon: Lifebuoy, color: 'text-cyan-400' },
+};
+
+/** Abschnitte mit tipps.topics.* in den Locale-Dateien */
+const TIPS_TOPIC_KEYS = {
+  appearance: ['wallpaper', 'colors', 'layout', 'widgets', 'weather'],
+  proxmox: ['connection', 'dashboard'],
+  addons: ['config', 'spotify', 'ldap'],
+};
+
+const TIPS_TOPIC_DEFAULT = {
+  appearance: 'wallpaper',
+  proxmox: 'connection',
+  addons: 'config',
+};
+
+function stringsToTipRows(strings) {
+  if (!Array.isArray(strings)) return [];
+  return strings.map((text, i) => ({
+    icon: TIP_ICON_CYCLE[i % TIP_ICON_CYCLE.length],
+    text,
+  }));
+}
+
+function collectTopicTipStrings(sectionId, t) {
+  const keys = TIPS_TOPIC_KEYS[sectionId];
+  if (!keys) return [];
+  const parts = [];
+  for (const topic of keys) {
+    parts.push(t(`settings.tips.topics.${sectionId}.${topic}.title`));
+    const arr = t(`settings.tips.topics.${sectionId}.${topic}.tips`, { returnObjects: true });
+    if (Array.isArray(arr)) parts.push(...arr);
+  }
+  return parts;
+}
 
 function SettingsPage({
   editAppearance, setEditAppearance, onSaveAppearance,
@@ -37,97 +82,15 @@ function SettingsPage({
   // Proxmox State (nur für savedTokenName in Overview)
   const [savedTokenName, setSavedTokenName] = useState('');
 
-  const sectionTips = useMemo(
-    () => ({
-      appearance: {
-        title: t('settings.tips.appearance_title'),
-        icon: Palette,
-        color: 'text-pink-400',
-        tips: [
-          { icon: Lightbulb, text: t('settings.tips.appearance.0') },
-          { icon: Info, text: t('settings.tips.appearance.1') },
-          { icon: Lightning, text: t('settings.tips.appearance.2') },
-          { icon: ShieldCheck, text: t('settings.tips.appearance.3') },
-          { icon: Info, text: t('settings.tips.appearance.4') },
-          { icon: Lightbulb, text: t('settings.tips.appearance.5') },
-          { icon: Lightning, text: t('settings.tips.appearance.6') },
-        ],
-      },
-      dashboards: {
-        title: t('settings.tips.dashboards_title'),
-        icon: SquaresFour,
-        color: 'text-blue-400',
-        tips: [
-          { icon: Lightbulb, text: t('settings.tips.dashboards.0') },
-          { icon: Info, text: t('settings.tips.dashboards.1') },
-          { icon: ShieldCheck, text: t('settings.tips.dashboards.2') },
-          { icon: Lightning, text: t('settings.tips.dashboards.3') },
-          { icon: Info, text: t('settings.tips.dashboards.4') },
-          { icon: Lightbulb, text: t('settings.tips.dashboards.5') },
-        ],
-      },
-      proxmox: {
-        title: t('settings.tips.proxmox_title'),
-        icon: Desktop,
-        color: 'text-orange-400',
-        tips: [
-          { icon: ShieldCheck, text: t('settings.tips.proxmox.0') },
-          { icon: Info, text: t('settings.tips.proxmox.1') },
-          { icon: Lightbulb, text: t('settings.tips.proxmox.2') },
-          { icon: Lightning, text: t('settings.tips.proxmox.3') },
-          { icon: Info, text: t('settings.tips.proxmox.4') },
-          { icon: Lightbulb, text: t('settings.tips.proxmox.5') },
-          { icon: ShieldCheck, text: t('settings.tips.proxmox.6') },
-        ],
-      },
-      addons: {
-        title: t('settings.tips.addons_title'),
-        icon: Plug,
-        color: 'text-green-400',
-        tips: [
-          { icon: Lightbulb, text: t('settings.tips.addons.0') },
-          { icon: ShieldCheck, text: t('settings.tips.addons.1') },
-          { icon: Info, text: t('settings.tips.addons.2') },
-          { icon: Lightning, text: t('settings.tips.addons.3') },
-          { icon: Lightbulb, text: t('settings.tips.addons.4') },
-          { icon: Info, text: t('settings.tips.addons.5') },
-          { icon: ShieldCheck, text: t('settings.tips.addons.6') },
-          { icon: Lightning, text: t('settings.tips.addons.7') },
-        ],
-      },
-      language: {
-        title: t('settings.tips.language_title'),
-        icon: Translate,
-        color: 'text-violet-400',
-        tips: [
-          { icon: Lightbulb, text: t('settings.tips.language.0') },
-          { icon: Info, text: t('settings.tips.language.1') },
-          { icon: Lightning, text: t('settings.tips.language.2') },
-        ],
-      },
-      users: {
-        title: t('settings.tips.users_title'),
-        icon: Users,
-        color: 'text-emerald-400',
-        tips: [
-          { icon: Info, text: t('settings.tips.users.0') },
-          { icon: ShieldCheck, text: t('settings.tips.users.1') },
-          { icon: Lightbulb, text: t('settings.tips.users.2') },
-        ],
-      },
-      help: {
-        title: t('settings.tips.help_title'),
-        icon: Lifebuoy,
-        color: 'text-cyan-400',
-        tips: [
-          { icon: Info, text: t('settings.tips.help.0') },
-          { icon: Lightbulb, text: t('settings.tips.help.1') },
-          { icon: BookOpen, text: t('settings.tips.help.2') },
-        ],
-      },
-    }),
-    [t]
-  );
+  /** Aktives Topic je Settings-Tab (für kontextbezogene Tipps rechts) */
+  const [tipsTopicBySection, setTipsTopicBySection] = useState({});
+
+  const handleTipsTopicChange = useCallback((sectionId, topicId) => {
+    setTipsTopicBySection((prev) => {
+      if (prev[sectionId] === topicId) return prev;
+      return { ...prev, [sectionId]: topicId };
+    });
+  }, []);
 
   const sections = useMemo(
     () => [
@@ -156,9 +119,15 @@ function SettingsPage({
     ];
     const out = {};
     for (const s of sections) {
-      const tips = sectionTips[s.id];
-      if (!tips) continue;
-      const parts = [s.label, tips.title, ...tips.tips.map((x) => x.text)];
+      const parts = [s.label];
+      if (TIPS_TOPIC_KEYS[s.id]) {
+        parts.push(t(`settings.tips.${s.id}_title`));
+        parts.push(...collectTopicTipStrings(s.id, t));
+      } else {
+        parts.push(t(`settings.tips.${s.id}_title`));
+        const flat = t(`settings.tips.${s.id}`, { returnObjects: true });
+        if (Array.isArray(flat)) parts.push(...flat);
+      }
       if (s.id === 'help') {
         parts.push(t('settings.help.intro'));
         for (const docId of helpDocIds) {
@@ -168,7 +137,7 @@ function SettingsPage({
       out[s.id] = parts.join('\n').toLowerCase();
     }
     return out;
-  }, [sections, sectionTips, t]);
+  }, [sections, t]);
 
   const displaySections = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -228,7 +197,28 @@ function SettingsPage({
     fetchProxmoxConfig();
   };
 
-  const currentTips = sectionTips[activeSection] || sectionTips.appearance;
+  const currentTips = useMemo(() => {
+    const meta = SECTION_TIP_META[activeSection] || SECTION_TIP_META.appearance;
+    if (TIPS_TOPIC_KEYS[activeSection]) {
+      const topic = tipsTopicBySection[activeSection] || TIPS_TOPIC_DEFAULT[activeSection];
+      const tipsRaw = t(`settings.tips.topics.${activeSection}.${topic}.tips`, { returnObjects: true });
+      const title = t(`settings.tips.topics.${activeSection}.${topic}.title`);
+      const strings = Array.isArray(tipsRaw) ? tipsRaw : [];
+      return {
+        ...meta,
+        title,
+        tips: stringsToTipRows(strings),
+      };
+    }
+    const flat = t(`settings.tips.${activeSection}`, { returnObjects: true });
+    const strings = Array.isArray(flat) ? flat : [];
+    return {
+      ...meta,
+      title: t(`settings.tips.${activeSection}_title`),
+      tips: stringsToTipRows(strings),
+    };
+  }, [activeSection, tipsTopicBySection, t]);
+
   const TipsSectionIcon = currentTips.icon;
 
   // Sub-Nav: gleiche aktive Fläche wie Sidebar
@@ -248,7 +238,7 @@ function SettingsPage({
   const rowDivider = 'lg:divide-x lg:divide-white/18 dark:lg:divide-white/[0.06]';
 
   return (
-    <div className="max-w-[1400px] mx-auto pb-2">
+    <div className="w-full max-w-none pb-2">
       <div className={settingsShell}>
         {/* Mobile: Sub-Nav oben in der Shell */}
         <nav
@@ -323,6 +313,7 @@ function SettingsPage({
                 isSavingAppearance={isSavingAppearance}
                 showSaved={showSaved}
                 onSaveAppearance={onSaveAppearance}
+                onTipsTopicChange={handleTipsTopicChange}
               />
             )}
 
@@ -331,6 +322,7 @@ function SettingsPage({
                 dashboards={dashboards}
                 activeDashboard={activeDashboard}
                 onDashboardsChange={onDashboardsChange}
+                onTipsTopicChange={handleTipsTopicChange}
               />
             )}
 
@@ -339,47 +331,53 @@ function SettingsPage({
                 activeDashboard={activeDashboard}
                 savedTokenName={savedTokenName}
                 onSettingsChange={handleProxmoxSettingsChange}
+                onTipsTopicChange={handleTipsTopicChange}
               />
             )}
 
-            {activeSection === 'addons' && <AddOnsCard />}
+            {activeSection === 'addons' && <AddOnsCard onTipsTopicChange={handleTipsTopicChange} />}
 
-            {activeSection === 'language' && <LanguageCard />}
+            {activeSection === 'language' && <LanguageCard onTipsTopicChange={handleTipsTopicChange} />}
 
-            {activeSection === 'users' && <UsersTab />}
+            {activeSection === 'users' && <UsersTab onTipsTopicChange={handleTipsTopicChange} />}
 
             {activeSection === 'help' && <HelpTab textColor={textColor} />}
           </main>
 
-          {/* Tipps: eigene Modul-Karte (kein extra border-l → kein schwarzer Naht-Rand) */}
-          <aside className="hidden xl:block w-64 2xl:w-72 shrink-0 bg-white/25 dark:bg-white/[0.05] sd-night-veil-flat p-3 sm:p-4">
-            <div className="sticky top-4 rounded-2xl border border-white/22 dark:border-white/[0.06] night:border-white/[0.05] bg-white/28 dark:bg-slate-900/40 sd-night-surface backdrop-blur-md shadow-inner dark:shadow-black/15 night:shadow-black/35 px-4 py-4 md:px-5 md:py-5">
-              <div className="flex items-center gap-2.5 mb-4 pb-3 border-b border-gray-400/25 dark:border-white/[0.07]">
-                <TipsSectionIcon size={22} weight="duotone" className="text-blue-600 dark:text-blue-400 shrink-0" />
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-slate-50 leading-snug tracking-tight">
-                  {currentTips.title}
-                </h3>
+          {/* Tipps rechts (Hilfe-Tab hat eigene Topic-Navigation) */}
+          {activeSection !== 'help' && (
+            <aside
+              className="hidden lg:flex lg:flex-col lg:w-56 xl:w-64 shrink-0 border-t border-white/22 dark:border-white/[0.06] night:border-white/[0.05] lg:border-t-0 lg:border-l bg-white/28 dark:bg-white/[0.05] sd-night-veil-flat p-4 xl:p-5"
+              aria-label={t('settings.tips_aside_aria')}
+            >
+              <div className="space-y-3">
+                <div className="flex items-start gap-2.5">
+                  <TipsSectionIcon size={24} weight="duotone" className={`shrink-0 mt-0.5 ${currentTips.color}`} />
+                  <h4 className="text-base font-semibold text-gray-900 dark:text-slate-50 tracking-tight leading-snug">
+                    {currentTips.title}
+                  </h4>
+                </div>
+                <ul className="list-none space-y-3 p-0 m-0">
+                  {currentTips.tips.map((tip, i) => {
+                    const TipIcon = tip.icon;
+                    return (
+                      <li key={i} className="flex gap-2.5 items-start text-left">
+                        <TipIcon
+                          size={18}
+                          weight="duotone"
+                          className={`shrink-0 mt-0.5 ${currentTips.color} opacity-80`}
+                          aria-hidden
+                        />
+                        <p className="text-sm text-gray-800 dark:text-slate-100/95 leading-relaxed m-0">
+                          {tip.text}
+                        </p>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
-              <ul className="space-y-3.5 list-none m-0 p-0">
-                {currentTips.tips.map((tip, i) => {
-                  const TipIcon = tip.icon;
-                  return (
-                    <li key={i} className="flex gap-2.5 items-start">
-                      <TipIcon
-                        size={17}
-                        weight="duotone"
-                        className="text-blue-600/90 dark:text-blue-300 shrink-0 mt-0.5"
-                        aria-hidden
-                      />
-                      <p className="text-sm text-gray-800 dark:text-slate-100/95 leading-relaxed m-0">
-                        {tip.text}
-                      </p>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          </aside>
+            </aside>
+          )}
         </div>
       </div>
     </div>

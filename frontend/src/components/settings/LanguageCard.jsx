@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo, useState, useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Translate, Check } from 'phosphor-react';
+import SettingsTopicLayout from './SettingsTopicLayout';
 
 // SVG Flaggen statt Emojis (Alpine/Docker hat keine Emoji-Font für Flaggen)
 const FlagDE = () => (
@@ -26,13 +27,27 @@ const languages = [
   { code: 'en', label: 'English', Flag: FlagGB, description: 'Englisch' },
 ];
 
-function LanguageCard() {
+function LanguageCard({ onTipsTopicChange }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language?.startsWith('en') ? 'en' : 'de';
+  const [activeTopic, setActiveTopic] = useState('interface');
+
+  useLayoutEffect(() => {
+    onTipsTopicChange?.('language', activeTopic);
+  }, [activeTopic, onTipsTopicChange]);
+  const languageGroups = useMemo(
+    () => [
+      {
+        key: 'language',
+        label: t('language.title'),
+        items: [{ id: 'interface', label: t('language.title') }],
+      },
+    ],
+    [t]
+  );
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
           <Translate size={22} weight="duotone" className="text-violet-400" />
@@ -43,8 +58,16 @@ function LanguageCard() {
         </p>
       </div>
 
-      {/* Language Options */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <SettingsTopicLayout
+        groups={languageGroups}
+        activeId={activeTopic}
+        onSelect={setActiveTopic}
+        navAriaLabel={t('settings.topicNav.language_nav_aria')}
+      >
+        {activeTopic === 'interface' && (
+          <div className="space-y-5">
+            <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed">{t('settings.topicNav.language_interface_detail')}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {languages.map((lang) => {
           const isActive = currentLang === lang.code;
           return (
@@ -76,12 +99,13 @@ function LanguageCard() {
             </button>
           );
         })}
-      </div>
-
-      {/* Info */}
-      <p className="mt-5 text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-        💡 {t('language.persistence_info')}
-      </p>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+              💡 {t('language.persistence_info')}
+            </p>
+          </div>
+        )}
+      </SettingsTopicLayout>
     </div>
   );
 }

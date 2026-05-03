@@ -304,6 +304,7 @@
   },
   "settings": {
     "nav_sections_aria": "Einstellungsbereiche",
+    "tips_aside_aria": "Hinweise zu diesem Bereich",
     "tabs": {
       "appearance": "Appearance",
       "dashboards": "Dashboards",
@@ -312,6 +313,24 @@
       "language": "Sprache",
       "users": "Benutzer",
       "help": "Hilfe"
+    },
+    "topicNav": {
+      "cta_configure": "Konfiguration öffnen",
+      "addons_nav_aria": "Add-on-Themen",
+      "proxmox_nav_aria": "Proxmox-Themen",
+      "dashboards_nav_aria": "Dashboard-Themen",
+      "dashboards_overview_item": "Übersicht",
+      "appearance_nav_aria": "Appearance-Themen",
+      "language_nav_aria": "Sprache",
+      "users_nav_aria": "Lokale Benutzer",
+      "users_accounts_detail": "Nur-Dashboard-Konten verwalten (bei aktivem AD/LDAP-Login nicht für die Anmeldung genutzt).",
+      "appearance_wallpaper_detail": "Vorgaben, eigene Uploads, Bild-URL sowie Hintergrundfarbe und Transparenz.",
+      "appearance_colors_detail": "Schriftfarben für helles und dunkles Theme, passend zum Wallpaper.",
+      "appearance_layout_detail": "Spaltenanzahl für Services und Shortcuts auf der Startseite.",
+      "appearance_widgets_detail": "Uhr, Wetter und Spotify ein- oder ausblenden; 12- oder 24-Stunden-Format.",
+      "appearance_weather_detail": "Stadt fürs Wetter-Widget und welche Werte angezeigt werden.",
+      "dashboards_overview_detail": "Dashboards anlegen, bearbeiten und löschen. Jedes Dashboard hat eigene Services, Shortcuts und Proxmox-Einstellungen.",
+      "language_interface_detail": "Sprache der Oberfläche wählen. Die Auswahl gilt sofort."
     },
     "users": {
       "title": "Lokale Benutzer",
@@ -353,16 +372,90 @@
     "result_error": "Fehler",
     "tips": {
       "appearance_title": "Appearance Tipps",
-      "appearance": [
-        "Wähle aus 9 gebundenen Preset-Wallpapers oder lade eigene Bilder hoch (JPG/PNG/WebP, max 10MB).",
-        "Hintergrundbilder funktionieren am besten mit einer Opacity von 0.6–0.8 für gute Lesbarkeit.",
-        "Die primäre Schriftfarbe gilt für Standard- und Nacht-Theme. Eine zweite Farbe bleibt gespeichert — mit ☀/🌙 in der Sidebar zwischen Standard und Nacht wechseln.",
-        "Service-Spalten (2–10) und Shortcut-Spalten (2–8) lassen sich unabhängig konfigurieren.",
-        "Hex-Eingabe und Color-Picker sind synchronisiert — du kannst exakte Farbwerte direkt eintippen.",
-        "Wetter-Widget: Die Stadt wird per Geocoding aufgelöst — zeigt dir Land, PLZ und Koordinaten zur Bestätigung.",
-        "Wetterdaten werden alle 2 Stunden automatisch aktualisiert. Manueller Refresh über den Widget-Button möglich.",
-        "Einzelne Widgets (Uhr, Wetter, Spotify) können ausgeblendet werden, ohne die Konfiguration zu verlieren."
-      ],
+      "topics": {
+        "appearance": {
+          "wallpaper": {
+            "title": "Hintergrund",
+            "tips": [
+              "Wähle aus 9 gebundenen Preset-Wallpapers oder lade eigene Bilder hoch (JPG/PNG/WebP, max 10MB).",
+              "Hintergrundbilder funktionieren am besten mit einer Opacity von 0.6–0.8 für gute Lesbarkeit."
+            ]
+          },
+          "colors": {
+            "title": "Schrift & Farben",
+            "tips": [
+              "Die primäre Schriftfarbe gilt für Standard- und Nacht-Theme. Eine zweite Farbe bleibt gespeichert — mit ☀/🌙 in der Sidebar zwischen Standard und Nacht wechseln.",
+              "Hex-Eingabe und Color-Picker sind synchronisiert — du kannst exakte Farbwerte direkt eintippen."
+            ]
+          },
+          "layout": {
+            "title": "Layout & Spalten",
+            "tips": [
+              "Service-Spalten (2–10) und Shortcut-Spalten (2–8) lassen sich unabhängig konfigurieren."
+            ]
+          },
+          "widgets": {
+            "title": "Widgets",
+            "tips": [
+              "Einzelne Widgets (Uhr, Wetter, Spotify) können ausgeblendet werden, ohne die Konfiguration zu verlieren."
+            ]
+          },
+          "weather": {
+            "title": "Wetter",
+            "tips": [
+              "Wetter-Widget: Die Stadt wird per Geocoding aufgelöst — zeigt dir Land, PLZ und Koordinaten zur Bestätigung.",
+              "Wetterdaten werden alle 2 Stunden automatisch aktualisiert. Manueller Refresh über den Widget-Button möglich."
+            ]
+          }
+        },
+        "proxmox": {
+          "connection": {
+            "title": "Verbindung & API",
+            "tips": [
+              "Nutze einen dedizierten API-Token mit minimalen Rechten (PVEAuditor) oder PVEAdmin, wenn VMs gesteuert werden sollen. Format: user@realm!tokenname",
+              "API-Token Secrets werden mit Fernet (AES-128) verschlüsselt gespeichert und nie im Klartext angezeigt.",
+              "SSL-Verifizierung kann deaktiviert werden — praktisch für selbstsignierte Zertifikate im Homelab.",
+              "Im Cluster-Modus werden automatisch alle Nodes erkannt. Optional: Bestimmten Node als Filter setzen.",
+              "Verbindung erst speichern, dann testen — der Test zeigt die Anzahl gefundener Nodes."
+            ]
+          },
+          "dashboard": {
+            "title": "Monitoring-Dashboard",
+            "tips": [
+              "Auto-Refresh Intervall einstellbar: 15s / 30s / 60s / 120s — kürzere Intervalle = mehr API-Aufrufe.",
+              "Monitoring-Einstellungen (Refresh, Top-Items, Zeitraum) sind browser-lokal und synchen nicht zwischen Geräten."
+            ]
+          }
+        },
+        "addons": {
+          "config": {
+            "title": "Config Import / Export",
+            "tips": [
+              "Config Export sichert: Dashboards, Services, Shortcuts & Appearance. Dateiname: servicedock-config-YYYY-MM-DD.json",
+              "Aus Sicherheitsgründen werden Proxmox- und Spotify-Credentials nie mit exportiert.",
+              "Import-Modus \"Anhängen\" fügt Daten hinzu (IDs werden neu vergeben). \"Ersetzen\" löscht vorher alles.",
+              "Vor dem Import wird die Datei validiert und eine Vorschau angezeigt (Anzahl Dashboards, Services, Shortcuts).",
+              "Immer einen Export-Backup machen bevor du den \"Ersetzen\"-Modus nutzt!"
+            ]
+          },
+          "spotify": {
+            "title": "Spotify",
+            "tips": [
+              "Spotify benötigt eine App im Spotify Developer Dashboard. Die Redirect URI wird automatisch erkannt.",
+              "Spotify hat nur Lese-Zugriff — es wird ausschließlich der aktuelle Song abgefragt.",
+              "OAuth-Verbindung: 2 Minuten Timeout. Wird automatisch alle 3 Sekunden geprüft. Bei Timeout einfach neu verbinden."
+            ]
+          },
+          "ldap": {
+            "title": "AD / LDAP",
+            "tips": [
+              "Microsoft Active Directory oder OpenLDAP bindest du über das LDAP-Add-on (Bind-Zugangsdaten dort speichern und testen).",
+              "Ist LDAP aktiv, kann die lokale Benutzerverwaltung eingeschränkt sein — tägliche Konten pflegst du im Verzeichnis.",
+              "Nutze einen dedizierten Service-Account für den LDAP-Bind mit minimal nötigen Rechten."
+            ]
+          }
+        }
+      },
       "dashboards_title": "Dashboard Tipps",
       "dashboards": [
         "Erstelle separate Dashboards für verschiedene Umgebungen — z.B. Home, Work, Gaming, Media oder Development.",
@@ -373,26 +466,7 @@
         "Beim Löschen eines Dashboards werden auch alle zugehörigen Services und Shortcuts entfernt."
       ],
       "proxmox_title": "Proxmox Tipps",
-      "proxmox": [
-        "Nutze einen dedizierten API-Token mit minimalen Rechten (PVEAuditor) oder PVEAdmin, wenn VMs gesteuert werden sollen. Format: user@realm!tokenname",
-        "API-Token Secrets werden mit Fernet (AES-128) verschlüsselt gespeichert und nie im Klartext angezeigt.",
-        "SSL-Verifizierung kann deaktiviert werden — praktisch für selbstsignierte Zertifikate im Homelab.",
-        "Im Cluster-Modus werden automatisch alle Nodes erkannt. Optional: Bestimmten Node als Filter setzen.",
-        "Verbindung erst speichern, dann testen — der Test zeigt die Anzahl gefundener Nodes.",
-        "Auto-Refresh Intervall einstellbar: 15s / 30s / 60s / 120s — kürzere Intervalle = mehr API-Aufrufe.",
-        "Monitoring-Einstellungen (Refresh, Top-Items, Zeitraum) sind browser-lokal und synchen nicht zwischen Geräten."
-      ],
       "addons_title": "AddOn Tipps",
-      "addons": [
-        "Config Export sichert: Dashboards, Services, Shortcuts & Appearance. Dateiname: servicedock-config-YYYY-MM-DD.json",
-        "Aus Sicherheitsgründen werden Proxmox- und Spotify-Credentials nie mit exportiert.",
-        "Import-Modus \"Anhängen\" fügt Daten hinzu (IDs werden neu vergeben). \"Ersetzen\" löscht vorher alles.",
-        "Vor dem Import wird die Datei validiert und eine Vorschau angezeigt (Anzahl Dashboards, Services, Shortcuts).",
-        "Immer einen Export-Backup machen bevor du den \"Ersetzen\"-Modus nutzt!",
-        "Spotify benötigt eine App im Spotify Developer Dashboard. Die Redirect URI wird automatisch erkannt.",
-        "Spotify hat nur Lese-Zugriff — es wird ausschließlich der aktuelle Song abgefragt.",
-        "OAuth-Verbindung: 2 Minuten Timeout. Wird automatisch alle 3 Sekunden geprüft. Bei Timeout einfach neu verbinden."
-      ],
       "language_title": "Sprach-Tipps",
       "language": [
         "Die Sprache wird automatisch anhand deiner Browser-Einstellungen erkannt.",

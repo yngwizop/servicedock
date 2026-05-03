@@ -304,6 +304,7 @@
   },
   "settings": {
     "nav_sections_aria": "Settings sections",
+    "tips_aside_aria": "Tips for this section",
     "tabs": {
       "appearance": "Appearance",
       "dashboards": "Dashboards",
@@ -312,6 +313,24 @@
       "language": "Language",
       "users": "Users",
       "help": "Help"
+    },
+    "topicNav": {
+      "cta_configure": "Open configuration",
+      "addons_nav_aria": "Add-on topics",
+      "proxmox_nav_aria": "Proxmox topics",
+      "dashboards_nav_aria": "Dashboard topics",
+      "dashboards_overview_item": "Overview",
+      "appearance_nav_aria": "Appearance topics",
+      "language_nav_aria": "Language",
+      "users_nav_aria": "Local users",
+      "users_accounts_detail": "Manage dashboard-only accounts (not used when AD/LDAP sign-in is enabled).",
+      "appearance_wallpaper_detail": "Preset gallery, custom uploads, image URL, background color and opacity.",
+      "appearance_colors_detail": "Text colors for light and dark theme to match your wallpaper.",
+      "appearance_layout_detail": "Number of columns for services and shortcuts on the home screen.",
+      "appearance_widgets_detail": "Show or hide clock, weather and Spotify; choose 12h or 24h time.",
+      "appearance_weather_detail": "City for the weather widget and which fields to display.",
+      "dashboards_overview_detail": "Create, edit and delete dashboards. Each dashboard has its own services, shortcuts and Proxmox settings.",
+      "language_interface_detail": "Choose the dashboard language. The selection applies immediately."
     },
     "users": {
       "title": "Local users",
@@ -353,16 +372,90 @@
     "result_error": "Error",
     "tips": {
       "appearance_title": "Appearance Tips",
-      "appearance": [
-        "Choose from 9 bundled preset wallpapers or upload your own images (JPG/PNG/WebP, max 10MB).",
-        "Background images work best with an opacity of 0.6–0.8 for good readability.",
-        "Primary text color applies to the dim and night themes. A secondary color is still stored for optional use — switch themes with the ☀/🌙 control in the sidebar to preview.",
-        "Service columns (2–10) and shortcut columns (2–8) can be configured independently.",
-        "Hex input and color picker are synchronized — you can type exact color values directly.",
-        "Weather widget: The city is resolved via geocoding — shows you country, postal code and coordinates for confirmation.",
-        "Weather data is automatically updated every 2 hours. Manual refresh via the widget button is possible.",
-        "Individual widgets (Clock, Weather, Spotify) can be hidden without losing the configuration."
-      ],
+      "topics": {
+        "appearance": {
+          "wallpaper": {
+            "title": "Wallpaper",
+            "tips": [
+              "Choose from 9 bundled preset wallpapers or upload your own images (JPG/PNG/WebP, max 10MB).",
+              "Background images work best with an opacity of 0.6–0.8 for good readability."
+            ]
+          },
+          "colors": {
+            "title": "Fonts & colors",
+            "tips": [
+              "Primary text color applies to the dim and night themes. A secondary color is still stored for optional use — switch themes with the ☀/🌙 control in the sidebar to preview.",
+              "Hex input and color picker are synchronized — you can type exact color values directly."
+            ]
+          },
+          "layout": {
+            "title": "Layout & columns",
+            "tips": [
+              "Service columns (2–10) and shortcut columns (2–8) can be configured independently."
+            ]
+          },
+          "widgets": {
+            "title": "Widgets",
+            "tips": [
+              "Individual widgets (Clock, Weather, Spotify) can be hidden without losing the configuration."
+            ]
+          },
+          "weather": {
+            "title": "Weather",
+            "tips": [
+              "Weather widget: The city is resolved via geocoding — shows you country, postal code and coordinates for confirmation.",
+              "Weather data is automatically updated every 2 hours. Manual refresh via the widget button is possible."
+            ]
+          }
+        },
+        "proxmox": {
+          "connection": {
+            "title": "Connection & API",
+            "tips": [
+              "Use a dedicated API token with minimal permissions (PVEAuditor) or PVEAdmin if VMs need to be controlled. Format: user@realm!tokenname",
+              "API token secrets are stored encrypted with Fernet (AES-128) and never shown in plaintext.",
+              "SSL verification can be disabled — useful for self-signed certificates in homelabs.",
+              "In cluster mode all nodes are detected automatically. Optional: Set a specific node as filter.",
+              "Save the connection first, then test — the test shows the number of found nodes."
+            ]
+          },
+          "dashboard": {
+            "title": "Monitoring dashboard",
+            "tips": [
+              "Auto-refresh interval configurable: 15s / 30s / 60s / 120s — shorter intervals = more API calls.",
+              "Monitoring settings (Refresh, Top-Items, Time Range) are browser-local and do not sync between devices."
+            ]
+          }
+        },
+        "addons": {
+          "config": {
+            "title": "Config import / export",
+            "tips": [
+              "Config export saves: Dashboards, Services, Shortcuts & Appearance. Filename: servicedock-config-YYYY-MM-DD.json",
+              "For security reasons Proxmox and Spotify credentials are never exported.",
+              "Import mode \"Append\" adds data (IDs are reassigned). \"Replace\" deletes everything first.",
+              "Before import the file is validated and a preview is shown (number of Dashboards, Services, Shortcuts).",
+              "Always make an export backup before using the \"Replace\" mode!"
+            ]
+          },
+          "spotify": {
+            "title": "Spotify",
+            "tips": [
+              "Spotify requires an app in the Spotify Developer Dashboard. The Redirect URI is automatically detected.",
+              "Spotify has read-only access — only the current song is queried.",
+              "OAuth connection: 2 minute timeout. Checked automatically every 3 seconds. On timeout simply reconnect."
+            ]
+          },
+          "ldap": {
+            "title": "AD / LDAP",
+            "tips": [
+              "Connect Microsoft Active Directory or OpenLDAP via the LDAP add-on (save and test bind credentials there).",
+              "When LDAP is enabled, local user management may be restricted — use your directory for day-to-day accounts.",
+              "Prefer a dedicated bind account with read access to users and groups only."
+            ]
+          }
+        }
+      },
       "dashboards_title": "Dashboard Tips",
       "dashboards": [
         "Create separate dashboards for different environments — e.g. Home, Work, Gaming, Media or Development.",
@@ -373,26 +466,7 @@
         "When deleting a dashboard, all associated services and shortcuts are also removed."
       ],
       "proxmox_title": "Proxmox Tips",
-      "proxmox": [
-        "Use a dedicated API token with minimal permissions (PVEAuditor) or PVEAdmin if VMs need to be controlled. Format: user@realm!tokenname",
-        "API token secrets are stored encrypted with Fernet (AES-128) and never shown in plaintext.",
-        "SSL verification can be disabled — useful for self-signed certificates in homelabs.",
-        "In cluster mode all nodes are detected automatically. Optional: Set a specific node as filter.",
-        "Save the connection first, then test — the test shows the number of found nodes.",
-        "Auto-refresh interval configurable: 15s / 30s / 60s / 120s — shorter intervals = more API calls.",
-        "Monitoring settings (Refresh, Top-Items, Time Range) are browser-local and do not sync between devices."
-      ],
       "addons_title": "AddOn Tips",
-      "addons": [
-        "Config export saves: Dashboards, Services, Shortcuts & Appearance. Filename: servicedock-config-YYYY-MM-DD.json",
-        "For security reasons Proxmox and Spotify credentials are never exported.",
-        "Import mode \"Append\" adds data (IDs are reassigned). \"Replace\" deletes everything first.",
-        "Before import the file is validated and a preview is shown (number of Dashboards, Services, Shortcuts).",
-        "Always make an export backup before using the \"Replace\" mode!",
-        "Spotify requires an app in the Spotify Developer Dashboard. The Redirect URI is automatically detected.",
-        "Spotify has read-only access — only the current song is queried.",
-        "OAuth connection: 2 minute timeout. Checked automatically every 3 seconds. On timeout simply reconnect."
-      ],
       "language_title": "Language Tips",
       "language": [
         "The language is automatically detected based on your browser settings.",
