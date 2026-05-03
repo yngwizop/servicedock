@@ -44,8 +44,8 @@ function StatCard({
         </h3>
       </div>
 
-      {/* min-h-0: Flex-Kind darf schrumpfen; kein Scroll — Höhe kommt aus Grid-Berechnung (ProxmoxStatusDashboard) */}
-      <div className="flex-1 min-h-0 flex flex-col text-gray-700 dark:text-gray-200 overflow-hidden">
+      {/* min-h-0: Flex-Kind darf schrumpfen; overflow-y-auto bei manuell verkleinerter Rasterhöhe */}
+      <div className="flex-1 min-h-0 flex flex-col text-gray-700 dark:text-gray-200 overflow-y-auto overflow-x-hidden">
         {children}
       </div>
     </div>

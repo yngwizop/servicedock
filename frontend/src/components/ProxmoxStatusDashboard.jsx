@@ -50,6 +50,8 @@ function ProxmoxStatusDashboard({
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [layoutModified, setLayoutModified] = useState(false);
+  /** Synchron: verhindert, dass ein spätes loadLayout() lokale Drag-/Resize-Änderungen überschreibt */
+  const layoutModifiedRef = useRef(false);
   const [saveStatus, setSaveStatus] = useState({ type: '', message: '' });
   const layoutInitialized = useRef(false);
   const currentBreakpoint = useRef('lg');
@@ -89,13 +91,6 @@ function ProxmoxStatusDashboard({
         const contentPx = 78 + typeCount * 82;
         return gridHFromContentPx(contentPx, 3, 24);
       }
-      case 'tasks': {
-        const nodeCount = statsData.tasks?.by_node?.length || 0;
-        if (nodeCount === 0) return 3;
-        // compact p-3 + Header; ~40px pro Node-Zeile; Total-Zeile + Trenner
-        const contentPx = 100 + nodeCount * 40 + 44;
-        return gridHFromContentPx(contentPx, 3, 14);
-      }
       default:
         return null;
     }
@@ -105,7 +100,7 @@ function ProxmoxStatusDashboard({
   const applyDynamicHeights = (currentLayout, statsData) => {
     if (!statsData) return currentLayout;
 
-    const dynamicCards = ['storage-by-node', 'storage-by-type', 'tasks'];
+    const dynamicCards = ['storage-by-node', 'storage-by-type'];
 
     return currentLayout.map(item => {
       if (dynamicCards.includes(item.i)) {
@@ -125,7 +120,7 @@ function ProxmoxStatusDashboard({
 
   /** Nur bei geänderter dynamischer Höhe neu setzen — vermeidet ständiges RGL-Reflow/Flackern bei Auto-Refresh. */
   const dynamicHeightsChanged = (prevLayout, nextLayout) => {
-    const ids = ['storage-by-node', 'storage-by-type', 'tasks'];
+    const ids = ['storage-by-node', 'storage-by-type'];
     const metrics = (layout) => {
       const m = new Map();
       for (const item of layout) {
@@ -165,28 +160,24 @@ function ProxmoxStatusDashboard({
   const getDefaultLayout = () => {
     const topCardHeight = getTopCardHeight();
     return [
-      // Zeile 1: Status Cards (4x Cards nebeneinander)
-      { i: 'nodes', x: 0, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 3, resizeHandles: RESIZE_WIDTH_ONLY },
-      { i: 'vms', x: 1, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 3, resizeHandles: RESIZE_WIDTH_ONLY },
-      { i: 'lxcs', x: 2, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 3, resizeHandles: RESIZE_WIDTH_ONLY },
-      // Tasks: Höhe wird dynamisch nach API-Daten gesetzt
-      { i: 'tasks', x: 3, y: 0, w: 1, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 3, resizeHandles: RESIZE_WIDTH_ONLY },
+      // Zeile 1–2: Status Cards (Default je 2 Spalten breit, min 1; Höhe Default = min, +1 Raster möglich)
+      { i: 'nodes', x: 0, y: 0, w: 2, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 4 },
+      { i: 'vms', x: 2, y: 0, w: 2, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 4 },
+      { i: 'lxcs', x: 0, y: 3, w: 2, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 4 },
+      { i: 'tasks', x: 2, y: 3, w: 2, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 4 },
 
-      // Zeile 2: Top Usage (Höhe Settings-gesteuert)
-      { i: 'top-cpu', x: 0, y: 4, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: topCardHeight, maxH: topCardHeight, resizeHandles: RESIZE_WIDTH_ONLY },
-      { i: 'top-memory', x: 1, y: 4, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: topCardHeight, maxH: topCardHeight, resizeHandles: RESIZE_WIDTH_ONLY },
+      // Top Usage (y nach zwei Status-Zeilen à h:3)
+      { i: 'top-cpu', x: 0, y: 7, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: topCardHeight, maxH: topCardHeight, resizeHandles: RESIZE_WIDTH_ONLY },
+      { i: 'top-memory', x: 1, y: 7, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: topCardHeight, maxH: topCardHeight, resizeHandles: RESIZE_WIDTH_ONLY },
 
-      // Zeile 3: Disk Usage + Storage Total
-      { i: 'top-disk', x: 2, y: 4 + topCardHeight, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: topCardHeight, maxH: topCardHeight, resizeHandles: RESIZE_WIDTH_ONLY },
-      { i: 'storage-total', x: 3, y: 4 + topCardHeight, w: 1, h: 4, minW: 1, maxW: 4, minH: 4, maxH: 7 },
+      { i: 'top-disk', x: 2, y: 7 + topCardHeight, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: topCardHeight, maxH: topCardHeight, resizeHandles: RESIZE_WIDTH_ONLY },
+      { i: 'storage-total', x: 3, y: 7 + topCardHeight, w: 1, h: 4, minW: 1, maxW: 4, minH: 4, maxH: 7 },
       
-      // Zeile 4: Storage By Node + By Type (Höhe dynamisch nach API-Daten)
-      { i: 'storage-by-node', x: 0, y: 9 + topCardHeight, w: 2, h: 6, minW: 2, maxW: 4, minH: 3, maxH: 6, resizeHandles: RESIZE_WIDTH_ONLY },
-      { i: 'storage-by-type', x: 2, y: 9 + topCardHeight, w: 2, h: 6, minW: 1, maxW: 4, minH: 3, maxH: 6, resizeHandles: RESIZE_WIDTH_ONLY },
+      { i: 'storage-by-node', x: 0, y: 12 + topCardHeight, w: 2, h: 6, minW: 1, maxW: 4, minH: 3, maxH: 6, resizeHandles: RESIZE_WIDTH_ONLY },
+      { i: 'storage-by-type', x: 2, y: 12 + topCardHeight, w: 2, h: 6, minW: 1, maxW: 4, minH: 3, maxH: 6, resizeHandles: RESIZE_WIDTH_ONLY },
       
-      // Zeile 5: Ceph Cards (Höhe manuell einstellbar)
-      { i: 'ceph-health', x: 0, y: 16 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 4, maxH: 7 },
-      { i: 'ceph-osd', x: 2, y: 16 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 5, maxH: 5, resizeHandles: RESIZE_WIDTH_ONLY }
+      { i: 'ceph-health', x: 0, y: 19 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 4, maxH: 7 },
+      { i: 'ceph-osd', x: 2, y: 19 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 5, maxH: 10 }
     ];
   };
   
@@ -314,7 +305,15 @@ function ProxmoxStatusDashboard({
             if (!defaultItem) return item;
 
             // Cards mit manuell einstellbarer Höhe: gespeicherte Höhe beibehalten
-            const resizableHeightCards = ['storage-total', 'ceph-health'];
+            const resizableHeightCards = [
+              'storage-total',
+              'ceph-health',
+              'ceph-osd',
+              'nodes',
+              'vms',
+              'lxcs',
+              'tasks',
+            ];
             const savedH = resizableHeightCards.includes(item.i)
               ? Math.min(Math.max(item.h, defaultItem.minH), defaultItem.maxH)
               : defaultItem.h;
@@ -330,11 +329,15 @@ function ProxmoxStatusDashboard({
           
           // Add missing cards at the bottom
           const mergedLayout = [...updatedLayout, ...missingCards];
-          // Wichtig: gespeichertes Layout setzt storage-by-type/tasks u. a. auf default-h (z. B. 6).
+          // Wichtig: gespeichertes Layout setzt storage-by-type u. a. auf default-h (z. B. 6).
           // Ohne Hydration aus Stats würde das mit dem nächsten Poll hin- und herspringen.
           const withDynamicHeights = statsRef.current
             ? applyDynamicHeights(mergedLayout, statsRef.current)
             : mergedLayout;
+          // Nicht das Server-Layout aufsetzen, wenn der Nutzer schon verschoben hat (sonst „zurückgesetzt“)
+          if (layoutModifiedRef.current) {
+            return;
+          }
           savedLayoutRef.current = withDynamicHeights.map(item => ({ ...item }));
           setLayout(withDynamicHeights);
         }
@@ -393,6 +396,7 @@ function ProxmoxStatusDashboard({
     if (dashboardChanged) {
       setLoading(true);
       setStats(null);
+      layoutModifiedRef.current = false;
     }
     layoutInitialized.current = false;
     void fetchStats({ silent: false });
@@ -418,6 +422,7 @@ function ProxmoxStatusDashboard({
       console.log('Save response data:', data);
       if (res.ok) {
         savedLayoutRef.current = layout.map(item => ({ ...item }));
+        layoutModifiedRef.current = false;
         setLayoutModified(false);
         setSaveStatus({ type: 'success', message: t('statusDashboard.layout_saved') });
         setTimeout(() => setSaveStatus({ type: '', message: '' }), 3000);
@@ -445,6 +450,7 @@ function ProxmoxStatusDashboard({
         const newLayout = getDefaultLayout();
         savedLayoutRef.current = newLayout.map(item => ({ ...item }));
         setLayout(newLayout);
+        layoutModifiedRef.current = false;
         setLayoutModified(false);
         setSaveStatus({ type: 'success', message: t('statusDashboard.layout_reset') });
         setTimeout(() => setSaveStatus({ type: '', message: '' }), 3000);
@@ -488,10 +494,25 @@ function ProxmoxStatusDashboard({
         const merged = prev.map(item => {
           const u = updatedMap.get(item.i);
           if (!u) return item;
-          return { ...item, x: u.x, y: u.y, w: u.w, h: u.h };
+          // Feste Höhe (minH === maxH): RGL liefert beim Breiten-Resize oft falsches h → Kompaktierung rutscht Karten
+          const heightLocked =
+            item.minH != null && item.maxH != null && item.minH === item.maxH;
+          return {
+            ...item,
+            x: u.x,
+            y: u.y,
+            w: u.w,
+            h: heightLocked ? item.h : u.h,
+          };
         });
+        // Erste Änderung vor abgeschlossenem loadLayout: sonst ist savedLayoutRef null → kein „modified“ → Server überschreibt Drag
+        if (!savedLayoutRef.current) {
+          savedLayoutRef.current = prev.map(item => ({ ...item }));
+        }
         // Only show Save button if positions actually differ from saved layout
-        setLayoutModified(hasLayoutChanged(merged));
+        const changed = hasLayoutChanged(merged);
+        layoutModifiedRef.current = changed;
+        setLayoutModified(changed);
         return merged;
       });
     }

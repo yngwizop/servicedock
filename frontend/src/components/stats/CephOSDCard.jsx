@@ -15,7 +15,7 @@ function CephOSDCard({ ceph }) {
         title="Ceph OSDs"
         icon={<HardDrives size={28} weight="duotone" />}
       >
-        <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="flex h-full min-h-0 flex-col items-center justify-center py-8 text-center">
           <Disc size={72} weight="duotone" className="mb-3 text-gray-500/50 dark:text-gray-400/35" />
           <div className="text-sm text-gray-600 dark:text-gray-400">
             {t('stats.no_osd')}
@@ -40,9 +40,8 @@ function CephOSDCard({ ceph }) {
       title="Ceph OSDs"
       icon={<HardDrives size={28} weight="duotone" />}
     >
-      <div className="flex flex-col">
-        <div className="space-y-1.5 text-center">
-          {/* Total OSDs */}
+      <div className="flex h-full min-h-0 flex-col gap-2">
+        <div className="shrink-0 space-y-1.5 text-center">
           <div>
             <div className="text-3xl font-bold text-gray-800 dark:text-white">
               {osd.total}
@@ -51,20 +50,19 @@ function CephOSDCard({ ceph }) {
               Total OSDs
             </div>
           </div>
-
-          {/* Health Percentage — Abstand zur Kachel-Matrix */}
-          <div className="pb-1">
+          <div className="pb-0.5">
             <div className={`text-xl font-bold ${getHealthColor()}`}>
               {healthyPercent.toFixed(0)}% Healthy
             </div>
           </div>
         </div>
 
-        {/* OSD Status Grid */}
-        <div className="mt-3 grid grid-cols-2 gap-2">
-            {/* Up */}
-            <div className="p-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-              <div className="flex items-center justify-between mb-0.5">
+        {/* Spacer: bei extra Höhe Abstand nach oben; Raster selbst nur „auto“-Zeilen → kein Überlappen im Minimum */}
+        <div className="min-h-0 flex-1" aria-hidden="true" />
+
+        <div className="grid shrink-0 grid-cols-2 gap-2">
+            <div className="flex flex-col justify-center rounded-lg border border-green-200 bg-green-50 p-2 dark:border-green-800 dark:bg-green-900/20">
+              <div className="mb-0.5 flex items-center justify-between">
                 <CheckCircle size={18} weight="fill" className="text-green-600 dark:text-green-400" />
                 <span className="text-xs font-semibold text-green-700 dark:text-green-300">UP</span>
               </div>
@@ -73,9 +71,8 @@ function CephOSDCard({ ceph }) {
               </div>
             </div>
 
-            {/* In */}
-            <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-              <div className="flex items-center justify-between mb-0.5">
+            <div className="flex flex-col justify-center rounded-lg border border-blue-200 bg-blue-50 p-2 dark:border-blue-800 dark:bg-blue-900/20">
+              <div className="mb-0.5 flex items-center justify-between">
                 <CheckCircle size={18} weight="fill" className="text-blue-600 dark:text-blue-400" />
                 <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">IN</span>
               </div>
@@ -84,9 +81,8 @@ function CephOSDCard({ ceph }) {
               </div>
             </div>
 
-            {/* Down */}
-            <div className="p-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-              <div className="flex items-center justify-between mb-0.5">
+            <div className="flex flex-col justify-center rounded-lg border border-red-200 bg-red-50 p-2 dark:border-red-800 dark:bg-red-900/20">
+              <div className="mb-0.5 flex items-center justify-between">
                 <XCircle size={18} weight="fill" className="text-red-600 dark:text-red-400" />
                 <span className="text-xs font-semibold text-red-700 dark:text-red-300">DOWN</span>
               </div>
@@ -95,9 +91,8 @@ function CephOSDCard({ ceph }) {
               </div>
             </div>
 
-            {/* Out */}
-            <div className="p-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800">
-              <div className="flex items-center justify-between mb-0.5">
+            <div className="flex flex-col justify-center rounded-lg border border-orange-200 bg-orange-50 p-2 dark:border-orange-800 dark:bg-orange-900/20">
+              <div className="mb-0.5 flex items-center justify-between">
                 <XCircle size={18} weight="fill" className="text-orange-600 dark:text-orange-400" />
                 <span className="text-xs font-semibold text-orange-700 dark:text-orange-300">OUT</span>
               </div>
@@ -107,9 +102,10 @@ function CephOSDCard({ ceph }) {
             </div>
         </div>
 
-        {/* Legende — Abstand zum Grid + zur Trennlinie */}
-        <div className="mt-4 pt-3 border-t border-gray-300/30 dark:border-white/10">
-          <div className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
+        <div className="min-h-0 flex-1" aria-hidden="true" />
+
+        <div className="shrink-0 border-t border-gray-300/30 pt-3 dark:border-white/10">
+          <div className="space-y-0.5 text-xs text-gray-600 dark:text-gray-400">
             <div>• <strong>Up:</strong> OSD is running and reachable</div>
             <div>• <strong>In:</strong> OSD is part of the cluster</div>
             <div>• <strong>Down:</strong> OSD is not responding</div>
