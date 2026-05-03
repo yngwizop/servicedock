@@ -2,7 +2,20 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LockKey, User } from 'phosphor-react';
 
-function LoginModal({ onSubmit, password, setPassword, username, setUsername, error, onClose, disabled = false, appearance = {}, adEnabled = false, adDomain = null }) {
+function LoginModal({
+  onSubmit,
+  password,
+  setPassword,
+  username,
+  setUsername,
+  error,
+  onClose,
+  disabled = false,
+  appearance = {},
+  adEnabled = false,
+  adDomain = null,
+  localUsernameRequired = false,
+}) {
   const { t } = useTranslation();
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="loginmodal-title">
@@ -36,11 +49,14 @@ function LoginModal({ onSubmit, password, setPassword, username, setUsername, er
           </h3>
         </div>
         <p className="text-gray-400 dark:text-gray-500 mb-4">
-          {adEnabled ? t('login.instruction_ad') : t('login.instruction')}
+          {adEnabled
+            ? t('login.instruction_ad')
+            : localUsernameRequired
+              ? t('login.instruction_local_multi')
+              : t('login.instruction')}
         </p>
 
-        {/* Username Input (nur wenn AD aktiv) */}
-        {adEnabled && (
+        {(adEnabled || localUsernameRequired) && (
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-300 dark:text-gray-400 mb-2">
               {t('login.username_label')}
@@ -56,6 +72,9 @@ function LoginModal({ onSubmit, password, setPassword, username, setUsername, er
                 className="w-full pl-10 pr-4 py-2 bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-white placeholder-gray-400 dark:placeholder-gray-500"
               />
             </div>
+            {adDomain && adEnabled && (
+              <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-500">{adDomain}</p>
+            )}
           </div>
         )}
 
@@ -67,7 +86,7 @@ function LoginModal({ onSubmit, password, setPassword, username, setUsername, er
           <input
             type="password"
             placeholder={t('login.password_placeholder')}
-            autoFocus={!adEnabled}
+            autoFocus={!adEnabled && !localUsernameRequired}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-4 py-2 bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-white placeholder-gray-400 dark:placeholder-gray-500"

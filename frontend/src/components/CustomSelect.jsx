@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { CaretDown } from 'phosphor-react';
 
-function CustomSelect({ value, onChange, options, className = '' }) {
+function CustomSelect({ value, onChange, options, className = '', disabled = false, compact = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
   const triggerRef = useRef(null);
@@ -66,24 +66,32 @@ function CustomSelect({ value, onChange, options, className = '' }) {
     return () => document.removeEventListener('keydown', handleKey);
   }, [isOpen]);
 
+  useEffect(() => {
+    if (disabled) setIsOpen(false);
+  }, [disabled]);
+
+  const triggerPad = compact ? 'px-3 py-2 text-xs' : 'px-4 py-3 text-sm';
+
   return (
     <div className={className}>
       {/* Trigger */}
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 border
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between gap-2 ${triggerPad} rounded-xl font-medium transition-all duration-200 border
           dark:bg-white/[0.12] sd-night-surface backdrop-blur-md
           border-gray-300/60 dark:border-white/15 night:border-white/10
           dark:hover:bg-white/20 night:hover:bg-sd-night-800/90
           text-gray-900 dark:text-white
+          disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-white/[0.12]
           ${isOpen ? 'ring-2 ring-blue-500 border-blue-500/50' : ''}
         `}
       >
         <span className="truncate">{selectedOption?.label || value}</span>
         <CaretDown
-          size={16}
+          size={compact ? 14 : 16}
           weight="bold"
           className={`shrink-0 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
         />

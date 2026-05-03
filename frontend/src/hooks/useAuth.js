@@ -21,6 +21,8 @@ export function useAuth() {
   // AD-Modus
   const [adEnabled, setAdEnabled] = useState(false);
   const [adDomain, setAdDomain] = useState(null);
+  /** Mehrere lokale Benutzer → Login benötigt Benutzername */
+  const [localUsernameRequired, setLocalUsernameRequired] = useState(false);
   
   // Rollen-Info
   const [userRole, setUserRole] = useState(
@@ -48,12 +50,25 @@ export function useAuth() {
           const data = await res.json();
           setAdEnabled(data.ad_enabled);
           setAdDomain(data.domain);
+          setLocalUsernameRequired(Boolean(data.local_username_required));
         }
       } catch (err) {
         // Silently fail — Local-only Mode
       }
     };
     fetchAuthMode();
+  }, []);
+
+  useEffect(() => {
+    const onMode = (e) => {
+      const d = e.detail;
+      if (!d) return;
+      if (d.local_username_required != null) setLocalUsernameRequired(Boolean(d.local_username_required));
+      if (d.ad_enabled != null) setAdEnabled(Boolean(d.ad_enabled));
+      if (d.domain !== undefined) setAdDomain(d.domain);
+    };
+    window.addEventListener('servicedock-auth-mode', onMode);
+    return () => window.removeEventListener('servicedock-auth-mode', onMode);
   }, []);
 
   const handleLogin = async (e) => {
@@ -174,6 +189,7 @@ export function useAuth() {
     // AD
     adEnabled,
     adDomain,
+    localUsernameRequired,
     // Rollen
     userRole,
     isAdmin,

@@ -119,6 +119,30 @@ INSERT INTO admin_auth (id, password_hash, force_change)
 VALUES (1, '$2b$12$YU.qWhwL8Y2m0a0NDlD5nON0UE5QrtkDfUh47pYIKgtDg/yg9HF.m', TRUE)
 ON CONFLICT (id) DO NOTHING;
 
+-- Lokale Benutzer (Multi-User ohne LDAP); Username immer kleingeschrieben gespeichert
+CREATE TABLE IF NOT EXISTS local_users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'admin'
+        CHECK (role IN ('admin', 'viewer')),
+    display_name VARCHAR(255),
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    force_change BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+INSERT INTO local_users (username, password_hash, role, enabled, force_change)
+VALUES (
+    'admin',
+    '$2b$12$YU.qWhwL8Y2m0a0NDlD5nON0UE5QrtkDfUh47pYIKgtDg/yg9HF.m',
+    'admin',
+    TRUE,
+    TRUE
+)
+ON CONFLICT (username) DO NOTHING;
+
 -- NEU: LDAP/Active Directory Konfigurationstabelle (AddOn)
 CREATE TABLE IF NOT EXISTS ldap_config (
     id INT PRIMARY KEY DEFAULT 1,

@@ -7,7 +7,7 @@ ServiceDock supports **Active Directory / LDAP authentication** as an optional a
 **Features:**
 - AD login with username + password (UPN bind: `user@domain`)
 - Role mapping via AD groups (admin group / viewer group)
-- Automatic fallback to local login when no username is provided
+- When LDAP is enabled: if the login request has **no** `username`, **local** authentication is used (same rules as without AD: single local user = password-only; multiple local users = username required). If a `username` is sent, **only** LDAP is attempted for that request.
 - Viewer role: read-only dashboard (no edit mode, no settings)
 - LDAP over SSL (LDAPS) or StartTLS
 - Bind password stored encrypted in the database (Fernet)
@@ -163,10 +163,12 @@ The login accepts:
 | Security tab | ✅ | ❌ |
 | Settings | ✅ | ❌ |
 | Add item (FAB) | ✅ | ❌ |
+| Help markdown (`GET /api/docs/help*`) | ✅ | ✅ only without AD; ❌ when AD/LDAP is **enabled** |
 
 ### Implementation
 
-- **Backend:** `require_any_role("admin", "viewer")` for read endpoints (services, shortcuts, dashboards, appearance). Write endpoints remain `require_role("admin")`.
+- **Backend:** `require_any_role("admin", "viewer")` for read endpoints (services, shortcuts, dashboards, appearance). Write endpoints remain `require_role("admin")`. **Help docs** use `require_help_docs_access`: admin **or** viewer when LDAP is off; **admin only** when `ldap_config.enabled` is true.
+- **Local accounts:** Multiple **local** users (admin/viewer) can be managed under **Settings → Users** without LDAP. If more than one row exists in `local_users`, the login API requires a **username**; with a single user, password-only login still works. LDAP and local accounts are separate: if AD is enabled and the client sends a `username`, only LDAP is tried for that attempt.
 - **Frontend:** `isAdmin` controls edit mode, FAB, and sidebar tabs (Proxmox, Security, Settings).
 - **Public endpoints** (no auth):
   - `GET /api/auth/mode` — whether AD is enabled

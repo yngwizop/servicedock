@@ -265,6 +265,7 @@ function App() {
         setUsername={auth.setUsername}
         adEnabled={auth.adEnabled}
         adDomain={auth.adDomain}
+        localUsernameRequired={auth.localUsernameRequired}
         error={auth.loginError}
         disabled={auth.loginDisabled}
         onClose={() => auth.setLoginError("")}

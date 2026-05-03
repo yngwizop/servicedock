@@ -5,10 +5,8 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from datetime import datetime, timezone
 import json
-import bcrypt
-
 from models.config import ConfigExport, ConfigImport, DashboardExport, ServiceExport, ShortcutExport, AppearanceExport
-from dependencies.auth import require_role
+from dependencies.auth import require_role, verify_destructive_password
 from config.database import get_db
 from core.logging import logger
 from core.limiter import limiter
@@ -161,9 +159,7 @@ async def import_config(
     if mode == "replace":
         if not x_confirm_password:
             raise HTTPException(status_code=400, detail="Password confirmation required for replace mode. Send X-Confirm-Password header.")
-        from dependencies.auth import get_admin_password_hash
-        admin_hash = get_admin_password_hash()
-        if not bcrypt.checkpw(x_confirm_password.encode('utf-8'), admin_hash.encode('utf-8')):
+        if not verify_destructive_password(token, x_confirm_password):
             raise HTTPException(status_code=403, detail="Password confirmation failed")
 
     # Limit number of dashboards to prevent abuse

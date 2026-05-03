@@ -36,7 +36,10 @@ routers/
 ├── services.py     # Services CRUD + Reorder
 ├── appearance.py   # Dashboard-Einstellungen
 ├── proxmox.py      # Proxmox VM-Management
-└── admin.py        # Audit-Logs & Token-Rotation
+├── admin.py        # Audit-Logs & Token-Rotation
+├── docs.py         # Hilfe-Markdown (Whitelist, /api/docs/help)
+├── users.py        # Lokale Benutzer (/api/users)
+└── …               # u. a. spotify, dashboards, ldap, wallpapers, config
 ```
 
 ### Security Features
@@ -59,21 +62,43 @@ routers/
 - SlowAPI: 5 Anfragen/Minute
 - IP-Lockout: 5 Fehlversuche → 15 Minuten Sperre
 
-**Request Body:**
+**Request Body (lokal, ein einziger Benutzer in `local_users`):**
 ```json
 {
   "password": "admin-password"
 }
 ```
 
-**Response (Success):**
+**Mit mehreren lokalen Benutzern** (siehe `GET /api/auth/mode` → `local_username_required: true`) ist **`username` Pflicht** (Kleinbuchstaben, erlaubte Zeichen: Buchstaben, Ziffern, `.`, `_`, `-`).
+
+**Mit aktivem LDAP/AD** und gesetztem `username`: zuerst **LDAP-Authentifizierung**; bei Fehlschlag **401** (kein automatischer Fallback auf lokales Passwort für denselben Namen).
+
+**Response (Success, Beispiel lokal):**
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "message": "Login successful",
   "token_type": "bearer",
-  "expires_in": 7200
+  "expires_in": 7200,
+  "auth_method": "local",
+  "role": "admin",
+  "username": "admin",
+  "display_name": null,
+  "force_password_change": false
 }
 ```
+
+Cookies `access_token` und `refresh_token` (httpOnly) werden wie bisher gesetzt; JWT enthält `sub` (= Benutzername), `type` (= `admin` | `viewer`), `auth_method` (`local` | `ad`).
+
+### GET /api/auth/mode
+
+**Öffentlich** — liefert u. a.:
+
+| Feld | Bedeutung |
+|------|------------|
+| `ad_enabled` | LDAP/AD aktiv |
+| `domain` | AD-Domain-Hinweis fürs Login-UI (wenn AD aktiv) |
+| `local_username_required` | `true`, wenn **mehr als ein** Eintrag in `local_users` existiert (Login benötigt dann `username`) |
+| `local_users_count` | Anzahl Zeilen in `local_users` |
 
 **Response (Error - 401):**
 ```json
@@ -93,6 +118,84 @@ routers/
 - `LOGIN_SUCCESS` - Erfolgreicher Login
 - `LOGIN_FAILED` - Falsches Passwort
 - `LOGIN_BLOCKED` - IP-Lockout aktiv
+
+### PUT /api/auth/password
+
+**Authentifizierung:** `admin` oder `viewer`, nur **`auth_method: local`** (AD: **403**).
+
+Ändert das Passwort des in JWT `sub` eingetragenen lokalen Benutzers (Tabelle `local_users`).
+
+---
+
+## 👤 Lokale Benutzer (`/api/users`)
+
+**Router:** `routers/users.py` — nur **`require_role("admin")`**.
+
+| Methode | Pfad | Beschreibung |
+|---------|------|----------------|
+| `GET` | `/api/users` | Liste aller lokalen Benutzer (ohne Passwort-Hash) |
+| `POST` | `/api/users` | Anlegen: `username`, `password` (min. 8 Zeichen), `role` (`admin` \| `viewer`), optional `display_name` |
+| `PUT` | `/api/users/{id}` | Rolle, `enabled`, `display_name`, optional `new_password` (Admin-Reset) |
+| `DELETE` | `/api/users/{id}` | Löschen (nicht der letzte aktive Admin; kein Selbst-Löschen) |
+
+Beim ersten Start wird `local_users` aus `admin_auth` befüllt (User **`admin`**). `admin_auth` wird bei Passwortänderungen des Users `admin` mit synchron gehalten (Legacy).
+
+---
+
+## 📄 Help / Markdown (Settings-Hilfe)
+
+**Prefix:** `/api/docs`  
+**Router:** `routers/docs.py`
+
+Diese Endpunkte liefern **nur whitelisted** Markdown-Dateien aus dem konfigurierten Hilfe-Verzeichnis (`SERVICEDOCK_HELP_DOCS_DIR` im Docker-Image, sonst Repo-Root). Es gibt **keinen** frei wählbaren Dateipfad; `doc_id` wird intern auf einen festen Dateinamen abgebildet.
+
+### GET /help
+
+**Vollständige URL:** `GET /api/docs/help`
+
+**Authentication:** Erforderlich (JWT Cookie oder `Authorization: Bearer`). Ohne aktives LDAP/AD in der App: Rolle **admin** oder **viewer**. Ist **LDAP/AD aktiviert** (`ldap_config.enabled`), dürfen nur noch **Admins** die Hilfe-Markdowns laden (Viewer erhalten **403**).
+
+**Rate Limit:** 60 Anfragen/Minute (SlowAPI, IP-basiert).
+
+**Response (200):**
+```json
+{
+  "docs": [
+    { "id": "readme", "file": "README.md" },
+    { "id": "quickstart", "file": "QUICKSTART.md" }
+  ]
+}
+```
+
+Die vollständige Liste der Einträge entspricht der Konstante `HELP_DOCS` im Backend (u. a. `readme`, `quickstart`, `initial-setup`, `token-rotation`, `proxmox`, `spotify`, `ldap`, `deploy`, `https`).
+
+### GET /help/{doc_id}
+
+**Vollständige URL:** `GET /api/docs/help/{doc_id}`
+
+**Authentication:** Wie bei `GET /api/docs/help` — ohne LDAP: **admin** oder **viewer**; mit aktivem LDAP/AD: **nur admin**.
+
+**Rate Limit:** 60 Anfragen/Minute.
+
+**Path-Parameter:** `doc_id` — einer der erlaubten `id`-Werte aus der Liste von `GET /api/docs/help`.
+
+**Response (200):**
+```json
+{
+  "id": "readme",
+  "file": "README.md",
+  "markdown": "# …"
+}
+```
+
+**Fehler:**
+| Code | Bedeutung |
+|------|-----------|
+| 401 | Nicht authentifiziert |
+| 403 | Rolle unzureichend (z. B. Viewer bei aktivem LDAP/AD, oder ohne LDAP weder admin noch viewer) |
+| 404 | Unbekanntes `doc_id` oder Datei fehlt auf dem Server |
+| 400 | Aufgelöster Pfad liegt nicht unter dem Hilfe-Root (ungültige Konfiguration / Symlink) |
+| 413 | Datei größer als das konfigurierte Maximum (~1,5 MB) |
 
 ---
 

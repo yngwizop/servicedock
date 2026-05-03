@@ -5,12 +5,21 @@ from typing import Optional
 from pydantic import BaseModel, Field, validator
 
 from models.auth import AdminLogin
-from core.security import verify_password, create_access_token, get_password_hash
+from core.security import create_access_token, get_password_hash, verify_password
 from core.rate_limiting import check_login_rate_limit, record_failed_login, reset_failed_login
 from core.audit import log_audit
 from core.limiter import limiter
 from core.ldap_auth import ldap_authenticate, get_ldap_config
-from dependencies.auth import get_client_ip, get_admin_password_hash, get_admin_force_change, update_admin_password, require_role
+from dependencies.auth import (
+    get_client_ip,
+    update_local_user_password,
+    require_any_role,
+)
+from core.local_users import (
+    count_all_local_users,
+    get_sole_local_user_if_exactly_one,
+    get_user_by_username,
+)
 from config.settings import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS, ENVIRONMENT, SECRET_KEY, ALGORITHM
 from jose import JWTError, jwt
 
@@ -85,24 +94,23 @@ def login(creds: AdminLogin, request: Request, response: Response):
         )
         raise HTTPException(status_code=429, detail=error_msg)
     
-    # --- AD Login Versuch ---
+    # --- AD Login (nur wenn LDAP aktiv und Username gesetzt) ---
     if creds.username:
         ldap_config = get_ldap_config()
         if ldap_config and ldap_config.get("enabled"):
             ad_result = ldap_authenticate(creds.username, creds.password)
-            
+
             if ad_result:
-                # AD Login erfolgreich
                 reset_failed_login(client_ip)
-                
+
                 _set_auth_cookies(
                     response=response,
                     user_sub=ad_result["username"],
-                    user_type=ad_result["role"],  # "admin" oder "viewer"
+                    user_type=ad_result["role"],
                     auth_method="ad",
                     display_name=ad_result.get("display_name"),
                 )
-                
+
                 log_audit(
                     action="LOGIN_SUCCESS",
                     status="success",
@@ -112,9 +120,9 @@ def login(creds: AdminLogin, request: Request, response: Response):
                         "auth_method": "ad",
                         "username": ad_result["username"],
                         "display_name": ad_result.get("display_name"),
-                    }
+                    },
                 )
-                
+
                 return {
                     "message": "Login successful",
                     "token_type": "bearer",
@@ -124,58 +132,120 @@ def login(creds: AdminLogin, request: Request, response: Response):
                     "username": ad_result["username"],
                     "display_name": ad_result.get("display_name"),
                 }
-            
-            # AD fehlgeschlagen — Fallback auf Local nur wenn kein Username
-            # Wenn Username angegeben wurde, ist es ein AD-Login-Versuch
+
             record_failed_login(client_ip)
             log_audit(
                 action="LOGIN_FAILED",
                 status="failed",
                 user_type="unknown",
                 ip_address=client_ip,
-                details={"reason": "ad_auth_failed", "username": creds.username}
+                details={"reason": "ad_auth_failed", "username": creds.username},
             )
             raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    # --- Local Login (Passwort-only) ---
-    admin_hash = get_admin_password_hash()
-    if not verify_password(creds.password, admin_hash):
+
+        # LDAP aus, aber Username gesetzt → lokaler Benutzer
+        loc = get_user_by_username(creds.username)
+        if not loc or not loc.get("enabled"):
+            record_failed_login(client_ip)
+            log_audit(
+                action="LOGIN_FAILED",
+                status="failed",
+                user_type="unknown",
+                ip_address=client_ip,
+                details={"reason": "unknown_local_user", "username": creds.username},
+            )
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        if not verify_password(creds.password, loc["password_hash"]):
+            record_failed_login(client_ip)
+            log_audit(
+                action="LOGIN_FAILED",
+                status="failed",
+                user_type=loc.get("role", "unknown"),
+                ip_address=client_ip,
+                details={"reason": "invalid_password", "auth_method": "local"},
+            )
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+
+        reset_failed_login(client_ip)
+        _set_auth_cookies(
+            response=response,
+            user_sub=loc["username"],
+            user_type=loc["role"],
+            auth_method="local",
+            display_name=loc.get("display_name"),
+        )
+        log_audit(
+            action="LOGIN_SUCCESS",
+            status="success",
+            user_type=loc["role"],
+            ip_address=client_ip,
+            details={"auth_method": "local", "username": loc["username"]},
+        )
+        return {
+            "message": "Login successful",
+            "token_type": "bearer",
+            "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            "auth_method": "local",
+            "role": loc["role"],
+            "username": loc["username"],
+            "display_name": loc.get("display_name"),
+            "force_password_change": bool(loc.get("force_change")),
+        }
+
+    # --- Lokales Login ohne Username (nur wenn genau ein lokaler User) ---
+    if count_all_local_users() > 1:
         record_failed_login(client_ip)
-        
         log_audit(
             action="LOGIN_FAILED",
             status="failed",
-            user_type="admin",
+            user_type="unknown",
             ip_address=client_ip,
-            details={"reason": "invalid_password", "auth_method": "local"}
+            details={"reason": "username_required"},
+        )
+        raise HTTPException(
+            status_code=401,
+            detail="Username is required when multiple local users exist.",
+        )
+
+    sole = get_sole_local_user_if_exactly_one()
+    if not sole or not sole.get("enabled"):
+        record_failed_login(client_ip)
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not verify_password(creds.password, sole["password_hash"]):
+        record_failed_login(client_ip)
+        log_audit(
+            action="LOGIN_FAILED",
+            status="failed",
+            user_type=sole.get("role", "admin"),
+            ip_address=client_ip,
+            details={"reason": "invalid_password", "auth_method": "local"},
         )
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    # Local Login erfolgreich
+
     reset_failed_login(client_ip)
-    
     _set_auth_cookies(
         response=response,
-        user_sub="admin",
-        user_type="admin",
+        user_sub=sole["username"],
+        user_type=sole["role"],
         auth_method="local",
+        display_name=sole.get("display_name"),
     )
-    
     log_audit(
         action="LOGIN_SUCCESS",
         status="success",
-        user_type="admin",
+        user_type=sole["role"],
         ip_address=client_ip,
-        details={"auth_method": "local"}
+        details={"auth_method": "local", "username": sole["username"]},
     )
-    
     return {
         "message": "Login successful",
         "token_type": "bearer",
         "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         "auth_method": "local",
-        "role": "admin",
-        "force_password_change": get_admin_force_change(),
+        "role": sole["role"],
+        "username": sole["username"],
+        "display_name": sole.get("display_name"),
+        "force_password_change": bool(sole.get("force_change")),
     }
 
 @router.post("/api/refresh")
@@ -268,10 +338,14 @@ def get_auth_mode(request: Request):
     ldap_config = get_ldap_config()
     ad_enabled = bool(ldap_config and ldap_config.get("enabled"))
     domain = ldap_config.get("domain") if ad_enabled else None
-    
+    n_local = count_all_local_users()
+    local_username_required = n_local > 1
+
     return {
         "ad_enabled": ad_enabled,
-        "domain": domain,  # z.B. "homelab.local" — Hinweis im Login-Modal
+        "domain": domain,
+        "local_username_required": local_username_required,
+        "local_users_count": n_local,
     }
 
 
@@ -288,42 +362,45 @@ class ChangePasswordRequest(BaseModel):
 
 @router.put("/api/auth/password")
 @limiter.limit("5/minute")
-def change_password(request: Request, body: ChangePasswordRequest, token: dict = Depends(require_role("admin"))):
+def change_password(request: Request, body: ChangePasswordRequest, token: dict = Depends(require_any_role("admin", "viewer"))):
     """
-    Passwort ändern — nur für lokale Admins.
+    Passwort ändern — nur für lokale Benutzer (JWT sub = Username).
     Prüft altes Passwort, setzt neues (bcrypt), force_change → FALSE.
     """
     client_ip = get_client_ip(request)
-    
-    # Nur local-Auth darf Passwort ändern
+
     if token.get("auth_method") == "ad":
         raise HTTPException(status_code=403, detail="AD users cannot change local password")
-    
-    # Altes Passwort verifizieren
-    admin_hash = get_admin_password_hash()
-    if not verify_password(body.current_password, admin_hash):
+
+    sub = token.get("sub")
+    if not sub:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    u = get_user_by_username(sub)
+    if not u or not u.get("enabled"):
+        raise HTTPException(status_code=403, detail="User not found or disabled")
+
+    if not verify_password(body.current_password, u["password_hash"]):
         log_audit(
             action="PASSWORD_CHANGE_FAILED",
             status="failed",
-            user_type="admin",
+            user_type=u.get("role", "admin"),
             ip_address=client_ip,
-            details={"reason": "wrong_current_password"}
+            details={"reason": "wrong_current_password"},
         )
         raise HTTPException(status_code=403, detail="Current password is incorrect")
-    
-    # Neues Passwort darf nicht gleich dem alten sein
+
     if body.current_password == body.new_password:
         raise HTTPException(status_code=400, detail="New password must be different from current")
-    
-    # Neues Passwort setzen
-    update_admin_password(body.new_password)
-    
+
+    update_local_user_password(sub, body.new_password)
+
     log_audit(
         action="PASSWORD_CHANGED",
         status="success",
-        user_type="admin",
+        user_type=u.get("role", "admin"),
         ip_address=client_ip,
-        details={"auth_method": "local"}
+        details={"auth_method": "local", "username": sub},
     )
-    
+
     return {"message": "Password changed successfully"}

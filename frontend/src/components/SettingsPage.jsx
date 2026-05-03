@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Palette, SquaresFour, Desktop, Plug, Lightbulb, Info, ShieldCheck, Lightning, Translate, Lifebuoy, BookOpen } from 'phosphor-react';
+import { Palette, SquaresFour, Desktop, Plug, Lightbulb, Info, ShieldCheck, Lightning, Translate, Lifebuoy, BookOpen, Users } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../utils/auth';
 import AppearanceTab from './settings/AppearanceTab';
@@ -8,6 +8,7 @@ import DashboardsCard from './settings/DashboardsCard';
 import AddOnsCard from './settings/AddOnsCard';
 import LanguageCard from './settings/LanguageCard';
 import HelpTab from './settings/HelpTab';
+import UsersTab from './settings/UsersTab';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
   (window.location.port === '' ? 
@@ -104,6 +105,16 @@ function SettingsPage({
           { icon: Lightning, text: t('settings.tips.language.2') },
         ],
       },
+      users: {
+        title: t('settings.tips.users_title'),
+        icon: Users,
+        color: 'text-emerald-400',
+        tips: [
+          { icon: Info, text: t('settings.tips.users.0') },
+          { icon: ShieldCheck, text: t('settings.tips.users.1') },
+          { icon: Lightbulb, text: t('settings.tips.users.2') },
+        ],
+      },
       help: {
         title: t('settings.tips.help_title'),
         icon: Lifebuoy,
@@ -125,6 +136,7 @@ function SettingsPage({
       { id: 'proxmox', label: t('settings.tabs.proxmox'), icon: Desktop },
       { id: 'addons', label: t('settings.tabs.addons'), icon: Plug },
       { id: 'language', label: t('settings.tabs.language'), icon: Translate },
+      { id: 'users', label: t('settings.tabs.users'), icon: Users },
       { id: 'help', label: t('settings.tabs.help'), icon: Lifebuoy },
     ],
     [t]
@@ -333,6 +345,8 @@ function SettingsPage({
             {activeSection === 'addons' && <AddOnsCard />}
 
             {activeSection === 'language' && <LanguageCard />}
+
+            {activeSection === 'users' && <UsersTab />}
 
             {activeSection === 'help' && <HelpTab textColor={textColor} />}
           </main>

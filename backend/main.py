@@ -32,6 +32,7 @@ from routers.config import router as config_router  # NEW: Config Import/Export
 from routers.ldap import router as ldap_router  # NEW: LDAP/AD Authentication AddOn
 from routers.wallpapers import router as wallpapers_router  # NEW: Wallpaper Upload/Serving
 from routers.docs import router as docs_router  # Help / Markdown from repo root
+from routers.users import router as users_router  # Local user accounts
 
 # Disable SSL warnings for Proxmox connections
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -134,6 +135,9 @@ async def startup_event():
     # Initialize database
     initialize_connection_pool()
     
+    # Lokale Benutzer-Tabelle + Migration admin_auth → local_users
+    from core.local_users import ensure_local_users_schema_and_bootstrap
+    ensure_local_users_schema_and_bootstrap()
     # Admin-Passwort Migration (.env → DB) bzw. Validierung
     from dependencies.auth import initialize_admin_password
     initialize_admin_password()
@@ -155,6 +159,7 @@ app.include_router(dashboards_router)     # /api/dashboards/* (Multi-Dashboard)
 app.include_router(ldap_router)           # /api/ldap/* (AD Authentication AddOn)
 app.include_router(wallpapers_router)     # /api/wallpapers/* (Wallpaper Upload/Serving)
 app.include_router(docs_router)           # /api/docs/help* (Markdown from repo)
+app.include_router(users_router)          # /api/users (local accounts)
 
 # Note: Reorder endpoints are in their respective routers:
 # - PUT /api/admin/services/reorder (in services router)

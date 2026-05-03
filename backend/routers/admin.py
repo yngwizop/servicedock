@@ -4,10 +4,10 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends, Request
 
 from models import DeleteLogsRequest, ProxmoxConfig
-from core.security import verify_password, encrypt_value
+from core.security import encrypt_value
 from core.audit import log_audit
 from core.limiter import limiter
-from dependencies.auth import require_role, get_admin_password_hash
+from dependencies.auth import require_role, verify_destructive_password
 from config.database import get_db
 
 router = APIRouter()
@@ -204,9 +204,7 @@ def cleanup_audit_logs(request: Request, days: int = 90, token: dict = Depends(r
 def delete_all_audit_logs(request: Request, delete_request: DeleteLogsRequest, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
     """Löscht ALLE Audit-Logs (Admin-Passwort erforderlich)"""
     
-    # Zusätzliche Passwort-Prüfung für diese kritische Operation
-    admin_hash = get_admin_password_hash()
-    if not verify_password(delete_request.password, admin_hash):
+    if not verify_destructive_password(token, delete_request.password):
         raise HTTPException(status_code=403, detail="Falsches Admin-Passwort")
     
     cur = db.cursor()

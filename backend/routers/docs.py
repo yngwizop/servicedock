@@ -4,7 +4,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from core.limiter import limiter
-from dependencies.auth import require_any_role
+from dependencies.auth import require_help_docs_access
 
 router = APIRouter(prefix="/api/docs", tags=["docs"])
 
@@ -43,7 +43,7 @@ _MAX_BYTES = 1_500_000
 @limiter.limit("60/minute")
 async def list_help_docs(
     request: Request,
-    _user: dict = Depends(require_any_role("admin", "viewer")),
+    _user: dict = Depends(require_help_docs_access),
 ):
     """List available help documents (ids and filenames)."""
     return {"docs": HELP_DOCS}
@@ -54,15 +54,16 @@ async def list_help_docs(
 async def get_help_doc(
     request: Request,
     doc_id: str,
-    _user: dict = Depends(require_any_role("admin", "viewer")),
+    _user: dict = Depends(require_help_docs_access),
 ):
     """Return raw Markdown for a whitelisted document."""
     filename = _ID_TO_FILE.get(doc_id)
     if not filename or filename not in _ALLOWED_FILES:
         raise HTTPException(status_code=404, detail="Unknown document")
 
+    root_resolved = REPO_ROOT.resolve()
     path = (REPO_ROOT / filename).resolve()
-    if not str(path).startswith(str(REPO_ROOT.resolve())):
+    if not path.is_relative_to(root_resolved):
         raise HTTPException(status_code=400, detail="Invalid path")
 
     if not path.is_file():

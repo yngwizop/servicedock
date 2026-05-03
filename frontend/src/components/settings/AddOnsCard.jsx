@@ -17,6 +17,17 @@ const SPOTIFY_REDIRECT_URI = window.location.protocol === 'https:'
   ? `https://${window.location.hostname}/api/spotify/callback`
   : 'http://127.0.0.1:8000/api/spotify/callback';
 
+async function broadcastAuthModeFromServer() {
+  try {
+    const modeRes = await fetch(`${BACKEND_URL}/api/auth/mode`);
+    if (modeRes.ok) {
+      window.dispatchEvent(new CustomEvent('servicedock-auth-mode', { detail: await modeRes.json() }));
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 function AddOnsCard() {
   const { t } = useTranslation();
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -211,6 +222,7 @@ function AddOnsCard() {
           enabled: data.enabled,
           has_bind_password: data.has_bind_password,
         });
+        void broadcastAuthModeFromServer();
       } else {
         const error = await res.json();
         alert(error.detail || t('addons.ldap_save_error'));
@@ -265,6 +277,7 @@ function AddOnsCard() {
           user_attribute: 'sAMAccountName', domain: '', admin_group_dn: '', viewer_group_dn: '',
         });
         setTestResult(null);
+        void broadcastAuthModeFromServer();
         alert(t('addons.ldap_removed'));
       } else {
         alert(t('addons.ldap_remove_error'));

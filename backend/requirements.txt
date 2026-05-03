@@ -1,5 +1,6 @@
 fastapi
 uvicorn
+httpx
 psycopg2-binary
 proxmoxer
 requests

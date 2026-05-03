@@ -87,6 +87,32 @@ def invalidate_ldap_cache():
     _ldap_config_cache_time = 0
 
 
+def is_ldap_signin_enabled() -> bool:
+    """
+    True wenn in der DB LDAP/AD-Login aktiv ist.
+
+    Immer direkt aus der DB (ohne den 60s-Config-Cache), damit Security-Gates
+    z. B. für /api/users-Schreibzugriffe nicht auf veralteten enabled-Werten basieren.
+    """
+    pool = database_module.db_pool
+    if pool is None:
+        return False
+    db = pool.getconn()
+    try:
+        cursor = db.cursor()
+        cursor.execute("SELECT enabled FROM ldap_config WHERE id = 1")
+        row = cursor.fetchone()
+        cursor.close()
+        if not row:
+            return False
+        return bool(row[0])
+    except Exception as e:
+        logger.error("is_ldap_signin_enabled: %s", e)
+        return False
+    finally:
+        pool.putconn(db)
+
+
 def _create_server(config: Dict[str, Any]) -> Server:
     """Erstellt einen ldap3 Server mit optionalem SSL/TLS"""
     tls_config = None
