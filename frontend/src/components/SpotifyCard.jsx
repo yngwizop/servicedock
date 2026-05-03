@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { MusicNote, Play, Pause, SkipForward, SkipBack, CircleNotch, ArrowSquareOut } from 'phosphor-react';
+import { MusicNote, CircleNotch, ArrowSquareOut } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../utils/auth';
+import HeaderWidgetCapsule from './HeaderWidgetCapsule';
 
 const SpotifyCard = () => {
   const { t } = useTranslation();
@@ -60,20 +61,34 @@ const SpotifyCard = () => {
   // Loading State
   if (loading) {
     return (
-      <div className="flex items-center space-x-3">
-        <CircleNotch className="w-5 h-5 text-green-500 dark:text-green-400 animate-spin" />
-        <span className="text-sm text-gray-900 dark:text-white/90" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>{t('spotify.loading')}</span>
-      </div>
+      <HeaderWidgetCapsule>
+        <div className="flex h-full min-h-0 items-center gap-3">
+          <CircleNotch className="h-5 w-5 animate-spin text-green-500 dark:text-green-400" />
+          <span
+            className="text-sm text-gray-900 dark:text-white/90"
+            style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}
+          >
+            {t('spotify.loading')}
+          </span>
+        </div>
+      </HeaderWidgetCapsule>
     );
   }
 
   // Error State
   if (error) {
     return (
-      <div className="flex items-center space-x-3">
-        <MusicNote className="w-5 h-5 text-gray-600 dark:text-white/40" />
-        <span className="text-sm text-gray-800 dark:text-white/60" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>{t('spotify.error')}</span>
-      </div>
+      <HeaderWidgetCapsule>
+        <div className="flex h-full min-h-0 items-center gap-3">
+          <MusicNote className="h-5 w-5 text-gray-600 dark:text-white/40" />
+          <span
+            className="text-sm text-gray-800 dark:text-white/60"
+            style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}
+          >
+            {t('spotify.error')}
+          </span>
+        </div>
+      </HeaderWidgetCapsule>
     );
   }
 
@@ -85,52 +100,64 @@ const SpotifyCard = () => {
   const { track, progress_percent } = nowPlaying;
 
   return (
-    <div className="flex items-center gap-3 group">
-      <div className="flex items-center gap-3">
+    <HeaderWidgetCapsule className="group">
+      <div className="flex h-full min-h-0 min-w-0 items-center gap-2 md:gap-2.5">
         {/* Album Cover */}
         {track.album_image && isSafeUrl(track.album_image) && (
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <img
               src={track.album_image}
               alt={track.album}
-              className="w-12 h-12 rounded-lg shadow-lg object-cover"
+              className="h-10 w-10 rounded-lg object-cover shadow-lg"
             />
           </div>
         )}
 
-        {/* Track Info */}
-        <div className="flex-1 min-w-0" style={{ minWidth: '200px', maxWidth: '260px' }}>
-          {/* Now Playing Badge */}
-          <div className="flex items-center gap-1.5 mb-1">
-            <MusicNote className="w-3.5 h-3.5 text-green-500 dark:text-green-400" weight="fill" />
-            {nowPlaying.is_playing && (
-              <span className="w-1.5 h-1.5 bg-green-500 dark:bg-green-400 rounded-full animate-pulse"></span>
-            )}
-            <span className="text-[11px] font-semibold text-green-600 dark:text-green-300" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>
-              Now Playing
-            </span>
+        {/* Track info: title + artist left, badge right; progress below */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-center gap-1 max-w-[min(100%,22rem)]">
+          <div className="flex min-w-0 items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <h3
+                className="truncate text-sm font-bold leading-tight text-gray-900 dark:text-white/90"
+                style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}
+              >
+                {track.name}
+              </h3>
+              <p
+                className="truncate text-xs leading-tight text-gray-700 dark:text-white/60"
+                style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}
+              >
+                {track.artist}
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col items-end justify-center text-right">
+              <div className="flex items-center gap-1">
+                <MusicNote className="h-3.5 w-3.5 text-green-500 dark:text-green-400" weight="fill" />
+                {nowPlaying.is_playing && (
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-500 animate-pulse dark:bg-green-400" />
+                )}
+                <span
+                  className="max-w-[6.5rem] truncate text-[10px] font-semibold uppercase tracking-wide text-green-600 dark:text-green-300"
+                  style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}
+                >
+                  {t('spotify.now_playing_badge')}
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Song Title */}
-          <h3 className="text-sm font-bold text-gray-900 dark:text-white/90 truncate mb-0.5" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>
-            {track.name}
-          </h3>
-
-          {/* Artist */}
-          <p className="text-xs text-gray-700 dark:text-white/60 truncate mb-2" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>
-            {track.artist}
-          </p>
-
-          {/* Progress Bar */}
           {track.progress_ms !== undefined && (
-            <div className="space-y-1">
-              <div className="bg-gray-300/60 dark:bg-white/20 rounded-full h-1.5 shadow-md">
+            <div className="space-y-0.5">
+              <div className="h-1 rounded-full bg-gray-300/60 shadow-md dark:bg-white/20">
                 <div
-                  className="bg-green-500 dark:bg-green-400 h-1.5 rounded-full transition-all duration-300"
+                  className="h-1 rounded-full bg-green-500 transition-all duration-300 dark:bg-green-400"
                   style={{ width: `${progress_percent || 0}%` }}
-                ></div>
+                />
               </div>
-              <div className="flex justify-between text-[10px] text-gray-600 dark:text-white/50" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}>
+              <div
+                className="flex justify-between text-[9px] leading-none text-gray-600 dark:text-white/50"
+                style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}
+              >
                 <span>{formatTime(track.progress_ms)}</span>
                 <span>{formatTime(track.duration_ms)}</span>
               </div>
@@ -151,7 +178,7 @@ const SpotifyCard = () => {
           </a>
         )}
       </div>
-    </div>
+    </HeaderWidgetCapsule>
   );
 };
 

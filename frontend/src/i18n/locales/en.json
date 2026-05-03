@@ -265,7 +265,8 @@
     "connection_error": "Connection error",
     "loading": "Loading...",
     "error": "Error",
-    "open_in_spotify": "Open in Spotify"
+    "open_in_spotify": "Open in Spotify",
+    "now_playing_badge": "Now playing"
   },
   "weather": {
     "geocoding_failed": "Geocoding failed",

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
+import HeaderWidgetCapsule from './HeaderWidgetCapsule';
 
 /**
  * WeatherWidget Component
@@ -343,51 +344,55 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
     // Loading state
   if (loading) {
     return (
-      <div 
-        className="flex items-center gap-2 text-base md:text-lg animate-pulse" 
-        style={{ 
-          color: textColor,
-          textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
-        }}
-        aria-label={t('weather.loading_aria')}
-        aria-busy="true"
-      >
-        <span>🌡️</span>
-        <span>{t('common.loading')}</span>
-      </div>
+      <HeaderWidgetCapsule>
+        <div
+          className="flex h-full min-h-0 items-center gap-2 text-base md:text-lg animate-pulse"
+          style={{
+            color: textColor,
+            textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)',
+          }}
+          aria-label={t('weather.loading_aria')}
+          aria-busy="true"
+        >
+          <span>🌡️</span>
+          <span>{t('common.loading')}</span>
+        </div>
+      </HeaderWidgetCapsule>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <div 
-        className="flex items-center gap-2 text-base md:text-lg cursor-pointer hover:opacity-80 transition-opacity" 
-        onClick={handleManualRefresh}
-        style={{ 
-          color: textColor,
-          textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
-        }}
-        aria-label={t('weather.error_aria')}
-        title={t('weather.error_title') + ': ' + error}
-      >
-        <span>⚠️</span>
-        <span>{t('weather.unavailable')}</span>
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className="h-4 w-4 opacity-50" 
-          fill="none" 
-          viewBox="0 0 24 24" 
-          stroke="currentColor"
-          strokeWidth={2}
+      <HeaderWidgetCapsule>
+        <div
+          className="flex h-full min-h-0 cursor-pointer items-center gap-2 text-base md:text-lg transition-opacity hover:opacity-80"
+          onClick={handleManualRefresh}
+          style={{
+            color: textColor,
+            textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)',
+          }}
+          aria-label={t('weather.error_aria')}
+          title={t('weather.error_title') + ': ' + error}
         >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
-          />
-        </svg>
-      </div>
+          <span>⚠️</span>
+          <span>{t('weather.unavailable')}</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4 opacity-50"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+        </div>
+      </HeaderWidgetCapsule>
     );
   }
 
@@ -412,13 +417,14 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
 
 
     return (
-      <div 
-        className="flex flex-row items-center gap-3 text-base md:text-lg font-medium group flex-wrap"
-        style={{ 
-          color: textColor,
-          textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)'
-        }}
-        aria-label={`Wetter in ${weather.cityName}: ${weatherFields.map(f => {
+      <HeaderWidgetCapsule className="group">
+        <div
+          className="flex h-full min-h-0 flex-row flex-wrap items-center gap-3 text-base font-medium md:text-lg"
+          style={{
+            color: textColor,
+            textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)',
+          }}
+          aria-label={`Wetter in ${weather.cityName}: ${weatherFields.map(f => {
           if (f === 'temperature') return `${temp} Grad Celsius`;
           if (f === 'humidity') return `Luftfeuchtigkeit ${humidity} Prozent`;
           if (f === 'wind') return `Wind ${wind} km/h`;
@@ -431,7 +437,7 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
         {/* Manual refresh button with cache indicator */}
         <button
           onClick={handleManualRefresh}
-          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 hover:opacity-100"
+          className="relative rounded-lg p-1.5 opacity-0 transition-colors hover:bg-white/10 hover:opacity-100 focus:opacity-100 group-hover:opacity-100"
           style={{ color: textColor }}
           title={isFromCache ? t('weather.updated_tooltip', { time: cacheAgeText }) : t('weather.just_updated_tooltip')}
           aria-label={t('weather.refresh_aria')}
@@ -480,7 +486,8 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
             <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
           </div>
         )}
-      </div>
+        </div>
+      </HeaderWidgetCapsule>
     );
   }
 

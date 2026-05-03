@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
+import HeaderWidgetCapsule from './HeaderWidgetCapsule';
 
 function ClockWidget({ textColor, locale: localeProp, showSeconds = true, use24Hour = true }) {
   const { t, i18n } = useTranslation();
@@ -105,30 +106,29 @@ function ClockWidget({ textColor, locale: localeProp, showSeconds = true, use24H
   const formatDate = () => dateFormatterRef.current.format(time);
 
   return (
-    <div 
-      className="text-right select-none"
-      style={{ 
-        color: textColor,
-        textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)'
-      }}
-      role="group"
-      aria-label={t('clock.aria_label')}
-    >
-      <div className="text-xl md:text-2xl font-bold tabular-nums" aria-hidden="false" role="timer">
-        {formatTime()}
-      </div>
+    <HeaderWidgetCapsule>
+      <div
+        className="flex h-full min-h-0 select-none flex-col justify-center text-center"
+        style={{
+          color: textColor,
+          textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)',
+        }}
+        role="group"
+        aria-label={t('clock.aria_label')}
+      >
+        <div className="text-xl font-bold tabular-nums md:text-2xl" aria-hidden="false" role="timer">
+          {formatTime()}
+        </div>
 
-      <div className="text-sm md:text-base opacity-80" aria-hidden="false">
-        {formatDate()}
-      </div>
+        <div className="text-xs opacity-80 md:text-sm" aria-hidden="false">
+          {formatDate()}
+        </div>
 
-      {/* Für Screenreader: sichtbarer, aber visuell versteckter Text, der in einer Live-Region liegt.
-          Tailwind hat die Klasse 'sr-only' standardmäßig. aria-live polite, aber wir aktualisieren
-          nur mit Minuten-/Zeitkombination (siehe useEffect) um Spam zu vermeiden. */}
-      <span className="sr-only" aria-live="polite" aria-atomic="true">
-        {announce}
-      </span>
-    </div>
+        <span className="sr-only" aria-live="polite" aria-atomic="true">
+          {announce}
+        </span>
+      </div>
+    </HeaderWidgetCapsule>
   );
 }
 

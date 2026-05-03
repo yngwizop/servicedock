@@ -305,9 +305,7 @@ function App() {
       {/* Main Content */}
       <div className={`${sidebarCollapsed ? 'ml-20' : 'ml-52'} transition-all duration-300 relative z-10 flex flex-col ${activeTab === 'settings' ? 'h-screen overflow-hidden' : 'min-h-screen'} pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2`}>
         <PageHeader
-          className={
-            activeTab === 'settings' ? 'shrink-0 mx-auto w-full max-w-[1400px]' : ''
-          }
+          className={activeTab === 'settings' ? 'shrink-0' : ''}
           icon={PageIcon}
           title={pageTitle}
           subtitle={pageSubtitle}
@@ -316,7 +314,7 @@ function App() {
           {(appearance.show_weather ||
             appearance.show_clock ||
             (appearance.show_spotify && spotifyConfigured && activeTab === 'services')) ? (
-            <div className="flex flex-wrap items-center gap-4 md:gap-6">
+            <div className="flex flex-wrap items-stretch justify-end gap-3 md:gap-4">
               {appearance.show_weather && (
                 <WeatherWidget
                   city={appearance.weather_city}
@@ -326,32 +324,9 @@ function App() {
                 />
               )}
 
-              {appearance.show_weather && appearance.show_clock && (
-                <div className="hidden md:flex items-center">
-                  <div
-                    className="h-16 w-px bg-gradient-to-b from-transparent via-current to-transparent opacity-30"
-                    style={{ color: pageHeaderColor }}
-                    aria-hidden="true"
-                  />
-                </div>
-              )}
-
               {appearance.show_clock && (
                 <ClockWidget textColor={pageHeaderColor} use24Hour={appearance.clock_format === '24h'} />
               )}
-
-              {(appearance.show_weather || appearance.show_clock) &&
-                appearance.show_spotify &&
-                spotifyConfigured &&
-                activeTab === 'services' && (
-                  <div className="hidden md:flex items-center">
-                    <div
-                      className="h-16 w-px bg-gradient-to-b from-transparent via-current to-transparent opacity-30"
-                      style={{ color: pageHeaderColor }}
-                      aria-hidden="true"
-                    />
-                  </div>
-                )}
 
               {appearance.show_spotify && spotifyConfigured && activeTab === 'services' && <SpotifyCard />}
             </div>
