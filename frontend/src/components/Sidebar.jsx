@@ -2,20 +2,20 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  SquaresFour,
-  Desktop, 
-  ShieldCheck, 
-  Gear, 
-  SignOut, 
-  Moon, 
+  HouseLine,
+  ComputerTower,
+  Vault,
+  SlidersHorizontal,
+  SignOut,
+  Moon,
   Sun,
   CaretLeft,
   CaretRight,
   MagnifyingGlass,
   CaretDown,
   Check,
+  PencilSimple,
   ArrowsLeftRight,
-  PencilSimple
 } from 'phosphor-react';
 
 function Sidebar({ 
@@ -85,10 +85,10 @@ function Sidebar({
     return () => document.removeEventListener('keydown', handleKey);
   }, [dashDropdownOpen]);
   const navItems = [
-    { id: 'services', label: 'Dashboard', icon: SquaresFour },
-    ...(showProxmox && isAdmin ? [{ id: 'monitoring', label: 'Proxmox', icon: Desktop }] : []),
-    ...(isAdmin ? [{ id: 'security', label: 'Security', icon: ShieldCheck }] : []),
-    ...(isAdmin ? [{ id: 'settings', label: 'Settings', icon: Gear }] : [])
+    { id: 'services', label: 'Dashboard', icon: HouseLine },
+    ...(showProxmox && isAdmin ? [{ id: 'monitoring', label: 'Proxmox', icon: ComputerTower }] : []),
+    ...(isAdmin ? [{ id: 'security', label: 'Security', icon: Vault }] : []),
+    ...(isAdmin ? [{ id: 'settings', label: 'Settings', icon: SlidersHorizontal }] : []),
   ];
 
   return (

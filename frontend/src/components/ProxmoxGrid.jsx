@@ -74,7 +74,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [proxmoxName, setProxmoxName] = useState(''); // NEU: Cluster/Server Name
   const [isCluster, setIsCluster] = useState(false); // NEU: Ist es ein Cluster?
-  /** Parallel zu VM-Liste geladene Cluster-Stats (Status Overview), damit der Tab nicht erst beim Klick 5s wartet */
+  /** Parallel zur Workloads-Liste geladene Cluster-Stats (Cluster-Status), damit der Tab nicht erst beim Klick 5s wartet */
   const [clusterStatsPrefetch, setClusterStatsPrefetch] = useState(null);
 
   // Filter & Sort States
@@ -82,7 +82,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
   const [filterType, setFilterType] = useState('all'); // all, qemu, lxc
   const [filterStatus, setFilterStatus] = useState('all'); // all, running, stopped
 
-  // VM/LXC zuerst (schnell), cluster-stats danach im Hintergrund (Status-Übersicht / Prefetch)
+  // Workloads zuerst (schnell), cluster-stats danach im Hintergrund (Cluster-Status / Prefetch)
   const fetchProxmoxData = async (dashboardId, options = {}) => {
     const { resetForLoad = true } = options;
     const currentDashboard = dashboardId ?? activeDashboard;
@@ -440,7 +440,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
               }`}
             >
               <Desktop size={18} weight={activeView === 'resources' ? 'fill' : 'regular'} />
-              <span>VM/LXC</span>
+              <span>{t('proxmox.workloads_tab')}</span>
             </button>
 
             <button
@@ -453,7 +453,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
               }`}
             >
               <ChartBar size={18} weight={activeView === 'status' ? 'fill' : 'regular'} />
-              <span>{t('proxmox.status_overview')}</span>
+              <span>{t('proxmox.cluster_status_tab')}</span>
             </button>
           </div>
 
@@ -507,7 +507,9 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                 </svg>
-                <span className="text-sm font-medium">{t('proxmox.search_unavailable')}</span>
+                <span className="text-sm font-medium">
+                  {t('proxmox.search_unavailable', { tab: t('proxmox.workloads_tab') })}
+                </span>
               </div>
             </div>
           )}
@@ -520,7 +522,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
           />
       </div>
 
-      {/* VM/LXC View */}
+      {/* Workloads (VM-/LXC-Liste) */}
       <div style={{ display: activeView !== 'status' ? 'block' : 'none' }}>
           {/* System Stats Cards */}
           <ProxmoxStatsCards resources={resources} nodes={nodes} />
