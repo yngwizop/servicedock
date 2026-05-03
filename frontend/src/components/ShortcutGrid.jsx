@@ -2,7 +2,8 @@ import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import ShortcutLink from './ShortcutLink';
 import EditModal from './EditModal';
-import { Pencil } from 'phosphor-react';
+import { Pencil, LinkSimple } from 'phosphor-react';
+import { SectionHeading } from './PageHeader';
 
 function ShortcutGrid({ 
   shortcuts, 
@@ -151,12 +152,9 @@ function ShortcutGrid({
 
   return (
     <div className="mb-10">
-      <h2 
-        className="text-2xl font-semibold mb-4"
-        style={{ color: textColor }}
-      >
-        {t('shortcutGrid.shortcuts')}
-      </h2>
+      <SectionHeading icon={LinkSimple} textColor={textColor}>
+        {t('pageHeader.section_shortcuts')}
+      </SectionHeading>
 
       <div
         ref={gridRef}

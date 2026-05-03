@@ -12,9 +12,11 @@ import AddItemFAB from "./components/AddItemFAB";
 import ClockWidget from "./components/ClockWidget";
 import WeatherWidget from "./components/WeatherWidget";
 import Sidebar from "./components/Sidebar";
+import PageHeader from "./components/PageHeader";
 import { authenticatedFetch } from './utils/auth';
 import { fetchProxmoxVmBundle, fetchProxmoxClusterStatsPrefetch } from './utils/fetchProxmoxBundle';
 import { useTranslation } from 'react-i18next';
+import { HouseLine, ComputerTower, Vault, SlidersHorizontal } from 'phosphor-react';
 
 // Hooks
 import { useAuth } from './hooks/useAuth';
@@ -195,6 +197,30 @@ function App() {
   const serviceColsClass = gridColsLookup[appearance.service_cols] || 'lg:grid-cols-6';
   const shortcutColsClass = gridColsLookup[appearance.shortcut_cols] || 'lg:grid-cols-6';
 
+  const activeDash = dashboards.find((d) => d.id === activeDashboard);
+  const pageHeaderColor = getTextColor();
+  let pageTitle = 'Dashboard';
+  let pageSubtitle = t('pageHeader.subtitle_services_default');
+  let PageIcon = HouseLine;
+  if (activeTab === 'services') {
+    pageTitle = activeDash?.name || 'Dashboard';
+    const desc = (activeDash?.description || '').trim();
+    pageSubtitle = desc || t('pageHeader.subtitle_services_default');
+    PageIcon = HouseLine;
+  } else if (activeTab === 'monitoring') {
+    pageTitle = 'Proxmox';
+    pageSubtitle = t('pageHeader.subtitle_proxmox');
+    PageIcon = ComputerTower;
+  } else if (activeTab === 'security') {
+    pageTitle = 'Security';
+    pageSubtitle = t('pageHeader.subtitle_security');
+    PageIcon = Vault;
+  } else if (activeTab === 'settings') {
+    pageTitle = 'Settings';
+    pageSubtitle = t('pageHeader.subtitle_settings');
+    PageIcon = SlidersHorizontal;
+  }
+
   // Background-Daten: nach Login aus appearance, davor aus loginWallpaper
   const bg = auth.isLoggedIn ? appearance : (loginWallpaper || {});
 
@@ -278,69 +304,59 @@ function App() {
 
       {/* Main Content */}
       <div className={`${sidebarCollapsed ? 'ml-20' : 'ml-52'} transition-all duration-300 relative z-10 flex flex-col ${activeTab === 'settings' ? 'h-screen overflow-hidden' : 'min-h-screen'} pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2`}>
-        {/* Header */}
-        <div className={`flex flex-col md:flex-row md:items-center mb-6 gap-4 ${activeTab === 'settings' ? 'shrink-0' : ''}`}>
-          <div className="flex items-center gap-4">
-            <h1 
-              className="text-4xl font-bold"
-              style={{ 
-                color: getTextColor(),
-                textShadow: '0 2px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2)'
-              }}
-            >
-              {activeTab === 'services'
-                ? (dashboards.find(d => d.id === activeDashboard)?.name || 'Dashboard')
-                : activeTab === 'monitoring' ? 'Proxmox'
-                : activeTab === 'security' ? 'Security'
-                : activeTab === 'settings' ? 'Settings'
-                : 'Dashboard'
-              }
-            </h1>
-          </div>
-          
-          {/* Widgets */}
-          <div className="flex flex-wrap items-center gap-4 md:gap-6 md:ml-auto">
-            {appearance.show_weather && (
-              <WeatherWidget 
-                city={appearance.weather_city} 
-                textColor={getTextColor()}
-                weatherFields={appearance.weather_fields || ['temperature','humidity']}
-                onLocationChange={setWeatherLocationInfo}
-              />
-            )}
-            
-            {appearance.show_weather && appearance.show_clock && (
-              <div className="hidden md:flex items-center">
-                <div 
-                  className="w-px h-16 bg-gradient-to-b from-transparent via-current to-transparent opacity-30"
-                  style={{ color: getTextColor() }}
-                  aria-hidden="true"
+        <PageHeader
+          className={
+            activeTab === 'settings' ? 'shrink-0 mx-auto w-full max-w-[1400px]' : ''
+          }
+          icon={PageIcon}
+          title={pageTitle}
+          subtitle={pageSubtitle}
+          textColor={pageHeaderColor}
+        >
+          {(appearance.show_weather ||
+            appearance.show_clock ||
+            (appearance.show_spotify && spotifyConfigured && activeTab === 'services')) ? (
+            <div className="flex flex-wrap items-center gap-4 md:gap-6">
+              {appearance.show_weather && (
+                <WeatherWidget
+                  city={appearance.weather_city}
+                  textColor={pageHeaderColor}
+                  weatherFields={appearance.weather_fields || ['temperature', 'humidity']}
+                  onLocationChange={setWeatherLocationInfo}
                 />
-              </div>
-            )}
-            
-            {appearance.show_clock && (
-              <ClockWidget 
-                textColor={getTextColor()} 
-                use24Hour={appearance.clock_format === '24h'}
-              />
-            )}
-            
-            {(appearance.show_weather || appearance.show_clock) && appearance.show_spotify && spotifyConfigured && activeTab === "services" && (
-              <div className="hidden md:flex items-center">
-                <div 
-                  className="w-px h-16 bg-gradient-to-b from-transparent via-current to-transparent opacity-30"
-                  style={{ color: getTextColor() }}
-                  aria-hidden="true"
-                />
-              </div>
-            )}
-            
-            {appearance.show_spotify && spotifyConfigured && activeTab === "services" && (
-              <SpotifyCard />
-            )}
-          </div>
-        </div>
+              )}
+
+              {appearance.show_weather && appearance.show_clock && (
+                <div className="hidden md:flex items-center">
+                  <div
+                    className="h-16 w-px bg-gradient-to-b from-transparent via-current to-transparent opacity-30"
+                    style={{ color: pageHeaderColor }}
+                    aria-hidden="true"
+                  />
+                </div>
+              )}
+
+              {appearance.show_clock && (
+                <ClockWidget textColor={pageHeaderColor} use24Hour={appearance.clock_format === '24h'} />
+              )}
+
+              {(appearance.show_weather || appearance.show_clock) &&
+                appearance.show_spotify &&
+                spotifyConfigured &&
+                activeTab === 'services' && (
+                  <div className="hidden md:flex items-center">
+                    <div
+                      className="h-16 w-px bg-gradient-to-b from-transparent via-current to-transparent opacity-30"
+                      style={{ color: pageHeaderColor }}
+                      aria-hidden="true"
+                    />
+                  </div>
+                )}
+
+              {appearance.show_spotify && spotifyConfigured && activeTab === 'services' && <SpotifyCard />}
+            </div>
+          ) : null}
+        </PageHeader>
 
         {/* Search Overlay */}
         {searchOpen && (

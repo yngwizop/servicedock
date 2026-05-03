@@ -111,6 +111,14 @@
     "icons_tip": "Icons von",
     "icons_tip_suffix": "oder einfach Emojis nutzen!"
   },
+  "pageHeader": {
+    "subtitle_services_default": "Schnellzugriff auf deine Dienste und Shortcuts.",
+    "subtitle_proxmox": "Workloads, Cluster-Status, Speicher und Tasks auf einen Blick.",
+    "subtitle_security": "Token-Rotation, Audit-Logs und Sicherheitsstatistik.",
+    "subtitle_settings": "Erscheinungsbild, Dashboards, Proxmox, Add-ons und Sprache.",
+    "section_services": "Services",
+    "section_shortcuts": "Shortcuts"
+  },
   "search": {
     "placeholder_services": "Suche in Services & Shortcuts...",
     "placeholder_monitoring": "Suche in Proxmox...",

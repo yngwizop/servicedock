@@ -537,20 +537,6 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Detective size={40} weight="duotone" style={{ color: textColor }} />
-        <h2 
-          className="text-3xl font-bold transition-colors duration-300"
-          style={{ 
-            color: textColor,
-            textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
-          }}
-        >
-          Security Dashboard
-        </h2>
-      </div>
-
       {/* Glass Segment Control */}
       <div className="flex items-center gap-3 mb-2">
         <div ref={segmentRefCallback} className="relative flex p-1 rounded-xl dark:bg-white/[0.06] sd-night-shade backdrop-blur-md border border-gray-300/40 dark:border-white/10 night:border-white/[0.08] shadow-lg">

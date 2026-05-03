@@ -111,6 +111,14 @@
     "icons_tip": "Icons from",
     "icons_tip_suffix": "or just use emojis!"
   },
+  "pageHeader": {
+    "subtitle_services_default": "Jump to your services and shortcuts from one place.",
+    "subtitle_proxmox": "Workloads, cluster health, storage, and tasks at a glance.",
+    "subtitle_security": "Token rotation, audit logs, and security statistics.",
+    "subtitle_settings": "Theme, dashboards, Proxmox, add-ons, and language.",
+    "section_services": "Services",
+    "section_shortcuts": "Shortcuts"
+  },
   "search": {
     "placeholder_services": "Search in Services & Shortcuts...",
     "placeholder_monitoring": "Search in Proxmox...",

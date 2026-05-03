@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import ServiceCard from './ServiceCard';
 import EditModal from './EditModal';
-import { Pencil, Star } from 'phosphor-react';
+import { Pencil, Star, GridFour } from 'phosphor-react';
+import { SectionHeading } from './PageHeader';
 
 function ServiceGrid({ 
   services = [], 
@@ -273,7 +274,9 @@ function ServiceGrid({
 
   return (
     <div className="mb-10">
-      <h2 className="text-2xl font-semibold mb-4" style={{ color: textColor }}>Services</h2>
+      <SectionHeading icon={GridFour} textColor={textColor}>
+        {t('pageHeader.section_services')}
+      </SectionHeading>
       <div
         ref={gridRef}
         onDragOver={onDragOverGrid}
