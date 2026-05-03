@@ -1,3 +1,5 @@
+# Build with repository root as context (see docker-compose / CI), e.g.:
+#   docker build -f backend/Dockerfile .
 FROM python:3.11-slim
 
 # Installiere Build-Dependencies für bcrypt
@@ -12,11 +14,16 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 WORKDIR /app
 
 # Dependencies als root installieren
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Application Code kopieren
-COPY . .
+# Application Code (nur backend/)
+COPY backend/ .
+
+# Markdown-Hilfe aus Repo-Root für GET /api/docs/help/{id}
+RUN mkdir -p /app/help_docs
+COPY *.md /app/help_docs/
+ENV SERVICEDOCK_HELP_DOCS_DIR=/app/help_docs
 
 # Upload-Verzeichnis erstellen (für Docker Volume Init)
 RUN mkdir -p /app/uploads/wallpapers

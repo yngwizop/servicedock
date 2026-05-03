@@ -375,7 +375,17 @@ function App() {
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder={activeTab === 'services' ? t('search.placeholder_services') : activeTab === 'monitoring' ? t('search.placeholder_monitoring') : t('search.placeholder_security')}
+                  placeholder={
+                    activeTab === 'services'
+                      ? t('search.placeholder_services')
+                      : activeTab === 'monitoring'
+                        ? t('search.placeholder_monitoring')
+                        : activeTab === 'settings'
+                          ? t('search.placeholder_settings')
+                          : activeTab === 'security'
+                            ? t('search.placeholder_security')
+                            : t('search.placeholder_services')
+                  }
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="flex-1 bg-transparent outline-none text-xl text-white placeholder-gray-500 dark:placeholder-gray-500"
@@ -470,6 +480,7 @@ function App() {
               textColor={getTextColor()}
               isAdmin={auth.isAdmin}
               userRole={auth.userRole}
+              searchTerm={searchTerm}
             />
           )}
         </div>

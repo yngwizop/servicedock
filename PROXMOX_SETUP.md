@@ -1,290 +1,283 @@
-# 🖥️ Proxmox Monitoring Setup Guide
+# 🖥️ Proxmox monitoring setup guide
 
-## Übersicht
+## Overview
 
-ServiceDock kann deine Proxmox VMs und LXC Container monitoren und verwalten! Diese Anleitung hilft dir bei der sicheren Einrichtung mit verschlüsselter Token-Speicherung.
+ServiceDock can monitor and manage your Proxmox VMs and LXC containers. This guide walks you through a secure setup with encrypted token storage.
 
 **Features:**
 
-> **Hinweis:** Alle Proxmox-API-Aufrufe und das Dashboard sind im lokalen Netzwerk über die zentrale Nginx-Adresse `https://10.10.10.50` erreichbar. Die Datenbank ist nur intern im Docker-Netzwerk verfügbar.
-- 📊 Live-Status-Monitoring aller VMs/Container
-- 🚀 Remote-Steuerung (Start/Stop/Reboot)
-- 📈 Ressourcen-Überwachung (CPU, RAM, Disk)
-- 🔒 Verschlüsselte Token-Speicherung (Fernet AES-128)
-- 📝 Audit-Logging aller Aktionen
-- ⏱️ Rate-Limiting (DoS-Schutz)
+> **Note:** All Proxmox API calls and the dashboard are reached on your LAN via the central Nginx URL `https://10.10.10.50`. The database is only reachable inside the Docker network.
+- 📊 Live status for all VMs / containers
+- 🚀 Remote control (start / stop / reboot)
+- 📈 Resource monitoring (CPU, RAM, disk)
+- 🔒 Encrypted token storage (Fernet AES-128)
+- 📝 Audit logging for actions
+- ⏱️ Rate limiting (DoS protection)
 
 ---
 
-## ✅ Was wurde implementiert
+## ✅ What is implemented
 
 ### Backend
-- ✅ Proxmox API Integration via `proxmoxer` Library
-- ✅ Neue Endpoints für VM/LXC Verwaltung (`/api/proxmox/*`)
-- ✅ **Verschlüsselte Speicherung** der API-Credentials (Fernet AES-128)
-- ✅ Unterstützung für Start/Stop/Reboot von VMs/Containern
-- ✅ Rate-Limiting: 30/min View, 10/min Control
-- ✅ Audit-Logging aller Proxmox-Aktionen
-- ✅ Token-Rotation Tracking (60 Tage Empfehlung)
+- ✅ Proxmox API integration via `proxmoxer`
+- ✅ Endpoints for VM/LXC management (`/api/proxmox/*`)
+- ✅ **Encrypted storage** of API credentials (Fernet AES-128)
+- ✅ Start / stop / reboot for VMs and containers
+- ✅ Rate limits: 30/min views, 10/min control
+- ✅ Audit logging for Proxmox actions
+- ✅ Token rotation tracking (60-day recommendation)
 
 ### Frontend
-- ✅ "Proxmox Monitoring" Tab im Settings-Panel
-- ✅ ProxmoxCard Component mit Live-Status-Anzeige
-- ✅ Ressourcen-Monitoring (CPU, RAM, Disk, Uptime)
-- ✅ Auto-Refresh alle 30 Sekunden (deaktivierbar)
-- ✅ Konfiguration über Settings Panel
-- ✅ Filter & Sortierung (6 Optionen)
+- ✅ **Proxmox** tab in Settings
+- ✅ Proxmox card with live status
+- ✅ Resource monitoring (CPU, RAM, disk, uptime)
+- ✅ Auto-refresh every 30 seconds (can be disabled)
+- ✅ Configuration in Settings
+- ✅ Filter & sort (6 options)
 
 ---
 
-## 🚀 Setup-Schritte
+## 🚀 Setup steps
 
-### 1. Proxmox API Token erstellen
+### 1. Create a Proxmox API token
 
-1. Melde dich in deiner Proxmox Web-UI an
-2. Gehe zu: **Datacenter → Permissions → API Tokens**
-3. Klicke auf **Add**
-4. Konfiguration:
-   - **User**: Wähle einen User (z.B. `root@pam`)
-   - **Token ID**: Vergebe einen Namen (z.B. `dashboard`)
-   - **Privilege Separation**: ✅ Aktiviert (empfohlen für Security)
-   - Klicke **Add**
+1. Log in to the Proxmox web UI
+2. Go to **Datacenter → Permissions → API Tokens**
+3. Click **Add**
+4. Configure:
+   - **User:** pick a user (e.g. `root@pam`)
+   - **Token ID:** choose a name (e.g. `dashboard`)
+   - **Privilege separation:** ✅ enabled (recommended)
+   - Click **Add**
 
-5. **WICHTIG**: Kopiere sofort den angezeigten Secret! Er wird nur einmal angezeigt.
+5. **Important:** copy the secret immediately — it is shown only once.
    ```
    Format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
    ```
 
-### 2. Berechtigungen setzen (wenn Privilege Separation aktiviert)
+### 2. Assign permissions (if privilege separation is enabled)
 
-Falls du "Privilege Separation" aktiviert hast, musst du dem Token Berechtigungen geben:
+If you enabled privilege separation, grant the token permissions:
 
-1. Gehe zu: **Datacenter → Permissions**
-2. Klicke **Add → API Token Permission**
-3. Konfiguration:
-   - **Path**: `/` (für alle VMs/LXCs)
-   - **API Token**: Wähle deinen erstellten Token
-   - **Role**: 
-     - `PVEAuditor` (Read-Only, nur Monitoring) ✅ Empfohlen
-     - `PVEVMAdmin` (mit Start/Stop/Reboot)
-   - Klicke **Add**
+1. Go to **Datacenter → Permissions**
+2. Click **Add → API Token Permission**
+3. Configure:
+   - **Path:** `/` (all VMs/LXCs)
+   - **API Token:** select your token
+   - **Role:**
+     - `PVEAuditor` (read-only monitoring) ✅ recommended
+     - `PVEVMAdmin` (includes start/stop/reboot)
+   - Click **Add**
 
-**Security-Empfehlung:** Starte mit `PVEAuditor` (Read-Only). Nur bei Bedarf auf `PVEVMAdmin` upgraden.
+**Security tip:** start with `PVEAuditor`. Upgrade to `PVEVMAdmin` only if you need control actions.
 
-### 3. Dashboard konfigurieren
+### 3. Configure the dashboard
 
-1. Starte dein Dashboard (falls nicht bereits gestartet):
+1. Start the stack (if not running):
    ```bash
    cd /home/servicedock
    docker compose up -d
    ```
 
-2. Öffne das Dashboard und logge dich als Admin ein
+2. Open the dashboard and sign in as admin
    ```
-   http://deine-server-ip:3000
+   http://your-server-ip:3000
    ```
 
-3. Öffne die **Settings** (Zahnrad-Icon unten rechts)
+3. Open **Settings** (gear icon)
 
-4. Wechsle zum **Proxmox** Tab
+4. Open the **Proxmox** tab
 
-5. Fülle das Formular aus:
-   - **Proxmox Host/IP**: IP oder Hostname deines Proxmox-Servers (z.B. `192.168.1.100`)
-   - **Port**: `8006` (Standard)
-   - **API Token Name**: Format `user@realm!tokenname` (z.B. `root@pam!dashboard`)
-   - **API Token Secret**: Der Secret, den du beim Erstellen kopiert hast
-   - **Node Name**: Optional - leer lassen für alle Nodes oder spezifischen Node angeben
-   - **SSL-Zertifikat verifizieren**: 
-     - ✅ Aktiviert bei produktiven Systemen mit gültigem Zertifikat
-     - ❌ Deaktiviert bei self-signed Zertifikaten (Homelab)
+5. Fill in the form:
+   - **Proxmox host / IP:** IP or hostname (e.g. `192.168.1.100`)
+   - **Port:** `8006` (default)
+   - **API token name:** format `user@realm!tokenid` (e.g. `root@pam!dashboard`)
+   - **API token secret:** the secret you copied when creating the token
+   - **Node name:** optional — leave empty for all nodes, or set a specific node
+   - **Verify SSL certificate:**
+     - ✅ on for production with valid certs
+     - ❌ off for self-signed certs (typical homelab)
 
-6. Klicke **Proxmox-Konfiguration speichern**
+6. Click **Save Proxmox configuration**
 
-**Was passiert beim Speichern:**
-- ✅ Token wird mit Fernet (AES-128) verschlüsselt
-- ✅ Nur verschlüsselter Token wird in DB gespeichert
-- ✅ `token_created_at` wird auf NOW() gesetzt
-- ✅ Verbindungstest wird durchgeführt
+**On save:**
+- ✅ Token is encrypted with Fernet (AES-128)
+- ✅ Only ciphertext is stored in the database
+- ✅ `token_created_at` is set to now
+- ✅ A connection test runs
 
-### 4. Token-Verschlüsselung verifizieren (Optional)
+### 4. Verify encryption (optional)
 
 ```bash
-# Zeige verschlüsselten Token in der DB
 docker compose exec db psql -U dashboard_user -d dashboard -c \
   "SELECT id, host, token_name, substring(token_value, 1, 20) as encrypted_token FROM proxmox_config;"
 ```
 
-**Erwartete Ausgabe:**
+**Expected:**
 ```
  id |      host       |        token_name         |   encrypted_token    
 ----+-----------------+---------------------------+---------------------
   1 | 192.168.1.100   | root@pam!dashboard        | gAAAAABpC5U8QaM...
 ```
 
-✅ **Verschlüsselt**: Beginnt mit `gAAAAAB...`  
-❌ **Unverschlüsselt**: UUID-Format `xxxxxxxx-xxxx-...`
+✅ **Encrypted:** starts with `gAAAAAB...`  
+❌ **Plain:** UUID-style `xxxxxxxx-xxxx-...`
 
-Siehe [ENCRYPTION.md](ENCRYPTION.md) für Details zur Verschlüsselung.
+See [ENCRYPTION.md](ENCRYPTION.md) for encryption details.
 
-### 5. Monitoring Tab nutzen
+### 5. Use the monitoring tab
 
-1. Wechsle zum Tab **Proxmox Monitoring**
-2. Du siehst jetzt alle deine VMs und LXC Container mit:
-   - Status (Running/Stopped)
-   - CPU-Auslastung
-   - RAM-Nutzung (genutzt / gesamt)
-   - Disk-Verwendung (genutzt / gesamt)
-   - Uptime (wie lange läuft die VM)
+1. Open the **Proxmox** monitoring tab
+2. You should see VMs and containers with:
+   - Status (running / stopped)
+   - CPU usage
+   - RAM (used / total)
+   - Disk (used / total)
+   - Uptime
 
-3. Als Admin kannst du VMs/Container direkt steuern:
-   - **▶️ Start**: Gestoppte VM/Container starten
-   - **⏹️ Stop**: Laufende VM/Container stoppen
-   - **🔄 Reboot**: Laufende VM/Container neu starten
+3. As admin you can control instances:
+   - **▶️ Start** stopped VM/container
+   - **⏹️ Stop** running VM/container
+   - **🔄 Reboot** running VM/container
 
-4. **Auto-Refresh**: Standardmäßig alle 30 Sekunden, kann per Checkbox deaktiviert werden
+4. **Auto-refresh:** default every 30 seconds; can be disabled with the checkbox
 
 ---
 
 ## 📊 Features
 
-### Automatische Aktualisierung
-- Standard: Alle 30 Sekunden automatische Aktualisierung
-- Kann über Checkbox deaktiviert werden
-- Manueller Refresh jederzeit über Button möglich
+### Auto refresh
+- Default: every 30 seconds
+- Can be disabled via checkbox
+- Manual refresh button available
 
-### Status-Indikatoren
-- 🟢 **Grün**: VM/Container läuft
-- 🔴 **Rot**: VM/Container gestoppt
-- ⚪ **Grau**: Status unbekannt
+### Status indicators
+- 🟢 **Green:** running
+- 🔴 **Red:** stopped
+- ⚪ **Gray:** unknown
 
-### Ressourcen-Anzeige
-Für laufende VMs/Container werden angezeigt:
-- CPU-Auslastung in %
-- RAM-Nutzung (genutzt / gesamt)
-- Disk-Verwendung (genutzt / gesamt)
-- Uptime (wie lange läuft die VM)
+### Resources (running guests)
+- CPU %
+- RAM used / total
+- Disk used / total
+- Uptime
 
-### Control Actions (nur Admin)
-- ▶️ **Start**: Startet gestoppte VM/Container
-- ⏹️ **Stop**: Stoppt laufende VM/Container
-- 🔄 **Reboot**: Startet VM/Container neu
+### Control actions (admin only)
+- ▶️ **Start**
+- ⏹️ **Stop**
+- 🔄 **Reboot**
 
-## 🔒 Sicherheit
+## 🔒 Security
 
-### Empfohlene Token-Berechtigungen
+### Recommended token roles
 
-**Für Read-Only Monitoring (sicherste Option):**
+**Read-only monitoring (safest):**
 ```
 Role: PVEAuditor
 Path: /
 ```
-- ✅ Kann VMs/Container anzeigen
-- ✅ Kann Status abfragen
-- ❌ Kann NICHT starten/stoppen/rebooten
+- ✅ List guests and status
+- ❌ Cannot start/stop/reboot
 
-**Für vollständige Kontrolle:**
+**Full control:**
 ```
 Role: PVEVMAdmin
 Path: /
 ```
-- ✅ Kann VMs/Container anzeigen
-- ✅ Kann starten/stoppen/rebooten
-- ⚠️ Mehr Berechtigungen = höheres Risiko bei Token-Leak
+- ✅ Includes start/stop/reboot
+- ⚠️ Higher impact if the token leaks
 
-### Token-Verschlüsselung
+### Token encryption
 
-- **Algorithmus**: Fernet (AES-128 in CBC-Modus mit HMAC)
-- **Key-Quelle**: `ENCRYPTION_KEY` aus `.env`
-- **Storage**: Nur verschlüsselte Tokens in PostgreSQL
-- **Decryption**: Nur zur Laufzeit im Backend
+- **Algorithm:** Fernet (AES-128 CBC + HMAC)
+- **Key:** `ENCRYPTION_KEY` from `.env`
+- **Storage:** ciphertext only in PostgreSQL
+- **Decryption:** only in the backend at runtime
 
-⚠️ **WICHTIG**: `ENCRYPTION_KEY` niemals ändern! Siehe [RE_ENCRYPTION_GUIDE.md](RE_ENCRYPTION_GUIDE.md)
+⚠️ **Do not change `ENCRYPTION_KEY` casually.** See [RE_ENCRYPTION_GUIDE.md](RE_ENCRYPTION_GUIDE.md).
 
-### Token-Rotation
+### Token rotation
 
-Empfohlen: **Alle 60 Tage** neuen Token erstellen
+Recommended: **every 60 days** create a new token.
 
 ```bash
-# Token-Alter prüfen
 curl -H "Authorization: Bearer <admin-token>" \
   http://localhost:8000/api/admin/proxmox/token-info?dashboard_id=1
 ```
 
-Siehe [TOKEN_ROTATION_GUIDE.md](TOKEN_ROTATION_GUIDE.md) für Details.
+See [TOKEN_ROTATION_GUIDE.md](TOKEN_ROTATION_GUIDE.md).
 
-### Rate-Limiting
+### Rate limiting
 
-- **View VMs**: 30 Anfragen/Minute
-- **Control (Start/Stop/Reboot)**: 10 Anfragen/Minute
-- **Audit-Logging**: Alle Aktionen werden protokolliert
+- **List / view:** 30 requests/minute
+- **Control:** 10 requests/minute
+- **Audit:** actions are logged
 
-### SSL-Zertifikate
-- **Produktiv-Systeme**: SSL-Verifikation aktiviert lassen
-- **Homelab/Test-Systeme**: Bei self-signed Zertifikaten deaktivieren
+### SSL
+- **Production:** keep certificate verification enabled
+- **Homelab:** disable verification for self-signed Proxmox certs
 
 ---
 
 ## 🐛 Troubleshooting
 
-### "Proxmox nicht konfiguriert"
-→ Gehe zu Settings → Proxmox Tab und konfiguriere die Verbindung
+### "Proxmox not configured"
+→ Settings → Proxmox and save a valid configuration
 
 ### "Failed to connect to Proxmox"
-Mögliche Ursachen:
-- Falsche IP/Host-Adresse
-- Proxmox Server nicht erreichbar (Firewall?)
-- Falscher Port (Standard: 8006)
-- SSL-Verifikation bei self-signed Zertifikat aktiviert
+Check:
+- Correct IP/hostname
+- Host reachable (firewall?)
+- Port (default `8006`)
+- SSL verification vs self-signed cert
 
 ### "Authentication failed"
-- Prüfe Token Name Format: `user@realm!tokenname`
-- Prüfe Token Secret (UUID-Format)
-- Stelle sicher, dass Token noch gültig ist
+- Token name format: `user@realm!tokenid`
+- Token secret (UUID)
+- Token not revoked in Proxmox
 
 ### "Permission denied"
-- Token hat nicht genug Berechtigungen
-- Gehe zu Proxmox → Permissions und prüfe API Token Permissions
+- Token lacks role/path permissions
+- Proxmox → Permissions → API token permissions
 
-### Keine VMs/Container sichtbar
-- Prüfe ob der Token Zugriff auf die VMs hat
-- Prüfe ob die VMs existieren und auf dem richtigen Node sind
-- Falls spezifischer Node konfiguriert: Prüfe Node-Name
+### No VMs shown
+- Token can see those objects
+- Guests exist on the expected node
+- If a node filter is set, verify the node name
 
-## 📝 API Endpoints
-
-Das Backend bietet folgende neue Endpoints:
+## 📝 API endpoints
 
 ```
-GET  /api/proxmox/config        - Proxmox-Konfiguration abrufen
-PUT  /api/proxmox/config        - Proxmox-Konfiguration speichern
-GET  /api/proxmox/vms           - Alle VMs/LXCs abrufen
-POST /api/proxmox/vm/{id}/start - VM/LXC starten
-POST /api/proxmox/vm/{id}/stop  - VM/LXC stoppen
-POST /api/proxmox/vm/{id}/reboot - VM/LXC neu starten
+GET  /api/proxmox/config         — read configuration
+PUT  /api/proxmox/config         — save configuration
+GET  /api/proxmox/vms            — list VMs/LXCs
+POST /api/proxmox/vm/{id}/start  — start
+POST /api/proxmox/vm/{id}/stop   — stop
+POST /api/proxmox/vm/{id}/reboot — reboot
 ```
 
-## 🎨 Anpassungen
+## 🎨 Customization
 
-### Refresh-Interval ändern
-In `ProxmoxGrid.jsx` Zeile ~60:
+### Change refresh interval
+In `ProxmoxGrid.jsx` around line 60:
 ```javascript
 const interval = setInterval(() => {
   fetchProxmoxData();
-}, 30000); // 30 Sekunden → ändern auf gewünschten Wert
+}, 30000); // change 30000 to desired ms
 ```
 
-### Grid-Layout ändern
-In `ProxmoxGrid.jsx` Zeile ~180:
+### Change grid columns
+In `ProxmoxGrid.jsx` around line 180:
 ```javascript
 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 ```
-Passe `lg:grid-cols-3` an für mehr/weniger Spalten
+Adjust `lg:grid-cols-3` as needed.
 
-## 📚 Weitere Informationen
+## 📚 Further reading
 
-- [Proxmox API Dokumentation](https://pve.proxmox.com/wiki/Proxmox_VE_API)
-- [Proxmoxer Python Library](https://pypi.org/project/proxmoxer/)
+- [Proxmox VE API](https://pve.proxmox.com/wiki/Proxmox_VE_API)
+- [proxmoxer (PyPI)](https://pypi.org/project/proxmoxer/)
 
 ---
 
-**Viel Spaß mit deinem erweiterten Dashboard! 🚀**
+**Enjoy your upgraded dashboard! 🚀**

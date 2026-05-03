@@ -1,40 +1,40 @@
-# 🚀 ServiceDock - Quickstart Guide
+# 🚀 ServiceDock — Quick Start Guide
 
-## Voraussetzungen
-- Docker & Docker Compose installiert
-- Python 3 (für Key-Generierung)
+## Prerequisites
+- Docker and Docker Compose installed
+- Python 3 (for key generation)
 
-## Installation (5 Minuten)
+## Installation (about 5 minutes)
 
-### 1. Setup-Script herunterladen und ausführen
+### 1. Download and run the setup script
 ```bash
-# Download Setup-Script
+# Download setup script
 curl -o setup-servicedock.sh https://raw.githubusercontent.com/yngwizop/servicedock/main/setup-servicedock.sh
 chmod +x setup-servicedock.sh
 
-# Automatische Installation
+# Automated install
 ./setup-servicedock.sh
 ```
 
-**ODER Manuelle Installation:**
+**OR manual installation:**
 
-### 1. Arbeitsverzeichnis erstellen
+### 1. Create working directory
 ```bash
 mkdir servicedock && cd servicedock
 ```
 
-### 2. Docker Compose File herunterladen
+### 2. Download Docker Compose file
 ```bash
 curl -o docker-compose.yml https://raw.githubusercontent.com/yngwizop/servicedock/main/docker-compose.production.yml
 ```
 
-### 3. Environment File erstellen
+### 3. Create environment file
 ```bash
 curl -o .env.example https://raw.githubusercontent.com/yngwizop/servicedock/main/.env.example
 cp .env.example .env
 ```
 
-### 4. SSL-Zertifikate generieren
+### 4. Generate SSL certificates
 
 **PostgreSQL SSL:**
 ```bash
@@ -55,12 +55,12 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
   -subj "/C=DE/ST=State/L=City/O=Organization/CN=localhost"
 ```
 
-### 5. init.sql herunterladen
+### 5. Download init.sql
 ```bash
 curl -o db-init.sql https://raw.githubusercontent.com/yngwizop/servicedock/main/db/init.sql
 ```
 
-### 6. Sicherheits-Keys generieren
+### 6. Generate security keys
 
 **ENCRYPTION_KEY:**
 ```bash
@@ -72,34 +72,34 @@ python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().
 openssl rand -hex 32
 ```
 
-### 7. .env Datei ausfüllen
-Öffne `.env` und trage ein:
-- `POSTGRES_PASSWORD` (z.B. starkes Passwort)
-- `ADMIN_PASSWORD` (für Admin-Login)
-- `ENCRYPTION_KEY` (aus Schritt 6)
-- `JWT_SECRET_KEY` (aus Schritt 6)
-- `FRONTEND_URL` (z.B. `https://10.10.10.50`)
-- `DATABASE_URL` mit dem POSTGRES_PASSWORD
+### 7. Fill in `.env`
+Open `.env` and set:
+- `POSTGRES_PASSWORD` (e.g. a strong password)
+- `ADMIN_PASSWORD` (for admin login)
+- `ENCRYPTION_KEY` (from step 6)
+- `JWT_SECRET_KEY` (from step 6)
+- `FRONTEND_URL` (e.g. `https://10.10.10.50`)
+- `DATABASE_URL` using your `POSTGRES_PASSWORD`
 
-### 8. Starten
+### 8. Start
 ```bash
 docker compose up -d
 ```
 
-### 9. Zugriff
-- Browser: `https://localhost` oder `https://YOUR_IP`
-- Login: `admin` / dein ADMIN_PASSWORD
+### 9. Access
+- Browser: `https://localhost` or `https://YOUR_IP`
+- Login: `admin` / your `ADMIN_PASSWORD`
 
-## 📦 Verzeichnisstruktur
+## 📦 Directory layout
 ```
 servicedock/
-├── docker-compose.yml    # Haupt-Config
-├── .env                  # Deine Secrets
-├── db-init.sql          # DB Schema
-├── ssl/                 # Nginx SSL Certs
+├── docker-compose.yml    # Main config
+├── .env                  # Your secrets
+├── db-init.sql          # DB schema
+├── ssl/                 # Nginx SSL certs
 │   ├── server.crt
 │   └── server.key
-└── db-ssl/              # PostgreSQL SSL Certs
+└── db-ssl/              # PostgreSQL SSL certs
     ├── server.crt
     └── server.key
 ```
@@ -110,23 +110,23 @@ docker compose pull
 docker compose up -d
 ```
 
-## 🛑 Stoppen/Starten
+## 🛑 Stop / start
 ```bash
-# Stoppen
+# Stop
 docker compose down
 
-# Starten
+# Start
 docker compose up -d
 
-# Logs anzeigen
+# Logs
 docker compose logs -f
 ```
 
-## 🗑️ Komplett Löschen (inkl. Daten!)
+## 🗑️ Full removal (including data!)
 ```bash
 docker compose down -v
 rm -rf servicedock/
 ```
 
-## 📚 Vollständige Dokumentation
-Siehe: https://github.com/yngwizop/servicedock
+## 📚 Full documentation
+See: https://github.com/yngwizop/servicedock

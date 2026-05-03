@@ -123,6 +123,8 @@
     "placeholder_services": "Search in Services & Shortcuts...",
     "placeholder_monitoring": "Search in Proxmox...",
     "placeholder_security": "Search in Security...",
+    "placeholder_settings": "Search settings (tabs, tips, help topics)...",
+    "settings_no_match": "No settings section matches that text. Try another word (e.g. wallpaper, Proxmox, Spotify, LDAP, language, deployment).",
     "filter_by": "Filter by:",
     "start_typing": "Start typing to search..."
   },
@@ -305,7 +307,8 @@
       "dashboards": "Dashboards",
       "proxmox": "Proxmox",
       "addons": "AddOns",
-      "language": "Language"
+      "language": "Language",
+      "help": "Help"
     },
     "proxmox_save_success": "Configuration saved and connection tested successfully!",
     "proxmox_save_test_failed": "Configuration saved, but connection test failed:\n\n{{error}}\n\nPlease check the settings.",
@@ -358,12 +361,44 @@
         "Always make an export backup before using the \"Replace\" mode!",
         "Spotify requires an app in the Spotify Developer Dashboard. The Redirect URI is automatically detected.",
         "Spotify has read-only access — only the current song is queried.",
-        "OAuth connection: 2 minute timeout. Checked automatically every 3 seconds. On timeout simply reconnect."      ],
+        "OAuth connection: 2 minute timeout. Checked automatically every 3 seconds. On timeout simply reconnect."
+      ],
       "language_title": "Language Tips",
       "language": [
         "The language is automatically detected based on your browser settings.",
         "Your language preference is saved in the browser and persists across sessions.",
-        "All UI text switches instantly \u2014 no page reload needed."      ]
+        "All UI text switches instantly \u2014 no page reload needed."
+      ],
+      "help_title": "Help",
+      "help": [
+        "Guides are Markdown files from the Servicedock repository, served read-only via the API.",
+        "Use the list on the left to switch topics. External links in docs open in a new tab.",
+        "If a file is missing on the server, that entry may fail to load until the deployment includes it."
+      ]
+    },
+    "help": {
+      "intro": "Documentation for operators and admins. Select a topic on the left.",
+      "load_error": "Could not load documentation. Check that the API is running and you are logged in.",
+      "nav_aria": "Help topics",
+      "nav_title": "Topics",
+      "groups": {
+        "getting_started": "Getting started",
+        "security": "Security & tokens",
+        "integrations": "Integrations",
+        "infrastructure": "Deployment & HTTPS",
+        "other": "More"
+      },
+      "docTitles": {
+        "readme": "Overview (README)",
+        "quickstart": "Quick start",
+        "initial-setup": "Initial setup",
+        "token-rotation": "Token rotation",
+        "proxmox": "Proxmox integration",
+        "spotify": "Spotify add-on",
+        "ldap": "LDAP / Active Directory",
+        "deploy": "Deployment",
+        "https": "HTTPS setup"
+      }
     }
   },
   "appearance": {

@@ -9,12 +9,7 @@
 *.env
 !.env.template
 
-# Dokumentation
-*.md
-README.md
-QUICKSTART.md
-API_DOCUMENTATION.md
-DEPLOY.md
+# Dokumentation: kein globales *.md — Backend-Image kopiert Repo-Root-*.md nach /app/help_docs (Hilfe-Tab).
 docs/
 
 # Development files

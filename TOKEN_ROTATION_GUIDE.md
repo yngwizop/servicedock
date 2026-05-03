@@ -1,274 +1,279 @@
 # Proxmox API Token Rotation Guide
 
-Dieses Dokument beschreibt den kompletten Prozess der Proxmox API Token-Erneuerung und -Überprüfung.
+This document describes the complete process for renewing and verifying Proxmox API tokens.
 
 
-## 📋 Inhaltsverzeichnis
+## 📋 Table of contents
 
-> **Hinweis:** Alle API-Aufrufe und OAuth-Redirects (z.B. Spotify) laufen im lokalen Netzwerk über die zentrale Nginx-Adresse `https://10.10.10.50`.
+> **Note:** All API calls and OAuth redirects (e.g. Spotify) run on the local network via the central Nginx address `https://10.10.10.50`.
 
-1. [Warum Token rotieren?](#warum-token-rotieren)
-2. [Wann rotieren?](#wann-rotieren)
-3. [Schritt-für-Schritt Anleitung](#schritt-für-schritt-anleitung)
-4. [Backend-Überprüfung](#backend-überprüfung)
+1. [Why rotate tokens?](#why-rotate-tokens)
+2. [When to rotate?](#when-to-rotate)
+3. [Step-by-step guide](#step-by-step-guide)
+4. [Backend verification](#backend-verification)
 5. [Troubleshooting](#troubleshooting)
 
 ---
 
-## 🔐 Warum Token rotieren?
+## 🔐 Why rotate tokens?
 
-**Sicherheits-Best-Practice:**
-- Token sollten regelmäßig erneuert werden (empfohlen: alle **60 Tage**)
-- Reduziert das Risiko bei Kompromittierung
-- Entspricht modernen Security-Standards
+**Security best practice:**
+- Tokens should be renewed regularly (recommended: every **60 days**)
+- Reduces risk if credentials are compromised
+- Aligns with modern security standards
 
-**Änderung:** Vorher waren 90 Tage empfohlen, jetzt **60 Tage** für erhöhte Sicherheit.
+**Change:** Previously 90 days was recommended; now **60 days** for stronger security.
 
-**Wann sollte sofort rotiert werden:**
-- ⚠️ Token wurde versehentlich exponiert (z.B. in Logs, Git)
-- ⚠️ Sicherheitsvorfall im Netzwerk
-- ⚠️ Verdacht auf unbefugten Zugriff
-- ⚠️ Nach Mitarbeiter-Wechsel (wenn Token geteilt wurde)
+**Rotate immediately when:**
+- ⚠️ A token was accidentally exposed (e.g. in logs, Git)
+- ⚠️ There is a security incident on the network
+- ⚠️ You suspect unauthorized access
+- ⚠️ After staff changes (if the token was shared)
 
 ---
 
-## 📅 Wann rotieren?
+## 📅 When to rotate?
 
-### Automatische Warnung
+### Automatic warning
 
-Das Dashboard zeigt eine **rote Warnung** im Security-Tab, wenn der Token älter als **60 Tage** ist:
+The dashboard shows a **red warning** in the Security tab when the token is older than **60 days**:
 
 ```
 ┌─────────────────────────────────┐
 │ 🔴 Token Rotation          ⚠️   │
 │                                 │
-│ Token Alter: 65 Tage            │
-│ Erstellt am: 01.09.2025, 14:30  │
+│ Token age: 65 days              │
+│ Created on: 2025-09-01, 14:30  │
 │                                 │
-│ ⚠️ Rotation empfohlen (>60 Tage)│
+│ ⚠️ Rotation recommended (>60 d) │
 └─────────────────────────────────┘
 ```
 
-### Manuell prüfen
+### Manual check
 
 ```bash
-# Token-Alter prüfen (Dashboard 1 ist default)
+# Check token age (dashboard 1 is default)
 curl -s http://localhost:8000/api/admin/proxmox/token-info?dashboard_id=1 | jq .
 
-# Ausgabe:
+# Output:
 {
   "configured": true,
   "token_name": "lxc-creator@pve!dashboard",
   "created_at": "2025-09-01T14:30:00",
   "last_rotated": null,
   "age_days": 65,
-  "rotation_recommended": true  # <- Rotation nötig!
+  "rotation_recommended": true  # <- rotation needed!
 }
 ```
 
 ---
 
-## 📝 Schritt-für-Schritt Anleitung
+## 📝 Step-by-step guide
 
-### Schritt 1: Neuen Token in Proxmox erstellen
+### Step 1: Create a new token in Proxmox
 
-1. **Proxmox Web-UI öffnen**
+1. **Open the Proxmox web UI**
    ```
    https://192.168.178.45:8006
    ```
 
-2. **Navigiere zu API Tokens**
+2. **Go to API tokens**
    ```
    Datacenter → Permissions → API Tokens
    ```
 
-3. **Neuen Token erstellen**
-   - Klicke auf **"Add"**
-   - **User**: `lxc-creator@pve` (oder dein bestehender User)
-   - **Token ID**: `dashboard-2025-11` (mit Datum für bessere Übersicht)
-   - **Privilege Separation**: ☐ **NICHT** angehakt (Token soll gleiche Rechte wie User haben)
-   - Klicke auf **"Add"**
+3. **Create a new token**
+   - Click **Add**
+   - **User**: `lxc-creator@pve` (or your existing user)
+   - **Token ID**: `dashboard-2025-11` (include a date for easier tracking)
+   - **Privilege Separation**: ☐ **do not** enable (token should have the same rights as the user)
+   - Click **Add**
 
-4. **Token-Secret kopieren**
+4. **Copy the token secret**
    ```
-   ⚠️ WICHTIG: Das Secret wird nur 1x angezeigt!
+   ⚠️ IMPORTANT: The secret is shown only once!
    
    Token: lxc-creator@pve!dashboard-2025-11
    Secret: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
    
-   → Secret SOFORT kopieren und sicher speichern!
+   → Copy the secret immediately and store it securely!
    ```
 
-5. **Screenshot als Backup** (optional aber empfohlen)
+5. **Screenshot as backup** (optional but recommended)
 
 ---
 
-### Schritt 2: Token im Dashboard aktualisieren
+### Step 2: Update the token in the dashboard
 
-#### Option A: Via Web-UI (Empfohlen)
+#### Option A: Via web UI (recommended)
 
-1. **Dashboard öffnen**
+1. **Open the dashboard**
    ```
    http://192.168.178.83:3000
    ```
 
-2. **Als Admin einloggen**
-   - Klicke auf das Schloss-Icon (unten rechts)
-   - Gib dein Admin-Passwort ein
+2. **Log in as admin**
+   - Click the lock icon (bottom right)
+   - Enter your admin password
 
-3. **Settings öffnen**
-   - Klicke auf das Zahnrad-Icon (unten rechts)
+3. **Open Settings**
+   - Click the gear icon (bottom right)
 
-4. **Proxmox-Tab auswählen**
-   - Klicke auf "Proxmox" in der Tab-Navigation
+4. **Select the Proxmox tab**
+   - Click **Proxmox** in the tab navigation
 
-5. **Token aktualisieren**
+5. **Update the token**
    ```
-   Host:        192.168.178.45  (unverändert)
-   Port:        8006             (unverändert)
-   Token Name:  lxc-creator@pve!dashboard-2025-11  ← NEU!
-   Token Value: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  ← NEU!
-   Verify SSL:  ☐ (unverändert)
+   Host:        192.168.178.45  (unchanged)
+   Port:        8006             (unchanged)
+   Token Name:  lxc-creator@pve!dashboard-2025-11  ← NEW!
+   Token Value: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  ← NEW!
+   Verify SSL:  ☐ (unchanged)
    Node:        Proxmox1         (optional)
    ```
 
-   **⚠️ Wichtig:** 
-   - Das Token Value-Feld ist leer (aus Sicherheitsgründen)
-   - Du **MUSST** den neuen Token-Wert eingeben
-   - Nach dem Speichern verschwindet der Token-Wert wieder (normal!)
+   **⚠️ Important:** 
+   - The token value field is empty (for security reasons)
+   - You **must** enter the new token value
+   - After saving, the token value disappears again (expected behavior!)
 
-6. **Speichern**
-   - Klicke auf **"Proxmox-Konfiguration speichern"**
-   - Warte auf Bestätigung: "✅ Gespeichert!"
-   - `token_created_at` wird automatisch auf NOW() gesetzt
+6. **Save**
+   - Click **Save Proxmox configuration**
+   - Wait for confirmation: "✅ Saved!"
+   - `token_created_at` is automatically set to `NOW()`
 
-#### Option B: Via API (für Automatisierung)
+#### Option B: Via API (for automation)
+
+The endpoint expects a full Proxmox configuration body (same fields as the dashboard **Save** action: `host`, `port`, `token_name`, `token_value`, `verify_ssl`, and optional `node` / `is_cluster`). Authenticate as admin via `Authorization: Bearer <JWT>` (from login) or the `access_token` cookie. Rate limit: **5 requests/hour**.
 
 ```bash
 curl -X POST http://localhost:8000/api/admin/proxmox/rotate-token \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ADMIN_JWT" \
   -d '{
-    "new_token_value": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-    "new_token_name": "lxc-creator@pve!dashboard-2025-11"
+    "host": "192.168.178.45",
+    "port": 8006,
+    "token_name": "lxc-creator@pve!dashboard-2025-11",
+    "token_value": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "verify_ssl": false,
+    "node": "Proxmox1",
+    "is_cluster": false
   }'
 
-# Erwartete Antwort:
-{
-  "success": true,
-  "message": "Token erfolgreich rotiert",
-  "old_age_days": 65,
-  "new_created_at": "2025-11-05T18:45:00"
-}
+# Expected response:
+{"message": "Token rotated successfully"}
 ```
 
+This updates the encrypted token and sets `token_last_rotated` (used for age in `/api/admin/proxmox/token-info`).
+
 ---
 
-### Schritt 3: Verbindung testen
+### Step 3: Test the connection
 
-1. **Proxmox Monitoring Tab öffnen**
-   - Wechsle zum Tab "Proxmox Monitoring"
-   - Dashboard sollte alle VMs/Container anzeigen
+1. **Open the Proxmox Monitoring tab**
+   - Switch to the **Proxmox Monitoring** tab
+   - The dashboard should list all VMs/containers
 
-2. **Manuell testen (optional)**
+2. **Manual test (optional)**
    ```bash
-   # VMs abrufen
+   # Fetch VMs
    curl -s http://localhost:8000/api/proxmox/vms | jq '.resources | length'
    
-   # Erwartete Ausgabe: Anzahl der VMs (z.B. 38)
+   # Expected output: number of VMs (e.g. 38)
    ```
 
-3. **Bei Fehlern:**
+3. **If errors occur:**
    ```bash
-   # Backend-Logs prüfen
+   # Check backend logs
    docker compose logs backend --tail 50
    
-   # Häufige Fehler:
-   # - "401 Unauthorized" → Token falsch/ungültig
-   # - "Connection refused" → Host/Port falsch
-   # - "SSL Error" → verify_ssl Einstellung prüfen
+   # Common errors:
+   # - "401 Unauthorized" → token wrong/invalid
+   # - "Connection refused" → host/port wrong
+   # - "SSL Error" → check verify_ssl setting
    ```
 
 ---
 
-### Schritt 4: Alten Token in Proxmox löschen
+### Step 4: Delete the old token in Proxmox
 
-**⚠️ WICHTIG: Erst löschen NACHDEM neuer Token funktioniert!**
+**⚠️ IMPORTANT: Delete only after the new token works!**
 
-1. **Proxmox Web-UI**
+1. **Proxmox web UI**
    ```
    Datacenter → Permissions → API Tokens
    ```
 
-2. **Alten Token finden**
-   - Suche nach: `lxc-creator@pve!dashboard` (alter Token)
+2. **Find the old token**
+   - Look for: `lxc-creator@pve!dashboard` (old token)
 
-3. **Token löschen**
-   - Token auswählen
-   - Klicke auf **"Remove"**
-   - Bestätige mit **"Yes"**
+3. **Delete the token**
+   - Select the token
+   - Click **Remove**
+   - Confirm with **Yes**
 
-4. **Verifizieren**
-   - Alter Token sollte nicht mehr in der Liste sein
-   - Dashboard sollte weiterhin funktionieren
+4. **Verify**
+   - The old token should no longer appear in the list
+   - The dashboard should still work
 
 ---
 
-## 🔍 Backend-Überprüfung
+## 🔍 Backend verification
 
-### 1. Token-Verschlüsselung prüfen
+### 1. Check token encryption
 
-**Prüfe ob Token in Datenbank verschlüsselt ist:**
+**Verify that the token is encrypted in the database:**
 
 ```bash
 docker compose exec -T db psql -U user -d dashboard -c \
   "SELECT id, token_name, LEFT(token_value, 50) as token_preview, LENGTH(token_value) as token_length FROM proxmox_config;"
 ```
 
-**Erwartete Ausgabe:**
+**Expected output:**
 ```
  id |        token_name              |                   token_preview                    | token_length 
 ----+--------------------------------+----------------------------------------------------+--------------
   1 | lxc-creator@pve!dashboard-2025 | gAAAAABpC5U8QaM4cN7HQclpfWN4AZdkdcZHnbxSKNZZVCjx8r |          140
 ```
 
-**✅ Token ist verschlüsselt wenn:**
-- Token beginnt mit `gAAAAAB` (Fernet-Header)
-- Token-Länge ist ~140 Zeichen (verschlüsselt)
-- **NICHT** das Original-Secret sichtbar ist
+**✅ Token is encrypted if:**
+- The value starts with `gAAAAAB` (Fernet header)
+- Length is ~140 characters (encrypted)
+- The **original** secret is **not** visible
 
-**❌ Token ist NICHT verschlüsselt wenn:**
-- Token sieht aus wie UUID: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
-- Token-Länge ist ~36 Zeichen
-- → **PROBLEM: Encryption nicht aktiv!**
+**❌ Token is not encrypted if:**
+- It looks like a UUID: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
+- Length is ~36 characters
+- → **PROBLEM: encryption not active!**
 
 ---
 
-### 2. Vollständigen Token anzeigen (zu Debug-Zwecken)
+### 2. View the full token (for debugging only)
 
 ```bash
 docker compose exec -T db psql -U user -d dashboard -c \
   "SELECT token_value FROM proxmox_config WHERE id = 1;"
 ```
 
-**Erwartete Ausgabe:**
+**Expected output:**
 ```
 gAAAAABpC5U8QaM4cN7HQclpfWN4AZdkdcZHnbxSKNZZVCjx8r-V-xvLJASx-ZZumkkAf1xWOCCiy93SCRBYZ3S6pOu7SzfHyu1fAWN0dt6wH0auFRbQzhBA11swHQSUpklgy5UX6swq
 ```
 
-**Fernet-Token Anatomie:**
+**Fernet token anatomy:**
 ```
 gAAAAAB pC5U8 QaM4cN7HQclpfWN...
 │       │      │
-│       │      └─ Encrypted Data (AES-128) + HMAC (SHA-256)
-│       └──────── Timestamp (wann verschlüsselt)
-└──────────────── Fernet Version Byte (0x80)
+│       │      └─ Encrypted data (AES-128) + HMAC (SHA-256)
+│       └──────── Timestamp (when encrypted)
+└──────────────── Fernet version byte (0x80)
 ```
 
 ---
 
-### 3. Encryption-Key prüfen
+### 3. Check the encryption key
 
-**Zeige den verwendeten Verschlüsselungsschlüssel:**
+**Show the encryption key in use:**
 
 ```bash
 docker compose exec backend python3 -c "
@@ -283,27 +288,27 @@ encryption_key = base64.urlsafe_b64encode(hash_digest)
 
 print('Encryption Key (first 20 chars):', encryption_key[:20].decode())
 print('Derived from: ADMIN_PASSWORD environment variable')
-print('Algorithm: SHA-256 → Base64 (Fernet-kompatibel)')
+print('Algorithm: SHA-256 → Base64 (Fernet-compatible)')
 "
 ```
 
-**Erwartete Ausgabe:**
+**Expected output:**
 ```
 Encryption Key (first 20 chars): 7NcYcNGWMxapfjrDQIyY
 Derived from: ADMIN_PASSWORD environment variable
-Algorithm: SHA-256 → Base64 (Fernet-kompatibel)
+Algorithm: SHA-256 → Base64 (Fernet-compatible)
 ```
 
-**Wichtig:**
-- Encryption-Key wird aus `ADMIN_PASSWORD` abgeleitet
-- Bei Passwort-Änderung müssen Tokens neu verschlüsselt werden!
-- Key ist 44 Zeichen lang (Base64-encoded 32-Byte-Key)
+**Important:**
+- The encryption key is derived from `ADMIN_PASSWORD`
+- If you change the password, tokens must be re-encrypted!
+- The key is 44 characters long (Base64-encoded 32-byte key)
 
 ---
 
-### 4. Token-Entschlüsselung testen (Debug)
+### 4. Test token decryption (debug)
 
-**⚠️ NUR zu Debug-Zwecken! Nicht in Produktion ausführen!**
+**⚠️ For debugging only! Do not run in production!**
 
 ```bash
 docker compose exec backend python3 -c "
@@ -313,7 +318,7 @@ import base64
 from cryptography.fernet import Fernet
 import psycopg2
 
-# Get Encryption Key
+# Get encryption key
 password = os.getenv('ADMIN_PASSWORD', 'admin')
 key_bytes = password.encode('utf-8')
 hash_digest = hashlib.sha256(key_bytes).digest()
@@ -341,7 +346,7 @@ print('Format looks like UUID:', '-' in decrypted and len(decrypted) == 36)
 "
 ```
 
-**Erwartete Ausgabe:**
+**Expected output:**
 ```
 Decrypted Token (first 20 chars): xxxxxxxx-xxxx-xxxx-x
 Decrypted Token (last 10 chars): xxxxxxxxxx
@@ -349,19 +354,19 @@ Full length: 36 characters
 Format looks like UUID: True
 ```
 
-**✅ Entschlüsselung erfolgreich wenn:**
-- Token hat UUID-Format (36 Zeichen mit Bindestrichen)
-- Keine Fehler bei `cipher.decrypt()`
+**✅ Decryption succeeded if:**
+- The token has UUID format (36 characters with hyphens)
+- No errors from `cipher.decrypt()`
 
-**❌ Fehler bei Entschlüsselung:**
+**❌ Decryption error:**
 ```
 cryptography.fernet.InvalidToken
-→ Falscher Encryption-Key oder korrupte Daten
+→ Wrong encryption key or corrupted data
 ```
 
 ---
 
-### 5. Token-Rotation-Historie prüfen
+### 5. Check token rotation history
 
 ```bash
 docker compose exec -T db psql -U user -d dashboard -c \
@@ -373,14 +378,14 @@ docker compose exec -T db psql -U user -d dashboard -c \
   FROM proxmox_config WHERE id = 1;"
 ```
 
-**Erwartete Ausgabe:**
+**Expected output:**
 ```
         token_name              |     token_created_at     | token_last_rotated | age_days 
 --------------------------------+--------------------------+--------------------+----------
  lxc-creator@pve!dashboard-2025 | 2025-11-05 18:45:00      | NULL               |        0
 ```
 
-**Nach Rotation:**
+**After rotation:**
 ```
         token_name              |     token_created_at     |   token_last_rotated    | age_days 
 --------------------------------+--------------------------+-------------------------+----------
@@ -389,13 +394,13 @@ docker compose exec -T db psql -U user -d dashboard -c \
 
 ---
 
-### 6. Audit-Log der Rotation prüfen
+### 6. Check the rotation audit log
 
 ```bash
 curl -s "http://localhost:8000/api/admin/audit-logs?limit=5" | jq '.logs[] | select(.action | contains("TOKEN"))'
 ```
 
-**Erwartete Ausgabe:**
+**Expected output:**
 ```json
 {
   "id": 45,
@@ -416,46 +421,46 @@ curl -s "http://localhost:8000/api/admin/audit-logs?limit=5" | jq '.logs[] | sel
 
 ## 🔧 Troubleshooting
 
-### Problem 1: "Token ist nicht verschlüsselt"
+### Issue 1: "Token is not encrypted"
 
 **Symptom:**
 ```sql
-token_value: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  (Klartext!)
+token_value: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  (plaintext!)
 ```
 
-**Ursache:**
-- Encryption wurde vor Token-Speicherung deaktiviert
-- Alter Token vor Encryption-Feature
+**Cause:**
+- Encryption was disabled before storing the token
+- Old token from before the encryption feature existed
 
-**Lösung:**
+**Fix:**
 ```bash
-# Token manuell verschlüsseln
+# Encrypt tokens manually
 docker compose exec backend python3 /app/migrate_encrypt_tokens.py
 ```
 
 ---
 
-### Problem 2: "InvalidToken beim Entschlüsseln"
+### Issue 2: "InvalidToken when decrypting"
 
 **Symptom:**
 ```
 cryptography.fernet.InvalidToken: 
 ```
 
-**Ursache:**
-- `ADMIN_PASSWORD` wurde geändert
-- Token mit anderem Key verschlüsselt
+**Cause:**
+- `ADMIN_PASSWORD` was changed
+- Token was encrypted with a different key
 
-**Lösung:**
+**Fix:**
 ```bash
-# 1. Alten Token in Proxmox löschen
-# 2. Neuen Token erstellen
-# 3. Im Dashboard speichern (wird mit aktuellem Key verschlüsselt)
+# 1. Delete the old token in Proxmox
+# 2. Create a new token
+# 3. Save it in the dashboard (encrypted with the current key)
 ```
 
 ---
 
-### Problem 3: "401 Unauthorized" bei Proxmox-Zugriff
+### Issue 3: "401 Unauthorized" on Proxmox access
 
 **Symptom:**
 ```json
@@ -464,230 +469,232 @@ cryptography.fernet.InvalidToken:
 }
 ```
 
-**Ursache:**
-- Token wurde in Proxmox gelöscht/deaktiviert
-- Token-Name falsch formatiert
-- User hat keine Berechtigung
+**Cause:**
+- Token was deleted/disabled in Proxmox
+- Token name formatted incorrectly
+- User lacks permissions
 
-**Lösung:**
+**Fix:**
 ```bash
-# 1. Token-Format prüfen
+# 1. Check token format
 curl -s http://localhost:8000/api/proxmox/config | jq .token_name
-# Muss sein: "user@realm!tokenid"
+# Must be: "user@realm!tokenid"
 
-# 2. Token in Proxmox prüfen
+# 2. Verify token in Proxmox
 # Datacenter → Permissions → API Tokens
-# → Token muss existieren und aktiv sein
+# → Token must exist and be active
 
-# 3. User-Berechtigungen prüfen
+# 3. Check user permissions
 # Datacenter → Permissions → Users
-# → User braucht mind. VM.Monitor, VM.PowerMgmt
+# → User needs at least VM.Monitor, VM.PowerMgmt
 ```
 
 ---
 
-### Problem 4: Token-Alter wird nicht aktualisiert
+### Issue 4: Token age is not updated
 
 **Symptom:**
 ```json
 {
-  "age_days": 65,  // Alt!
+  "age_days": 65,  // stale!
   "rotation_recommended": true
 }
 ```
 
-**Ursache:**
-- `token_created_at` wurde nicht aktualisiert
-- Token-Wert wurde nicht neu eingegeben (Frontend sendet leeren String)
+**Cause:**
+- `token_created_at` was not updated
+- Token value was not re-entered (frontend sends empty string)
 
-**Lösung:**
+**Fix:**
 ```bash
-# Option 1: Im Dashboard neu eingeben
-# 1. Settings → Proxmox Tab
-# 2. Token Value NEU EINGEBEN (wichtig!)
-# 3. Speichern
+# Option 1: Re-enter in the dashboard
+# 1. Settings → Proxmox tab
+# 2. Re-enter token value (important!)
+# 3. Save
 
-# Option 2: Manuell in DB aktualisieren
+# Option 2: Update manually in the DB
 docker compose exec -T db psql -U user -d dashboard -c \
   "UPDATE proxmox_config 
    SET token_created_at = NOW(), 
        token_last_rotated = NOW() 
    WHERE id = 1;"
 
-# Option 3: Prüfe ob token_value gesendet wurde
+# Option 3: Check whether token_value was sent
 docker compose logs backend | grep "token_value received"
-# Sollte zeigen: "YES (length: 36)"
+# Should show: "YES (length: 36)"
 ```
 
-**Wichtig:** Der Token-Wert wird aus Sicherheitsgründen NICHT im Frontend angezeigt. Du musst ihn bei jeder Rotation neu eingeben!
+**Important:** For security, the token value is **not** shown in the frontend. You must enter it again on every rotation!
 
 ---
 
-### Problem 5: "Dashboard zeigt keine VMs mehr"
+### Issue 5: "Dashboard shows no VMs"
 
 **Symptom:**
-- Proxmox Monitoring Tab ist leer
-- Fehler: "Failed to fetch Proxmox data"
+- Proxmox Monitoring tab is empty
+- Error: "Failed to fetch Proxmox data"
 
-**Diagnose:**
+**Diagnosis:**
 ```bash
-# 1. Backend-Logs prüfen
+# 1. Check backend logs
 docker compose logs backend --tail 50 | grep -i proxmox
 
-# 2. Proxmox-Config prüfen
+# 2. Check Proxmox config
 curl -s http://localhost:8000/api/proxmox/config | jq .
 
-# 3. Manuelle API-Anfrage
+# 3. Manual API request
 curl -s http://localhost:8000/api/proxmox/vms | jq .
 ```
 
-**Häufige Ursachen:**
-- Token wurde in Proxmox gelöscht (alten vergessen)
-- Host/Port falsch
-- Netzwerk-Problem zwischen Dashboard und Proxmox
-- Proxmox-Server offline
+**Common causes:**
+- Token was deleted in Proxmox (old one removed too early)
+- Wrong host/port
+- Network issue between dashboard and Proxmox
+- Proxmox server offline
 
 ---
 
-## 📊 Checkliste nach Rotation
+## 📊 Post-rotation checklist
 
-- [ ] Neuer Token in Proxmox erstellt
-- [ ] Token im Dashboard gespeichert
-- [ ] Token in Datenbank verschlüsselt (`gAAAAAB...`)
-- [ ] Token-Alter zurückgesetzt (0 Tage)
-- [ ] Proxmox Monitoring zeigt alle VMs
-- [ ] Start/Stop/Reboot funktioniert
-- [ ] Alter Token in Proxmox gelöscht
-- [ ] Audit-Log zeigt Rotation-Eintrag
-- [ ] Security-Dashboard zeigt grünen Status
+- [ ] New token created in Proxmox
+- [ ] Token saved in the dashboard
+- [ ] Token encrypted in the database (`gAAAAAB...`)
+- [ ] Token age reset (0 days)
+- [ ] Proxmox Monitoring lists all VMs
+- [ ] Start/stop/reboot works
+- [ ] Old token removed in Proxmox
+- [ ] Audit log shows rotation entry
+- [ ] Security dashboard shows green status
 
 ---
 
-## 🔐 Best Practices
+## 🔐 Best practices
 
-### Sicherheit
+### Security
 
-1. **Token niemals teilen**
-   - Jeder Admin sollte eigenen Token haben
+1. **Never share tokens**
+   - Each admin should have their own token
    - Format: `admin-name@pve!dashboard-YYYY-MM`
 
-2. **Token-Secrets sicher speichern**
-   - Passwort-Manager (z.B. Bitwarden, KeePass)
-   - NICHT in Git committen
-   - NICHT in Logs ausgeben
+2. **Store token secrets securely**
+   - Password manager (e.g. Bitwarden, KeePass)
+   - Do **not** commit to Git
+   - Do **not** print to logs
 
-3. **Regelmäßige Rotation**
-   - Alle 60 Tage (oder bei Warnung im Dashboard)
-   - Nach Sicherheitsvorfällen sofort
+3. **Rotate regularly**
+   - Every 60 days (or when the dashboard warns)
+   - Immediately after security incidents
 
-4. **Backup des Encryption-Keys**
-   - `ADMIN_PASSWORD` sicher speichern
-   - Bei Verlust: Alle Tokens neu erstellen nötig
+4. **Backup the encryption key**
+   - Store `ADMIN_PASSWORD` securely
+   - If lost: you must recreate all tokens
 
-### Dokumentation
+### Documentation
 
-1. **Token-Namen mit Datum**
+1. **Token names with dates**
    ```
    dashboard-2025-11
    dashboard-2025-12
    dashboard-2026-01
    ```
 
-2. **Rotations-Log führen**
+2. **Keep a rotation log**
    ```
-   05.11.2025 - Token rotiert (Alt: 65 Tage)
-   04.01.2026 - Token rotiert (Alt: 60 Tage)
+   2025-11-05 - Token rotated (previous: 65 days)
+   2026-01-04 - Token rotated (previous: 60 days)
    ```
 
-3. **Screenshots bei Token-Erstellung**
-   - Als Backup falls Secret verloren geht
+3. **Screenshots when creating tokens**
+   - Backup if the secret is lost
 
 ---
 
-## � ADMIN_PASSWORD Änderung (Re-Encryption)
+## 🔐 ADMIN_PASSWORD change (re-encryption)
 
 ### Problem
-Wenn du dein `ADMIN_PASSWORD` änderst, können die verschlüsselten Tokens nicht mehr entschlüsselt werden, da der Encryption Key vom Passwort abgeleitet wird!
+If you change your `ADMIN_PASSWORD`, encrypted tokens can no longer be decrypted, because the encryption key is derived from the password!
 
-### ⚠️ Symptome nach Passwort-Änderung
-- Proxmox Monitoring zeigt keine VMs mehr
-- Backend-Log: `Decryption error: InvalidToken`
-- 401 Unauthorized bei Proxmox-Zugriff
+### ⚠️ Symptoms after a password change
+- Proxmox Monitoring shows no VMs
+- Backend log: `Decryption error: InvalidToken`
+- 401 Unauthorized when accessing Proxmox
 
-### Lösung: Re-Encryption Script
+### Solution: re-encryption script
 
-#### Schritt 1: Backup erstellen
+#### Step 1: Create a backup
 ```bash
-# Datenbank-Backup
+# Database backup
 docker compose exec db pg_dump -U user dashboard > backup_$(date +%Y%m%d).sql
 ```
 
-#### Schritt 2: Re-Encryption ausführen
+#### Step 2: Run re-encryption
 ```bash
-# Script starten
+# Start the script
 docker compose exec backend python3 /app/re_encrypt_tokens.py
-
-# Script fragt nach:
-Altes ADMIN_PASSWORD: [dein altes Passwort]
-Neues ADMIN_PASSWORD: [dein neues Passwort]
-Neues ADMIN_PASSWORD bestätigen: [nochmal neues Passwort]
-
-# Ausgabe bei Erfolg:
-✅ Entschlüsselung mit altem Passwort erfolgreich
-✅ Verschlüsselung mit neuem Passwort erfolgreich
-✅ Token erfolgreich re-encrypted!
-✅ Verifikation erfolgreich!
-🎉 Token kann jetzt mit neuem ADMIN_PASSWORD entschlüsselt werden
 ```
 
-#### Schritt 3: docker-compose.yml anpassen
+The script prompts and log lines are in **German** in the current codebase. You should see prompts like:
+
+- `Altes ADMIN_PASSWORD:` (old password)  
+- `Neues ADMIN_PASSWORD:` (new password)  
+- `Neues ADMIN_PASSWORD bestätigen:` (confirm new password)
+
+On success, output includes lines such as:
+
+- `✅ Entschlüsselung mit altem Passwort erfolgreich`
+- `✅ Verschlüsselung mit neuem Passwort erfolgreich`
+- `✅ Token erfolgreich re-encrypted!`
+- `✅ Verifikation erfolgreich!`
+- `🎉 Token kann jetzt mit neuem ADMIN_PASSWORD entschlüsselt werden`
+
+#### Step 3: Update docker-compose.yml
 ```yaml
 services:
   backend:
     environment:
-      - ADMIN_PASSWORD=dein-neues-passwort  # ← HIER ÄNDERN
+      - ADMIN_PASSWORD=your-new-password  # ← CHANGE HERE
 ```
 
-#### Schritt 4: Backend neu starten
+#### Step 4: Restart the backend
 ```bash
 docker compose restart backend
 ```
 
-#### Schritt 5: Testen
+#### Step 5: Test
 ```bash
-# Teste ob Proxmox Monitoring funktioniert
+# Verify Proxmox Monitoring works
 curl http://localhost:8000/api/proxmox/vms | jq .
 ```
 
-### Alternative: Neuer Token
-Falls Re-Encryption nicht funktioniert:
+### Alternative: new token
+If re-encryption does not work:
 
-1. **Neuen Token in Proxmox erstellen**
-2. **Im Dashboard speichern** (Settings → Proxmox Tab)
-3. **Wird automatisch mit neuem Passwort verschlüsselt**
+1. **Create a new token in Proxmox**
+2. **Save it in the dashboard** (Settings → Proxmox tab)
+3. **It will be encrypted automatically with the new password**
 
 ---
 
-## �📚 Weiterführende Dokumentation
+## 📚 Further reading
 
-- [SECURITY_FEATURES.md](SECURITY_FEATURES.md) - Übersicht aller Security-Features
-- [ENCRYPTION.md](ENCRYPTION.md) - Details zur Verschlüsselung
-- [PROXMOX_SETUP.md](PROXMOX_SETUP.md) - Proxmox Integration Setup
+- [SECURITY_FEATURES.md](SECURITY_FEATURES.md) — Overview of security features
+- [ENCRYPTION.md](ENCRYPTION.md) — Encryption details
+- [PROXMOX_SETUP.md](PROXMOX_SETUP.md) — Proxmox integration setup
 
 ---
 
 ## 🆘 Support
 
-Bei Problemen:
-1. Backend-Logs prüfen: `docker compose logs backend --tail 100`
-2. Datenbank prüfen: Siehe [Backend-Überprüfung](#backend-überprüfung)
-3. Token neu erstellen: [Schritt-für-Schritt Anleitung](#schritt-für-schritt-anleitung)
+If you run into problems:
+1. Check backend logs: `docker compose logs backend --tail 100`
+2. Check the database: see [Backend verification](#backend-verification)
+3. Create a new token: [Step-by-step guide](#step-by-step-guide)
 
-**Notfall-Lösung:**
+**Emergency reset:**
 ```bash
-# Alles zurücksetzen
+# Reset everything
 docker compose exec -T db psql -U user -d dashboard -c \
   "DELETE FROM proxmox_config WHERE id = 1;"
 
-# Neuen Token erstellen und im Dashboard speichern
+# Create a new token and save it in the dashboard
 ```

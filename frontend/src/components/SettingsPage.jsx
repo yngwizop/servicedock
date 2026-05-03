@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Palette, SquaresFour, Desktop, Plug, Lightbulb, Info, ShieldCheck, Lightning, Translate } from 'phosphor-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Palette, SquaresFour, Desktop, Plug, Lightbulb, Info, ShieldCheck, Lightning, Translate, Lifebuoy, BookOpen } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../utils/auth';
 import AppearanceTab from './settings/AppearanceTab';
@@ -7,6 +7,7 @@ import ProxmoxTab from './settings/ProxmoxTab';
 import DashboardsCard from './settings/DashboardsCard';
 import AddOnsCard from './settings/AddOnsCard';
 import LanguageCard from './settings/LanguageCard';
+import HelpTab from './settings/HelpTab';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
   (window.location.port === '' ? 
@@ -24,7 +25,8 @@ function SettingsPage({
   onDashboardsChange,
   textColor,
   isAdmin = true,
-  userRole = 'admin'
+  userRole = 'admin',
+  searchTerm = ''
 }) {
   const { t } = useTranslation();
 
@@ -33,6 +35,151 @@ function SettingsPage({
 
   // Proxmox State (nur für savedTokenName in Overview)
   const [savedTokenName, setSavedTokenName] = useState('');
+
+  const sectionTips = useMemo(
+    () => ({
+      appearance: {
+        title: t('settings.tips.appearance_title'),
+        icon: Palette,
+        color: 'text-pink-400',
+        tips: [
+          { icon: Lightbulb, text: t('settings.tips.appearance.0') },
+          { icon: Info, text: t('settings.tips.appearance.1') },
+          { icon: Lightning, text: t('settings.tips.appearance.2') },
+          { icon: ShieldCheck, text: t('settings.tips.appearance.3') },
+          { icon: Info, text: t('settings.tips.appearance.4') },
+          { icon: Lightbulb, text: t('settings.tips.appearance.5') },
+          { icon: Lightning, text: t('settings.tips.appearance.6') },
+        ],
+      },
+      dashboards: {
+        title: t('settings.tips.dashboards_title'),
+        icon: SquaresFour,
+        color: 'text-blue-400',
+        tips: [
+          { icon: Lightbulb, text: t('settings.tips.dashboards.0') },
+          { icon: Info, text: t('settings.tips.dashboards.1') },
+          { icon: ShieldCheck, text: t('settings.tips.dashboards.2') },
+          { icon: Lightning, text: t('settings.tips.dashboards.3') },
+          { icon: Info, text: t('settings.tips.dashboards.4') },
+          { icon: Lightbulb, text: t('settings.tips.dashboards.5') },
+        ],
+      },
+      proxmox: {
+        title: t('settings.tips.proxmox_title'),
+        icon: Desktop,
+        color: 'text-orange-400',
+        tips: [
+          { icon: ShieldCheck, text: t('settings.tips.proxmox.0') },
+          { icon: Info, text: t('settings.tips.proxmox.1') },
+          { icon: Lightbulb, text: t('settings.tips.proxmox.2') },
+          { icon: Lightning, text: t('settings.tips.proxmox.3') },
+          { icon: Info, text: t('settings.tips.proxmox.4') },
+          { icon: Lightbulb, text: t('settings.tips.proxmox.5') },
+          { icon: ShieldCheck, text: t('settings.tips.proxmox.6') },
+        ],
+      },
+      addons: {
+        title: t('settings.tips.addons_title'),
+        icon: Plug,
+        color: 'text-green-400',
+        tips: [
+          { icon: Lightbulb, text: t('settings.tips.addons.0') },
+          { icon: ShieldCheck, text: t('settings.tips.addons.1') },
+          { icon: Info, text: t('settings.tips.addons.2') },
+          { icon: Lightning, text: t('settings.tips.addons.3') },
+          { icon: Lightbulb, text: t('settings.tips.addons.4') },
+          { icon: Info, text: t('settings.tips.addons.5') },
+          { icon: ShieldCheck, text: t('settings.tips.addons.6') },
+          { icon: Lightning, text: t('settings.tips.addons.7') },
+        ],
+      },
+      language: {
+        title: t('settings.tips.language_title'),
+        icon: Translate,
+        color: 'text-violet-400',
+        tips: [
+          { icon: Lightbulb, text: t('settings.tips.language.0') },
+          { icon: Info, text: t('settings.tips.language.1') },
+          { icon: Lightning, text: t('settings.tips.language.2') },
+        ],
+      },
+      help: {
+        title: t('settings.tips.help_title'),
+        icon: Lifebuoy,
+        color: 'text-cyan-400',
+        tips: [
+          { icon: Info, text: t('settings.tips.help.0') },
+          { icon: Lightbulb, text: t('settings.tips.help.1') },
+          { icon: BookOpen, text: t('settings.tips.help.2') },
+        ],
+      },
+    }),
+    [t]
+  );
+
+  const sections = useMemo(
+    () => [
+      { id: 'appearance', label: t('settings.tabs.appearance'), icon: Palette },
+      { id: 'dashboards', label: t('settings.tabs.dashboards'), icon: SquaresFour },
+      { id: 'proxmox', label: t('settings.tabs.proxmox'), icon: Desktop },
+      { id: 'addons', label: t('settings.tabs.addons'), icon: Plug },
+      { id: 'language', label: t('settings.tabs.language'), icon: Translate },
+      { id: 'help', label: t('settings.tabs.help'), icon: Lifebuoy },
+    ],
+    [t]
+  );
+
+  const sectionSearchBlobs = useMemo(() => {
+    const helpDocIds = [
+      'readme',
+      'quickstart',
+      'initial-setup',
+      'token-rotation',
+      'proxmox',
+      'spotify',
+      'ldap',
+      'deploy',
+      'https',
+    ];
+    const out = {};
+    for (const s of sections) {
+      const tips = sectionTips[s.id];
+      if (!tips) continue;
+      const parts = [s.label, tips.title, ...tips.tips.map((x) => x.text)];
+      if (s.id === 'help') {
+        parts.push(t('settings.help.intro'));
+        for (const docId of helpDocIds) {
+          parts.push(t(`settings.help.docTitles.${docId}`));
+        }
+      }
+      out[s.id] = parts.join('\n').toLowerCase();
+    }
+    return out;
+  }, [sections, sectionTips, t]);
+
+  const displaySections = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return sections;
+    const hits = sections.filter((s) => sectionSearchBlobs[s.id]?.includes(q));
+    return hits.length ? hits : sections;
+  }, [sections, sectionSearchBlobs, searchTerm]);
+
+  const settingsSearchHasMatches = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return true;
+    return sections.some((s) => sectionSearchBlobs[s.id]?.includes(q));
+  }, [searchTerm, sections, sectionSearchBlobs]);
+
+  useEffect(() => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return;
+    const hits = sections.filter((s) => sectionSearchBlobs[s.id]?.includes(q));
+    if (!hits.length) return;
+    if (!hits.some((h) => h.id === activeSection)) {
+      setActiveSection(hits[0].id);
+    }
+  }, [searchTerm, sections, sectionSearchBlobs, activeSection]);
 
   // Lade Proxmox Token Name für Overview
   useEffect(() => {
@@ -69,84 +216,6 @@ function SettingsPage({
     fetchProxmoxConfig();
   };
 
-  const sections = [
-    { id: 'appearance', label: t('settings.tabs.appearance'), icon: Palette },
-    { id: 'dashboards', label: t('settings.tabs.dashboards'), icon: SquaresFour },
-    { id: 'proxmox', label: t('settings.tabs.proxmox'), icon: Desktop },
-    { id: 'addons', label: t('settings.tabs.addons'), icon: Plug },
-    { id: 'language', label: t('settings.tabs.language'), icon: Translate },
-  ];
-
-  // Contextual tips per section
-  const sectionTips = {
-    appearance: {
-      title: t('settings.tips.appearance_title'),
-      icon: Palette,
-      color: 'text-pink-400',
-      tips: [
-        { icon: Lightbulb, text: t('settings.tips.appearance.0') },
-        { icon: Info, text: t('settings.tips.appearance.1') },
-        { icon: Lightning, text: t('settings.tips.appearance.2') },
-        { icon: ShieldCheck, text: t('settings.tips.appearance.3') },
-        { icon: Info, text: t('settings.tips.appearance.4') },
-        { icon: Lightbulb, text: t('settings.tips.appearance.5') },
-        { icon: Lightning, text: t('settings.tips.appearance.6') },
-      ]
-    },
-    dashboards: {
-      title: t('settings.tips.dashboards_title'),
-      icon: SquaresFour,
-      color: 'text-blue-400',
-      tips: [
-        { icon: Lightbulb, text: t('settings.tips.dashboards.0') },
-        { icon: Info, text: t('settings.tips.dashboards.1') },
-        { icon: ShieldCheck, text: t('settings.tips.dashboards.2') },
-        { icon: Lightning, text: t('settings.tips.dashboards.3') },
-        { icon: Info, text: t('settings.tips.dashboards.4') },
-        { icon: Lightbulb, text: t('settings.tips.dashboards.5') },
-      ]
-    },
-    proxmox: {
-      title: t('settings.tips.proxmox_title'),
-      icon: Desktop,
-      color: 'text-orange-400',
-      tips: [
-        { icon: ShieldCheck, text: t('settings.tips.proxmox.0') },
-        { icon: Info, text: t('settings.tips.proxmox.1') },
-        { icon: Lightbulb, text: t('settings.tips.proxmox.2') },
-        { icon: Lightning, text: t('settings.tips.proxmox.3') },
-        { icon: Info, text: t('settings.tips.proxmox.4') },
-        { icon: Lightbulb, text: t('settings.tips.proxmox.5') },
-        { icon: ShieldCheck, text: t('settings.tips.proxmox.6') },
-      ]
-    },
-    addons: {
-      title: t('settings.tips.addons_title'),
-      icon: Plug,
-      color: 'text-green-400',
-      tips: [
-        { icon: Lightbulb, text: t('settings.tips.addons.0') },
-        { icon: ShieldCheck, text: t('settings.tips.addons.1') },
-        { icon: Info, text: t('settings.tips.addons.2') },
-        { icon: Lightning, text: t('settings.tips.addons.3') },
-        { icon: Lightbulb, text: t('settings.tips.addons.4') },
-        { icon: Info, text: t('settings.tips.addons.5') },
-        { icon: ShieldCheck, text: t('settings.tips.addons.6') },
-        { icon: Lightning, text: t('settings.tips.addons.7') },
-      ]
-    },
-    language: {
-      title: t('settings.tips.language_title'),
-      icon: Translate,
-      color: 'text-violet-400',
-      tips: [
-        { icon: Lightbulb, text: t('settings.tips.language.0') },
-        { icon: Info, text: t('settings.tips.language.1') },
-        { icon: Lightning, text: t('settings.tips.language.2') },
-      ]
-    },
-  };
-
   const currentTips = sectionTips[activeSection] || sectionTips.appearance;
   const TipsSectionIcon = currentTips.icon;
 
@@ -175,7 +244,7 @@ function SettingsPage({
           aria-label={t('settings.nav_sections_aria')}
         >
           <div className="flex gap-1 min-w-min">
-            {sections.map((section) => {
+            {displaySections.map((section) => {
               const Icon = section.icon;
               const isActive = activeSection === section.id;
               return (
@@ -201,7 +270,7 @@ function SettingsPage({
           {/* Desktop-Subnav */}
           <div className="hidden lg:flex flex-col w-56 xl:w-60 shrink-0 bg-white/30 dark:bg-white/[0.05] sd-night-veil-flat p-3">
             <nav className="space-y-1 sticky top-4 self-start w-full" role="navigation" aria-label={t('settings.nav_sections_aria')}>
-              {sections.map((section) => {
+              {displaySections.map((section) => {
                 const Icon = section.icon;
                 const isActive = activeSection === section.id;
                 return (
@@ -225,6 +294,14 @@ function SettingsPage({
 
           {/* Hauptinhalt */}
           <main className="flex-1 min-w-0 bg-white/22 dark:bg-white/[0.04] sd-night-tint-flat px-5 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
+            {searchTerm.trim() && !settingsSearchHasMatches && (
+              <div
+                role="status"
+                className="mb-5 rounded-xl border border-amber-400/45 bg-amber-500/12 px-4 py-3 text-sm text-amber-950 dark:border-amber-400/30 dark:bg-amber-500/15 dark:text-amber-50"
+              >
+                {t('search.settings_no_match')}
+              </div>
+            )}
             {activeSection === 'appearance' && (
               <AppearanceTab
                 editAppearance={editAppearance}
@@ -256,6 +333,8 @@ function SettingsPage({
             {activeSection === 'addons' && <AddOnsCard />}
 
             {activeSection === 'language' && <LanguageCard />}
+
+            {activeSection === 'help' && <HelpTab textColor={textColor} />}
           </main>
 
           {/* Tipps: eigene Modul-Karte (kein extra border-l → kein schwarzer Naht-Rand) */}

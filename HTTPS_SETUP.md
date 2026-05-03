@@ -1,68 +1,68 @@
-# HTTPS Setup für servicedock
+# HTTPS setup for ServiceDock
 
-## 🔒 Übersicht
+## 🔒 Overview
 
-Dein Dashboard läuft jetzt mit HTTPS über einen Nginx Reverse Proxy!
+Your dashboard runs with HTTPS behind an Nginx reverse proxy.
 
-### Was wurde eingerichtet:
+### What is configured
 
-- ✅ **Nginx Reverse Proxy** als Docker Container
-- ✅ **Self-Signed SSL-Zertifikat** für lokale Nutzung
-- ✅ **HTTP → HTTPS Redirect** (automatisch)
-- ✅ **Moderne SSL-Konfiguration** (TLS 1.2/1.3)
-- ✅ **Security Headers** (HSTS, X-Frame-Options, etc.)
+- ✅ **Nginx reverse proxy** as a Docker container
+- ✅ **Self-signed SSL certificate** for local use
+- ✅ **HTTP → HTTPS redirect** (automatic)
+- ✅ **Modern TLS** (TLS 1.2 / 1.3)
+- ✅ **Security headers** (HSTS, X-Frame-Options, etc.)
 
-## 🌐 Zugriff
+## 🌐 Access
 
-### HTTPS (empfohlen):
+### HTTPS (recommended)
 ```
 https://10.10.10.50
 ```
 
-### HTTP (redirectet automatisch zu HTTPS):
+### HTTP (redirects to HTTPS)
 ```
 http://10.10.10.50
 ```
 
-## 🎵 Spotify OAuth Setup
+## 🎵 Spotify OAuth setup
 
 ### 1. Spotify Developer Dashboard
 
-Füge in deiner Spotify App hinzu:
+Add to your Spotify app:
 ```
 https://10.10.10.50/api/spotify/callback
 ```
 
-### 2. servicedock Dashboard
+### 2. ServiceDock dashboard
 
-1. Öffne: `https://10.10.10.50`
-2. Akzeptiere die Zertifikats-Warnung (siehe unten)
+1. Open `https://10.10.10.50`
+2. Accept the certificate warning (see below)
 3. Settings → AddOns → Spotify
-4. Die Redirect URI wird automatisch korrekt angezeigt
-5. "Mit Spotify verbinden" klicken
-6. Fertig! 🎉
+4. The redirect URI is shown correctly automatically
+5. Click **Connect with Spotify**
+6. Done! 🎉
 
-## ⚠️ Browser-Warnung
+## ⚠️ Browser warning
 
-Da es sich um ein Self-Signed Zertifikat handelt, zeigt dein Browser eine Warnung:
+Because the certificate is self-signed, your browser shows a warning:
 
-### Chrome/Edge:
-1. Klicke auf "Erweitert"
-2. Klicke auf "Weiter zu 10.10.10.50 (unsicher)"
+### Chrome / Edge
+1. Click **Advanced**
+2. Click **Proceed to 10.10.10.50 (unsafe)**
 
-### Firefox:
-1. Klicke auf "Erweitert"
-2. Klicke auf "Risiko akzeptieren und fortfahren"
+### Firefox
+1. Click **Advanced**
+2. Click **Accept the Risk and Continue**
 
-### Safari:
-1. Klicke auf "Details"
-2. Klicke auf "Diese Website besuchen"
+### Safari
+1. Click **Show Details**
+2. Click **visit this website**
 
-**Das ist völlig normal und sicher für lokale Nutzung!**
+**This is normal and fine for local / homelab use.**
 
-## 🔄 Zertifikat neu generieren
+## 🔄 Regenerate certificate
 
-Falls du die IP-Adresse änderst oder ein neues Zertifikat brauchst:
+If you change the IP or need a new certificate:
 
 ```bash
 cd /home/webdashboard
@@ -70,103 +70,103 @@ cd /home/webdashboard
 docker compose restart nginx
 ```
 
-## 🔧 Konfiguration
+## 🔧 Configuration
 
-### Nginx Config:
+### Nginx config
 ```
 nginx/nginx.conf
 ```
 
-### SSL Zertifikate:
+### SSL certificates
 ```
-nginx/ssl/cert.pem  (öffentliches Zertifikat)
-nginx/ssl/key.pem   (privater Schlüssel)
+nginx/ssl/cert.pem   (public certificate)
+nginx/ssl/key.pem    (private key)
 ```
 
-### Docker Compose:
-Das `docker-compose.yml` wurde erweitert um den `nginx` Service.
+### Docker Compose
+`docker-compose.yml` includes the `nginx` service.
 
-## 📱 Von anderen Geräten zugreifen
+## 📱 Access from other devices
 
-Du kannst jetzt von **allen Geräten** im Netzwerk zugreifen:
+You can reach the dashboard from **any device** on the network:
 
 - ✅ PC: `https://10.10.10.50`
 - ✅ Laptop: `https://10.10.10.50`
-- ✅ Handy: `https://10.10.10.50`
+- ✅ Phone: `https://10.10.10.50`
 - ✅ Tablet: `https://10.10.10.50`
 
-**Wichtig**: Auf jedem Gerät musst du die Zertifikats-Warnung akzeptieren.
+**Important:** You must accept the certificate warning on each device once.
 
-## 🚀 Container Management
+## 🚀 Container management
 
-### Alles starten:
+### Start everything
 ```bash
 docker compose up -d
 ```
 
-### Alles stoppen:
+### Stop everything
 ```bash
 docker compose down
 ```
 
-### Nur Nginx neu starten:
+### Restart Nginx only
 ```bash
 docker compose restart nginx
 ```
 
-### Logs anschauen:
+### View logs
 ```bash
 docker compose logs nginx
-docker compose logs -f nginx  # Live-Logs
+docker compose logs -f nginx   # follow
 ```
 
-## 🔐 Sicherheit
+## 🔐 Security
 
-### Was ist geschützt:
-- ✅ Verschlüsselte Verbindung (HTTPS)
-- ✅ Security Headers aktiv
-- ✅ Nur im lokalen Netzwerk erreichbar
+### What is protected
+- ✅ Encrypted connection (HTTPS)
+- ✅ Security headers enabled
+- ✅ Reachable only on your local network (typical setup)
 
-### Was du beachten solltest:
-- ⚠️ Das Zertifikat ist Self-Signed (Browser-Warnung ist normal)
-- ⚠️ Nicht von außen (Internet) erreichbar (gut so!)
-- ⚠️ Starke Passwörter verwenden!
+### What to keep in mind
+- ⚠️ The certificate is self-signed (browser warning is expected)
+- ⚠️ Not exposed to the public internet (usually what you want)
+- ⚠️ Use strong passwords
 
 ## 🎯 Ports
 
-- **Port 80** (HTTP): Redirectet automatisch zu HTTPS
-- **Port 443** (HTTPS): Hauptzugriff
-- **Port 3000/8000**: Nicht mehr direkt erreichbar (läuft über Nginx)
+- **Port 80 (HTTP):** Redirects to HTTPS
+- **Port 443 (HTTPS):** Main entry point
+- **Ports 3000 / 8000:** Not exposed directly (traffic goes through Nginx)
 
-## 💡 Tipps
+## 💡 Tips
 
-### Zertifikats-Warnung nervig?
+### Tired of certificate warnings?
 
-Option 1: **mkcert verwenden** (keine Warnung)
-- Erstellt eine lokale CA
-- Browser vertraut dem Zertifikat
-- Setup-Anleitung: [siehe mkcert Dokumentation]
+Option 1: **Use mkcert** (no warning)
+- Creates a local CA
+- Browser trusts the certificate
+- See mkcert documentation for setup
 
-Option 2: **Warnung akzeptieren und weitermachen** 😎
-- Für persönliche Nutzung völlig ok
-- Musst es nur einmal pro Browser akzeptieren
+Option 2: **Accept the warning once** 😎
+- Fine for personal homelab use
+- One-time per browser
 
-### Von unterwegs zugreifen?
+### Remote access from the internet?
 
-Du brauchst:
-1. Port-Forwarding im Router (443 → 10.10.10.50:443)
-2. DynDNS (z.B. DuckDNS) für feste URL
-3. Zertifikat für deine DynDNS-Domain
+You need:
+1. Port forwarding on your router (443 → host:443)
+2. Dynamic DNS (e.g. DuckDNS) for a stable hostname
+3. A certificate for that hostname
 
-Für rein lokale Nutzung: **Nicht nötig!**
+For **local-only** use: **not required.**
 
-## 📚 Weitere Informationen
+## 📚 Further reading
 
-- Nginx Dokumentation: https://nginx.org/en/docs/
+- Nginx: https://nginx.org/en/docs/
 - Docker Compose: https://docs.docker.com/compose/
-- Let's Encrypt (für echte Zertifikate): https://letsencrypt.org/
+- Let's Encrypt (real certificates): https://letsencrypt.org/
 
 ---
 
-**Status**: ✅ HTTPS ist aktiv und funktioniert!
-**Zugriff**: `https://10.10.10.50`
+**Status:** ✅ HTTPS is active and working.  
+**Access:** `https://10.10.10.50`

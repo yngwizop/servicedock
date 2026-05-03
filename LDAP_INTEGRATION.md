@@ -1,69 +1,69 @@
-# AD/LDAP Integration — ServiceDock
+# AD / LDAP integration — ServiceDock
 
-## Übersicht
+## Overview
 
-ServiceDock unterstützt **Active Directory / LDAP-Authentifizierung** als optionales AddOn. Damit können sich AD-Benutzer mit ihrem Domain-Account anmelden, wobei die Rolle (Admin oder Viewer) über Gruppenmitgliedschaften gesteuert wird.
+ServiceDock supports **Active Directory / LDAP authentication** as an optional add-on. AD users sign in with their domain account; the role (admin or viewer) is determined by group membership.
 
 **Features:**
-- AD-Login mit Username + Passwort (UPN-Bind: `user@domain`)
-- Rollensteuerung über AD-Gruppen (Admin-Gruppe / Viewer-Gruppe)
-- Automatischer Fallback auf lokalen Login, wenn kein Username angegeben wird
-- Viewer-Rolle: Nur-Lese-Zugriff auf Dashboard (kein Edit Mode, keine Settings)
-- LDAP über SSL (LDAPS) oder StartTLS unterstützt
-- Bind-Passwort wird verschlüsselt in der Datenbank gespeichert (Fernet)
-- Konfiguration komplett über die Web-UI (Settings → AddOns → LDAP/AD)
+- AD login with username + password (UPN bind: `user@domain`)
+- Role mapping via AD groups (admin group / viewer group)
+- Automatic fallback to local login when no username is provided
+- Viewer role: read-only dashboard (no edit mode, no settings)
+- LDAP over SSL (LDAPS) or StartTLS
+- Bind password stored encrypted in the database (Fernet)
+- Full configuration in the web UI (Settings → AddOns → LDAP/AD)
 
 ---
 
-## Voraussetzungen
+## Prerequisites
 
-- **Active Directory Domain Controller** (z.B. Samba AD DC oder Windows Server AD DS)
-- **Service-Account** im AD mit Leserechten (für User-Suche)
-- **Zwei AD-Gruppen** für Rollensteuerung:
-  - Eine Gruppe für **Admins** (voller Zugriff)
-  - Eine Gruppe für **Viewer** (Nur-Lese-Zugriff)
-- **ldap3** Python-Paket (bereits in `requirements.txt`: `ldap3>=2.9.1`)
+- **Active Directory domain controller** (e.g. Samba AD DC or Windows Server AD DS)
+- **Service account** in AD with read rights (for user search)
+- **Two AD groups** for roles:
+  - One group for **admins** (full access)
+  - One group for **viewers** (read-only)
+- **ldap3** Python package (already in `requirements.txt`: `ldap3>=2.9.1`)
 
 ---
 
-## AD vorbereiten
+## Prepare Active Directory
 
-### 1. Service-Account erstellen
+### 1. Create a service account
 
-Erstelle einen dedizierten Service-Account im AD, der nur Leserechte hat:
+Create a dedicated service account with read-only rights:
 
 ```bash
-# Samba AD DC Beispiel:
+# Samba AD DC example:
 samba-tool user create svc_servicedock --random-password
 samba-tool user setexpiry svc_servicedock --noexpiry
 ```
 
-### 2. Gruppen erstellen
+### 2. Create groups
 
-Erstelle zwei Sicherheitsgruppen für die Rollenzuordnung:
+Create two security groups for role mapping:
 
 ```bash
-# Admin-Gruppe
+# Admin group
 samba-tool group add ServiceDock-Admins
 
-# Viewer-Gruppe
+# Viewer group
 samba-tool group add ServiceDock-Viewers
 ```
 
-### 3. Benutzer zu Gruppen hinzufügen
+### 3. Add users to groups
 
 ```bash
-# Admin-User hinzufügen
+# Add admin user
 samba-tool group addmembers ServiceDock-Admins adminuser
 
-# Viewer-User hinzufügen
+# Add viewer user
 samba-tool group addmembers ServiceDock-Viewers vieweruser
 ```
 
-### 4. DNs der Gruppen ermitteln
+### 4. Look up group DNs
 
 ```bash
-# Gruppen-DN nachschlagen
+# Look up group DN
 samba-tool group show ServiceDock-Admins | grep dn
 # → dn: CN=ServiceDock-Admins,CN=Users,DC=domain,DC=local
 
@@ -73,135 +73,139 @@ samba-tool group show ServiceDock-Viewers | grep dn
 
 ---
 
-## Konfiguration in ServiceDock
+## Configure ServiceDock
 
-### Über die Web-UI
+### Web UI
 
-1. Als **lokaler Admin** einloggen
-2. **Settings** → **AddOns** → **LDAP / Active Directory** → **Konfigurieren**
-3. Formular ausfüllen:
+1. Sign in as **local admin**
+2. **Settings** → **AddOns** → **LDAP / Active Directory** → **Configure**
+3. Fill in the form:
 
-| Feld | Beschreibung | Beispiel |
+| Field | Description | Example |
 |------|-------------|---------|
-| **LDAP Host** | Hostname/IP des Domain Controllers | `ldap.example.com` |
-| **Port** | LDAP-Port (389 oder 636 für LDAPS) | `389` |
-| **SSL** | LDAPS aktivieren (Port 636) | ☐ |
-| **StartTLS** | StartTLS auf Port 389 | ☐ |
-| **Base DN** | LDAP-Basis für die Suche | `DC=domain,DC=local` |
-| **User Search Base** | Wo User gesucht werden | `CN=Users` (relativ) oder `CN=Users,DC=domain,DC=local` (absolut) |
-| **Bind DN** | Distinguished Name des Service-Accounts | `CN=svc_servicedock,CN=Users,DC=domain,DC=local` |
-| **Bind Password** | Passwort des Service-Accounts | *(wird verschlüsselt gespeichert)* |
-| **User Attribute** | LDAP-Attribut für den Usernamen | `sAMAccountName` (Standard für AD) |
-| **Domain** | AD-Domain für UPN-Bind | `domain.local` |
-| **Admin Group DN** | DN der Admin-Gruppe | `CN=ServiceDock-Admins,CN=Users,DC=domain,DC=local` |
-| **Viewer Group DN** | DN der Viewer-Gruppe | `CN=ServiceDock-Viewers,CN=Users,DC=domain,DC=local` |
+| **LDAP host** | Hostname/IP of the domain controller | `ldap.example.com` |
+| **Port** | LDAP port (`389` or `636` for LDAPS) | `389` |
+| **SSL** | Enable LDAPS (port 636) | ☐ |
+| **StartTLS** | StartTLS on port 389 | ☐ |
+| **Base DN** | LDAP search base | `DC=domain,DC=local` |
+| **User search base** | Where users are searched | `CN=Users` (relative) or `CN=Users,DC=domain,DC=local` (absolute) |
+| **Bind DN** | Distinguished name of the service account | `CN=svc_servicedock,CN=Users,DC=domain,DC=local` |
+| **Bind password** | Service account password | *(stored encrypted)* |
+| **User attribute** | LDAP attribute for the username | `sAMAccountName` (default for AD) |
+| **Domain** | AD domain for UPN bind | `domain.local` |
+| **Admin group DN** | DN of the admin group | `CN=ServiceDock-Admins,CN=Users,DC=domain,DC=local` |
+| **Viewer group DN** | DN of the viewer group | `CN=ServiceDock-Viewers,CN=Users,DC=domain,DC=local` |
 
-4. **Verbindung testen** → Zeigt gefundene User-Anzahl und Gruppen-Details
-5. **Speichern** → Konfiguration wird in der DB gespeichert
-6. **Aktivieren** über den Toggle-Schalter
+4. **Test connection** → shows user count and group details  
+5. **Save** → configuration is persisted in the database  
+6. **Enable** with the toggle switch
 
-### Hinweise zur Konfiguration
+### Configuration notes
 
-- **User Search Base:** Kann relativ (`CN=Users`) oder absolut (`CN=Users,DC=domain,DC=local`) angegeben werden. Relative Pfade werden automatisch mit der Base DN kombiniert.
-- **User Attribute:** `sAMAccountName` ist der Standard für Microsoft AD und Samba AD. Für OpenLDAP ggf. `uid` verwenden.
-- **Domain:** Wird für den UPN-Bind verwendet (`username@domain`). Muss die DNS-Domain des AD sein.
-- **Gruppenprüfung:** Admin-Gruppe hat Vorrang. Ist ein User in beiden Gruppen, erhält er Admin-Rechte.
-- **Kein Gruppenmatch:** User, die in keiner der beiden Gruppen sind, werden abgelehnt (Login schlägt fehl).
+- **User search base:** Can be relative (`CN=Users`) or absolute (`CN=Users,DC=domain,DC=local`). Relative values are combined with the base DN automatically.
+- **User attribute:** `sAMAccountName` is the default for Microsoft AD and Samba AD. Use `uid` for typical OpenLDAP layouts.
+- **Domain:** Used for UPN bind (`username@domain`). Must be the AD DNS domain.
+- **Group check:** Admin group wins. If a user is in both groups, they get admin rights.
+- **No group match:** Users in neither group are denied (login fails).
 
 ---
 
-## Login-Ablauf
+## Login flow
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│                     Login-Flow                             │
+│                     Login flow                            │
 ├────────────────────────────────────────────────────────────┤
 │                                                            │
-│  1. Frontend fragt GET /api/auth/mode                      │
+│  1. Frontend calls GET /api/auth/mode                      │
 │     → { ad_enabled: true, domain: "domain.local" }         │
-│     → Zeigt Username-Feld im Login-Dialog                  │
+│     → Shows username field on login dialog                 │
 │                                                            │
-│  2. User gibt Username + Passwort ein                      │
+│  2. User enters username + password                          │
 │     → POST /api/login { username, password }               │
 │                                                            │
-│  3. Backend prüft: Username vorhanden + AD enabled?        │
-│     ├─ JA → LDAP-Authentifizierung:                        │
-│     │   a) Service-Account bindet an DC                    │
-│     │   b) Sucht User nach sAMAccountName                  │
-│     │   c) Re-Bind mit User-Credentials (user@domain)      │
-│     │   d) Prüft Gruppenmitgliedschaft → Rolle             │
-│     │   e) JWT mit Rolle + auth_method="ad" setzen         │
+│  3. Backend checks: username present + AD enabled?         │
+│     ├─ YES → LDAP authentication:                          │
+│     │   a) Service account binds to DC                     │
+│     │   b) Search user by sAMAccountName                   │
+│     │   c) Re-bind with user credentials (user@domain)     │
+│     │   d) Check group membership → role                   │
+│     │   e) Issue JWT with role + auth_method="ad"          │
 │     │                                                      │
-│     └─ NEIN → Lokaler Login:                               │
-│         a) Passwort gegen ADMIN_PASSWORD Hash prüfen       │
-│         b) JWT mit role="admin" + auth_method="local"      │
+│     └─ NO → Local login:                                   │
+│         a) Verify password against ADMIN_PASSWORD hash     │
+│         b) Issue JWT with role="admin" + auth_method="local"│
 │                                                            │
-│  4. JWT als httpOnly Cookie gesetzt                        │
+│  4. JWT set as httpOnly cookie                             │
 │    → { sub, type (admin/viewer), auth_method, display_name}│
 │                                                            │
 └────────────────────────────────────────────────────────────┘
 ```
 
-### Username-Format
+### Username formats
 
-Der Login akzeptiert verschiedene Formate:
-- `jdoe` — Bevorzugt (plain sAMAccountName)
-- `jdoe@domain.local` — UPN-Format wird automatisch erkannt, Domain wird abgeschnitten
+The login accepts:
+- `jdoe` — preferred (plain `sAMAccountName`)
+- `jdoe@domain.local` — UPN is detected; domain suffix is stripped
 
 ---
 
-## Rollen & Berechtigungen
+## Roles & permissions
 
 | Feature | Admin | Viewer |
 |---------|:-----:|:------:|
-| Dashboard anzeigen | ✅ | ✅ |
-| Services/Shortcuts sehen | ✅ | ✅ |
-| Hintergrund/Wallpaper | ✅ | ✅ |
-| Edit Mode | ✅ | ❌ |
-| Services/Shortcuts bearbeiten | ✅ | ❌ |
-| Proxmox-Tab | ✅ | ❌ |
-| Security-Tab | ✅ | ❌ |
+| View dashboard | ✅ | ✅ |
+| View services / shortcuts | ✅ | ✅ |
+| Background / wallpaper | ✅ | ✅ |
+| Edit mode | ✅ | ❌ |
+| Edit services / shortcuts | ✅ | ❌ |
+| Proxmox tab | ✅ | ❌ |
+| Security tab | ✅ | ❌ |
 | Settings | ✅ | ❌ |
-| Add Item (FAB) | ✅ | ❌ |
+| Add item (FAB) | ✅ | ❌ |
 
-### Technische Umsetzung
+### Implementation
 
-- **Backend:** `require_any_role("admin", "viewer")` für GET-Endpunkte (Services, Shortcuts, Dashboards, Appearance). Schreibende Endpunkte bleiben `require_role("admin")`.
-- **Frontend:** `isAdmin` Prop steuert Sichtbarkeit von Edit Mode, FAB, Sidebar-Tabs (Proxmox, Security, Settings).
-- **Öffentliche Endpunkte** (kein Auth nötig):
-  - `GET /api/auth/mode` — Prüft ob AD aktiviert ist
-  - `GET /api/appearance/wallpaper` — Hintergrundbild für Login-Seite
+- **Backend:** `require_any_role("admin", "viewer")` for read endpoints (services, shortcuts, dashboards, appearance). Write endpoints remain `require_role("admin")`.
+- **Frontend:** `isAdmin` controls edit mode, FAB, and sidebar tabs (Proxmox, Security, Settings).
+- **Public endpoints** (no auth):
+  - `GET /api/auth/mode` — whether AD is enabled
+  - `GET /api/appearance/wallpaper` — login page background
 
 ---
 
-## Sicherheit
+## Security
 
-### Bind-Passwort-Verschlüsselung
-Das Bind-Passwort des Service-Accounts wird mit **Fernet** (AES-128-CBC) verschlüsselt in der DB gespeichert. Der Schlüssel (`ENCRYPTION_KEY`) liegt in der `.env`-Datei.
+### Bind password encryption
+
+The service account bind password is stored **encrypted with Fernet** (AES-128-CBC). The key (`ENCRYPTION_KEY`) lives in `.env`.
 
 ### SSL/TLS
-- **LDAPS** (Port 636): Vollständig verschlüsselte Verbindung von Anfang an
-- **StartTLS** (Port 389): Upgrade auf verschlüsselte Verbindung nach Verbindungsaufbau
-- **Ohne SSL/TLS** (Port 389): Nur für Testumgebungen! Passwörter werden im Klartext übertragen.
+- **LDAPS** (port 636): encrypted from the start
+- **StartTLS** (port 389): upgrade to TLS after connect
+- **Plain LDAP** (port 389): **lab only** — passwords travel in clear text.
 
-> ⚠️ **Empfehlung:** In Produktivumgebungen immer LDAPS oder StartTLS verwenden.
+> ⚠️ **Recommendation:** Always use LDAPS or StartTLS in production.
 
-### Self-Signed Zertifikate
-Für Self-Signed Zertifikate (z.B. Samba AD mit eigenem CA) ist `validate=ssl.CERT_NONE` konfiguriert. Für Produktivumgebungen sollte das CA-Zertifikat eingebunden werden.
+### Self-signed certificates
 
-### Rate Limiting
-LDAP-Logins unterliegen dem gleichen Rate Limiting wie lokale Logins:
-- **slowapi:** 5 Login-Versuche pro Minute
-- **IP-Tracker:** Lockout nach zu vielen Fehlversuchen
+For self-signed CAs (e.g. Samba AD), `validate=ssl.CERT_NONE` may be used. In production, install the CA certificate properly.
 
-### Config-Cache
-Die LDAP-Konfiguration wird für **60 Sekunden gecacht**, um nicht bei jedem Login die DB abzufragen. Der Cache wird bei Konfigurationsänderungen über die UI automatisch invalidiert.
+### Rate limiting
+
+LDAP logins use the same limits as local logins:
+- **slowapi:** 5 login attempts per minute
+- **IP tracker:** lockout after repeated failures
+
+### Config cache
+
+LDAP settings are cached for **60 seconds** to avoid hitting the database on every login. The cache is invalidated when you save changes in the UI.
 
 ---
 
-## Datenbank
+## Database
 
-### Tabelle `ldap_config`
+### `ldap_config` table
 
 ```sql
 CREATE TABLE IF NOT EXISTS ldap_config (
@@ -214,7 +218,7 @@ CREATE TABLE IF NOT EXISTS ldap_config (
     base_dn VARCHAR(500) NOT NULL,
     user_search_base VARCHAR(500),
     bind_dn VARCHAR(500),
-    bind_password TEXT,                   -- Fernet-verschlüsselt
+    bind_password TEXT,                   -- Fernet encrypted
     user_attribute VARCHAR(100) DEFAULT 'sAMAccountName',
     domain VARCHAR(255),
     admin_group_dn VARCHAR(500),
@@ -225,66 +229,66 @@ CREATE TABLE IF NOT EXISTS ldap_config (
 );
 ```
 
-Die Tabelle ist ein Singleton (nur id=1 erlaubt), analog zu `appearance` und `spotify_config`.
+This table is a singleton (only `id = 1`), similar to `appearance` and `spotify_config`.
 
 ---
 
-## API-Endpunkte
+## API endpoints
 
-| Methode | Pfad | Auth | Beschreibung |
-|---------|------|------|--------------|
-| `GET` | `/api/auth/mode` | Nein | AD-Status abfragen (ad_enabled, domain) |
-| `POST` | `/api/login` | Nein | Login (AD + Local Fallback) |
-| `GET` | `/api/ldap/config` | Admin | LDAP-Konfiguration lesen |
-| `POST` | `/api/ldap/config` | Admin | LDAP-Konfiguration speichern |
-| `DELETE` | `/api/ldap/config` | Admin | LDAP-Konfiguration löschen (Deinstallieren) |
-| `POST` | `/api/ldap/test` | Admin | LDAP-Verbindung testen |
-| `PUT` | `/api/ldap/toggle` | Admin | LDAP aktivieren/deaktivieren |
-| `GET` | `/api/appearance/wallpaper` | Nein | Hintergrundbild (für Login-Seite) |
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/api/auth/mode` | No | AD status (`ad_enabled`, `domain`) |
+| `POST` | `/api/login` | No | Login (AD + local fallback) |
+| `GET` | `/api/ldap/config` | Admin | Read LDAP configuration |
+| `POST` | `/api/ldap/config` | Admin | Save LDAP configuration |
+| `DELETE` | `/api/ldap/config` | Admin | Remove LDAP configuration (uninstall) |
+| `POST` | `/api/ldap/test` | Admin | Test LDAP connectivity |
+| `PUT` | `/api/ldap/toggle` | Admin | Enable / disable LDAP |
+| `GET` | `/api/appearance/wallpaper` | No | Wallpaper for login page |
 
 ---
 
-## Beteiligte Dateien
+## Related files
 
-| Datei | Beschreibung |
-|-------|-------------|
-| `backend/core/ldap_auth.py` | LDAP-Kernlogik: Config-Cache, Authentifizierung, Rollenbestimmung, Verbindungstest |
-| `backend/routers/auth.py` | Login-Endpoint mit AD + Local Fallback, `/api/auth/mode` |
-| `backend/routers/admin.py` | LDAP-Config CRUD, Test, Toggle (unter `/api/ldap/*`) |
-| `backend/dependencies/auth.py` | `require_any_role()` für Viewer+Admin-Zugriff |
-| `frontend/src/hooks/useAuth.js` | AD-State (adEnabled, adDomain, userRole, isAdmin), `/api/auth/mode` Fetch |
-| `frontend/src/components/LoginModal.jsx` | Username-Feld bei AD, Login-Flow |
-| `frontend/src/components/settings/LdapAddon.jsx` | LDAP-Konfigurationsformular in Settings → AddOns |
-| `frontend/src/components/Sidebar.jsx` | Viewer-Guards (versteckt Edit Mode, Proxmox, Security, Settings) |
-| `frontend/src/i18n/locales/de.json` | Deutsche LDAP/AD-Übersetzungen (~45 Keys) |
-| `frontend/src/i18n/locales/en.json` | Englische LDAP/AD-Übersetzungen (~45 Keys) |
-| `db/init.sql` | `ldap_config` Tabellendefinition |
+| File | Description |
+|------|-------------|
+| `backend/core/ldap_auth.py` | LDAP core: config cache, auth, roles, connection test |
+| `backend/routers/auth.py` | Login with AD + local fallback, `/api/auth/mode` |
+| `backend/routers/admin.py` | LDAP CRUD, test, toggle under `/api/ldap/*` |
+| `backend/dependencies/auth.py` | `require_any_role()` for viewer + admin |
+| `frontend/src/hooks/useAuth.js` | AD state, `/api/auth/mode` |
+| `frontend/src/components/LoginModal.jsx` | Username field and login when AD is on |
+| `frontend/src/components/settings/LdapAddon.jsx` | LDAP form in Settings → AddOns |
+| `frontend/src/components/Sidebar.jsx` | Viewer guards (hide edit, Proxmox, security, settings) |
+| `frontend/src/i18n/locales/de.json` | German UI strings for LDAP/AD |
+| `frontend/src/i18n/locales/en.json` | English UI strings for LDAP/AD |
+| `db/init.sql` | `ldap_config` schema |
 
 ---
 
 ## Troubleshooting
 
-### "Invalid credentials" trotz korrektem Passwort
-- Prüfen ob der User in der Admin- oder Viewer-Gruppe ist
-- Ohne Gruppenmitgliedschaft wird der Login abgelehnt
-- Backend-Logs prüfen: `docker compose logs backend | grep LDAP`
+### "Invalid credentials" with a correct password
+- Confirm the user is in the admin or viewer group
+- Without group membership, login is denied
+- Check backend logs: `docker compose logs backend | grep LDAP`
 
-### "User nicht gefunden"
-- `user_search_base` prüfen — muss den Container enthalten, in dem der User liegt
-- Bei relativer Angabe (z.B. `CN=Users`) wird automatisch die Base DN angehängt
-- `user_attribute` prüfen — Standard ist `sAMAccountName` (AD), für OpenLDAP ggf. `uid`
+### "User not found"
+- Verify `user_search_base` covers the OU/CN that contains the user
+- Relative values (e.g. `CN=Users`) are combined with the base DN
+- Check `user_attribute` — default `sAMAccountName` (AD); OpenLDAP may need `uid`
 
-### Verbindungstest schlägt fehl
-- Host und Port prüfen (389 für LDAP, 636 für LDAPS)
-- Firewall-Regeln prüfen (Docker-Container muss den DC erreichen können)
-- Bind-DN und Bind-Passwort des Service-Accounts prüfen
-- Bei SSL-Problemen: Zunächst ohne SSL testen
+### Connection test fails
+- Host and port (`389` LDAP, `636` LDAPS)
+- Firewall: the backend container must reach the DC
+- Bind DN and bind password
+- For SSL issues: try without SSL in a lab first
 
-### Viewer sieht weißen Hintergrund
-- Sollte nicht mehr auftreten — `GET /api/appearance/wallpaper` ist ein öffentlicher Endpoint
-- Falls doch: Browser-Cache leeren und neu laden
+### Viewer sees a white background
+- Should be resolved — `GET /api/appearance/wallpaper` is public
+- If not: clear browser cache and reload
 
-### Cache-Probleme nach Konfigurationsänderung
-- Der Config-Cache hat eine TTL von 60 Sekunden
-- Bei Änderungen über die UI wird der Cache automatisch invalidiert
-- Bei manuellen DB-Änderungen: Backend neu starten oder 60s warten
+### Cache issues after manual DB edits
+- Config cache TTL is 60 seconds
+- UI saves invalidate the cache automatically
+- For raw SQL changes: restart the backend or wait 60s

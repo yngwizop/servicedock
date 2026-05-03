@@ -123,6 +123,8 @@
     "placeholder_services": "Suche in Services & Shortcuts...",
     "placeholder_monitoring": "Suche in Proxmox...",
     "placeholder_security": "Suche in Security...",
+    "placeholder_settings": "Einstellungen durchsuchen (Tabs, Tipps, Hilfe-Themen)...",
+    "settings_no_match": "Kein Einstellungsbereich passt zu diesem Text. Andere Begriffe probieren (z. B. Wallpaper, Proxmox, Spotify, LDAP, Sprache, Deployment).",
     "filter_by": "Filtern nach:",
     "start_typing": "Beginne zu tippen um zu suchen..."
   },
@@ -305,7 +307,8 @@
       "dashboards": "Dashboards",
       "proxmox": "Proxmox",
       "addons": "AddOns",
-      "language": "Sprache"
+      "language": "Sprache",
+      "help": "Hilfe"
     },
     "proxmox_save_success": "Konfiguration gespeichert und Verbindung erfolgreich getestet!",
     "proxmox_save_test_failed": "Konfiguration gespeichert, aber Verbindungstest fehlgeschlagen:\n\n{{error}}\n\nBitte überprüfe die Einstellungen.",
@@ -365,7 +368,37 @@
         "Die Sprache wird automatisch anhand deiner Browser-Einstellungen erkannt.",
         "Deine Sprachwahl wird im Browser gespeichert und bleibt auch nach einem Neustart erhalten.",
         "Alle Texte der Oberfläche werden sofort umgeschaltet — kein Neuladen nötig."
+      ],
+      "help_title": "Hilfe",
+      "help": [
+        "Die Anleitungen sind Markdown-Dateien aus dem Servicedock-Repository und werden nur lesend über die API ausgeliefert.",
+        "Links in der Liste wechseln das Thema. Externe Links in den Texten öffnen sich in einem neuen Tab.",
+        "Fehlt eine Datei auf dem Server, schlägt der Eintrag fehl, bis die Datei im Deployment enthalten ist."
       ]
+    },
+    "help": {
+      "intro": "Dokumentation für Betrieb und Admins. Wähle links ein Thema.",
+      "load_error": "Dokumentation konnte nicht geladen werden. Prüfe API und Login.",
+      "nav_aria": "Hilfe-Themen",
+      "nav_title": "Themen",
+      "groups": {
+        "getting_started": "Einstieg",
+        "security": "Sicherheit & Token",
+        "integrations": "Integrationen",
+        "infrastructure": "Deployment & HTTPS",
+        "other": "Weitere"
+      },
+      "docTitles": {
+        "readme": "Überblick (README)",
+        "quickstart": "Schnellstart",
+        "initial-setup": "Ersteinrichtung",
+        "token-rotation": "Token-Rotation",
+        "proxmox": "Proxmox-Integration",
+        "spotify": "Spotify-Add-on",
+        "ldap": "LDAP / Active Directory",
+        "deploy": "Deployment",
+        "https": "HTTPS-Einrichtung"
+      }
     }
   },
   "appearance": {

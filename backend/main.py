@@ -31,6 +31,7 @@ from routers.dashboards import router as dashboards_router  # NEW: Multi-Dashboa
 from routers.config import router as config_router  # NEW: Config Import/Export
 from routers.ldap import router as ldap_router  # NEW: LDAP/AD Authentication AddOn
 from routers.wallpapers import router as wallpapers_router  # NEW: Wallpaper Upload/Serving
+from routers.docs import router as docs_router  # Help / Markdown from repo root
 
 # Disable SSL warnings for Proxmox connections
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -153,6 +154,7 @@ app.include_router(spotify_router)        # /api/spotify/* (AddOn)
 app.include_router(dashboards_router)     # /api/dashboards/* (Multi-Dashboard)
 app.include_router(ldap_router)           # /api/ldap/* (AD Authentication AddOn)
 app.include_router(wallpapers_router)     # /api/wallpapers/* (Wallpaper Upload/Serving)
+app.include_router(docs_router)           # /api/docs/help* (Markdown from repo)
 
 # Note: Reorder endpoints are in their respective routers:
 # - PUT /api/admin/services/reorder (in services router)
