@@ -276,6 +276,7 @@
     "load_error": "Fehler beim Laden",
     "connection_error": "Verbindungsfehler",
     "loading": "Lädt...",
+    "not_playing": "Keine Wiedergabe",
     "error": "Fehler",
     "open_in_spotify": "In Spotify öffnen",
     "now_playing_badge": "Live",

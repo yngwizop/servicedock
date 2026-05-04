@@ -306,7 +306,8 @@ function App() {
       />
 
       {/* Main Content */}
-      <div className={`${sidebarCollapsed ? 'ml-20' : 'ml-52'} transition-all duration-300 relative z-10 flex flex-col ${activeTab === 'settings' ? 'h-screen overflow-hidden' : 'min-h-screen'} pt-8 md:pt-12 pl-8 md:pl-12 pr-4 md:pr-6 pb-2`}>
+      {/* pt-3/sm:pt-3.5 = wie Sidebar-Außenpadding → PageHeader bündig mit Glas-Rail der Navbar */}
+      <div className={`${sidebarCollapsed ? 'ml-20' : 'ml-52'} transition-all duration-300 relative z-10 flex flex-col ${activeTab === 'settings' ? 'h-screen overflow-hidden' : 'min-h-screen'} pt-3 sm:pt-3.5 pl-8 md:pl-12 pr-4 md:pr-6 pb-2`}>
         <PageHeader
           className={activeTab === 'settings' ? 'shrink-0' : ''}
           icon={PageIcon}
@@ -314,22 +315,19 @@ function App() {
           subtitle={pageSubtitle}
           textColor={pageHeaderColor}
         >
-          <div className="flex flex-wrap items-stretch justify-end gap-3 md:gap-4">
-            {appearance.show_weather && (
-              <WeatherWidget
-                city={appearance.weather_city}
-                textColor={pageHeaderColor}
-                weatherFields={appearance.weather_fields || ['temperature', 'humidity']}
-                onLocationChange={setWeatherLocationInfo}
-              />
-            )}
-
-            {appearance.show_clock && (
-              <ClockWidget textColor={pageHeaderColor} use24Hour={appearance.clock_format === '24h'} />
-            )}
-
-            {appearance.show_spotify && spotifyConfigured && activeTab === 'services' && <SpotifyCard />}
-          </div>
+          {/* Direkte Kinder: PageHeader streckt jedes Widget auf gleiche Zeilenhöhe (kein extra Wrapper) */}
+          {appearance.show_weather && (
+            <WeatherWidget
+              city={appearance.weather_city}
+              textColor={pageHeaderColor}
+              weatherFields={appearance.weather_fields || ['temperature', 'humidity']}
+              onLocationChange={setWeatherLocationInfo}
+            />
+          )}
+          {appearance.show_clock && (
+            <ClockWidget textColor={pageHeaderColor} use24Hour={appearance.clock_format === '24h'} />
+          )}
+          {appearance.show_spotify && spotifyConfigured && activeTab === 'services' && <SpotifyCard />}
         </PageHeader>
 
         {/* Search Overlay */}

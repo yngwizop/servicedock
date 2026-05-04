@@ -11,7 +11,7 @@ export default function PageHeader({ icon: Icon, title, subtitle, textColor, chi
         className="
           flex flex-col gap-4 rounded-2xl border border-gray-400/60 bg-white/50 px-4 py-3.5 shadow-lg backdrop-blur-md
           dark:border-white/10 dark:bg-white/[0.12] sd-night-surface night:border-white/[0.07] night:shadow-black/40
-          md:flex-row md:items-center md:justify-between md:gap-6
+          md:flex-row md:items-start md:justify-between md:gap-6
         "
       >
         <div className="flex min-w-0 flex-1 items-start gap-3.5 text-left">

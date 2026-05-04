@@ -108,7 +108,7 @@ function ClockWidget({ textColor, locale: localeProp, showSeconds = true, use24H
   return (
     <HeaderWidgetCapsule>
       <div
-        className="flex h-full min-h-0 select-none flex-col justify-center text-center"
+        className="flex h-full min-h-0 w-full select-none flex-col justify-center text-center"
         style={{
           color: textColor,
           textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)',

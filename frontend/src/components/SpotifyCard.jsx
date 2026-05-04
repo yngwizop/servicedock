@@ -1,68 +1,14 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { MusicNote, CircleNotch, ArrowSquareOut } from 'phosphor-react';
+import React, { useState, useEffect } from 'react';
+import { MusicNote, ArrowSquareOut } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../utils/auth';
 import HeaderWidgetCapsule from './HeaderWidgetCapsule';
+import MarqueeOrTruncate from './MarqueeOrTruncate';
 
-/** Feste Breite im Flex-Kontext; bei Overflow nahtloser Marquee (ohne Widget zu strecken). */
-function MarqueeOrTruncate({ text, className = '', style, as: Tag = 'span' }) {
-  const wrapRef = useRef(null);
-  const [marquee, setMarquee] = useState(false);
-
-  useLayoutEffect(() => {
-    const wrap = wrapRef.current;
-    if (!wrap) return;
-
-    const measure = () => {
-      const reduceMotion =
-        typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const m = wrap.querySelector('[data-marquee-measure]');
-      if (!m || reduceMotion) {
-        setMarquee(false);
-        return;
-      }
-      setMarquee(m.scrollWidth > wrap.clientWidth);
-    };
-
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(wrap);
-    return () => ro.disconnect();
-  }, [text]);
-
-  const durationSec = Math.min(28, Math.max(10, String(text || '').length * 0.22));
-
-  return (
-    <div ref={wrapRef} className="relative min-w-0">
-      <span
-        data-marquee-measure
-        className={`invisible absolute left-0 top-0 z-0 whitespace-nowrap ${className}`}
-        aria-hidden
-      >
-        {text}
-      </span>
-      <div className="min-w-0 overflow-hidden">
-        {!marquee ? (
-          <Tag className={`block truncate ${className}`} style={style}>
-            {text}
-          </Tag>
-        ) : (
-          <div
-            className="sd-marquee-track inline-flex"
-            style={{ '--sd-marquee-sec': `${durationSec}s` }}
-          >
-            <Tag className={`shrink-0 pr-8 ${className}`} style={style}>
-              {text}
-            </Tag>
-            <Tag className={`shrink-0 pr-8 ${className}`} style={style} aria-hidden>
-              {text}
-            </Tag>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+/**
+ * Schmale feste Breite — kompakte Höhe (~wie Uhr/Wetter), damit der PageHeader nicht mitwächst.
+ */
+const SPOTIFY_SHELL = 'group w-[min(13.5rem,72vw)] shrink-0 md:w-[14.5rem]';
 
 const SpotifyCard = () => {
   const { t } = useTranslation();
@@ -76,12 +22,26 @@ const SpotifyCard = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setNowPlaying(data);
+        setNowPlaying((prev) => {
+          const isOn = (p) => Boolean(p?.is_playing && p?.track);
+          if (!isOn(prev) && !isOn(data)) {
+            return prev ?? data;
+          }
+          if (
+            isOn(prev) &&
+            isOn(data) &&
+            prev.track?.id === data.track?.id &&
+            prev.track?.name === data.track?.name &&
+            Math.round(prev.progress_percent ?? 0) === Math.round(data.progress_percent ?? 0)
+          ) {
+            return prev;
+          }
+          return data;
+        });
         setError(null);
       } else if (response.status === 429) {
         setError(t('spotify.rate_limit'));
       } else if (response.status === 401) {
-        // Session expired — don't show error, just wait for re-login
         setError(null);
         setNowPlaying(null);
       } else {
@@ -96,12 +56,8 @@ const SpotifyCard = () => {
   };
 
   useEffect(() => {
-    // Initial fetch
     fetchNowPlaying();
-
-    // Poll every 5 seconds
     const interval = setInterval(fetchNowPlaying, 5000);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -112,47 +68,16 @@ const SpotifyCard = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // Sanitize URLs - only allow https:// schemes
   const isSafeUrl = (url) => {
     if (!url || typeof url !== 'string') return false;
     return url.startsWith('https://') || url.startsWith('http://');
   };
 
-  // Loading State
-  if (loading) {
-    return (
-      <HeaderWidgetCapsule>
-        <div className="flex h-full min-h-0 items-center gap-3">
-          <CircleNotch className="h-5 w-5 animate-spin text-green-500 dark:text-green-400" />
-          <span
-            className="text-sm text-gray-900 dark:text-white/90"
-            style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}
-          >
-            {t('spotify.loading')}
-          </span>
-        </div>
-      </HeaderWidgetCapsule>
-    );
+  /* Kein Platzhalter: nichts läuft / lädt / Fehler → kein Widget, Uhr & Wetter rutschen nach rechts */
+  if (loading || error) {
+    return null;
   }
 
-  // Error State
-  if (error) {
-    return (
-      <HeaderWidgetCapsule>
-        <div className="flex h-full min-h-0 items-center gap-3">
-          <MusicNote className="h-5 w-5 text-gray-600 dark:text-white/40" />
-          <span
-            className="text-sm text-gray-800 dark:text-white/60"
-            style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}
-          >
-            {t('spotify.error')}
-          </span>
-        </div>
-      </HeaderWidgetCapsule>
-    );
-  }
-
-  // Not Playing State - nicht anzeigen
   if (!nowPlaying || !nowPlaying.is_playing || !nowPlaying.track) {
     return null;
   }
@@ -162,85 +87,72 @@ const SpotifyCard = () => {
   const titleShadow = { textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' };
 
   return (
-    <HeaderWidgetCapsule className="group w-[min(calc(22rem*2/3*1.15),100%)] shrink-0 md:w-[calc(22rem*2/3*1.15)]">
-      <div className="flex h-full min-h-0 w-full min-w-0 items-center gap-2 md:gap-2.5">
-        {/* Album Cover */}
-        {track.album_image && isSafeUrl(track.album_image) && (
-          <div className="shrink-0">
-            <img
-              src={track.album_image}
-              alt={track.album}
-              className="h-10 w-10 rounded-lg object-cover shadow-lg"
-            />
-          </div>
-        )}
+    <HeaderWidgetCapsule className={SPOTIFY_SHELL}>
+      <div className="flex h-full min-h-0 w-full min-w-0 items-center justify-center gap-1.5 py-0.5 md:gap-2">
+        <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md bg-gray-300/40 shadow-inner dark:bg-white/10">
+          {track.album_image && isSafeUrl(track.album_image) ? (
+            <img src={track.album_image} alt="" className="h-8 w-8 object-cover" />
+          ) : null}
+        </div>
 
-        {/* Track info: breiter Textbereich; Badge nur kurzer Schriftzug (i18n „Live“) */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-center gap-1">
-          <div className="flex min-w-0 items-start gap-2">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-center gap-0.5 leading-none">
+          <div className="flex min-w-0 items-center gap-1">
             <div className="min-w-0 flex-1">
               <MarqueeOrTruncate
                 text={track.name}
                 as="h3"
-                className="m-0 text-sm font-bold leading-tight text-gray-900 dark:text-white/90"
-                style={titleShadow}
-              />
-              <MarqueeOrTruncate
-                text={track.artist}
-                as="p"
-                className="m-0 mt-0.5 text-xs leading-tight text-gray-700 dark:text-white/60"
+                className="m-0 truncate text-xs font-bold leading-tight text-gray-900 dark:text-white/90"
                 style={titleShadow}
               />
             </div>
-            <div
-              className="flex shrink-0 flex-col items-end justify-center gap-0.5 text-right"
-              role="status"
-              aria-label={t('spotify.now_playing_a11y')}
-            >
-              <div className="flex items-center gap-1">
-                <MusicNote className="h-3.5 w-3.5 shrink-0 text-green-500 dark:text-green-400" weight="fill" />
-                {nowPlaying.is_playing && (
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-500 animate-pulse dark:bg-green-400" />
-                )}
-                <span
-                  className="whitespace-nowrap text-[9px] font-semibold uppercase tracking-wide text-green-600 dark:text-green-300"
-                  style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}
-                >
-                  {t('spotify.now_playing_badge')}
-                </span>
-              </div>
+            <div className="flex shrink-0 items-center gap-0.5" role="status" aria-label={t('spotify.now_playing_a11y')}>
+              <MusicNote className="h-3 w-3 shrink-0 text-green-500 dark:text-green-400" weight="fill" />
+              {nowPlaying.is_playing && (
+                <span className="h-1 w-1 shrink-0 rounded-full bg-green-500 animate-pulse dark:bg-green-400" />
+              )}
+              <span
+                className="whitespace-nowrap text-[8px] font-semibold uppercase tracking-wide text-green-600 dark:text-green-300"
+                style={titleShadow}
+              >
+                {t('spotify.now_playing_badge')}
+              </span>
             </div>
           </div>
 
+          <MarqueeOrTruncate
+            text={track.artist}
+            as="p"
+            className="m-0 truncate text-[10px] leading-tight text-gray-700 dark:text-white/60"
+            style={titleShadow}
+          />
+
           {track.progress_ms !== undefined && (
-            <div className="space-y-0.5">
-              <div className="h-1 rounded-full bg-gray-300/60 shadow-md dark:bg-white/20">
+            <div className="flex min-h-0 items-center gap-1.5 pt-0.5">
+              <div className="h-0.5 min-w-0 flex-1 rounded-full bg-gray-300/60 dark:bg-white/20">
                 <div
-                  className="h-1 rounded-full bg-green-500 transition-all duration-300 dark:bg-green-400"
+                  className="h-0.5 rounded-full bg-green-500 transition-all duration-300 dark:bg-green-400"
                   style={{ width: `${progress_percent || 0}%` }}
                 />
               </div>
-              <div
-                className="flex justify-between text-[9px] leading-none text-gray-600 dark:text-white/50"
-                style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}
+              <span
+                className="shrink-0 whitespace-nowrap text-[9px] tabular-nums text-gray-600 dark:text-white/50"
+                style={titleShadow}
               >
-                <span>{formatTime(track.progress_ms)}</span>
-                <span>{formatTime(track.duration_ms)}</span>
-              </div>
+                {formatTime(track.progress_ms)} / {formatTime(track.duration_ms)}
+              </span>
             </div>
           )}
         </div>
 
-        {/* Spotify Link */}
         {track.external_url && isSafeUrl(track.external_url) && (
           <a
             href={track.external_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-green-600 dark:text-green-400 hover:text-green-500 dark:hover:text-green-300 flex-shrink-0 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 hover:opacity-100"
+            className="flex-shrink-0 text-green-600 opacity-0 transition-opacity hover:text-green-500 hover:opacity-100 focus:opacity-100 group-hover:opacity-100 dark:text-green-400 dark:hover:text-green-300"
             title={t('spotify.open_in_spotify')}
           >
-            <ArrowSquareOut className="w-5 h-5" weight="bold" />
+            <ArrowSquareOut className="h-4 w-4" weight="bold" />
           </a>
         )}
       </div>

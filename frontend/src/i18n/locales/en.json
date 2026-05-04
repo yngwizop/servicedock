@@ -276,6 +276,7 @@
     "load_error": "Error loading",
     "connection_error": "Connection error",
     "loading": "Loading...",
+    "not_playing": "Nothing playing",
     "error": "Error",
     "open_in_spotify": "Open in Spotify",
     "now_playing_badge": "Live",

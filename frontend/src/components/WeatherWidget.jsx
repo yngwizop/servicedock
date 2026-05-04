@@ -346,7 +346,7 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
     return (
       <HeaderWidgetCapsule>
         <div
-          className="flex h-full min-h-0 items-center gap-2 text-base md:text-lg animate-pulse"
+          className="flex h-full min-h-0 w-full items-center justify-center gap-2 text-base md:text-lg animate-pulse"
           style={{
             color: textColor,
             textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)',
@@ -366,7 +366,7 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
     return (
       <HeaderWidgetCapsule>
         <div
-          className="flex h-full min-h-0 cursor-pointer items-center gap-2 text-base md:text-lg transition-opacity hover:opacity-80"
+          className="flex h-full min-h-0 w-full cursor-pointer items-center justify-center gap-2 text-base md:text-lg transition-opacity hover:opacity-80"
           onClick={handleManualRefresh}
           style={{
             color: textColor,
@@ -419,7 +419,7 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
     return (
       <HeaderWidgetCapsule className="group">
         <div
-          className="flex h-full min-h-0 flex-row flex-wrap items-center gap-3 text-base font-medium md:text-lg"
+          className="flex h-full min-h-0 w-full flex-row flex-wrap items-center justify-center gap-3 text-base font-medium md:text-lg"
           style={{
             color: textColor,
             textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)',
