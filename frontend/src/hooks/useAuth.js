@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { setAuthSession, clearAuthSession, isAuthenticated } from '../utils/auth';
+import { setAuthSession, clearAuthSession, isAuthenticated, authenticatedFetch } from '../utils/auth';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
   (window.location.port === '' ? 
@@ -34,7 +34,11 @@ export function useAuth() {
   const [authMethod, setAuthMethod] = useState(
     () => localStorage.getItem('servicedock_auth_method') || 'local'
   );
-  
+  /** Eingeloggter Benutzername (nicht das Login-Formularfeld `username`) */
+  const [sessionUsername, setSessionUsername] = useState(
+    () => localStorage.getItem('servicedock_session_username') || null
+  );
+
   // Force Password Change
   const [forcePasswordChange, setForcePasswordChange] = useState(false);
   
@@ -70,6 +74,58 @@ export function useAuth() {
     window.addEventListener('servicedock-auth-mode', onMode);
     return () => window.removeEventListener('servicedock-auth-mode', onMode);
   }, []);
+
+  const syncSessionFromMe = useCallback((data) => {
+    const uname = data.username ?? null;
+    setSessionUsername(uname);
+    if (uname) localStorage.setItem('servicedock_session_username', uname);
+    else localStorage.removeItem('servicedock_session_username');
+
+    const name = data.display_name || null;
+    setDisplayName(name);
+    if (name) localStorage.setItem('servicedock_display_name', name);
+    else localStorage.removeItem('servicedock_display_name');
+
+    const role = data.role || 'admin';
+    setUserRole(role);
+    localStorage.setItem('servicedock_user_role', role);
+
+    const method = data.auth_method || 'local';
+    setAuthMethod(method);
+    localStorage.setItem('servicedock_auth_method', method);
+  }, []);
+
+  /** Session mit Server abgleichen (JWT), z. B. nach Reload */
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await authenticatedFetch(`${BACKEND_URL}/api/auth/me`);
+        if (cancelled) return;
+        if (res.ok) {
+          const data = await res.json();
+          syncSessionFromMe(data);
+        }
+      } catch {
+        if (!cancelled) {
+          clearAuthSession();
+          setIsLoggedIn(false);
+          setSessionUsername(null);
+          setDisplayName(null);
+          setUserRole('admin');
+          setAuthMethod('local');
+          localStorage.removeItem('servicedock_session_username');
+          localStorage.removeItem('servicedock_display_name');
+          localStorage.removeItem('servicedock_user_role');
+          localStorage.removeItem('servicedock_auth_method');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoggedIn, syncSessionFromMe]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -111,12 +167,17 @@ export function useAuth() {
         setUserRole(role);
         setAuthMethod(method);
         setDisplayName(name);
-        
+
+        const loggedInUser = data.username ?? null;
+        setSessionUsername(loggedInUser);
+        if (loggedInUser) localStorage.setItem('servicedock_session_username', loggedInUser);
+        else localStorage.removeItem('servicedock_session_username');
+
         localStorage.setItem('servicedock_user_role', role);
         localStorage.setItem('servicedock_auth_method', method);
         if (name) localStorage.setItem('servicedock_display_name', name);
         else localStorage.removeItem('servicedock_display_name');
-        
+
         // Force Password Change bei Default-Passwort
         if (data.force_password_change) {
           setForcePasswordChange(true);
@@ -166,9 +227,11 @@ export function useAuth() {
     setUserRole('admin');
     setAuthMethod('local');
     setDisplayName(null);
+    setSessionUsername(null);
     localStorage.removeItem('servicedock_user_role');
     localStorage.removeItem('servicedock_auth_method');
     localStorage.removeItem('servicedock_display_name');
+    localStorage.removeItem('servicedock_session_username');
   };
 
   // Helper: call this when an authenticated request fails with session expired
@@ -196,6 +259,7 @@ export function useAuth() {
     isViewer,
     displayName,
     authMethod,
+    sessionUsername,
     // Force Password Change
     forcePasswordChange,
     setForcePasswordChange,

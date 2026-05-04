@@ -301,6 +301,8 @@ function App() {
         isAdmin={auth.isAdmin}
         displayName={auth.displayName}
         authMethod={auth.authMethod}
+        sessionUsername={auth.sessionUsername}
+        userRole={auth.userRole}
       />
 
       {/* Main Content */}
@@ -312,26 +314,22 @@ function App() {
           subtitle={pageSubtitle}
           textColor={pageHeaderColor}
         >
-          {(appearance.show_weather ||
-            appearance.show_clock ||
-            (appearance.show_spotify && spotifyConfigured && activeTab === 'services')) ? (
-            <div className="flex flex-wrap items-stretch justify-end gap-3 md:gap-4">
-              {appearance.show_weather && (
-                <WeatherWidget
-                  city={appearance.weather_city}
-                  textColor={pageHeaderColor}
-                  weatherFields={appearance.weather_fields || ['temperature', 'humidity']}
-                  onLocationChange={setWeatherLocationInfo}
-                />
-              )}
+          <div className="flex flex-wrap items-stretch justify-end gap-3 md:gap-4">
+            {appearance.show_weather && (
+              <WeatherWidget
+                city={appearance.weather_city}
+                textColor={pageHeaderColor}
+                weatherFields={appearance.weather_fields || ['temperature', 'humidity']}
+                onLocationChange={setWeatherLocationInfo}
+              />
+            )}
 
-              {appearance.show_clock && (
-                <ClockWidget textColor={pageHeaderColor} use24Hour={appearance.clock_format === '24h'} />
-              )}
+            {appearance.show_clock && (
+              <ClockWidget textColor={pageHeaderColor} use24Hour={appearance.clock_format === '24h'} />
+            )}
 
-              {appearance.show_spotify && spotifyConfigured && activeTab === 'services' && <SpotifyCard />}
-            </div>
-          ) : null}
+            {appearance.show_spotify && spotifyConfigured && activeTab === 'services' && <SpotifyCard />}
+          </div>
         </PageHeader>
 
         {/* Search Overlay */}

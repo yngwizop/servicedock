@@ -37,6 +37,17 @@
     "theme_switch_night": "Zum Nacht-Theme wechseln",
     "theme_switch_standard": "Zum Standard-Theme wechseln"
   },
+  "session": {
+    "auth_local": "Lokal",
+    "auth_directory": "AD/LDAP",
+    "role_admin": "Admin",
+    "role_viewer": "Viewer",
+    "aria_label": "Angemeldeter Benutzer und Kontotyp",
+    "menu_heading": "Angemeldet als",
+    "popup_username": "Benutzername",
+    "popup_role": "Rolle",
+    "popup_auth": "Anmeldung"
+  },
   "login": {
     "subtitle": "Dein persönliches Service-Dashboard",
     "title": "Admin-Login",

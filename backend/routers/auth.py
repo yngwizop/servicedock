@@ -349,6 +349,23 @@ def get_auth_mode(request: Request):
     }
 
 
+@router.get("/api/auth/me")
+@limiter.limit("60/minute")
+def get_current_session(
+    request: Request,
+    token: dict = Depends(require_any_role("admin", "viewer")),
+):
+    """
+    Aktuelle Session aus dem JWT (ohne Secrets) — für UI z. B. PageHeader.
+    """
+    return {
+        "username": token.get("sub"),
+        "display_name": token.get("display_name"),
+        "auth_method": token.get("auth_method") or "local",
+        "role": token.get("type") or "admin",
+    }
+
+
 class ChangePasswordRequest(BaseModel):
     current_password: str = Field(..., min_length=1, max_length=1000)
     new_password: str = Field(..., min_length=8, max_length=1000)
