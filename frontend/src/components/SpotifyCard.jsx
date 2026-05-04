@@ -1,8 +1,68 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { MusicNote, CircleNotch, ArrowSquareOut } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../utils/auth';
 import HeaderWidgetCapsule from './HeaderWidgetCapsule';
+
+/** Feste Breite im Flex-Kontext; bei Overflow nahtloser Marquee (ohne Widget zu strecken). */
+function MarqueeOrTruncate({ text, className = '', style, as: Tag = 'span' }) {
+  const wrapRef = useRef(null);
+  const [marquee, setMarquee] = useState(false);
+
+  useLayoutEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+
+    const measure = () => {
+      const reduceMotion =
+        typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const m = wrap.querySelector('[data-marquee-measure]');
+      if (!m || reduceMotion) {
+        setMarquee(false);
+        return;
+      }
+      setMarquee(m.scrollWidth > wrap.clientWidth);
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(wrap);
+    return () => ro.disconnect();
+  }, [text]);
+
+  const durationSec = Math.min(28, Math.max(10, String(text || '').length * 0.22));
+
+  return (
+    <div ref={wrapRef} className="relative min-w-0">
+      <span
+        data-marquee-measure
+        className={`invisible absolute left-0 top-0 z-0 whitespace-nowrap ${className}`}
+        aria-hidden
+      >
+        {text}
+      </span>
+      <div className="min-w-0 overflow-hidden">
+        {!marquee ? (
+          <Tag className={`block truncate ${className}`} style={style}>
+            {text}
+          </Tag>
+        ) : (
+          <div
+            className="sd-marquee-track inline-flex"
+            style={{ '--sd-marquee-sec': `${durationSec}s` }}
+          >
+            <Tag className={`shrink-0 pr-8 ${className}`} style={style}>
+              {text}
+            </Tag>
+            <Tag className={`shrink-0 pr-8 ${className}`} style={style} aria-hidden>
+              {text}
+            </Tag>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 const SpotifyCard = () => {
   const { t } = useTranslation();
@@ -99,9 +159,11 @@ const SpotifyCard = () => {
 
   const { track, progress_percent } = nowPlaying;
 
+  const titleShadow = { textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' };
+
   return (
-    <HeaderWidgetCapsule className="group">
-      <div className="flex h-full min-h-0 min-w-0 items-center gap-2 md:gap-2.5">
+    <HeaderWidgetCapsule className="group w-[min(calc(22rem*2/3*1.15),100%)] shrink-0 md:w-[calc(22rem*2/3*1.15)]">
+      <div className="flex h-full min-h-0 w-full min-w-0 items-center gap-2 md:gap-2.5">
         {/* Album Cover */}
         {track.album_image && isSafeUrl(track.album_image) && (
           <div className="shrink-0">
@@ -113,31 +175,35 @@ const SpotifyCard = () => {
           </div>
         )}
 
-        {/* Track info: title + artist left, badge right; progress below */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-center gap-1 max-w-[min(100%,22rem)]">
+        {/* Track info: breiter Textbereich; Badge nur kurzer Schriftzug (i18n „Live“) */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-center gap-1">
           <div className="flex min-w-0 items-start gap-2">
             <div className="min-w-0 flex-1">
-              <h3
-                className="truncate text-sm font-bold leading-tight text-gray-900 dark:text-white/90"
-                style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}
-              >
-                {track.name}
-              </h3>
-              <p
-                className="truncate text-xs leading-tight text-gray-700 dark:text-white/60"
-                style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}
-              >
-                {track.artist}
-              </p>
+              <MarqueeOrTruncate
+                text={track.name}
+                as="h3"
+                className="m-0 text-sm font-bold leading-tight text-gray-900 dark:text-white/90"
+                style={titleShadow}
+              />
+              <MarqueeOrTruncate
+                text={track.artist}
+                as="p"
+                className="m-0 mt-0.5 text-xs leading-tight text-gray-700 dark:text-white/60"
+                style={titleShadow}
+              />
             </div>
-            <div className="flex shrink-0 flex-col items-end justify-center text-right">
+            <div
+              className="flex shrink-0 flex-col items-end justify-center gap-0.5 text-right"
+              role="status"
+              aria-label={t('spotify.now_playing_a11y')}
+            >
               <div className="flex items-center gap-1">
-                <MusicNote className="h-3.5 w-3.5 text-green-500 dark:text-green-400" weight="fill" />
+                <MusicNote className="h-3.5 w-3.5 shrink-0 text-green-500 dark:text-green-400" weight="fill" />
                 {nowPlaying.is_playing && (
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-500 animate-pulse dark:bg-green-400" />
                 )}
                 <span
-                  className="max-w-[6.5rem] truncate text-[10px] font-semibold uppercase tracking-wide text-green-600 dark:text-green-300"
+                  className="whitespace-nowrap text-[9px] font-semibold uppercase tracking-wide text-green-600 dark:text-green-300"
                   style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)' }}
                 >
                   {t('spotify.now_playing_badge')}

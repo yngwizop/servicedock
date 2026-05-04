@@ -250,6 +250,26 @@ html.dark[data-sd-theme="night"] {
   50% { box-shadow: 0 0 16px rgba(59, 130, 246, 0.25); }
 }
 
+/* Spotify / header: seamless horizontal scroll for long one-line text (inner flex is 200% wide, duplicate pair) */
+@keyframes sd-text-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.sd-marquee-track {
+  animation: sd-text-marquee var(--sd-marquee-sec, 14s) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-marquee-track {
+    animation: none !important;
+  }
+}
+
 /* Glass — Standard (dim): html.dark; Nacht: data-sd-theme="night" */
 html.dark .glass {
   background: rgba(255, 255, 255, 0.12);

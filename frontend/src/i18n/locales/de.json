@@ -267,7 +267,8 @@
     "loading": "Lädt...",
     "error": "Fehler",
     "open_in_spotify": "In Spotify öffnen",
-    "now_playing_badge": "Wird abgespielt"
+    "now_playing_badge": "Live",
+    "now_playing_a11y": "Wird gerade auf Spotify abgespielt"
   },
   "weather": {
     "geocoding_failed": "Geocoding fehlgeschlagen",
