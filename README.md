@@ -143,6 +143,7 @@ https://your-ip
 | [RATE_LIMITS.md](RATE_LIMITS.md) | Rate limits for all endpoints |
 | [TOKEN_ROTATION_GUIDE.md](TOKEN_ROTATION_GUIDE.md) | Proxmox token rotation |
 | [RE_ENCRYPTION_GUIDE.md](RE_ENCRYPTION_GUIDE.md) | Encryption key rotation |
+| [TECH_DEBT_UPGRADES.md](TECH_DEBT_UPGRADES.md) | Summary of recent debt-reduction upgrades (tests, migrations, redis, etc.) |
 
 ---
 

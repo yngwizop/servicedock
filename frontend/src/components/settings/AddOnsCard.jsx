@@ -2,17 +2,12 @@ import React, { useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plug } from 'phosphor-react';
 import { authenticatedFetch } from '../../utils/auth';
+import { BACKEND_URL } from '../../utils/backendUrl';
 import ConfigAddon from './ConfigAddon';
 import SpotifyAddon from './SpotifyAddon';
 import LdapAddon from './LdapAddon';
 import SettingsModalShell from './SettingsModalShell';
 import SettingsTopicLayout from './SettingsTopicLayout';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
-  (window.location.port === '' ? 
-    `${window.location.protocol}//${window.location.hostname}` :
-    `${window.location.protocol}//${window.location.hostname}:8000`
-  );
 
 const SPOTIFY_REDIRECT_URI = window.location.protocol === 'https:' 
   ? `https://${window.location.hostname}/api/spotify/callback`

@@ -1,4 +1,5 @@
 """Database connection pool and dependency injection"""
+import os
 import psycopg2
 import psycopg2.pool
 from urllib.parse import urlparse, parse_qs
@@ -16,6 +17,19 @@ def initialize_connection_pool():
     """Initialisiert den PostgreSQL Connection Pool beim Startup."""
     global db_pool
     try:
+        # Optional: psycopg3 pool (incremental migration path)
+        if os.getenv("USE_PSYCOPG3", "false").lower() == "true":
+            from psycopg_pool import ConnectionPool
+
+            db_pool = ConnectionPool(
+                conninfo=DATABASE_URL,
+                min_size=2,
+                max_size=10,
+                open=True,
+            )
+            logger.info("Database connection pool initialized (psycopg3 ConnectionPool, min=2, max=10)")
+            return
+
         result = urlparse(DATABASE_URL)
         # Extrahiere optionale SSL-Parameter aus der URL (z.B. sslmode)
         query = parse_qs(result.query)
@@ -57,7 +71,11 @@ def get_db():
     
     conn = None
     try:
-        conn = db_pool.getconn()
+        # psycopg3 pool exposes `.getconn()` compat via `.connection()`
+        if hasattr(db_pool, "connection"):
+            conn = db_pool.connection()
+        else:
+            conn = db_pool.getconn()
         if conn is None:
             logger.error("No connection available from pool")
             raise HTTPException(status_code=503, detail="Service temporarily unavailable")
@@ -67,4 +85,10 @@ def get_db():
         raise HTTPException(status_code=503, detail="Service temporarily unavailable")
     finally:
         if conn is not None:
-            db_pool.putconn(conn)
+            if hasattr(db_pool, "putconn"):
+                db_pool.putconn(conn)
+            else:
+                try:
+                    conn.close()
+                except Exception:
+                    pass

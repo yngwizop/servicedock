@@ -6,6 +6,7 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import '../styles/grid-layout.css';
 import { authenticatedFetch } from '../utils/auth';
+import { BACKEND_URL } from '../utils/backendUrl';
 import NodeStatusCard from './stats/NodeStatusCard';
 import VMStatusCard from './stats/VMStatusCard';
 import TopUsageCard from './stats/TopUsageCard';
@@ -22,12 +23,6 @@ const ResponsiveGridLayout = WidthProvider(Responsive);
 
 /** Nur horizontale Breite — Höhe kommt aus Daten / min=max (kein manuelles Ziehen). */
 const RESIZE_WIDTH_ONLY = ['e', 'w'];
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
-  (window.location.port === '' ? 
-    `${window.location.protocol}//${window.location.hostname}` :
-    `${window.location.protocol}//${window.location.hostname}:8000`
-  );
 
 /**
  * Proxmox Status-Dashboard mit Cluster-Übersicht und Drag & Drop Layout

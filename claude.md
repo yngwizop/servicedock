@@ -37,6 +37,8 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 
 **State Management:** Kein Redux/Zustand — 4 Custom Hooks (`useAuth`, `useDashboards`, `useAppearance`, `useServices`) + lokaler `useState` in `App.jsx`.
 
+**Tests:** Vitest + Testing Library (Baseline-Setup, geringe Abdeckung).
+
 ### Backend
 | Technologie | Version | Zweck |
 |---|---|---|
@@ -51,6 +53,9 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 | proxmoxer | latest | Proxmox VE API Client |
 | python-multipart | latest | Multipart Form Upload (Wallpapers) |
 | ldap3 | ≥2.9.1 | LDAP/Active Directory Authentifizierung |
+
+**Migrations:** Alembic (Baseline-Setup, Raw-SQL Projekt).
+**Optional:** Redis (persistente Rate Limits + OAuth state + Login Lockout), psycopg3 Pool (`USE_PSYCOPG3=true` opt-in).
 
 **API-Struktur:** REST, alle Routen unter `/api/*`, modulares Router-Pattern.
 
@@ -247,14 +252,14 @@ Das Status-Dashboard (`ProxmoxStatusDashboard.jsx`) zeigt aggregierte Cluster-St
 | admin (ldap) | `/api/ldap` | Config CRUD, Test, Toggle | Admin |
 
 ### Bekannte technische Schulden
-1. **Kein ORM** — Raw SQL überall. Funktioniert, aber Schema-Migrationen sind manuell (`init.sql` anpassen, Container neu starten).
-2. **~~Single-User-System~~** — Lokaler Admin + optionale AD-User. Rollen: `admin` (lokal + AD) und `viewer` (nur AD). Kein eigenes User-Management — User kommen aus AD.
-3. **In-Memory Rate-Limiting** — `failed_login_attempts` Dict geht bei Backend-Restart verloren. slowapi speichert ebenfalls in-memory.
-4. **Kein TypeScript** — Keine Compile-Zeit-Typprüfung im Frontend. prop-types installiert aber nicht flächendeckend genutzt.
-5. **Sync DB in Async Framework** — psycopg2 ist synchron, wird in `run_in_threadpool` gewrapped. Funktioniert, aber nicht ideal für hohe Concurrency.
-6. **Backend-URL Detection** — Frontend erkennt Backend-URL automatisch via `window.location`. Funktioniert in Docker, aber fragil bei komplexen Proxy-Setups.
-7. **Keine Tests** — Kein Test-Framework konfiguriert (weder Backend noch Frontend).
-8. **Keine DB-Migrationen** — Schema-Änderungen erfordern manuelles SQL in `init.sql` + `docker compose down -v` oder manuelle ALTER TABLEs.
+1. **Kein ORM** — Raw SQL überall. Funktioniert, aber Schema-Änderungen brauchen diszipliniertes Migrations-Handling (siehe unten).
+2. **Single-/Few-User Modell** — Lokale User + optionale AD-User, Rollen `admin`/`viewer`. Kein „echtes“ User-Management (bewusstes Produkt-Design).
+3. **Tests sind nur ein Baseline-Setup** — pytest/vitest sind vorhanden, aber Testabdeckung ist noch gering und es gibt kein CI, das sie automatisch erzwingt.
+4. **Migrationen sind eingeführt, aber noch nicht “voll” genutzt** — Alembic Baseline existiert; neue Schema-Änderungen müssen ab jetzt als Migrations kommen (statt nur `init.sql`).
+5. **DB-Stack: sync-first** — Default bleibt psycopg2 Pool; es gibt einen opt-in Pfad für psycopg3 (`USE_PSYCOPG3=true`), aber kein kompletter async DB Rewrite.
+6. **Redis ist optional, aber empfohlen** — Wenn Redis nicht läuft, fällt einiges auf in-memory fallback zurück (z.B. OAuth state / Login-Lockout / slowapi storage).
+7. **Type Safety im Frontend** — Kein TypeScript; `prop-types` nicht flächendeckend. (Optional: später inkrementell TS oder konsequent JSDoc/prop-types.)
+8. **Backend URL Konfiguration** — Standardisiert via `VITE_BACKEND_URL` (Vite) + same-origin fallback; ältere `REACT_APP_BACKEND_URL` Logik ist obsolet.
 
 ### Komplexe/Fragile Bereiche
 - **`ProxmoxGrid.jsx`** (~591 Zeilen) — Glass Segment Control mit Sliding Pill, Filter, Sortierung, Auto-Refresh, VM-Actions, Cluster/Standalone-Detection, display:none/block Tab-Persistenz.
@@ -263,6 +268,14 @@ Das Status-Dashboard (`ProxmoxStatusDashboard.jsx`) zeigt aggregierte Cluster-St
 - **`routers/spotify.py`** — OAuth2-Flow mit Thread-sicherem Token-Refresh + Double-Checked-Locking. CSRF-State-Token in Memory.
 - **`authenticatedFetch()`** — Automatischer Token-Refresh mit Retry-Logic. Wenn Refresh fehlschlägt, wird Session cleared → User muss neu einloggen. Keine Queue für parallele 401s.
 - **Verschlüsselungs-Key** — ENCRYPTION_KEY darf NIEMALS geändert werden, sonst sind Proxmox-Tokens und Spotify-Secrets nicht mehr lesbar. Re-Encryption-Script vorhanden (`re_encrypt_tokens.py`).
+
+### Neu hinzugekommen / verbessert (Stand 2026-05)
+- **Tests**: pytest (Backend) und vitest (Frontend) sind gebootstrapped. Das ist noch keine vollständige Abdeckung, aber ein Sicherheitsnetz für weitere Refactors.
+- **Migrations**: Alembic ist eingeführt (Baseline). `db/init.sql` ist weiterhin für frische Volumes, Schema-Änderungen gehen ab jetzt über Migrations.
+- **Rate Limiting & Lockout**: kann via Redis persistent sein (`REDIS_URL`), statt bei Backend-Restart zu verlieren.
+- **Spotify OAuth state**: nicht mehr nur in-memory, sondern Redis+TTL (Fallback in-memory für dev).
+- **Token Refresh**: `authenticatedFetch` hat jetzt Single-Flight Refresh (keine parallelen Refresh-Stürme).
+- **Backend URL**: zentral über `frontend/src/utils/backendUrl.js` (`VITE_BACKEND_URL` oder same-origin).
 
 ### Design-Entscheidungen
 - **Cookie-basierte Auth** statt localStorage (httpOnly, Secure, SameSite=Strict) — besserer XSS-Schutz

@@ -1,12 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { setAuthSession, clearAuthSession, isAuthenticated, authenticatedFetch } from '../utils/auth';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
-  (window.location.port === '' ? 
-    `${window.location.protocol}//${window.location.hostname}` :
-    `${window.location.protocol}//${window.location.hostname}:8000`
-  );
+import { BACKEND_URL } from '../utils/backendUrl';
 
 export function useAuth() {
   const { t } = useTranslation();

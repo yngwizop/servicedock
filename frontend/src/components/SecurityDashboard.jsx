@@ -17,6 +17,7 @@ import {
   Shield
 } from 'phosphor-react';
 import { authenticatedFetch } from '../utils/auth';
+import { BACKEND_URL } from '../utils/backendUrl';
 
 /**
  * Animated Counter Hook — Zählt von 0 bis target hoch
@@ -72,13 +73,6 @@ const AnimatedBar = React.memo(function AnimatedBar({ percentage, colorClass, de
     </div>
   );
 });
-
-// Backend-URL: Mit Nginx kein Port, ohne Nginx Port 8000
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
-  (window.location.port === '' ? 
-    `${window.location.protocol}//${window.location.hostname}` :
-    `${window.location.protocol}//${window.location.hostname}:8000`
-  );
 
 /**
  * Overview Cards — als eigene Komponente für stabile Counter-Animationen

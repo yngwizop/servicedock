@@ -26,6 +26,7 @@ from core.security import encrypt_value, decrypt_value
 from core.logging import logger
 from core.audit import log_audit
 from core.limiter import limiter
+from core.oauth_state_store import put_state, pop_state
 from dependencies.auth import require_role, get_client_ip
 from config.database import get_db
 
@@ -43,9 +44,7 @@ SPOTIFY_SCOPES = [
     "user-modify-playback-state"
 ]
 
-# Temporary State Storage (für CSRF Protection)
-# In Production: Redis oder DB verwenden
-_oauth_states = {}
+# OAuth state is stored in Redis (or in-memory fallback) via core.oauth_state_store
 
 # ✅ Thread Lock für Token Refresh (verhindert Race Conditions)
 _spotify_refresh_lock = threading.Lock()
@@ -326,18 +325,9 @@ async def get_auth_url(
     
     # Generate CSRF State Token
     state = secrets.token_urlsafe(32)
-    
-    # Clean old states (älter als 10 Minuten)
-    cutoff = datetime.now(timezone.utc) - timedelta(minutes=10)
-    expired_states = [k for k, v in _oauth_states.items() if v["timestamp"] < cutoff]
-    for k in expired_states:
-        del _oauth_states[k]
-    
-    # Speichere State mit redirect_uri (für Token-Exchange)
-    _oauth_states[state] = {
-        "timestamp": datetime.now(timezone.utc),
-        "redirect_uri": spotify_config["redirect_uri"]
-    }
+
+    # Speichere State mit redirect_uri (für Token-Exchange) (TTL 10 Minuten)
+    put_state("spotify", state, {"redirect_uri": spotify_config["redirect_uri"]}, ttl_seconds=600)
     logger.info(f"[SPOTIFY OAUTH] Auth-Request: redirect_uri={spotify_config['redirect_uri']}")
     
     # Build Authorization URL
@@ -378,16 +368,13 @@ async def spotify_callback(
         raise HTTPException(status_code=400, detail="Code oder State fehlt")
     
     # CSRF Protection: Verify State
-    if state not in _oauth_states:
+    state_data = pop_state("spotify", state)
+    if not state_data:
         raise HTTPException(status_code=400, detail="Ungültiger State Token (CSRF)")
     
     # Hole die beim Auth-Request verwendete redirect_uri
-    state_data = _oauth_states[state]
     used_redirect_uri = state_data["redirect_uri"] if isinstance(state_data, dict) else spotify_config["redirect_uri"]
     logger.info(f"[SPOTIFY OAUTH] Callback: used_redirect_uri={used_redirect_uri}")
-    
-    # Remove used state
-    del _oauth_states[state]
     
     spotify_config = get_spotify_config()
     if not spotify_config:

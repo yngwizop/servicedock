@@ -7,13 +7,7 @@ import { ArrowsClockwise, WarningCircle, GearSix, LockKey, FunnelSimple, SortAsc
 import CustomSelect from './CustomSelect';
 import { authenticatedFetch } from '../utils/auth';
 import { fetchProxmoxVmBundle, fetchProxmoxClusterStatsPrefetch } from '../utils/fetchProxmoxBundle';
-
-// Backend-URL: Mit Nginx kein Port, ohne Nginx Port 8000
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
-  (window.location.port === '' ? 
-    `${window.location.protocol}//${window.location.hostname}` :
-    `${window.location.protocol}//${window.location.hostname}:8000`
-  );
+import { BACKEND_URL } from '../utils/backendUrl';
 
 function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, searchTerm = "", isAdmin = true, proxmoxWarm = null }) {
   const { t } = useTranslation();

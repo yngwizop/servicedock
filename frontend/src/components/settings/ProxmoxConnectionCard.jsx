@@ -2,12 +2,7 @@ import React, { useState } from 'react';
 import { CheckCircle, LockKey } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
-  (window.location.port === '' ? 
-    `${window.location.protocol}//${window.location.hostname}` :
-    `${window.location.protocol}//${window.location.hostname}:8000`
-  );
+import { BACKEND_URL } from '../../utils/backendUrl';
 
 /**
  * Card für Proxmox-Verbindungseinstellungen (für Modal)

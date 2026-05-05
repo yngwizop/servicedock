@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LockKey, ShieldCheck } from 'phosphor-react';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
-  (window.location.port === '' ? 
-    `${window.location.protocol}//${window.location.hostname}` :
-    `${window.location.protocol}//${window.location.hostname}:8000`
-  );
+import { BACKEND_URL } from '../utils/backendUrl';
 
 function ChangePasswordModal({ onComplete, appearance = {} }) {
   const { t } = useTranslation();

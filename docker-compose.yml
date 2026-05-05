@@ -76,6 +76,7 @@ services:
       - LOGIN_LOCKOUT_MINUTES=${LOGIN_LOCKOUT_MINUTES:-15}
       - TRUST_FORWARDED_HEADERS=${TRUST_FORWARDED_HEADERS:-false}
       - TRUSTED_PROXIES=${TRUSTED_PROXIES:-}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
     # ✅ Security Hardening
     security_opt:
       - no-new-privileges:true
@@ -88,6 +89,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "python3 -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/\")' || exit 1"]
@@ -101,6 +104,22 @@ services:
         max-size: "10m"      # Max 10MB pro Log-Datei
         max-file: "3"        # Maximal 3 Dateien (= 30MB total)
         compress: "true"     # Alte Logs komprimieren
+
+  # Optional: run DB migrations on demand
+  migrate:
+    profiles: ["migrations"]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["bash", "-lc", "cd /app && alembic -c alembic.ini upgrade head"]
 
   db:
     image: postgres:16
@@ -134,6 +153,23 @@ services:
       options:
         max-size: "10m"      # Max 10MB pro Log-Datei
         max-file: "3"        # Maximal 3 Dateien (= 30MB total)
+
+  redis:
+    image: redis:7-alpine
+    container_name: webdashboard-redis
+    restart: always
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
 
 volumes:
   postgres_data:

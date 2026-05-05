@@ -2,6 +2,8 @@ fastapi
 uvicorn
 httpx
 psycopg2-binary
+psycopg[binary]
+psycopg-pool
 proxmoxer
 requests
 cryptography
@@ -10,3 +12,7 @@ python-jose[cryptography]
 bcrypt>=4.0.0
 python-multipart
 ldap3>=2.9.1
+pytest
+pytest-asyncio
+alembic
+redis

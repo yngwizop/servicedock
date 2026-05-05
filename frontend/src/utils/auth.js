@@ -7,6 +7,9 @@
 // Flag to track if we're using cookies (modern) or localStorage (legacy)
 let useCookies = true;
 
+// Single-flight refresh (avoid parallel /api/refresh calls)
+let refreshInFlight = null;
+
 /**
  * Checks if authentication cookie exists
  */
@@ -93,11 +96,16 @@ export async function authenticatedFetch(url, options = {}) {
   // If 401, try to refresh token once
   if (response.status === 401 && !options._isRetry) {
     try {
-      // Try to refresh token
-      const refreshResponse = await fetch('/api/refresh', {
-        method: 'POST',
-        credentials: 'include'
-      });
+      // Try to refresh token (single-flight)
+      if (!refreshInFlight) {
+        refreshInFlight = fetch('/api/refresh', {
+          method: 'POST',
+          credentials: 'include',
+        }).finally(() => {
+          refreshInFlight = null;
+        });
+      }
+      const refreshResponse = await refreshInFlight;
       
       if (refreshResponse.ok) {
         // Token refreshed, retry original request

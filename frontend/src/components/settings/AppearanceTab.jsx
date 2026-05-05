@@ -2,13 +2,8 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from 're
 import { Image, Palette, SquaresFour, Eye, CloudSun, UploadSimple, Trash, CheckCircle, Link as LinkIcon, CaretDown, CaretUp, XCircle } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
+import { BACKEND_URL } from '../../utils/backendUrl';
 import SettingsTopicLayout from './SettingsTopicLayout';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
-  (window.location.port === '' ? 
-    `${window.location.protocol}//${window.location.hostname}` :
-    `${window.location.protocol}//${window.location.hostname}:8000`
-  );
 
 const WEATHER_FIELDS = [
   { key: 'temperature', labelKey: 'appearance.temperature', icon: '🌡️' },

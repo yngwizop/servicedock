@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Users, Plus, Trash, Key, WarningCircle } from 'phosphor-react';
 import { authenticatedFetch } from '../../utils/auth';
 import CustomSelect from '../CustomSelect';
+import { BACKEND_URL } from '../../utils/backendUrl';
 
 /** Wie AppearanceTab — lesbare Felder im hellen & dunklen Settings-Glas */
 const sectionCard =
@@ -12,12 +13,6 @@ const labelClass = 'block text-xs font-medium text-gray-700 dark:text-gray-300 m
 const controlClass =
   'w-full border border-gray-300/50 dark:border-white/10 bg-white/50 dark:bg-white/10 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-xl backdrop-blur-sm transition-all text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
 const inputClass = `${controlClass} px-3 py-2.5`;
-
-const BACKEND_URL =
-  process.env.REACT_APP_BACKEND_URL ||
-  (window.location.port === ''
-    ? `${window.location.protocol}//${window.location.hostname}`
-    : `${window.location.protocol}//${window.location.hostname}:8000`);
 
 function UsersTab({ onTipsTopicChange }) {
   const { t } = useTranslation();

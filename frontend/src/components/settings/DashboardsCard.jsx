@@ -2,15 +2,10 @@ import React, { useMemo, useState, useLayoutEffect } from 'react';
 import { Pencil, SquaresFour, Plus, Desktop, Trash, Tag, Package, Link as LinkIcon } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
+import { BACKEND_URL } from '../../utils/backendUrl';
 import CustomSelect from '../CustomSelect';
 import SettingsModalShell from './SettingsModalShell';
 import SettingsTopicLayout from './SettingsTopicLayout';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
-  (window.location.port === '' ? 
-    `${window.location.protocol}//${window.location.hostname}` :
-    `${window.location.protocol}//${window.location.hostname}:8000`
-  );
 
 const inputClass = "w-full border border-gray-300/50 dark:border-white/15 bg-white/50 dark:bg-gray-700/70 dark:text-white dark:placeholder-gray-400 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm";
 const labelClass = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2";

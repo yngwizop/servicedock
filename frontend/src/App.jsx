@@ -23,13 +23,7 @@ import { useAuth } from './hooks/useAuth';
 import { useDashboards } from './hooks/useDashboards';
 import { useAppearance } from './hooks/useAppearance';
 import { useServices } from './hooks/useServices';
-
-// 🛠 Backend-URL
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
-  (window.location.port === '' ? 
-    `${window.location.protocol}//${window.location.hostname}` :
-    `${window.location.protocol}//${window.location.hostname}:8000`
-  );
+import { BACKEND_URL } from './utils/backendUrl';
 
 /** Ohne Wallpaper: Standard-Hellgrau/Weiß aus der API würde das Theme-Mesh vollständig verdecken (opacity oft 1). */
 function shouldShowAppearanceColorTint(bg) {
