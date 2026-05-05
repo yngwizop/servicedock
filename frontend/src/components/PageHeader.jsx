@@ -4,17 +4,19 @@ import React from 'react';
  * Seitenkopf: Glass-Balken in derselben Breite wie der Inhalt darunter (gleiche App-Hauptspalte + Padding,
  * kein „Ausbrechen“) — links Titel, rechts Widgets.
  */
-export default function PageHeader({ icon: Icon, title, subtitle, textColor, children, className = '' }) {
+export default function PageHeader({ icon: Icon, title, subtitle, textColor, children, className = '', theme = 'light' }) {
+  const isLight = theme === 'light';
   return (
     <div className={`mb-6 w-full${className ? ` ${className}` : ''}`}>
       <div
-        className="
+        className={`
+          relative isolate
           flex flex-col gap-4 rounded-2xl border border-gray-400/60 bg-white/50 px-4 py-3.5 shadow-lg backdrop-blur-md
-          dark:border-white/10 dark:bg-white/[0.12] sd-night-surface night:border-white/[0.07] night:shadow-black/40
+          dark:border-white/10 dark:bg-white/[0.06] sd-night-surface night:border-white/[0.07] night:shadow-black/40
           md:flex-row md:items-center md:justify-between md:gap-6
-        "
+        `}
       >
-        <div className="flex min-w-0 flex-1 items-center gap-3.5 text-left">
+        <div className="relative z-10 flex min-w-0 flex-1 items-center gap-3.5 text-left">
           {Icon ? (
             <div
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-400/60 bg-gradient-to-br from-gray-100 to-gray-200 backdrop-blur-sm dark:border-white/20 dark:from-white/10 dark:to-white/10 night:border-white/20 night:from-white/[0.16] night:to-white/[0.11]"
@@ -44,7 +46,7 @@ export default function PageHeader({ icon: Icon, title, subtitle, textColor, chi
           </div>
         </div>
         {children ? (
-          <div className="flex shrink-0 flex-wrap items-stretch justify-end gap-3 md:gap-4">
+          <div className="relative z-10 flex shrink-0 flex-wrap items-stretch justify-end gap-3 md:gap-4">
             {children}
           </div>
         ) : null}

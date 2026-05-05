@@ -341,6 +341,7 @@ function App() {
           title={pageTitle}
           subtitle={pageSubtitle}
           textColor={pageHeaderColor}
+          theme={theme}
         >
           {/* Direkte Kinder: PageHeader streckt jedes Widget auf gleiche Zeilenhöhe (kein extra Wrapper) */}
           {appearance.show_weather && (

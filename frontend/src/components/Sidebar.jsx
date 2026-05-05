@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import MarqueeOrTruncate from './MarqueeOrTruncate';
+import { getOrangeGlassRail } from '../styles/glass';
 import {
   HouseLine,
   ComputerTower,
@@ -112,11 +113,8 @@ function Sidebar({
   const roleLabel =
     userRole === 'viewer' ? t('session.role_viewer') : t('session.role_admin');
 
-  const isLight = theme === 'light';
-  /** Vertikales Glaspaneel — gleiche Orangefamilie, hell (Dim) vs. gedämpft dunkel (Nacht) */
-  const glassRail = isLight
-    ? 'rounded-3xl border border-orange-200/70 bg-gradient-to-b from-orange-200/50 via-orange-100/42 to-amber-100/38 shadow-lg shadow-orange-950/10 backdrop-blur-xl ring-1 ring-inset ring-white/50'
-    : 'rounded-3xl border border-orange-900/50 bg-gradient-to-b from-orange-950/78 via-orange-950/58 to-[rgb(48_20_6)]/82 shadow-xl shadow-black/40 backdrop-blur-xl ring-1 ring-inset ring-orange-300/12';
+  /** Vertikales Glaspaneel — gleiche Orangefamilie, hell (Dim) vs. gedämpft dunkel */
+  const glassRail = getOrangeGlassRail(theme);
 
   /** Eingeklappt: weniger Innenpadding, größere Icons — sonst ~16px nutzbare Breite und Phosphor-SVGs wirken „winzig“ */
   const iz = collapsed ? 28 : 22;
