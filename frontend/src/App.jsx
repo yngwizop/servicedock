@@ -70,6 +70,7 @@ function App() {
   const [editMode, setEditMode] = useState(false);
   const [activeTab, setActiveTab] = useState("services");
   const [spotifyConfigured, setSpotifyConfigured] = useState(false);
+  const [integrationHealth, setIntegrationHealth] = useState(null);
   const [weatherLocationInfo, setWeatherLocationInfo] = useState(null);
   /** Proxmox-Daten schon laden, bevor der VM/LXC-Tab geöffnet wird (entlastet ersten Klick). */
   const [proxmoxWarm, setProxmoxWarm] = useState(null);
@@ -103,6 +104,23 @@ function App() {
     }
   };
 
+  const fetchIntegrationHealth = async () => {
+    try {
+      const res = await authenticatedFetch(
+        `${BACKEND_URL}/api/integrations/health?dashboard_id=${activeDashboard}`
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      setIntegrationHealth((prev) => {
+        const oldRaw = prev ? JSON.stringify(prev) : "";
+        const nextRaw = JSON.stringify(data);
+        return oldRaw === nextRaw ? prev : data;
+      });
+    } catch (err) {
+      // keep previous state when health endpoint temporarily fails
+    }
+  };
+
   useEffect(() => {
     if (auth.isLoggedIn) {
       // Bei Login: Tab auf Dashboard setzen + Edit-Mode aus
@@ -112,8 +130,16 @@ function App() {
       fetchData();
       fetchAppearance();
       fetchSpotifyStatus();
+      fetchIntegrationHealth();
     }
   }, [auth.isLoggedIn]);
+
+  useEffect(() => {
+    if (!auth.isLoggedIn) return;
+    fetchIntegrationHealth();
+    const timer = setInterval(fetchIntegrationHealth, 30000);
+    return () => clearInterval(timer);
+  }, [auth.isLoggedIn, activeDashboard]);
 
   // Re-fetch data when active dashboard changes
   useEffect(() => {
@@ -303,6 +329,7 @@ function App() {
         authMethod={auth.authMethod}
         sessionUsername={auth.sessionUsername}
         userRole={auth.userRole}
+        integrationHealth={integrationHealth}
       />
 
       {/* Main Content */}
@@ -440,6 +467,7 @@ function App() {
               activeDashboard={activeDashboard}
               searchTerm={searchTerm}
               onOpenSettings={() => setActiveTab('settings')}
+              integrationHealth={integrationHealth}
             />
           )}
 

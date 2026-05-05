@@ -35,7 +35,8 @@
     "search_shortcut": "Suche (Strg+F)",
     "logout": "Abmelden",
     "theme_switch_night": "Zum Nacht-Theme wechseln",
-    "theme_switch_standard": "Zum Standard-Theme wechseln"
+    "theme_switch_standard": "Zum Standard-Theme wechseln",
+    "health": "Integrations-Status"
   },
   "session": {
     "auth_local": "Lokal",
@@ -269,7 +270,8 @@
     "wrong_password": "❌ Falsches Admin-Passwort",
     "delete_error_detail": "❌ Fehler: {{detail}}",
     "delete_error": "❌ Fehler beim Löschen: {{message}}",
-    "enter_password": "Bitte Admin-Passwort eingeben"
+    "enter_password": "Bitte Admin-Passwort eingeben",
+    "integration_health": "Integrations-Status"
   },
   "spotify": {
     "rate_limit": "Rate limit erreicht. Bitte warten...",

@@ -33,6 +33,7 @@ from routers.ldap import router as ldap_router  # NEW: LDAP/AD Authentication Ad
 from routers.wallpapers import router as wallpapers_router  # NEW: Wallpaper Upload/Serving
 from routers.docs import router as docs_router  # Help / Markdown from repo root
 from routers.users import router as users_router  # Local user accounts
+from routers.integrations import router as integrations_router  # Integration health summary
 
 # Disable SSL warnings for Proxmox connections
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -160,6 +161,7 @@ app.include_router(ldap_router)           # /api/ldap/* (AD Authentication AddOn
 app.include_router(wallpapers_router)     # /api/wallpapers/* (Wallpaper Upload/Serving)
 app.include_router(docs_router)           # /api/docs/help* (Markdown from repo)
 app.include_router(users_router)          # /api/users (local accounts)
+app.include_router(integrations_router)   # /api/integrations/health
 
 # Note: Reorder endpoints are in their respective routers:
 # - PUT /api/admin/services/reorder (in services router)

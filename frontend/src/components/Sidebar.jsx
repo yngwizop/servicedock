@@ -44,12 +44,17 @@ function Sidebar({
   authMethod = 'local',
   sessionUsername = null,
   userRole = 'admin',
+  integrationHealth = null,
 }) {
   const { t } = useTranslation();
   const [dashDropdownOpen, setDashDropdownOpen] = useState(false);
   const dashTriggerRef = useRef(null);
   const dashDropdownRef = useRef(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
+  const [showHealthHover, setShowHealthHover] = useState(false);
+  const [showUserHover, setShowUserHover] = useState(false);
+  const healthHoverTimerRef = useRef(null);
+  const userHoverTimerRef = useRef(null);
 
   const activeDash = dashboards.find(d => d.id === activeDashboard);
 
@@ -89,6 +94,13 @@ function Sidebar({
     return () => document.removeEventListener('keydown', handleKey);
   }, [dashDropdownOpen]);
 
+  useEffect(() => {
+    return () => {
+      if (healthHoverTimerRef.current) clearTimeout(healthHoverTimerRef.current);
+      if (userHoverTimerRef.current) clearTimeout(userHoverTimerRef.current);
+    };
+  }, []);
+
   const sessionPrimary =
     (displayName && String(displayName).trim()) ||
     (sessionUsername && String(sessionUsername).trim()) ||
@@ -119,6 +131,30 @@ function Sidebar({
     ...(isAdmin ? [{ id: 'security', label: 'Security', icon: Vault }] : []),
     ...(isAdmin ? [{ id: 'settings', label: 'Settings', icon: SlidersHorizontal }] : []),
   ];
+
+  const healthChecks = integrationHealth?.checks || [];
+  const checkByName = (name) => healthChecks.find((c) => c.name === name);
+  const proxmoxHealth = checkByName('proxmox');
+  const spotifyHealth = checkByName('spotify');
+  const ldapHealth = checkByName('ldap');
+  const healthRows = [
+    { key: 'proxmox', label: 'Proxmox', data: proxmoxHealth },
+    { key: 'spotify', label: 'Spotify', data: spotifyHealth },
+    { key: 'ldap', label: 'LDAP', data: ldapHealth },
+  ];
+  const healthColor = (status) => {
+    if (status === 'ok') return 'bg-green-500';
+    if (status === 'warning' || status === 'not_configured') return 'bg-amber-400';
+    if (status === 'down') return 'bg-red-500';
+    return 'bg-gray-400/70';
+  };
+  const healthText = (status) => {
+    if (status === 'ok') return 'OK';
+    if (status === 'warning') return 'Warnung';
+    if (status === 'not_configured') return 'Nicht konfiguriert';
+    if (status === 'down') return 'Fehler';
+    return 'Unbekannt';
+  };
 
   return (
     <div
@@ -212,6 +248,76 @@ function Sidebar({
             </div>,
             document.body
           )}
+        </div>
+      )}
+
+      {/* Integration Health */}
+      {integrationHealth && (
+        <div
+          className={`relative ${collapsed ? 'px-2 pb-2' : 'px-4 pb-2'}`}
+          onMouseEnter={() => {
+            if (healthHoverTimerRef.current) clearTimeout(healthHoverTimerRef.current);
+            healthHoverTimerRef.current = setTimeout(() => setShowHealthHover(true), 600);
+          }}
+          onClick={() => {
+            if (healthHoverTimerRef.current) clearTimeout(healthHoverTimerRef.current);
+            setShowHealthHover((prev) => !prev);
+          }}
+          onMouseLeave={() => {
+            if (healthHoverTimerRef.current) clearTimeout(healthHoverTimerRef.current);
+            setShowHealthHover(false);
+          }}
+        >
+          <div
+            className={`w-full rounded-xl transition-all duration-300 ${
+              collapsed ? 'px-1 py-2.5' : 'px-3 py-2'
+            } bg-white/10 dark:bg-white/5 hover:bg-white/15 dark:hover:bg-white/10`}
+          >
+            <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2.5'}`}>
+              {!collapsed && (
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-white/60">
+                  {t('sidebar.health')}
+                </span>
+              )}
+              <div className={`${collapsed ? '' : 'ml-auto'} flex items-center gap-1.5`}>
+                <span className={`h-2.5 w-2.5 rounded-full ${healthColor(proxmoxHealth?.status)}`} />
+                <span className={`h-2.5 w-2.5 rounded-full ${healthColor(spotifyHealth?.status)}`} />
+                <span className={`h-2.5 w-2.5 rounded-full ${healthColor(ldapHealth?.status)}`} />
+              </div>
+            </div>
+          </div>
+
+          <div
+            className={`absolute z-[120] w-[18rem] rounded-xl border border-slate-700/75 bg-slate-950/95 p-3 text-left shadow-2xl shadow-black/45 backdrop-blur-xl
+            dark:border-slate-700/80 dark:bg-slate-950/95 dark:shadow-black/55
+            night:border-sd-night-800/90 night:bg-sd-night-950/95
+            ${showHealthHover ? 'opacity-100 visible translate-y-0 scale-100' : 'opacity-0 invisible -translate-y-1 scale-[0.98]'}
+            transition-all duration-200
+            pointer-events-none
+            left-full ml-2 bottom-0`}
+          >
+            <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/80 dark:text-white/80 night:text-slate-200">
+              {t('sidebar.health')}
+            </div>
+            <div className="space-y-2">
+              {healthRows.map(({ key, label, data }) => (
+                <div key={key} className="rounded-lg border border-white/12 bg-white/[0.09] px-2.5 py-2 dark:bg-white/[0.1] night:bg-sd-night-900/80">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`h-2.5 w-2.5 rounded-full ${healthColor(data?.status)}`} />
+                      <span className="text-xs font-semibold text-white/95 dark:text-white night:text-slate-100">{label}</span>
+                    </div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-white/85 dark:text-white/85 night:text-slate-200">
+                      {healthText(data?.status)}
+                    </span>
+                  </div>
+                  <div className="mt-1 text-[11px] leading-relaxed text-white/90 dark:text-white/85 night:text-slate-300">
+                    {data?.detail || 'n/a'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -323,10 +429,23 @@ function Sidebar({
         </button>
 
         {/* Angemeldeter Benutzer — Hover zeigt Details */}
-        <div className="relative z-[60] group/sidebar-user">
+        <div
+          className="relative z-[60]"
+          onMouseEnter={() => {
+            if (userHoverTimerRef.current) clearTimeout(userHoverTimerRef.current);
+            userHoverTimerRef.current = setTimeout(() => setShowUserHover(true), 600);
+          }}
+          onClick={() => {
+            if (userHoverTimerRef.current) clearTimeout(userHoverTimerRef.current);
+            setShowUserHover((prev) => !prev);
+          }}
+          onMouseLeave={() => {
+            if (userHoverTimerRef.current) clearTimeout(userHoverTimerRef.current);
+            setShowUserHover(false);
+          }}
+        >
           <div
             className={`w-full flex items-center ${collapsed ? 'justify-center px-1 py-2.5' : 'gap-3 px-4 py-3'} rounded-xl text-white dark:text-gray-300 hover:bg-white/15 dark:hover:bg-white/10 transition-all duration-300 ease-in-out cursor-default`}
-            title={collapsed ? sessionPrimary : ''}
             role="status"
             aria-label={t('session.aria_label')}
           >
@@ -341,34 +460,30 @@ function Sidebar({
 
           <div
             className={`
-              absolute z-[100] min-w-[12.5rem] max-w-[16rem] rounded-2xl border border-gray-400/45 bg-white/55 p-3 text-left shadow-lg backdrop-blur-md
-              dark:border-white/[0.12] dark:bg-slate-900/55 dark:shadow-black/20
-              night:border-white/[0.08] night:bg-sd-night-950/65 night:shadow-black/40
-              opacity-0 invisible scale-[0.98]
-              group-hover/sidebar-user:opacity-100 group-hover/sidebar-user:visible group-hover/sidebar-user:scale-100
+              absolute z-[100] min-w-[11.75rem] max-w-[13rem] rounded-2xl border border-slate-700/75 bg-slate-950/95 p-3 text-left shadow-2xl shadow-black/45 backdrop-blur-xl
+              dark:border-slate-700/80 dark:bg-slate-950/95 dark:shadow-black/55
+              night:border-sd-night-800/90 night:bg-sd-night-950/95 night:shadow-black/60
+              ${showUserHover ? 'opacity-100 visible scale-100' : 'opacity-0 invisible scale-[0.98]'}
               transition-all duration-200 ease-out
-              pointer-events-none group-hover/sidebar-user:pointer-events-auto
-              ${collapsed
-                /* Unten am Trigger ausrichten, Inhalt wächst nach oben — wirkt nicht mehr am Viewport-Boden gequetscht */
-                ? 'bottom-0 left-[calc(100%-6px)] pl-2 w-[14rem]'
-                : 'bottom-[calc(100%+2.75rem)] left-0 right-0 mx-0'}
+              pointer-events-none
+              left-full ml-2 bottom-0 w-[13rem]
             `}
           >
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 night:text-slate-400 mb-2.5">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-white/65 dark:text-white/70 night:text-slate-300 mb-2">
               {t('session.menu_heading')}
             </div>
-            <dl className="space-y-2 text-sm">
-              <div>
-                <dt className="text-[11px] font-medium text-gray-500 dark:text-gray-400 night:text-slate-400 mb-0.5">{t('session.popup_username')}</dt>
-                <dd className="font-semibold text-gray-900 truncate dark:text-gray-100 night:text-slate-100" title={sessionUserLine}>{sessionUserLine}</dd>
+            <dl className="space-y-2.5 text-sm">
+              <div className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-2">
+                <dt className="text-[11px] font-medium uppercase tracking-wide text-white/60 dark:text-white/65 night:text-slate-300 mb-1">{t('session.popup_username')}</dt>
+                <dd className="text-base font-semibold leading-tight text-white truncate dark:text-gray-100 night:text-slate-100" title={sessionUserLine}>{sessionUserLine}</dd>
               </div>
-              <div>
-                <dt className="text-[11px] font-medium text-gray-500 dark:text-gray-400 night:text-slate-400 mb-0.5">{t('session.popup_role')}</dt>
-                <dd className="font-semibold text-gray-900 dark:text-gray-100 night:text-slate-100">{roleLabel}</dd>
+              <div className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-2">
+                <dt className="text-[11px] font-medium uppercase tracking-wide text-white/60 dark:text-white/65 night:text-slate-300 mb-1">{t('session.popup_role')}</dt>
+                <dd className="text-base font-semibold leading-tight text-white/95 dark:text-gray-100 night:text-slate-100">{roleLabel}</dd>
               </div>
-              <div>
-                <dt className="text-[11px] font-medium text-gray-500 dark:text-gray-400 night:text-slate-400 mb-0.5">{t('session.popup_auth')}</dt>
-                <dd>
+              <div className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-2">
+                <dt className="text-[11px] font-medium uppercase tracking-wide text-white/60 dark:text-white/65 night:text-slate-300 mb-1">{t('session.popup_auth')}</dt>
+                <dd className="leading-tight">
                   <span
                     className={
                       authMethod === 'ad'

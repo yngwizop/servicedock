@@ -35,7 +35,8 @@
     "search_shortcut": "Search (Ctrl+F)",
     "logout": "Log out",
     "theme_switch_night": "Switch to night theme",
-    "theme_switch_standard": "Switch to standard theme"
+    "theme_switch_standard": "Switch to standard theme",
+    "health": "Integration health"
   },
   "session": {
     "auth_local": "Local",
@@ -269,7 +270,8 @@
     "wrong_password": "❌ Wrong admin password",
     "delete_error_detail": "❌ Error: {{detail}}",
     "delete_error": "❌ Error deleting: {{message}}",
-    "enter_password": "Please enter admin password"
+    "enter_password": "Please enter admin password",
+    "integration_health": "Integration health"
   },
   "spotify": {
     "rate_limit": "Rate limit reached. Please wait...",
@@ -484,7 +486,7 @@
       "language": [
         "The language is automatically detected based on your browser settings.",
         "Your language preference is saved in the browser and persists across sessions.",
-        "All UI text switches instantly \u2014 no page reload needed."
+        "All UI text switches instantly — no page reload needed."
       ],
       "users_title": "Local users",
       "users": [

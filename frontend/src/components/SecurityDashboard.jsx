@@ -83,7 +83,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
 /**
  * Overview Cards — als eigene Komponente für stabile Counter-Animationen
  */
-const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats, rateLimitUsage, formatTimestamp, t }) {
+const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats, rateLimitUsage, integrationHealth, formatTimestamp, t }) {
   // Animated Counters für Activity Card
   const animTotal = useAnimatedCounter(auditStats?.error_stats?.total || 0, 2200, 200);
   const animSuccess = useAnimatedCounter(auditStats?.error_stats?.success || 0, 2200, 400);
@@ -99,6 +99,13 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
 
   // Rate-Limit Bar-Farben
   const getBarColor = (pct) => pct >= 80 ? 'bg-red-500' : pct >= 50 ? 'bg-orange-500' : 'bg-green-500';
+  const healthChecks = integrationHealth?.checks || [];
+  const healthColor = (status) => {
+    if (status === 'ok') return 'text-green-500 dark:text-green-400';
+    if (status === 'warning' || status === 'not_configured') return 'text-amber-500 dark:text-amber-400';
+    if (status === 'down') return 'text-red-500 dark:text-red-400';
+    return 'text-gray-400 dark:text-gray-500';
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -343,11 +350,44 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
           </div>
         )}
       </div>
+
+      {/* Integration Health Card */}
+      <div className="animate-slide-in-left dark:bg-white/[0.12] sd-night-surface backdrop-blur-md rounded-2xl shadow-xl night:shadow-black/45 p-6 border border-gray-400/60 dark:border-white/10 night:border-white/[0.08] hover:scale-[1.02] hover:border-gray-500/70 dark:hover:border-white/20 night:hover:border-white/12 transition-all duration-300 group" style={{ animationDelay: '0.6s' }}>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-cyan-100/60 dark:bg-cyan-500/10 night:bg-cyan-950/40 p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+            <Shield size={24} className="text-cyan-500" weight="duotone" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+            {t('security.integration_health')}
+          </h3>
+        </div>
+        {integrationHealth ? (
+          <div className="space-y-2.5">
+            {healthChecks.map((check) => (
+              <div key={check.name} className="rounded-xl p-3 bg-white/20 dark:bg-white/5 night:bg-sd-night-900/65">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold uppercase tracking-wide text-gray-800 dark:text-white">
+                    {check.name}
+                  </span>
+                  <span className={`text-xs font-semibold uppercase tracking-wider ${healthColor(check.status)}`}>
+                    {check.status}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-gray-700 dark:text-gray-300 night:text-slate-300">
+                  {check.detail}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-600 dark:text-gray-400">{t('security.loading_data')}</p>
+        )}
+      </div>
     </div>
   );
 });
 
-function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashboard = 1, searchTerm = "" }) {
+function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashboard = 1, searchTerm = "", integrationHealth = null }) {
   const { t } = useTranslation();
   const [tokenInfo, setTokenInfo] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
@@ -604,6 +644,7 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
           tokenInfo={tokenInfo}
           auditStats={auditStats}
           rateLimitUsage={rateLimitUsage}
+          integrationHealth={integrationHealth}
           formatTimestamp={formatTimestamp}
           t={t}
         />
