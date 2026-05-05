@@ -6,9 +6,9 @@ import HeaderWidgetCapsule from './HeaderWidgetCapsule';
 import MarqueeOrTruncate from './MarqueeOrTruncate';
 
 /**
- * Schmale feste Breite — kompakte Höhe (~wie Uhr/Wetter), damit der PageHeader nicht mitwächst.
+ * Breiter als Wetter/Uhr für bessere Lesbarkeit; Höhe bleibt über HeaderWidgetCapsule fix.
  */
-const SPOTIFY_SHELL = 'group w-[min(13.5rem,72vw)] shrink-0 md:w-[14.5rem]';
+const SPOTIFY_SHELL = 'group w-[min(17rem,80vw)] shrink-0 md:w-[18rem]';
 
 const SpotifyCard = () => {
   const { t } = useTranslation();
@@ -88,10 +88,10 @@ const SpotifyCard = () => {
 
   return (
     <HeaderWidgetCapsule className={SPOTIFY_SHELL}>
-      <div className="flex h-full min-h-0 w-full min-w-0 items-center justify-center gap-1.5 py-0.5 md:gap-2">
-        <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md bg-gray-300/40 shadow-inner dark:bg-white/10">
+      <div className="flex h-full min-h-0 w-full min-w-0 items-center justify-center gap-2 py-0.5 md:gap-2.5">
+        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gray-300/40 shadow-inner dark:bg-white/10">
           {track.album_image && isSafeUrl(track.album_image) ? (
-            <img src={track.album_image} alt="" className="h-8 w-8 object-cover" />
+            <img src={track.album_image} alt="" className="h-10 w-10 object-cover" />
           ) : null}
         </div>
 
@@ -101,17 +101,17 @@ const SpotifyCard = () => {
               <MarqueeOrTruncate
                 text={track.name}
                 as="h3"
-                className="m-0 truncate text-xs font-bold leading-tight text-gray-900 dark:text-white/90"
+                className="m-0 truncate text-sm font-bold leading-tight text-gray-900 dark:text-white/90"
                 style={titleShadow}
               />
             </div>
             <div className="flex shrink-0 items-center gap-0.5" role="status" aria-label={t('spotify.now_playing_a11y')}>
-              <MusicNote className="h-3 w-3 shrink-0 text-green-500 dark:text-green-400" weight="fill" />
+              <MusicNote className="h-3.5 w-3.5 shrink-0 text-green-500 dark:text-green-400" weight="fill" />
               {nowPlaying.is_playing && (
-                <span className="h-1 w-1 shrink-0 rounded-full bg-green-500 animate-pulse dark:bg-green-400" />
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-500 animate-pulse dark:bg-green-400" />
               )}
               <span
-                className="whitespace-nowrap text-[8px] font-semibold uppercase tracking-wide text-green-600 dark:text-green-300"
+                className="whitespace-nowrap text-[9px] font-semibold uppercase tracking-wide text-green-600 dark:text-green-300"
                 style={titleShadow}
               >
                 {t('spotify.now_playing_badge')}
@@ -122,7 +122,7 @@ const SpotifyCard = () => {
           <MarqueeOrTruncate
             text={track.artist}
             as="p"
-            className="m-0 truncate text-[10px] leading-tight text-gray-700 dark:text-white/60"
+            className="m-0 truncate text-xs leading-tight text-gray-700 dark:text-white/60"
             style={titleShadow}
           />
 
@@ -135,7 +135,7 @@ const SpotifyCard = () => {
                 />
               </div>
               <span
-                className="shrink-0 whitespace-nowrap text-[9px] tabular-nums text-gray-600 dark:text-white/50"
+                className="shrink-0 whitespace-nowrap text-[10px] tabular-nums text-gray-600 dark:text-white/50"
                 style={titleShadow}
               >
                 {formatTime(track.progress_ms)} / {formatTime(track.duration_ms)}
@@ -152,7 +152,7 @@ const SpotifyCard = () => {
             className="flex-shrink-0 text-green-600 opacity-0 transition-opacity hover:text-green-500 hover:opacity-100 focus:opacity-100 group-hover:opacity-100 dark:text-green-400 dark:hover:text-green-300"
             title={t('spotify.open_in_spotify')}
           >
-            <ArrowSquareOut className="h-4 w-4" weight="bold" />
+            <ArrowSquareOut className="h-4.5 w-4.5" weight="bold" />
           </a>
         )}
       </div>
