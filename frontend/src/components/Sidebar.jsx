@@ -143,17 +143,24 @@ function Sidebar({
     { key: 'ldap', label: 'LDAP', data: ldapHealth },
   ];
   const healthColor = (status) => {
-    if (status === 'ok') return 'bg-green-500';
+    if (status === 'ok' || status === 'disabled') return 'bg-green-500';
     if (status === 'warning' || status === 'not_configured') return 'bg-amber-400';
     if (status === 'down') return 'bg-red-500';
     return 'bg-gray-400/70';
   };
   const healthText = (status) => {
-    if (status === 'ok') return 'OK';
-    if (status === 'warning') return 'Warnung';
-    if (status === 'not_configured') return 'Nicht konfiguriert';
-    if (status === 'down') return 'Fehler';
-    return 'Unbekannt';
+    if (status === 'ok') return t('sidebar.health_status_ok');
+    if (status === 'disabled') return t('sidebar.health_status_disabled');
+    if (status === 'warning') return t('sidebar.health_status_warning');
+    if (status === 'not_configured') return t('sidebar.health_status_not_configured');
+    if (status === 'down') return t('sidebar.health_status_down');
+    return t('sidebar.health_status_unknown');
+  };
+  const healthDetail = (check) => {
+    if (check?.name === 'spotify' && check?.status === 'disabled') {
+      return t('sidebar.health_spotify_widget_off');
+    }
+    return check?.detail || 'n/a';
   };
 
   return (
@@ -294,7 +301,7 @@ function Sidebar({
             ${showHealthHover ? 'opacity-100 visible translate-y-0 scale-100' : 'opacity-0 invisible -translate-y-1 scale-[0.98]'}
             transition-all duration-200
             pointer-events-none
-            left-full ml-2 bottom-0`}
+            left-full ml-2 top-0`}
           >
             <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/80 dark:text-white/80 night:text-slate-200">
               {t('sidebar.health')}
@@ -312,7 +319,7 @@ function Sidebar({
                     </span>
                   </div>
                   <div className="mt-1 text-[11px] leading-relaxed text-white/90 dark:text-white/85 night:text-slate-300">
-                    {data?.detail || 'n/a'}
+                    {healthDetail(data)}
                   </div>
                 </div>
               ))}

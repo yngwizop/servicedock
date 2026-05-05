@@ -36,7 +36,14 @@
     "logout": "Abmelden",
     "theme_switch_night": "Zum Nacht-Theme wechseln",
     "theme_switch_standard": "Zum Standard-Theme wechseln",
-    "health": "Integrations-Status"
+    "health": "Integrations-Status",
+    "health_status_ok": "OK",
+    "health_status_disabled": "Deaktiviert",
+    "health_status_warning": "Warnung",
+    "health_status_not_configured": "Nicht konfiguriert",
+    "health_status_down": "Fehler",
+    "health_status_unknown": "Unbekannt",
+    "health_spotify_widget_off": "Das Spotify-Widget ist unter Darstellung → Widgets ausgeschaltet."
   },
   "session": {
     "auth_local": "Lokal",

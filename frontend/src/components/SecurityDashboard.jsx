@@ -101,10 +101,22 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
   const getBarColor = (pct) => pct >= 80 ? 'bg-red-500' : pct >= 50 ? 'bg-orange-500' : 'bg-green-500';
   const healthChecks = integrationHealth?.checks || [];
   const healthColor = (status) => {
-    if (status === 'ok') return 'text-green-500 dark:text-green-400';
+    if (status === 'ok' || status === 'disabled') return 'text-green-500 dark:text-green-400';
     if (status === 'warning' || status === 'not_configured') return 'text-amber-500 dark:text-amber-400';
     if (status === 'down') return 'text-red-500 dark:text-red-400';
     return 'text-gray-400 dark:text-gray-500';
+  };
+
+  const healthStatusLabel = (check) => {
+    if (check.status === 'disabled') return t('sidebar.health_status_disabled');
+    return check.status;
+  };
+
+  const healthDetailLine = (check) => {
+    if (check.name === 'spotify' && check.status === 'disabled') {
+      return t('sidebar.health_spotify_widget_off');
+    }
+    return check.detail;
   };
 
   return (
@@ -370,11 +382,11 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
                     {check.name}
                   </span>
                   <span className={`text-xs font-semibold uppercase tracking-wider ${healthColor(check.status)}`}>
-                    {check.status}
+                    {healthStatusLabel(check)}
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-gray-700 dark:text-gray-300 night:text-slate-300">
-                  {check.detail}
+                  {healthDetailLine(check)}
                 </p>
               </div>
             ))}

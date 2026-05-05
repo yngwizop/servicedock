@@ -75,6 +75,28 @@ def _check_proxmox(dashboard_id: int) -> Dict[str, Any]:
             config.database.db_pool.putconn(conn)
 
 
+def _get_show_spotify_widget() -> bool:
+    """Whether the Spotify header widget is enabled in appearance (default True)."""
+    conn = None
+    cur = None
+    try:
+        conn = config.database.db_pool.getconn()
+        cur = conn.cursor()
+        cur.execute("SELECT show_spotify FROM appearance WHERE id = 1;")
+        row = cur.fetchone()
+        if row is None or row[0] is None:
+            return True
+        return bool(row[0])
+    except Exception as exc:
+        logger.warning(f"Could not read show_spotify for health: {exc}")
+        return True
+    finally:
+        if cur is not None:
+            cur.close()
+        if conn is not None:
+            config.database.db_pool.putconn(conn)
+
+
 def _check_spotify() -> Dict[str, Any]:
     try:
         cfg = get_spotify_config()
@@ -90,6 +112,18 @@ def _check_spotify() -> Dict[str, Any]:
     except Exception as exc:
         logger.error(f"Spotify health check failed: {exc}")
         return _status_payload("spotify", "down", True, "Health check failed")
+
+
+def _check_spotify_for_health() -> Dict[str, Any]:
+    """Spotify integration check, respecting widget visibility (green + disabled when hidden)."""
+    base = _check_spotify()
+    if not _get_show_spotify_widget():
+        return {
+            **base,
+            "status": "disabled",
+            "detail": "Spotify widget hidden in appearance settings",
+        }
+    return base
 
 
 def _check_ldap() -> Dict[str, Any]:
@@ -150,10 +184,10 @@ def get_integrations_health(
 ):
     checks = [
         _check_proxmox(dashboard_id),
-        _check_spotify(),
+        _check_spotify_for_health(),
         _check_ldap(),
     ]
-    severity = {"ok": 0, "warning": 1, "not_configured": 1, "down": 2}
+    severity = {"ok": 0, "disabled": 0, "warning": 1, "not_configured": 1, "down": 2}
     overall = max(checks, key=lambda c: severity.get(c["status"], 2))["status"]
     return {
         "overall_status": overall,
