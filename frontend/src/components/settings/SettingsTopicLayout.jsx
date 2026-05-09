@@ -51,9 +51,10 @@ function SettingsTopicLayout({
         </div>
       </nav>
 
-      <div className="flex min-h-[min(52vh,520px)] min-w-0 flex-1 flex-col gap-3">
+      {/* Kein overflow-y hier: Scroll passiert in der App-Hauptspalte (Rand wie andere Dashboards), nicht innerhalb des Rahmens */}
+      <div className="flex min-w-0 flex-1 flex-col gap-3">
         <div
-          className={`min-h-0 flex-1 overflow-y-auto rounded-xl border border-gray-300/40 bg-white/35 p-4 dark:border-white/10 dark:bg-white/[0.04] sm:p-6 night:border-white/[0.07] ${detailClassName}`}
+          className={`rounded-xl border border-gray-300/40 bg-white/35 p-4 dark:border-white/10 dark:bg-white/[0.04] sm:p-6 night:border-white/[0.07] ${detailClassName}`}
         >
           {children}
         </div>

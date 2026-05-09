@@ -23,43 +23,45 @@
   animation: fadeIn 0.15s ease-out forwards;
 }
 
-/* Moderne Scrollbar-Gestaltung */
-/* Scrollbar-Größe */
-::-webkit-scrollbar {
-  width: 8px; /* Vertikale Scrollbar */
-  height: 8px; /* Horizontale Scrollbar */
-}
-
-/* Transparenter Hintergrund (Track) */
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* Scrollbars: html immer .dark; Nacht nur mit data-sd-theme="night" */
-html.dark ::-webkit-scrollbar-thumb {
-  background: #475569;
-  border-radius: 4px;
-}
-
-html.dark[data-sd-theme="night"] ::-webkit-scrollbar-thumb {
-  background: #475569;
-}
-
-html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
-}
-
-html.dark[data-sd-theme="night"] ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+/* App-weite Scrollbars (Light / Dim / Nacht) — gleiche Größe & Farben überall */
+:root {
+  --sd-scrollbar-size: 8px;
+  --sd-scrollbar-thumb: #c4ced9;
+  --sd-scrollbar-thumb-hover: #94a3b8;
+  --sd-scrollbar-track: transparent;
 }
 
 html.dark {
-  scrollbar-color: #475569 transparent;
+  --sd-scrollbar-thumb: #475569;
+  --sd-scrollbar-thumb-hover: #64748b;
 }
+
+::-webkit-scrollbar {
+  width: var(--sd-scrollbar-size);
+  height: var(--sd-scrollbar-size);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--sd-scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--sd-scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sd-scrollbar-thumb-hover);
+}
+
+/* Firefox: dieselben Farben auf allen Scroll-Containern */
+* {
+  scrollbar-color: var(--sd-scrollbar-thumb) var(--sd-scrollbar-track);
+}
+
 html.dark[data-sd-theme="night"] {
-  scrollbar-color: #475569 transparent;
   /*
-   * Zentrale Nacht-Palette (RGB ohne Kommas = Tailwind <alpha-value>).
+   * Zentrale Nacht-Palette (RGB ohne Kommas = Tailwind <alpha-value>); Scrollbar-Farben von html.dark.
    * Flächen-Deckkraft: einheitlich dichter als früheres 12%-Glas (wie Service-Karten),
    * Stufen behalten dasselbe Verhältnis zueinander wie zu Dim white/[0.12|0.06|0.04|…].
    */
@@ -151,10 +153,18 @@ html.dark[data-sd-theme="night"] {
     overflow-y: scroll;
     overflow-x: clip;
   }
-  
+
   body {
     overflow-x: clip;
   }
+}
+
+/*
+ * Settings-Tab: html hat sonst immer overflow-y: scroll + innere App-Spalte overflow-y-auto
+ * → zwei Scrollbars. Klasse wird per JS nur bei Tab „settings“ gesetzt.
+ */
+html.sd-settings-scroll-contained {
+  overflow-y: hidden;
 }
 
 /* Scrollbar in der Sidebar komplett ausblenden */
@@ -166,6 +176,7 @@ html.dark[data-sd-theme="night"] {
 .sidebar-no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+  scrollbar-color: transparent transparent;
 }
 
 /* Slide-In Animation für Settings Sidebar */
@@ -321,6 +332,13 @@ html.dark[data-sd-theme="night"] .glass-btn:hover {
   }
 }
 
+@layer utilities {
+  /* Nur wo explizit gewünscht (z. B. Settings-Hauptspalte), sonst kein extra Gutter */
+  .sd-scroll-gutter-stable {
+    scrollbar-gutter: stable;
+  }
+}
+
 /* Theme-Hintergrund-Mesh (App fixed layer — nicht von Appearance bg_color verdecken) */
 .sd-theme-mesh-dim {
   background-color: #020617;
@@ -347,4 +365,4 @@ html.dark[data-sd-theme="night"] .glass-btn:hover {
   background-attachment: fixed;
 }
 
-/* Settings scroll — kein Fade, Inhalt voll sichtbar */
+/* Settings: vertikaler Scroll im App-Container — bei Tab „settings“ pr-0 am Haupt-Wrapper, Innenabstand in SettingsPage + PageHeader */

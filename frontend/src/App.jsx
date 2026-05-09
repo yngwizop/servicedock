@@ -128,6 +128,16 @@ function App() {
     }
   }, [auth.isLoggedIn]);
 
+  /* html hat global overflow-y: scroll; Settings scrollen in der Hauptspalte → sonst zwei Scrollbars */
+  useEffect(() => {
+    const root = document.documentElement;
+    if (activeTab === 'settings' && auth.isLoggedIn) {
+      root.classList.add('sd-settings-scroll-contained');
+      return () => root.classList.remove('sd-settings-scroll-contained');
+    }
+    root.classList.remove('sd-settings-scroll-contained');
+  }, [activeTab, auth.isLoggedIn]);
+
   useEffect(() => {
     if (!auth.isLoggedIn) return;
     fetchIntegrationHealth();
@@ -328,9 +338,13 @@ function App() {
 
       {/* Main Content */}
       {/* pt-3/sm:pt-3.5 = wie Sidebar-Außenpadding → PageHeader bündig mit Glas-Rail der Navbar */}
-      <div className={`${sidebarCollapsed ? 'ml-20' : 'ml-52'} transition-all duration-300 relative z-10 flex flex-col ${activeTab === 'settings' ? 'h-screen overflow-hidden' : 'min-h-screen'} pt-3 sm:pt-3.5 pl-8 md:pl-12 pr-4 md:pr-6 pb-2`}>
+      <div
+        className={`${sidebarCollapsed ? 'ml-20' : 'ml-52'} transition-all duration-300 relative z-10 flex flex-col ${
+          activeTab === 'settings' ? 'h-screen overflow-hidden pr-0' : 'min-h-screen pr-4 md:pr-6'
+        } pt-3 sm:pt-3.5 pl-8 md:pl-12 pb-2`}
+      >
         <PageHeader
-          className={activeTab === 'settings' ? 'shrink-0' : ''}
+          className={activeTab === 'settings' ? 'shrink-0 pr-4 md:pr-6' : ''}
           icon={PageIcon}
           title={pageTitle}
           subtitle={pageSubtitle}
@@ -404,7 +418,7 @@ function App() {
         <div
           className={`${
             activeTab === 'settings'
-              ? 'flex-1 min-h-0 overflow-y-auto [scrollbar-gutter:stable] settings-scroll-fade'
+              ? 'flex-1 min-h-0 overflow-y-auto'
               : 'flex-grow'
           } relative z-[65]`}
         >

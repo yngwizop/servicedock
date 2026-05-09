@@ -83,7 +83,7 @@ function StorageByNodeCard({ storageByNode }) {
                     <div className="mb-1.5 text-xs text-gray-600 dark:text-gray-400">
                         {node.storages.length} Storage{node.storages.length !== 1 ? 's' : ''}
                       </div>
-                      <div className="-mx-0.5 flex min-h-[1.75rem] flex-nowrap gap-1 overflow-x-auto overflow-y-hidden px-0.5 pb-0.5 [scrollbar-width:thin]">
+                      <div className="-mx-0.5 flex min-h-[1.75rem] flex-nowrap gap-1 overflow-x-auto overflow-y-hidden px-0.5 pb-0.5">
                         {node.storages.map((storage) => (
                           <span
                             key={storage.storage}

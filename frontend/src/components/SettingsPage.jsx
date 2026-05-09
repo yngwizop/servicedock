@@ -224,7 +224,7 @@ function SettingsPage({
 
   // Shell: hell = lesbar; dunkel = Slate-Glas (weniger „reines Schwarz“), weiterhin blur
   const settingsShell =
-    'rounded-3xl overflow-hidden border border-white/28 dark:border-white/[0.07] night:border-white/[0.05] ' +
+    'overflow-hidden rounded-3xl border border-white/28 dark:border-white/[0.07] night:border-white/[0.05] ' +
     'bg-gradient-to-br from-white/[0.78] via-white/[0.65] to-white/[0.55] ' +
     'dark:from-slate-900/55 dark:via-slate-800/48 dark:to-slate-900/52 ' +
     'night:from-sd-night-900/92 night:via-sd-night-950/78 night:to-sd-night-900/95 ' +
@@ -233,7 +233,7 @@ function SettingsPage({
   const rowDivider = 'lg:divide-x lg:divide-white/18 dark:lg:divide-white/[0.06]';
 
   return (
-    <div className="w-full max-w-none pb-2">
+    <div className="w-full max-w-none pb-2 pr-4 md:pr-6">
       <div className={settingsShell}>
         {/* Mobile: Sub-Nav oben in der Shell */}
         <nav
