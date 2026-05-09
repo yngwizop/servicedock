@@ -1,24 +1,39 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CheckCircle } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
+import {
+  clearProxmoxMonitoringPrefs,
+  getProxmoxRefreshInterval,
+  getProxmoxTaskHours,
+  getProxmoxTopItems,
+  setProxmoxMonitoringPrefs,
+} from '../../utils/proxmoxDashboardPrefs';
 
 /**
  * Card für Proxmox Dashboard-Einstellungen (für Modal)
  */
-function ProxmoxDashboardSettingsCard({ onClose }) {
+function ProxmoxDashboardSettingsCard({ activeDashboard, onClose }) {
   const { t } = useTranslation();
-  const [settings, setSettings] = useState({
-    autoRefreshInterval: parseInt(localStorage.getItem('proxmox_refresh_interval') || '30'),
-    topItemsCount: parseInt(localStorage.getItem('proxmox_top_items') || '10'),
-    taskTimeRange: parseInt(localStorage.getItem('proxmox_task_hours') || '48')
+
+  const readDefaults = () => ({
+    autoRefreshInterval: getProxmoxRefreshInterval(activeDashboard),
+    topItemsCount: getProxmoxTopItems(activeDashboard),
+    taskTimeRange: getProxmoxTaskHours(activeDashboard),
   });
+
+  const [settings, setSettings] = useState(() => readDefaults());
   const [saveStatus, setSaveStatus] = useState('');
 
+  useEffect(() => {
+    setSettings(readDefaults());
+  }, [activeDashboard]);
+
   const handleSave = () => {
-    // Speichere in localStorage
-    localStorage.setItem('proxmox_refresh_interval', settings.autoRefreshInterval.toString());
-    localStorage.setItem('proxmox_top_items', settings.topItemsCount.toString());
-    localStorage.setItem('proxmox_task_hours', settings.taskTimeRange.toString());
+    setProxmoxMonitoringPrefs(activeDashboard, {
+      autoRefreshInterval: settings.autoRefreshInterval,
+      topItemsCount: settings.topItemsCount,
+      taskTimeRange: settings.taskTimeRange,
+    });
     
     setSaveStatus('success');
     setTimeout(() => setSaveStatus(''), 1500);
@@ -42,9 +57,7 @@ function ProxmoxDashboardSettingsCard({ onClose }) {
     };
     
     setSettings(defaults);
-    localStorage.removeItem('proxmox_refresh_interval');
-    localStorage.removeItem('proxmox_top_items');
-    localStorage.removeItem('proxmox_task_hours');
+    clearProxmoxMonitoringPrefs(activeDashboard);
     
     setSaveStatus('reset');
     setTimeout(() => setSaveStatus(''), 1500);

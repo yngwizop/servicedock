@@ -1,5 +1,6 @@
 import { authenticatedFetch } from './auth';
 import { BACKEND_URL } from './backendUrl';
+import { getProxmoxTaskHours, getProxmoxTopItems } from './proxmoxDashboardPrefs';
 
 const emptyVmBundle = () => ({
   ok: false,
@@ -76,8 +77,8 @@ export async function fetchProxmoxVmBundle(dashboardId) {
 export async function fetchProxmoxClusterStatsPrefetch(dashboardId) {
   const id = String(dashboardId);
   try {
-    const topItems = parseInt(localStorage.getItem('proxmox_top_items') || '10', 10);
-    const taskHours = parseInt(localStorage.getItem('proxmox_task_hours') || '48', 10);
+    const topItems = getProxmoxTopItems(dashboardId);
+    const taskHours = getProxmoxTaskHours(dashboardId);
     const statsUrl = `${BACKEND_URL}/api/proxmox/cluster-stats?dashboard_id=${id}&top_n=${topItems}&task_hours=${taskHours}`;
     const statsRes = await authenticatedFetch(statsUrl);
     if (!statsRes.ok) return null;

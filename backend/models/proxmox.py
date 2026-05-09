@@ -160,6 +160,32 @@ class CephHealth(BaseModel):
 
 
 # ========================================
+# Cluster Compute (nur Hypervisor-Nodes)
+# ========================================
+
+
+class ClusterComputeAggregate(BaseModel):
+    """Summe physische CPU/RAM über alle online-Nodes (keine Gast-Doppelzählung)."""
+
+    cpu_percent: float = 0.0
+    ram_percent: float = 0.0
+    cpu_used_cores: float = 0.0
+    cpu_total_cores: int = 0
+    ram_used_bytes: int = 0
+    ram_total_bytes: int = 0
+    nodes_online: int = 0
+
+
+class TopNodeLoad(BaseModel):
+    """Node mit höchster gewichteter Last (CPU/RAM)."""
+
+    node: str
+    cpu_percent: float = 0.0
+    memory_percent: float = 0.0
+    load_score: float = 0.0
+
+
+# ========================================
 # ClusterStats erweitert
 # ========================================
 
@@ -180,3 +206,7 @@ class ClusterStats(BaseModel):
     storage_by_type: List[StorageByType] = []
     # NEU: Ceph-Daten
     ceph: Optional[CephHealth] = None
+    # Compute-Pool (nur Nodes) + Top-Node-Indikator
+    compute_cluster: Optional[ClusterComputeAggregate] = None
+    top_node: Optional[TopNodeLoad] = None
+    top_node_memory: Optional[TopNodeLoad] = None  # Nur wenn von top_node abweichend (RAM-Spitze)

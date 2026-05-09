@@ -11,6 +11,8 @@ function StatCard({
   children, 
   className = "", 
   compact = false,
+  bodyScrollable = true,
+  bodyClassName = '',
   ...props 
 }) {
   return (
@@ -45,7 +47,11 @@ function StatCard({
       </div>
 
       {/* min-h-0: Flex-Kind darf schrumpfen; overflow-y-auto bei manuell verkleinerter Rasterhöhe */}
-      <div className="flex-1 min-h-0 flex flex-col text-gray-700 dark:text-gray-200 overflow-y-auto overflow-x-hidden">
+      <div
+        className={`flex-1 min-h-0 flex flex-col overflow-x-hidden text-gray-700 dark:text-gray-200 ${
+          bodyScrollable ? 'overflow-y-auto' : 'overflow-y-hidden'
+        } ${bodyClassName}`.trim()}
+      >
         {children}
       </div>
     </div>

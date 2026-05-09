@@ -33,29 +33,30 @@ function StorageByNodeCard({ storageByNode }) {
   };
 
   return (
-    <StatCard 
+    <StatCard
       title="Storage per Node"
       icon={<HardDrives size={28} weight="duotone" />}
+      bodyScrollable={false}
     >
       {storageByNode && storageByNode.length > 0 ? (
-        <div className="space-y-2">
-            {storageByNode.map((node, index) => {
+        <div className="space-y-2 min-h-0 min-w-0">
+            {storageByNode.map((node) => {
               const percent = node.percent || 0;
               
               return (
                 <div 
                   key={node.node}
-                  className="p-2.5 rounded-lg bg-white/5 dark:bg-white/[0.03] sd-night-faint-flat hover:bg-white/10 dark:hover:bg-white/5 night:hover:bg-sd-night-700/90 transition-colors"
+                  className="p-2.5 rounded-lg bg-white/5 dark:bg-white/[0.03] sd-night-faint-flat hover:bg-white/10 dark:hover:bg-white/5 night:hover:bg-sd-night-700/90 transition-colors min-w-0"
                 >
                   {/* Node Header */}
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-2 mb-1 min-w-0">
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
                     <Monitor size={22} weight="duotone" className="shrink-0 text-gray-600 dark:text-gray-400" />
-                    <span className="text-base font-semibold text-gray-800 dark:text-white">
+                    <span className="truncate text-base font-semibold text-gray-800 dark:text-white">
                       {node.node}
                     </span>
                   </div>
-                  <div className={`text-base font-bold ${getTextColor(percent)}`}>
+                  <div className={`shrink-0 text-base font-bold tabular-nums ${getTextColor(percent)}`}>
                     {percent.toFixed(1)}%
                   </div>
                 </div>
@@ -71,22 +72,22 @@ function StorageByNodeCard({ storageByNode }) {
                   </div>
 
                   {/* Stats */}
-                  <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-                    <span>{formatBytes(node.used)} used</span>
-                    <span>{formatBytes(node.total)} total</span>
+                  <div className="grid min-w-0 grid-cols-2 gap-x-2 text-xs text-gray-600 dark:text-gray-400">
+                    <span className="truncate whitespace-nowrap">{formatBytes(node.used)} used</span>
+                    <span className="truncate whitespace-nowrap text-right">{formatBytes(node.total)} total</span>
                   </div>
 
-                  {/* Storage Details (collapsible) */}
+                  {/* Storage Details — ein Zeile Tags + horizontal scrollen statt Wrap (verhindert Höhen-Sprung) */}
                   {node.storages && node.storages.length > 0 && (
-                  <div className="mt-1 pt-1.5 border-t border-gray-300/30 dark:border-white/10">
-                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-1.5">
+                  <div className="mt-1 min-w-0 border-t border-gray-300/30 pt-1.5 dark:border-white/10">
+                    <div className="mb-1.5 text-xs text-gray-600 dark:text-gray-400">
                         {node.storages.length} Storage{node.storages.length !== 1 ? 's' : ''}
                       </div>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="-mx-0.5 flex min-h-[1.75rem] flex-nowrap gap-1 overflow-x-auto overflow-y-hidden px-0.5 pb-0.5 [scrollbar-width:thin]">
                         {node.storages.map((storage) => (
                           <span
                             key={storage.storage}
-                            className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                            className="inline-flex shrink-0 items-center whitespace-nowrap rounded px-2 py-0.5 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
                             title={`${storage.storage} (${storage.type})`}
                           >
                             {storage.storage}

@@ -7,6 +7,11 @@ import 'react-resizable/css/styles.css';
 import '../styles/grid-layout.css';
 import { authenticatedFetch } from '../utils/auth';
 import { BACKEND_URL } from '../utils/backendUrl';
+import {
+  getProxmoxRefreshInterval,
+  getProxmoxTaskHours,
+  getProxmoxTopItems,
+} from '../utils/proxmoxDashboardPrefs';
 import NodeStatusCard from './stats/NodeStatusCard';
 import VMStatusCard from './stats/VMStatusCard';
 import TopUsageCard from './stats/TopUsageCard';
@@ -17,6 +22,7 @@ import StorageByNodeCard from './stats/StorageByNodeCard';
 import StorageByTypeCard from './stats/StorageByTypeCard';
 import CephHealthCard from './stats/CephHealthCard';
 import CephOSDCard from './stats/CephOSDCard';
+import ClusterComputeCard from './stats/ClusterComputeCard';
 import CardVisibilityPanel, { CARD_DEFINITIONS, loadVisibleCards, saveVisibleCardsLocal, getDefaultVisibleCards } from './stats/CardVisibilityPanel';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -53,13 +59,24 @@ function ProxmoxStatusDashboard({
   const savedLayoutRef = useRef(null); // Baseline zum Vergleich ob User wirklich was geändert hat
   const cephAutoDetected = useRef(false);
 
-  // Card Visibility State — null = noch nicht initialisiert (Auto-Detect)
+  // Card Visibility State — pro Dashboard (localStorage + Backend)
   const [visibleCards, setVisibleCards] = useState(() => {
-    const saved = loadVisibleCards();
-    // null = noch nie konfiguriert, wird nach erstem fetchStats gesetzt
-    return saved || CARD_DEFINITIONS.map(c => c.id);
+    const saved = loadVisibleCards(activeDashboard);
+    return saved ?? CARD_DEFINITIONS.map((c) => c.id);
   });
-  const hasUserConfigured = useRef(loadVisibleCards() !== null);
+  const hasUserConfigured = useRef(loadVisibleCards(activeDashboard) !== null);
+
+  useEffect(() => {
+    if (!activeDashboard) return;
+    const saved = loadVisibleCards(activeDashboard);
+    if (saved != null) {
+      setVisibleCards(saved);
+      hasUserConfigured.current = true;
+    } else {
+      hasUserConfigured.current = false;
+      setVisibleCards(CARD_DEFINITIONS.map((c) => c.id));
+    }
+  }, [activeDashboard]);
 
   // Dynamische Card-Höhen: aus geschätzter Inhaltshöhe (px) → Grid-h
   // RGL: Höhe = rowHeight*h + marginY*(h-1) = 75*h + 20*(h-1) = 95*h - 20
@@ -138,8 +155,8 @@ function ProxmoxStatusDashboard({
   };
   
   // Berechne Card-Höhe basierend auf Top-Items-Anzahl
-  const getTopCardHeight = () => {
-    const topItems = parseInt(localStorage.getItem('proxmox_top_items') || '10');
+  const getTopCardHeight = (dashboardId) => {
+    const topItems = getProxmoxTopItems(dashboardId);
     // Pixel-basierte Höhen (bei rowHeight=75px):
     // Top 5: 400px → h: 6 (450px)
     // Top 10: 720px → h: 10 (750px)
@@ -153,7 +170,7 @@ function ProxmoxStatusDashboard({
 
   // Default Layout: 4-Spalten-Grid mit dynamischer Höhe
   const getDefaultLayout = () => {
-    const topCardHeight = getTopCardHeight();
+    const topCardHeight = getTopCardHeight(activeDashboard);
     return [
       // Zeile 1–2: Status Cards (Default je 2 Spalten breit, min 1; Höhe Default = min, +1 Raster möglich)
       { i: 'nodes', x: 0, y: 0, w: 2, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 4 },
@@ -161,18 +178,21 @@ function ProxmoxStatusDashboard({
       { i: 'lxcs', x: 0, y: 3, w: 2, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 4 },
       { i: 'tasks', x: 2, y: 3, w: 2, h: 3, minW: 1, maxW: 4, minH: 3, maxH: 4 },
 
-      // Top Usage (y nach zwei Status-Zeilen à h:3)
-      { i: 'top-cpu', x: 0, y: 7, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: topCardHeight, maxH: topCardHeight, resizeHandles: RESIZE_WIDTH_ONLY },
-      { i: 'top-memory', x: 1, y: 7, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: topCardHeight, maxH: topCardHeight, resizeHandles: RESIZE_WIDTH_ONLY },
+      // Compute-Pool (volle Breite unter Status-Zeilen)
+      { i: 'compute-cluster', x: 0, y: 6, w: 4, h: 4, minW: 1, maxW: 4, minH: 4, maxH: 6, resizeHandles: RESIZE_WIDTH_ONLY },
 
-      { i: 'top-disk', x: 2, y: 7 + topCardHeight, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: topCardHeight, maxH: topCardHeight, resizeHandles: RESIZE_WIDTH_ONLY },
-      { i: 'storage-total', x: 3, y: 7 + topCardHeight, w: 1, h: 4, minW: 1, maxW: 4, minH: 4, maxH: 7 },
+      // Top Usage (unter Compute-Karte)
+      { i: 'top-cpu', x: 0, y: 10, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: topCardHeight, maxH: topCardHeight, resizeHandles: RESIZE_WIDTH_ONLY },
+      { i: 'top-memory', x: 1, y: 10, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: topCardHeight, maxH: topCardHeight, resizeHandles: RESIZE_WIDTH_ONLY },
+
+      { i: 'top-disk', x: 2, y: 10 + topCardHeight, w: 1, h: topCardHeight, minW: 1, maxW: 2, minH: topCardHeight, maxH: topCardHeight, resizeHandles: RESIZE_WIDTH_ONLY },
+      { i: 'storage-total', x: 3, y: 10 + topCardHeight, w: 1, h: 4, minW: 1, maxW: 4, minH: 4, maxH: 7 },
       
-      { i: 'storage-by-node', x: 0, y: 12 + topCardHeight, w: 2, h: 6, minW: 1, maxW: 4, minH: 3, maxH: 6, resizeHandles: RESIZE_WIDTH_ONLY },
-      { i: 'storage-by-type', x: 2, y: 12 + topCardHeight, w: 2, h: 6, minW: 1, maxW: 4, minH: 3, maxH: 6, resizeHandles: RESIZE_WIDTH_ONLY },
+      { i: 'storage-by-node', x: 0, y: 15 + topCardHeight, w: 2, h: 6, minW: 1, maxW: 4, minH: 3, maxH: 6, resizeHandles: RESIZE_WIDTH_ONLY },
+      { i: 'storage-by-type', x: 2, y: 15 + topCardHeight, w: 2, h: 6, minW: 1, maxW: 4, minH: 3, maxH: 6, resizeHandles: RESIZE_WIDTH_ONLY },
       
-      { i: 'ceph-health', x: 0, y: 19 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 4, maxH: 7 },
-      { i: 'ceph-osd', x: 2, y: 19 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 5, maxH: 10 }
+      { i: 'ceph-health', x: 0, y: 22 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 4, maxH: 7 },
+      { i: 'ceph-osd', x: 2, y: 22 + topCardHeight, w: 2, h: 5, minW: 1, maxW: 4, minH: 5, maxH: 10 }
     ];
   };
   
@@ -186,7 +206,7 @@ function ProxmoxStatusDashboard({
 
   // Save visible cards to backend + localStorage cache
   const saveVisibleCards = async (cardIds) => {
-    saveVisibleCardsLocal(cardIds); // sofortiger lokaler Cache
+    saveVisibleCardsLocal(cardIds, activeDashboard); // sofortiger lokaler Cache (pro Dashboard)
     try {
       await authenticatedFetch(
         `${BACKEND_URL}/api/dashboards/${activeDashboard}/proxmox-visible-cards`,
@@ -211,7 +231,7 @@ function ProxmoxStatusDashboard({
         const data = await res.json();
         if (data.visible_cards && Array.isArray(data.visible_cards)) {
           setVisibleCards(data.visible_cards);
-          saveVisibleCardsLocal(data.visible_cards);
+          saveVisibleCardsLocal(data.visible_cards, activeDashboard);
           hasUserConfigured.current = true;
           return true; // Loaded from backend
         }
@@ -248,8 +268,8 @@ function ProxmoxStatusDashboard({
     if (resetLoading) setLoading(true);
     if (!silent) setError(null);
     try {
-      const topItems = parseInt(localStorage.getItem('proxmox_top_items') || '10', 10);
-      const taskHours = parseInt(localStorage.getItem('proxmox_task_hours') || '48', 10);
+      const topItems = getProxmoxTopItems(activeDashboard);
+      const taskHours = getProxmoxTaskHours(activeDashboard);
       const res = await authenticatedFetch(
         `${BACKEND_URL}/api/proxmox/cluster-stats?dashboard_id=${activeDashboard}&top_n=${topItems}&task_hours=${taskHours}`
       );
@@ -287,7 +307,7 @@ function ProxmoxStatusDashboard({
         const data = await res.json();
         if (data.layout && Array.isArray(data.layout)) {
           // Update top card heights dynamically based on current settings
-          const topCardHeight = getTopCardHeight();
+          const topCardHeight = getTopCardHeight(activeDashboard);
           const defaultLayout = getDefaultLayout();
           
           // Merge: Keep saved positions but add missing cards from default layout
@@ -308,6 +328,7 @@ function ProxmoxStatusDashboard({
               'vms',
               'lxcs',
               'tasks',
+              'compute-cluster',
             ];
             const savedH = resizableHeightCards.includes(item.i)
               ? Math.min(Math.max(item.h, defaultItem.minH), defaultItem.maxH)
@@ -392,6 +413,8 @@ function ProxmoxStatusDashboard({
       setLoading(true);
       setStats(null);
       layoutModifiedRef.current = false;
+      // Pro Dashboard einmal Ceph-Sichtbarkeit aus aktuellen Stats ableiten (hasUserConfigured bleibt: LS/Backend)
+      cephAutoDetected.current = false;
     }
     layoutInitialized.current = false;
     void fetchStats({ silent: false });
@@ -521,7 +544,7 @@ function ProxmoxStatusDashboard({
   // Update layout when top items setting changes
   useEffect(() => {
     const handleSettingsChange = () => {
-      const newHeight = getTopCardHeight();
+      const newHeight = getTopCardHeight(activeDashboard);
       setLayout(currentLayout => {
         const updated = currentLayout.map(item => {
           if (item.i === 'top-cpu' || item.i === 'top-memory' || item.i === 'top-disk') {
@@ -535,14 +558,13 @@ function ProxmoxStatusDashboard({
 
     window.addEventListener('proxmox-settings-changed', handleSettingsChange);
     return () => window.removeEventListener('proxmox-settings-changed', handleSettingsChange);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeDashboard]);
 
   // Auto-refresh mit konfigurierbarem Intervall
   useEffect(() => {
     if (!autoRefresh || !isLoggedIn) return;
 
-    const refreshInterval = parseInt(localStorage.getItem('proxmox_refresh_interval') || '30') * 1000;
+    const refreshInterval = getProxmoxRefreshInterval(activeDashboard) * 1000;
     const interval = setInterval(() => {
       fetchStats();
     }, refreshInterval);
@@ -564,7 +586,8 @@ function ProxmoxStatusDashboard({
   };
 
   const handleShowAll = () => {
-    const allIds = CARD_DEFINITIONS.map(c => c.id);
+    const cephAvailable = stats?.ceph?.available === true;
+    const allIds = getDefaultVisibleCards(cephAvailable);
     setVisibleCards(allIds);
     saveVisibleCards(allIds);
     hasUserConfigured.current = true;
@@ -618,6 +641,16 @@ function ProxmoxStatusDashboard({
       
       case 'tasks':
         return <TaskSummaryCard key="tasks" stats={stats.tasks} />;
+
+      case 'compute-cluster':
+        return (
+          <ClusterComputeCard
+            key="compute-cluster"
+            computeCluster={stats.compute_cluster}
+            topNode={stats.top_node}
+            topNodeMemory={stats.top_node_memory}
+          />
+        );
       
       case 'top-cpu':
         return (
@@ -806,7 +839,7 @@ function ProxmoxStatusDashboard({
               className="w-3.5 h-3.5 rounded border-gray-400 dark:border-white/30 text-blue-500 focus:ring-blue-500/30"
             />
             <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
-              Auto-Refresh ({parseInt(localStorage.getItem('proxmox_refresh_interval') || '30')}s)
+              Auto-Refresh ({getProxmoxRefreshInterval(activeDashboard)}s)
             </span>
           </label>
           

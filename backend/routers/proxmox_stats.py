@@ -6,6 +6,7 @@ from typing import List
 
 from routers.proxmox import get_proxmox_connection
 from models.proxmox import ClusterStats, NodeSummary, ResourceSummary, TopUsageItem, TaskSummary
+from cluster_compute import aggregate_cluster_compute
 from core.logging import logger
 from core.audit import log_audit
 from core.limiter import limiter
@@ -35,6 +36,7 @@ def get_cluster_stats(
     - Top 10 CPU-Auslastung (Nodes + VMs/LXCs)
     - Top 10 Memory-Auslastung (Nodes + VMs/LXCs)
     - Task-Zusammenfassung (failed/running/success)
+    - compute_cluster / top_node: aggregierte Host-CPU/RAM und „heißester“ Node
     """
     client_ip = get_client_ip(request)
     proxmox, configured_node, is_cluster = get_proxmox_connection(dashboard_id)
@@ -63,6 +65,7 @@ def get_cluster_stats(
         )
         
         all_usage_items: List[TopUsageItem] = []
+        compute_node_rows: List[dict] = []
 
         # ========================================
         # CLUSTER-MODUS
@@ -71,16 +74,13 @@ def get_cluster_stats(
             # Clustername abrufen
             try:
                 cluster_status = proxmox.cluster.status.get()
+                # Nur Clustername — Node-Zählung kommt ausschließlich aus cluster.resources
+                # (vermeidet Doppelzählung; resources berücksichtigt zudem configured_node).
                 for item in cluster_status:
                     if item.get('type') == 'cluster':
                         stats.cluster_name = item.get('name', 'Cluster')
-                        break
-                    elif item.get('type') == 'node':
-                        stats.nodes.total += 1
-                        if item.get('online', 0) == 1:
-                            stats.nodes.online += 1
-                        else:
-                            stats.nodes.offline += 1
+                if not stats.cluster_name:
+                    stats.cluster_name = 'Cluster'
             except Exception as e:
                 logger.warning(f"Could not fetch cluster status: {e}")
                 stats.cluster_name = "Cluster"
@@ -201,7 +201,21 @@ def get_cluster_stats(
                             disk_total=maxdisk,
                             status=node_status
                         ))
-                
+
+                        if node_name:
+                            compute_node_rows.append({
+                                'node': node_name,
+                                'online': node_status == 'online',
+                                'cpu': float(cpu or 0),
+                                'maxcpu': int(maxcpu or 0),
+                                'mem': int(mem or 0),
+                                'maxmem': int(maxmem or 0),
+                            })
+
+                stats.compute_cluster, stats.top_node, stats.top_node_memory = (
+                    aggregate_cluster_compute(compute_node_rows)
+                )
+
             except Exception as e:
                 logger.error(f"Failed to fetch cluster resources: {e}")
                 raise HTTPException(
@@ -307,6 +321,15 @@ def get_cluster_stats(
                             disk_total=disk_total,
                             status='online' if node_status_str == 'online' else 'offline'
                         ))
+
+                        compute_node_rows.append({
+                            'node': node_name,
+                            'online': node_status_str == 'online',
+                            'cpu': float(cpu or 0),
+                            'maxcpu': int(cpu_cores or 0),
+                            'mem': int(mem_used or 0),
+                            'maxmem': int(mem_total or 0),
+                        })
                     except Exception as e:
                         logger.error(f"Error fetching node stats from {node_name}: {e}")
                     
@@ -424,6 +447,10 @@ def get_cluster_stats(
                         logger.warning(f"Could not fetch tasks from {node_name}: {e}")
                 
                 stats.tasks.by_node.sort(key=lambda x: (x.node or "").lower())
+
+                stats.compute_cluster, stats.top_node, stats.top_node_memory = (
+                    aggregate_cluster_compute(compute_node_rows)
+                )
 
                 # Server-Name setzen
                 if nodes and len(nodes) > 0:

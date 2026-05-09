@@ -133,7 +133,10 @@ function ProxmoxTab({
           </div>
         }
       >
-        <ProxmoxDashboardSettingsCard onClose={() => setShowDashboardModal(false)} />
+        <ProxmoxDashboardSettingsCard
+          activeDashboard={activeDashboard}
+          onClose={() => setShowDashboardModal(false)}
+        />
       </SettingsModalShell>
     </div>
   );

@@ -12,6 +12,7 @@ export const CARD_DEFINITIONS = [
   { id: 'lxcs', category: 'status', labelKey: 'statusDashboard.card_lxcs' },
   { id: 'tasks', category: 'status', labelKey: 'statusDashboard.card_tasks' },
   // Usage
+  { id: 'compute-cluster', category: 'usage', labelKey: 'statusDashboard.card_compute_cluster' },
   { id: 'top-cpu', category: 'usage', labelKey: 'statusDashboard.card_top_cpu' },
   { id: 'top-memory', category: 'usage', labelKey: 'statusDashboard.card_top_memory' },
   { id: 'top-disk', category: 'usage', labelKey: 'statusDashboard.card_top_disk' },
@@ -34,28 +35,7 @@ const CATEGORIES = [
   { id: 'ceph', labelKey: 'statusDashboard.category_ceph' },
 ];
 
-const STORAGE_KEY = 'proxmox_visible_cards';
-
-/**
- * Lade sichtbare Cards aus localStorage (Fallback/Cache).
- * null = noch nie konfiguriert (Auto-Detect soll greifen)
- */
-export function loadVisibleCards() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch (e) {
-    console.error('Error loading visible cards:', e);
-  }
-  return null; // null = Auto-Detect
-}
-
-/**
- * Speichere sichtbare Cards in localStorage (als Cache)
- */
-export function saveVisibleCardsLocal(cardIds) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(cardIds));
-}
+export { loadVisibleCards, saveVisibleCardsLocal } from '../../utils/proxmoxDashboardPrefs';
 
 /**
  * Berechne Default-Sichtbarkeit basierend auf Ceph-Verfügbarkeit
