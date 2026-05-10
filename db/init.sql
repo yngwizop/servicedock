@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS proxmox_config (
     is_cluster BOOLEAN DEFAULT FALSE,  -- NEU: Ist es ein Cluster?
     token_created_at TIMESTAMP DEFAULT NOW(),  -- NEU: Wann wurde Token erstellt
     token_last_rotated TIMESTAMP,               -- NEU: Letzte Rotation
+    updated_at TIMESTAMP DEFAULT NOW(),
     dashboard_id INT DEFAULT 1,                 -- Multi-Dashboard Support
     UNIQUE(dashboard_id)                        -- Pro Dashboard nur eine Proxmox-Config
 );
@@ -172,7 +173,8 @@ CREATE TABLE IF NOT EXISTS dashboards (
     type TEXT DEFAULT 'dashboard',
     is_active BOOLEAN DEFAULT TRUE,
     show_proxmox BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- NEU: Dashboard-Zuordnung für Services, Shortcuts, Proxmox

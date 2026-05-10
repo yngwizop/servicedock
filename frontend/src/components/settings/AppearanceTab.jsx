@@ -231,10 +231,10 @@ function AppearanceTab({
             type="button"
             onClick={onSaveAppearance}
             disabled={isSavingAppearance}
-            className={`w-full py-3 px-4 rounded-xl font-semibold text-white shadow-lg transition-all duration-200 ${
+            className={`inline-flex min-w-[9rem] items-center justify-center py-2.5 px-5 rounded-lg text-sm font-semibold text-white shadow-sm transition-colors duration-200 ${
               showSaved
-                ? 'bg-green-600'
-                : 'bg-blue-600 hover:bg-blue-700 hover:shadow-xl hover:scale-[1.01]'
+                ? 'bg-emerald-600/90 hover:bg-emerald-600'
+                : 'bg-blue-500/90 hover:bg-blue-600'
             } ${isSavingAppearance ? 'opacity-70 cursor-wait' : ''}`}
           >
             {isSavingAppearance ? t('common.saving') : showSaved ? `✓ ${t('common.saved')}` : t('common.save')}

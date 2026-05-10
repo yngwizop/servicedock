@@ -1,5 +1,18 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  CaretLeft,
+  DownloadSimple,
+  UploadSimple,
+  SquaresFour,
+  Package,
+  LinkSimple,
+  Warning,
+  Lightbulb,
+  CircleNotch,
+  XCircle,
+  CheckCircle,
+} from 'phosphor-react';
 import { authenticatedFetch } from '../../utils/auth';
 
 function ConfigAddon({ 
@@ -33,7 +46,7 @@ function ConfigAddon({
           onClick={handleClose}
           className="flex items-center gap-2 px-4 py-2 mb-4 bg-white/70 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/10 rounded-xl transition-all text-gray-700 dark:text-gray-300 font-medium shadow-lg"
         >
-          <span className="text-xl">←</span>
+          <CaretLeft size={20} weight="bold" className="shrink-0" aria-hidden />
           {t('configAddon.back')}
         </button>
       )}
@@ -41,8 +54,10 @@ function ConfigAddon({
       <div className="space-y-6">
         {/* Export Section */}
         <div className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-blue-500/50 dark:border-blue-500/40">
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <span className="text-2xl">📥</span>
+          <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/15 dark:bg-blue-400/20 ring-1 ring-blue-500/25 dark:ring-blue-400/15">
+              <DownloadSimple size={20} weight="duotone" className="text-blue-600 dark:text-blue-300" aria-hidden />
+            </span>
             {t('configAddon.export_title')}
           </h3>
           <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
@@ -69,16 +84,19 @@ function ConfigAddon({
                 alert(t('configAddon.export_failed') + err.message);
               }
             }}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+            className="w-full py-2.5 text-sm font-medium bg-blue-500/90 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm inline-flex items-center justify-center gap-2"
           >
+            <DownloadSimple size={20} weight="bold" className="shrink-0" aria-hidden />
             {t('configAddon.export_button')}
           </button>
         </div>
 
         {/* Import Section */}
         <div className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-blue-500/50 dark:border-blue-500/40">
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <span className="text-2xl">📤</span>
+          <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/15 dark:bg-blue-400/20 ring-1 ring-blue-500/25 dark:ring-blue-400/15">
+              <UploadSimple size={20} weight="duotone" className="text-blue-600 dark:text-blue-300" aria-hidden />
+            </span>
             {t('configAddon.import_title')}
           </h3>
 
@@ -98,7 +116,8 @@ function ConfigAddon({
                   className="mt-1 w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
                 />
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <div className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Package size={18} weight="duotone" className="shrink-0 text-blue-600 dark:text-blue-400" aria-hidden />
                     {t('configAddon.mode_append')}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -116,7 +135,8 @@ function ConfigAddon({
                   className="mt-1 w-4 h-4 text-red-600 focus:ring-2 focus:ring-red-500"
                 />
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <div className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Warning size={18} weight="fill" className="shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
                     {t('configAddon.mode_replace')}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -136,7 +156,7 @@ function ConfigAddon({
               <button
                 type="button"
                 onClick={() => document.getElementById('config-file-input').click()}
-                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap"
+                className="px-4 py-2 text-sm font-medium bg-blue-500/90 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm whitespace-nowrap"
               >
                 {t('configAddon.choose_file')}
               </button>
@@ -185,13 +205,23 @@ function ConfigAddon({
           {/* Preview */}
           {importPreview && (
             <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded-xl">
-              <h4 className="font-semibold text-green-900 dark:text-green-300 mb-2">
+              <h4 className="font-semibold text-green-900 dark:text-green-300 mb-2 flex items-center gap-2">
+                <CheckCircle size={20} weight="fill" className="shrink-0 text-green-600 dark:text-green-400" aria-hidden />
                 {t('configAddon.file_valid')}
               </h4>
-              <div className="text-sm text-green-800 dark:text-green-400 space-y-1">
-                <p>📊 <strong>{importPreview.statistics.dashboards}</strong> Dashboard(s)</p>
-                <p>📦 <strong>{importPreview.statistics.services}</strong> Service(s)</p>
-                <p>🔗 <strong>{importPreview.statistics.shortcuts}</strong> Shortcut(s)</p>
+              <div className="text-sm text-green-800 dark:text-green-400 space-y-2">
+                <p className="flex items-center gap-2">
+                  <SquaresFour size={18} weight="duotone" className="shrink-0 text-green-700 dark:text-green-400" aria-hidden />
+                  <span><strong>{importPreview.statistics.dashboards}</strong> Dashboard(s)</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <Package size={18} weight="duotone" className="shrink-0 text-green-700 dark:text-green-400" aria-hidden />
+                  <span><strong>{importPreview.statistics.services}</strong> Service(s)</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <LinkSimple size={18} weight="duotone" className="shrink-0 text-green-700 dark:text-green-400" aria-hidden />
+                  <span><strong>{importPreview.statistics.shortcuts}</strong> Shortcut(s)</span>
+                </p>
                 <p className="mt-2 text-xs">
                   Dashboards: {importPreview.preview.dashboard_names.join(', ')}
                 </p>
@@ -202,7 +232,8 @@ function ConfigAddon({
           {/* Error */}
           {importError && (
             <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-xl">
-              <h4 className="font-semibold text-red-900 dark:text-red-300 mb-2">
+              <h4 className="font-semibold text-red-900 dark:text-red-300 mb-2 flex items-center gap-2">
+                <XCircle size={20} weight="fill" className="shrink-0 text-red-600 dark:text-red-400" aria-hidden />
                 {t('configAddon.file_error')}
               </h4>
               <p className="text-sm text-red-800 dark:text-red-400">{importError}</p>
@@ -212,7 +243,8 @@ function ConfigAddon({
           {/* Success Message */}
           {importSuccess && (
             <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded-xl">
-              <h4 className="font-semibold text-green-900 dark:text-green-300 mb-2">
+              <h4 className="font-semibold text-green-900 dark:text-green-300 mb-2 flex items-center gap-2">
+                <CheckCircle size={20} weight="fill" className="shrink-0 text-green-600 dark:text-green-400" aria-hidden />
                 {t('configAddon.import_success')}
               </h4>
               <p className="text-sm text-green-800 dark:text-green-400">
@@ -279,20 +311,36 @@ function ConfigAddon({
               }
             }}
             disabled={!importFile || !importPreview || isImporting}
-            className={`w-full py-3 font-semibold rounded-xl transition-all duration-300 shadow-lg ${
+            className={`w-full py-2.5 text-sm font-medium rounded-lg transition-colors shadow-sm inline-flex items-center justify-center gap-2 ${
               !importFile || !importPreview || isImporting
                 ? 'bg-gray-400 cursor-not-allowed text-gray-200'
                 : importMode === 'replace'
-                ? 'bg-red-600 hover:bg-red-700 text-white hover:shadow-xl'
-                : 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-xl'
+                ? 'bg-red-500/90 hover:bg-red-600 text-white'
+                : 'bg-blue-500/90 hover:bg-blue-600 text-white'
             }`}
           >
-            {isImporting ? t('configAddon.importing') : importMode === 'replace' ? t('configAddon.replace_import') : t('configAddon.append_import')}
+            {isImporting ? (
+              <>
+                <CircleNotch size={20} weight="bold" className="animate-spin shrink-0" aria-hidden />
+                {t('configAddon.importing')}
+              </>
+            ) : importMode === 'replace' ? (
+              <>
+                <Warning size={20} weight="fill" className="shrink-0" aria-hidden />
+                {t('configAddon.replace_import')}
+              </>
+            ) : (
+              <>
+                <UploadSimple size={20} weight="bold" className="shrink-0" aria-hidden />
+                {t('configAddon.append_import')}
+              </>
+            )}
           </button>
 
           {/* Info Box */}
           <div className="mt-6 p-4 bg-white/70 dark:bg-white/5 backdrop-blur-sm border border-blue-500/50 dark:border-blue-500/40 rounded-2xl shadow-lg">
-            <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
+            <h5 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+              <Lightbulb size={20} weight="duotone" className="shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
               {t('configAddon.notes_title')}
             </h5>
             <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1 list-disc list-inside">

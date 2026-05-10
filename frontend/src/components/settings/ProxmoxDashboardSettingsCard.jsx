@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle } from 'phosphor-react';
+import { CheckCircle, Timer, ChartBar, CalendarBlank, Lightbulb, Palette } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import {
   clearProxmoxMonitoringPrefs,
@@ -8,11 +8,23 @@ import {
   getProxmoxTopItems,
   setProxmoxMonitoringPrefs,
 } from '../../utils/proxmoxDashboardPrefs';
+import SettingsModalSectionTitle from './SettingsModalSectionTitle';
+
+const choiceBase =
+  'px-4 py-2.5 rounded-xl border font-medium text-sm transition-colors ' +
+  'bg-white/45 dark:bg-white/[0.07] text-gray-900 dark:text-slate-100 ' +
+  'border-gray-300/70 dark:border-white/[0.12] ' +
+  'hover:bg-white/70 dark:hover:bg-white/[0.11] hover:border-gray-400/80 dark:hover:border-white/[0.18]';
+
+const choiceActive =
+  'px-4 py-2.5 rounded-xl border font-medium text-sm transition-colors ' +
+  'bg-blue-500/95 dark:bg-blue-500/90 text-white border-blue-500/90 dark:border-blue-500/80 ' +
+  'shadow-sm shadow-blue-900/10 dark:shadow-black/25';
 
 /**
  * Card für Proxmox Dashboard-Einstellungen (für Modal)
  */
-function ProxmoxDashboardSettingsCard({ activeDashboard, onClose }) {
+function ProxmoxDashboardSettingsCard({ activeDashboard }) {
   const { t } = useTranslation();
 
   const readDefaults = () => ({
@@ -34,14 +46,12 @@ function ProxmoxDashboardSettingsCard({ activeDashboard, onClose }) {
       topItemsCount: settings.topItemsCount,
       taskTimeRange: settings.taskTimeRange,
     });
-    
+
     setSaveStatus('success');
     setTimeout(() => setSaveStatus(''), 1500);
-    
-    // Trigger custom event für Layout-Update
+
     window.dispatchEvent(new CustomEvent('proxmox-settings-changed'));
-    
-    // Trigger page reload um Einstellungen zu übernehmen
+
     setTimeout(() => {
       window.location.reload();
     }, 1000);
@@ -49,148 +59,138 @@ function ProxmoxDashboardSettingsCard({ activeDashboard, onClose }) {
 
   const handleReset = () => {
     if (!window.confirm(t('proxmoxDashboardSettings.reset_confirm'))) return;
-    
+
     const defaults = {
       autoRefreshInterval: 30,
       topItemsCount: 10,
-      taskTimeRange: 48
+      taskTimeRange: 48,
     };
-    
+
     setSettings(defaults);
     clearProxmoxMonitoringPrefs(activeDashboard);
-    
+
     setSaveStatus('reset');
     setTimeout(() => setSaveStatus(''), 1500);
     setTimeout(() => window.location.reload(), 1000);
   };
 
   return (
-    <div className="space-y-6">
-      {/* Settings */}
-      <div className="space-y-6">
-        {/* Auto-Refresh Interval */}
+    <div className="space-y-8">
+      <div className="space-y-8">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+          <SettingsModalSectionTitle icon={Timer} divider>
             {t('proxmoxDashboardSettings.refresh_interval')}
-          </label>
-          <div className="grid grid-cols-4 gap-3">
+          </SettingsModalSectionTitle>
+          <div className="grid grid-cols-4 gap-2 sm:gap-3">
             {[15, 30, 60, 120].map((seconds) => (
               <button
                 key={seconds}
+                type="button"
                 onClick={() => setSettings({ ...settings, autoRefreshInterval: seconds })}
-                className={`px-4 py-3 rounded-xl border-2 font-medium transition-all ${
-                  settings.autoRefreshInterval === seconds
-                    ? 'bg-blue-500 text-white border-blue-500 shadow-lg scale-105'
-                    : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:scale-105'
-                }`}
+                className={settings.autoRefreshInterval === seconds ? choiceActive : choiceBase}
               >
                 {seconds}s
               </button>
             ))}
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+          <p className="text-xs sm:text-sm text-gray-700 dark:text-slate-300 mt-2.5 leading-relaxed">
             {t('proxmoxDashboardSettings.refresh_help')}
           </p>
         </div>
 
-        {/* Top Items Count */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+          <SettingsModalSectionTitle icon={ChartBar} divider>
             {t('proxmoxDashboardSettings.top_items')}
-          </label>
-          <div className="grid grid-cols-4 gap-3">
+          </SettingsModalSectionTitle>
+          <div className="grid grid-cols-4 gap-2 sm:gap-3">
             {[5, 10, 15, 20].map((count) => (
               <button
                 key={count}
+                type="button"
                 onClick={() => setSettings({ ...settings, topItemsCount: count })}
-                className={`px-4 py-3 rounded-xl border-2 font-medium transition-all ${
-                  settings.topItemsCount === count
-                    ? 'bg-blue-500 text-white border-blue-500 shadow-lg scale-105'
-                    : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:scale-105'
-                }`}
+                className={settings.topItemsCount === count ? choiceActive : choiceBase}
               >
                 Top {count}
               </button>
             ))}
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+          <p className="text-xs sm:text-sm text-gray-700 dark:text-slate-300 mt-2.5 leading-relaxed">
             {t('proxmoxDashboardSettings.top_items_help')}
           </p>
         </div>
 
-        {/* Task Time Range */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+          <SettingsModalSectionTitle icon={CalendarBlank} divider>
             {t('proxmoxDashboardSettings.task_range')}
-          </label>
-          <div className="grid grid-cols-3 gap-3">
+          </SettingsModalSectionTitle>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {[
               { hours: 24, label: '24h' },
               { hours: 48, label: '48h' },
-              { hours: 168, label: t('proxmoxDashboardSettings.seven_days') }
+              { hours: 168, label: t('proxmoxDashboardSettings.seven_days') },
             ].map(({ hours, label }) => (
               <button
                 key={hours}
+                type="button"
                 onClick={() => setSettings({ ...settings, taskTimeRange: hours })}
-                className={`px-4 py-3 rounded-xl border-2 font-medium transition-all ${
-                  settings.taskTimeRange === hours
-                    ? 'bg-blue-500 text-white border-blue-500 shadow-lg scale-105'
-                    : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:scale-105'
-                }`}
+                className={settings.taskTimeRange === hours ? choiceActive : choiceBase}
               >
                 {label}
               </button>
             ))}
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+          <p className="text-xs sm:text-sm text-gray-700 dark:text-slate-300 mt-2.5 leading-relaxed">
             {t('proxmoxDashboardSettings.task_range_help')}
           </p>
         </div>
 
-        {/* Card Layout Info */}
-        <div className="bg-blue-50/80 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-4">
-          <p className="text-sm text-blue-800 dark:text-blue-300 leading-relaxed">
-            {t('proxmoxDashboardSettings.card_layout_placeholder')}
-          </p>
+        <div className="rounded-xl border border-blue-400/35 dark:border-blue-400/30 bg-blue-500/[0.08] dark:bg-blue-950/45 px-4 py-3">
+          <div className="flex gap-2.5 items-start">
+            <Palette size={18} weight="duotone" className="shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
+            <p className="text-sm text-blue-950 dark:text-blue-100 leading-relaxed m-0">
+              {t('proxmoxDashboardSettings.card_layout_placeholder')}
+            </p>
+          </div>
         </div>
 
-        {/* Status Message */}
         {saveStatus === 'success' && (
-          <div className="p-4 rounded-xl bg-green-50/80 dark:bg-green-900/20 border border-green-200 dark:border-green-700 text-green-800 dark:text-green-300 text-sm font-medium flex items-center gap-2">
-            <CheckCircle size={18} weight="fill" />
+          <div className="flex items-center gap-2 rounded-xl border border-emerald-400/35 dark:border-emerald-500/25 bg-emerald-500/10 dark:bg-emerald-950/40 px-4 py-3 text-sm font-medium text-emerald-950 dark:text-emerald-100">
+            <CheckCircle size={18} weight="fill" className="shrink-0 text-emerald-600 dark:text-emerald-400" />
             {t('proxmoxDashboardSettings.save_success')}
           </div>
         )}
-        
+
         {saveStatus === 'reset' && (
-          <div className="p-4 rounded-xl bg-blue-50/80 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-300 text-sm font-medium flex items-center gap-2">
-            <CheckCircle size={18} weight="fill" />
+          <div className="flex items-center gap-2 rounded-xl border border-blue-400/35 dark:border-blue-500/25 bg-blue-500/10 dark:bg-blue-950/40 px-4 py-3 text-sm font-medium text-blue-950 dark:text-blue-100">
+            <CheckCircle size={18} weight="fill" className="shrink-0 text-blue-600 dark:text-blue-400" />
             {t('proxmoxDashboardSettings.reset_success')}
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-2">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 pt-1">
           <button
-            onClick={handleSave}
-            className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white font-medium rounded-xl transition-all shadow-lg hover:shadow-xl"
-          >
-            {t('proxmoxDashboardSettings.save_settings')}
-          </button>
-          
-          <button
+            type="button"
             onClick={handleReset}
-            className="py-3 px-4 bg-gray-400 hover:bg-gray-500 dark:bg-gray-600 dark:hover:bg-gray-500 text-white font-medium rounded-xl transition-all shadow-lg hover:shadow-xl"
+            className="inline-flex items-center justify-center py-2 px-4 rounded-lg text-sm font-medium border border-gray-300/80 dark:border-white/[0.14] bg-white/50 dark:bg-white/[0.06] text-gray-900 dark:text-slate-100 hover:bg-white/80 dark:hover:bg-white/[0.1] transition-colors"
           >
             {t('common.reset')}
           </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            className="inline-flex items-center justify-center py-2 px-5 rounded-lg text-sm font-medium bg-blue-500/90 hover:bg-blue-600 text-white shadow-sm transition-colors sm:min-w-[10rem]"
+          >
+            {t('proxmoxDashboardSettings.save_settings')}
+          </button>
         </div>
 
-        {/* Info */}
-        <div className="bg-amber-50/80 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4">
-          <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-            {t('proxmoxDashboardSettings.note')}
-          </p>
+        <div className="rounded-xl border border-amber-400/40 dark:border-amber-500/30 bg-amber-500/[0.09] dark:bg-amber-950/50 px-4 py-3">
+          <div className="flex gap-2.5 items-start">
+            <Lightbulb size={18} weight="duotone" className="shrink-0 mt-0.5 text-amber-700 dark:text-amber-300" />
+            <p className="text-xs sm:text-sm text-amber-950 dark:text-amber-50 leading-relaxed m-0">
+              {t('proxmoxDashboardSettings.note')}
+            </p>
+          </div>
         </div>
       </div>
     </div>

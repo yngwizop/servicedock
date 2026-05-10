@@ -1,4 +1,5 @@
 """Pydantic models for LDAP/Active Directory configuration"""
+from datetime import datetime
 from pydantic import BaseModel, Field, validator
 from typing import Optional
 
@@ -47,6 +48,7 @@ class LdapConfigResponse(BaseModel):
     domain: Optional[str] = None
     admin_group_dn: Optional[str] = None
     viewer_group_dn: Optional[str] = None
+    updated_at: Optional[datetime] = None
 
 
 class LdapTestRequest(BaseModel):

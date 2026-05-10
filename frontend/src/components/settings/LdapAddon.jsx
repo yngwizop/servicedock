@@ -1,6 +1,19 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ShieldCheck, FloppyDisk, Plugs, TestTube, Trash, Eye, EyeSlash } from 'phosphor-react';
+import {
+  ShieldCheck,
+  FloppyDisk,
+  Plugs,
+  TestTube,
+  Trash,
+  Eye,
+  EyeSlash,
+  CheckCircle,
+  XCircle,
+  Check,
+  UsersThree,
+} from 'phosphor-react';
+import SettingsModalSectionTitle from './SettingsModalSectionTitle';
 
 function LdapAddon({
   BACKEND_URL,
@@ -21,7 +34,7 @@ function LdapAddon({
   const [showBindPassword, setShowBindPassword] = useState(false);
 
   const inputClass = "w-full px-3 py-2 text-sm bg-white/70 dark:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all";
-  const labelClass = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1";
+  const labelClass = "block text-sm font-semibold text-gray-800 dark:text-slate-200 mb-1";
 
   // Im Modal-Modus: Content ohne eigenen Container/Header
   const renderContent = () => (
@@ -48,7 +61,7 @@ function LdapAddon({
       {/* Info Box */}
       {!ldapStatus.configured && (
         <div className="p-4 bg-blue-50/80 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-          <h5 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">
+          <h5 className="text-base font-bold text-blue-900 dark:text-blue-100 mb-2">
             {t('ldapAddon.setup_info_title')}
           </h5>
           <p className="text-sm text-blue-700 dark:text-blue-400">
@@ -58,14 +71,13 @@ function LdapAddon({
       )}
 
       {/* Form */}
-      <form onSubmit={handleSaveLdap} className="space-y-5">
+      <form onSubmit={handleSaveLdap} className="space-y-8">
         {/* Server Section */}
         <div className="space-y-4">
-          <h5 className="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider flex items-center gap-2">
-            <Plugs size={16} weight="bold" className="text-blue-500" />
+          <SettingsModalSectionTitle icon={Plugs} divider>
             {t('ldapAddon.section_server')}
-          </h5>
-          
+          </SettingsModalSectionTitle>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <label className={labelClass}>{t('ldapAddon.host')}</label>
@@ -138,11 +150,10 @@ function LdapAddon({
 
         {/* Bind Account Section */}
         <div className="space-y-4">
-          <h5 className="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider flex items-center gap-2">
-            <ShieldCheck size={16} weight="bold" className="text-blue-500" />
+          <SettingsModalSectionTitle icon={ShieldCheck} divider>
             {t('ldapAddon.section_bind')}
-          </h5>
-          
+          </SettingsModalSectionTitle>
+
           <div>
             <label className={labelClass}>{t('ldapAddon.bind_dn')}</label>
             <input
@@ -200,11 +211,10 @@ function LdapAddon({
 
         {/* Group Mapping Section */}
         <div className="space-y-4">
-          <h5 className="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider flex items-center gap-2">
-            <ShieldCheck size={16} weight="bold" className="text-blue-500" />
+          <SettingsModalSectionTitle icon={UsersThree} divider>
             {t('ldapAddon.section_groups')}
-          </h5>
-          
+          </SettingsModalSectionTitle>
+
           <div>
             <label className={labelClass}>{t('ldapAddon.admin_group_dn')}</label>
             <input
@@ -254,10 +264,15 @@ function LdapAddon({
               ? 'bg-green-50/80 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
               : 'bg-red-50/80 dark:bg-red-900/20 border-red-200 dark:border-red-800'
           }`}>
-            <p className={`text-sm font-semibold mb-1 ${
+            <p className={`text-sm font-semibold mb-1 flex items-start gap-2 ${
               testResult.success ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'
             }`}>
-              {testResult.success ? '✅' : '❌'} {testResult.message}
+              {testResult.success ? (
+                <CheckCircle size={20} weight="fill" className="shrink-0 mt-0.5 text-green-600 dark:text-green-400" aria-hidden />
+              ) : (
+                <XCircle size={20} weight="fill" className="shrink-0 mt-0.5 text-red-600 dark:text-red-400" aria-hidden />
+              )}
+              <span>{testResult.message}</span>
             </p>
             {testResult.server && (
               <p className="text-xs text-green-700 dark:text-green-400">
@@ -282,7 +297,7 @@ function LdapAddon({
             type="button"
             onClick={handleTestLdap}
             disabled={isTesting || !ldapConfig.host || !ldapConfig.base_dn}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-amber-500/90 hover:bg-amber-600 text-white transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <TestTube size={18} weight="bold" />
             {isTesting ? t('ldapAddon.testing') : t('ldapAddon.test_button')}
@@ -291,17 +306,21 @@ function LdapAddon({
           <button
             type="submit"
             disabled={isSavingLdap || !ldapConfig.host || !ldapConfig.base_dn}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-blue-500/90 hover:bg-blue-600 text-white transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FloppyDisk size={18} weight="bold" />
-            {ldapSaved ? '✓ ' + t('ldapAddon.saved') : isSavingLdap ? t('ldapAddon.saving') : t('ldapAddon.save_button')}
+            {ldapSaved ? (
+              <Check size={18} weight="bold" className="shrink-0" aria-hidden />
+            ) : (
+              <FloppyDisk size={18} weight="bold" className="shrink-0" aria-hidden />
+            )}
+            {ldapSaved ? t('ldapAddon.saved') : isSavingLdap ? t('ldapAddon.saving') : t('ldapAddon.save_button')}
           </button>
 
           {ldapStatus.configured && (
             <button
               type="button"
               onClick={handleUninstallLdap}
-              className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-red-500 hover:bg-red-600 text-white transition-all shadow-lg hover:shadow-xl ml-auto"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-red-500/90 hover:bg-red-600 text-white transition-colors shadow-sm ml-auto"
             >
               <Trash size={18} weight="bold" />
               {t('ldapAddon.uninstall_button')}

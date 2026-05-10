@@ -22,12 +22,13 @@ async def get_dashboards(request: Request, db = Depends(get_db), _admin = Depend
             query = """
                 SELECT 
                     d.id, d.name, d.description, d.type, d.is_active, d.show_proxmox,
+                    d.updated_at,
                     COUNT(DISTINCT s.id) as service_count,
                     COUNT(DISTINCT sh.id) as shortcut_count
                 FROM dashboards d
                 LEFT JOIN services s ON s.dashboard_id = d.id
                 LEFT JOIN shortcuts sh ON sh.dashboard_id = d.id
-                GROUP BY d.id, d.name, d.description, d.type, d.is_active, d.show_proxmox
+                GROUP BY d.id, d.name, d.description, d.type, d.is_active, d.show_proxmox, d.updated_at
                 ORDER BY d.id ASC;
             """
             cur.execute(query)
@@ -40,8 +41,9 @@ async def get_dashboards(request: Request, db = Depends(get_db), _admin = Depend
                     "type": r[3],
                     "is_active": r[4],
                     "show_proxmox": r[5] if r[5] is not None else True,
-                    "service_count": r[6],
-                    "shortcut_count": r[7]
+                    "updated_at": r[6],
+                    "service_count": r[7],
+                    "shortcut_count": r[8],
                 }
                 for r in rows
             ]
@@ -74,13 +76,14 @@ async def create_dashboard(
                 """
                 SELECT 
                     d.id, d.name, d.description, d.type, d.is_active, d.show_proxmox,
+                    d.updated_at,
                     COUNT(DISTINCT s.id) as service_count,
                     COUNT(DISTINCT sh.id) as shortcut_count
                 FROM dashboards d
                 LEFT JOIN services s ON s.dashboard_id = d.id
                 LEFT JOIN shortcuts sh ON sh.dashboard_id = d.id
                 WHERE d.id = %s
-                GROUP BY d.id, d.name, d.description, d.type, d.is_active, d.show_proxmox;
+                GROUP BY d.id, d.name, d.description, d.type, d.is_active, d.show_proxmox, d.updated_at;
                 """,
                 (new_id,)
             )
@@ -92,8 +95,9 @@ async def create_dashboard(
                 "type": row[3],
                 "is_active": row[4],
                 "show_proxmox": row[5] if row[5] is not None else True,
-                "service_count": row[6],
-                "shortcut_count": row[7]
+                "updated_at": row[6],
+                "service_count": row[7],
+                "shortcut_count": row[8],
             }
         except Exception as e:
             db.rollback()
@@ -118,7 +122,7 @@ async def update_dashboard(
         cur = db.cursor()
         try:
             cur.execute(
-                "UPDATE dashboards SET name=%s, description=%s, type=%s, is_active=%s, show_proxmox=%s WHERE id=%s RETURNING id;",
+                "UPDATE dashboards SET name=%s, description=%s, type=%s, is_active=%s, show_proxmox=%s, updated_at=NOW() WHERE id=%s RETURNING id;",
                 (dashboard.name, dashboard.description, dashboard.type, dashboard.is_active, dashboard.show_proxmox, dashboard_id)
             )
             updated = cur.fetchone()
@@ -192,13 +196,17 @@ async def get_proxmox_layout(
         cur = db.cursor()
         try:
             cur.execute(
-                "SELECT layout FROM proxmox_dashboard_layouts WHERE dashboard_id = %s;",
+                "SELECT layout, updated_at FROM proxmox_dashboard_layouts WHERE dashboard_id = %s;",
                 (dashboard_id,)
             )
             row = cur.fetchone()
             if row:
-                return {"layout": row[0]}
-            return {"layout": None}
+                ts = row[1]
+                return {
+                    "layout": row[0],
+                    "updated_at": ts.isoformat() if ts else None,
+                }
+            return {"layout": None, "updated_at": None}
         finally:
             cur.close()
     

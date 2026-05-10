@@ -58,7 +58,16 @@ function SettingsTopicLayout({
         >
           {children}
         </div>
-        {footer ? <div className="shrink-0">{footer}</div> : null}
+        {footer ? (
+          <div
+            className={
+              'shrink-0 flex flex-wrap items-center justify-end gap-2 rounded-xl border border-gray-300/40 ' +
+              'bg-white/30 px-4 py-3 dark:border-white/10 dark:bg-white/[0.05] sm:px-5 night:border-white/[0.07]'
+            }
+          >
+            {footer}
+          </div>
+        ) : null}
       </div>
     </div>
   );

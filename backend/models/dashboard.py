@@ -1,4 +1,5 @@
 """Dashboard model"""
+from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import Optional
 
@@ -25,3 +26,4 @@ class DashboardResponse(BaseModel):
     service_count: int
     shortcut_count: int
     show_proxmox: bool = True
+    updated_at: Optional[datetime] = None

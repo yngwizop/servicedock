@@ -34,7 +34,7 @@ async def get_ldap_config(
         cursor.execute("""
             SELECT enabled, host, port, use_ssl, use_starttls, base_dn,
                    user_search_base, bind_dn, bind_password, user_attribute,
-                   domain, admin_group_dn, viewer_group_dn
+                   domain, admin_group_dn, viewer_group_dn, updated_at
             FROM ldap_config WHERE id = 1
         """)
         row = cursor.fetchone()
@@ -60,6 +60,7 @@ async def get_ldap_config(
         domain=row[10],
         admin_group_dn=row[11],
         viewer_group_dn=row[12],
+        updated_at=row[13],
     )
 
 
@@ -120,6 +121,15 @@ async def save_ldap_config(
         return final_password
     
     final_password = await run_in_threadpool(_upsert)
+
+    def _fetch_updated_at():
+        c = db.cursor()
+        c.execute("SELECT updated_at FROM ldap_config WHERE id = 1")
+        r = c.fetchone()
+        c.close()
+        return r[0] if r else None
+
+    ldap_updated_at = await run_in_threadpool(_fetch_updated_at)
     
     # Cache invalidieren
     invalidate_ldap_cache()
@@ -148,6 +158,7 @@ async def save_ldap_config(
         domain=config.domain,
         admin_group_dn=config.admin_group_dn,
         viewer_group_dn=config.viewer_group_dn,
+        updated_at=ldap_updated_at,
     )
 
 

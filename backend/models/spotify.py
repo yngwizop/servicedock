@@ -35,6 +35,7 @@ class SpotifyConfigResponse(BaseModel):
     client_id: Optional[str] = Field(None, description="Client ID (sichtbar)")
     redirect_uri: Optional[str] = Field(None, description="Redirect URI")
     token_expires_at: Optional[datetime] = Field(None, description="Token Ablaufzeit")
+    updated_at: Optional[datetime] = Field(None, description="Letzte Änderung der Konfiguration / Tokens")
     
     class Config:
         from_attributes = True

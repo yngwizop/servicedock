@@ -1,6 +1,20 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo } from 'react';
+import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
-import { Plug } from 'phosphor-react';
+import {
+  Plug,
+  DownloadSimple,
+  UploadSimple,
+  ShieldCheck,
+  MusicNotes,
+  Key,
+  Activity,
+  Buildings,
+  UsersThree,
+  LockKey,
+  GearSix,
+  CheckCircle,
+} from 'phosphor-react';
 import { authenticatedFetch } from '../../utils/auth';
 import { BACKEND_URL } from '../../utils/backendUrl';
 import ConfigAddon from './ConfigAddon';
@@ -8,6 +22,8 @@ import SpotifyAddon from './SpotifyAddon';
 import LdapAddon from './LdapAddon';
 import SettingsModalShell from './SettingsModalShell';
 import SettingsTopicLayout from './SettingsTopicLayout';
+import SettingsTopicPreviewGrid from './SettingsTopicPreviewGrid';
+import SettingsLastModifiedLine from './SettingsLastModifiedLine';
 
 const SPOTIFY_REDIRECT_URI = window.location.protocol === 'https:' 
   ? `https://${window.location.hostname}/api/spotify/callback`
@@ -24,7 +40,7 @@ async function broadcastAuthModeFromServer() {
   }
 }
 
-function AddOnsCard({ onTipsTopicChange }) {
+function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
   const { t } = useTranslation();
   const [activeTopic, setActiveTopic] = useState('config');
 
@@ -51,7 +67,8 @@ function AddOnsCard({ onTipsTopicChange }) {
   });
   const [spotifyStatus, setSpotifyStatus] = useState({
     configured: false,
-    connected: false
+    connected: false,
+    updated_at: null,
   });
   const [isSavingSpotify, setIsSavingSpotify] = useState(false);
   const [spotifySaved, setSpotifySaved] = useState(false);
@@ -76,13 +93,14 @@ function AddOnsCard({ onTipsTopicChange }) {
     configured: false,
     enabled: false,
     has_bind_password: false,
+    updated_at: null,
   });
   const [isSavingLdap, setIsSavingLdap] = useState(false);
   const [ldapSaved, setLdapSaved] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
 
-  // Lade Spotify Status
+  // Spotify Status (beim Start und wenn das Modal geschlossen wird)
   useEffect(() => {
     const fetchSpotifyStatus = async () => {
       try {
@@ -90,27 +108,27 @@ function AddOnsCard({ onTipsTopicChange }) {
         const data = await res.json();
         setSpotifyStatus(data);
         if (data.configured && data.client_id) {
-          setSpotifyConfig(prev => ({
+          setSpotifyConfig((prev) => ({
             ...prev,
             client_id: data.client_id,
-            redirect_uri: data.redirect_uri || SPOTIFY_REDIRECT_URI
+            redirect_uri: data.redirect_uri || SPOTIFY_REDIRECT_URI,
           }));
         }
       } catch (err) {
         console.error('Failed to load Spotify status:', err);
       }
     };
-    fetchSpotifyStatus();
-  }, []);
+    if (!showSpotifyModal) void fetchSpotifyStatus();
+  }, [showSpotifyModal]);
 
-  // Lade LDAP Status
+  // LDAP Status (beim Start und wenn das Modal geschlossen wird)
   useEffect(() => {
     const fetchLdapStatus = async () => {
       try {
         const res = await authenticatedFetch(`${BACKEND_URL}/api/ldap/config`);
         const data = await res.json();
         if (data.host) {
-          setLdapConfig(prev => ({
+          setLdapConfig((prev) => ({
             ...prev,
             enabled: data.enabled,
             host: data.host || '',
@@ -120,7 +138,7 @@ function AddOnsCard({ onTipsTopicChange }) {
             base_dn: data.base_dn || '',
             user_search_base: data.user_search_base || '',
             bind_dn: data.bind_dn || '',
-            bind_password: '', // Wird nie zurückgegeben
+            bind_password: '',
             user_attribute: data.user_attribute || 'sAMAccountName',
             domain: data.domain || '',
             admin_group_dn: data.admin_group_dn || '',
@@ -130,14 +148,15 @@ function AddOnsCard({ onTipsTopicChange }) {
             configured: true,
             enabled: data.enabled,
             has_bind_password: data.has_bind_password,
+            updated_at: data.updated_at ?? null,
           });
         }
       } catch (err) {
         console.error('Failed to load LDAP config:', err);
       }
     };
-    fetchLdapStatus();
-  }, []);
+    if (!showLdapModal) void fetchLdapStatus();
+  }, [showLdapModal]);
 
   const handleSaveSpotify = async (e) => {
     e.preventDefault();
@@ -193,7 +212,7 @@ function AddOnsCard({ onTipsTopicChange }) {
     try {
       const res = await authenticatedFetch(`${BACKEND_URL}/api/spotify/uninstall`, { method: 'DELETE' });
       if (res.ok) {
-        setSpotifyStatus({ configured: false, connected: false });
+        setSpotifyStatus({ configured: false, connected: false, updated_at: null });
         setSpotifyConfig({ client_id: '', client_secret: '', redirect_uri: SPOTIFY_REDIRECT_URI });
         alert(t('addons.spotify_removed'));
       } else {
@@ -222,6 +241,7 @@ function AddOnsCard({ onTipsTopicChange }) {
           configured: true,
           enabled: data.enabled,
           has_bind_password: data.has_bind_password,
+          updated_at: data.updated_at ?? null,
         });
         void broadcastAuthModeFromServer();
       } else {
@@ -271,7 +291,7 @@ function AddOnsCard({ onTipsTopicChange }) {
     try {
       const res = await authenticatedFetch(`${BACKEND_URL}/api/ldap/config`, { method: 'DELETE' });
       if (res.ok) {
-        setLdapStatus({ configured: false, enabled: false, has_bind_password: false });
+        setLdapStatus({ configured: false, enabled: false, has_bind_password: false, updated_at: null });
         setLdapConfig({
           enabled: false, host: '', port: 389, use_ssl: false, use_starttls: false,
           base_dn: '', user_search_base: '', bind_dn: '', bind_password: '',
@@ -310,6 +330,22 @@ function AddOnsCard({ onTipsTopicChange }) {
     if (id === 'ldap') setShowLdapModal(true);
   };
 
+  /** Näherungsweise: letzte Änderung an Dashboard-Metadaten (Export enthält diese Daten). */
+  const configDashboardsMaxUpdatedAt = useMemo(() => {
+    if (!Array.isArray(dashboards) || dashboards.length === 0) return null;
+    let bestIso = null;
+    let bestMs = -1;
+    for (const d of dashboards) {
+      if (!d?.updated_at) continue;
+      const ms = new Date(d.updated_at).getTime();
+      if (!Number.isNaN(ms) && ms > bestMs) {
+        bestMs = ms;
+        bestIso = d.updated_at;
+      }
+    }
+    return bestIso;
+  }, [dashboards]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -333,18 +369,33 @@ function AddOnsCard({ onTipsTopicChange }) {
             <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.config_title')}</h4>
             <p className="text-sm text-gray-600 dark:text-slate-300 mb-3">{t('addons.config_subtitle')}</p>
             <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed mb-4">{t('addons.config_description')}</p>
-            <div className="flex flex-wrap gap-2 mb-6">
-              <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/12 dark:bg-blue-400/15 text-blue-800 dark:text-blue-200">📥 Export</span>
-              <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/12 dark:bg-blue-400/15 text-blue-800 dark:text-blue-200">📤 Import</span>
-              <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/12 dark:bg-blue-400/15 text-blue-800 dark:text-blue-200">🔒 Admin-only</span>
+            <div className="mb-4 flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/12 px-3 py-1 text-xs font-medium text-blue-800 dark:bg-blue-400/15 dark:text-blue-200">
+                <DownloadSimple size={14} weight="duotone" className="shrink-0" aria-hidden />
+                Export
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/12 px-3 py-1 text-xs font-medium text-blue-800 dark:bg-blue-400/15 dark:text-blue-200">
+                <UploadSimple size={14} weight="duotone" className="shrink-0" aria-hidden />
+                Import
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/12 px-3 py-1 text-xs font-medium text-blue-800 dark:bg-blue-400/15 dark:text-blue-200">
+                <ShieldCheck size={14} weight="duotone" className="shrink-0" aria-hidden />
+                Admin-only
+              </span>
             </div>
+            <SettingsTopicPreviewGrid
+              accent="blue"
+              icons={[DownloadSimple, UploadSimple, ShieldCheck]}
+              items={t('addons.config_preview_cards', { returnObjects: true })}
+            />
             <button
               type="button"
               onClick={() => openModalForTopic('config')}
-              className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-blue-700"
+              className="mt-6 inline-flex items-center justify-center rounded-lg bg-blue-500/90 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600"
             >
               {t('settings.topicNav.cta_configure')}
             </button>
+            <SettingsLastModifiedLine iso={configDashboardsMaxUpdatedAt} />
           </div>
         )}
         {activeTopic === 'spotify' && (
@@ -353,32 +404,50 @@ function AddOnsCard({ onTipsTopicChange }) {
             <p className="text-sm text-gray-600 dark:text-slate-300 mb-3">{t('addons.spotify_subtitle')}</p>
             <div className="mb-3 flex flex-wrap gap-2">
               {spotifyStatus.connected ? (
-                <span className="px-3 py-1 bg-green-500/15 dark:bg-green-400/20 text-green-800 dark:text-green-200 text-sm font-semibold rounded-full">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/15 dark:bg-green-400/20 text-green-800 dark:text-green-200 text-sm font-semibold rounded-full">
+                  <CheckCircle size={16} weight="fill" className="shrink-0" aria-hidden />
                   {t('addons.connected')}
                 </span>
               ) : spotifyStatus.configured ? (
-                <span className="px-3 py-1 bg-amber-500/15 dark:bg-amber-400/18 text-amber-900 dark:text-amber-200 text-sm font-semibold rounded-full">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/15 dark:bg-amber-400/18 text-amber-900 dark:text-amber-200 text-sm font-semibold rounded-full">
+                  <GearSix size={16} weight="duotone" className="shrink-0" aria-hidden />
                   {t('addons.configured')}
                 </span>
               ) : (
-                <span className="px-3 py-1 bg-white/40 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-full">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/40 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-full">
+                  <MusicNotes size={16} weight="duotone" className="shrink-0 opacity-80" aria-hidden />
                   {t('addons.not_installed')}
                 </span>
               )}
             </div>
             <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed mb-4">{t('addons.spotify_description')}</p>
-            <div className="flex flex-wrap gap-2 mb-6">
-              <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/12 dark:bg-emerald-400/15 text-emerald-900 dark:text-emerald-200">🎵 Widget</span>
-              <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/12 dark:bg-emerald-400/15 text-emerald-900 dark:text-emerald-200">🔗 OAuth</span>
-              <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/12 dark:bg-emerald-400/15 text-emerald-900 dark:text-emerald-200">🔒 Encrypted</span>
+            <div className="mb-4 flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-3 py-1 text-xs font-medium text-emerald-900 dark:bg-emerald-400/15 dark:text-emerald-200">
+                <MusicNotes size={14} weight="duotone" className="shrink-0" aria-hidden />
+                Widget
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-3 py-1 text-xs font-medium text-emerald-900 dark:bg-emerald-400/15 dark:text-emerald-200">
+                <Key size={14} weight="duotone" className="shrink-0" aria-hidden />
+                OAuth
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-3 py-1 text-xs font-medium text-emerald-900 dark:bg-emerald-400/15 dark:text-emerald-200">
+                <LockKey size={14} weight="duotone" className="shrink-0" aria-hidden />
+                Encrypted
+              </span>
             </div>
+            <SettingsTopicPreviewGrid
+              accent="emerald"
+              icons={[MusicNotes, Key, Activity]}
+              items={t('addons.spotify_preview_cards', { returnObjects: true })}
+            />
             <button
               type="button"
               onClick={() => openModalForTopic('spotify')}
-              className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-emerald-700"
+              className="mt-6 inline-flex items-center justify-center rounded-lg bg-emerald-600/90 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700"
             >
               {t('settings.topicNav.cta_configure')}
             </button>
+            <SettingsLastModifiedLine iso={spotifyStatus.updated_at} />
           </div>
         )}
         {activeTopic === 'ldap' && (
@@ -387,32 +456,50 @@ function AddOnsCard({ onTipsTopicChange }) {
             <p className="text-sm text-gray-600 dark:text-slate-300 mb-3">{t('addons.ldap_subtitle')}</p>
             <div className="mb-3 flex flex-wrap gap-2">
               {ldapStatus.enabled ? (
-                <span className="px-3 py-1 bg-blue-500/15 dark:bg-blue-400/20 text-blue-800 dark:text-blue-200 text-sm font-semibold rounded-full">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/15 dark:bg-blue-400/20 text-blue-800 dark:text-blue-200 text-sm font-semibold rounded-full">
+                  <Activity size={16} weight="fill" className="shrink-0" aria-hidden />
                   {t('addons.active')}
                 </span>
               ) : ldapStatus.configured ? (
-                <span className="px-3 py-1 bg-amber-500/15 dark:bg-amber-400/18 text-amber-900 dark:text-amber-200 text-sm font-semibold rounded-full">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/15 dark:bg-amber-400/18 text-amber-900 dark:text-amber-200 text-sm font-semibold rounded-full">
+                  <GearSix size={16} weight="duotone" className="shrink-0" aria-hidden />
                   {t('addons.configured')}
                 </span>
               ) : (
-                <span className="px-3 py-1 bg-white/40 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-full">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/40 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-full">
+                  <ShieldCheck size={16} weight="duotone" className="shrink-0 opacity-80" aria-hidden />
                   {t('addons.not_installed')}
                 </span>
               )}
             </div>
             <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed mb-4">{t('addons.ldap_description')}</p>
-            <div className="flex flex-wrap gap-2 mb-6">
-              <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-500/12 dark:text-indigo-200">{t('addons.ldap_tag_ad')}</span>
-              <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-500/12 dark:text-indigo-200">{t('addons.ldap_tag_roles')}</span>
-              <span className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-500/12 dark:text-indigo-200">🔒 Encrypted</span>
+            <div className="mb-4 flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/12 px-3 py-1 text-xs font-medium text-indigo-900 dark:text-indigo-200">
+                <Buildings size={14} weight="duotone" className="shrink-0" aria-hidden />
+                {t('addons.ldap_tag_ad')}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/12 px-3 py-1 text-xs font-medium text-indigo-900 dark:text-indigo-200">
+                <UsersThree size={14} weight="duotone" className="shrink-0" aria-hidden />
+                {t('addons.ldap_tag_roles')}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/12 px-3 py-1 text-xs font-medium text-indigo-900 dark:text-indigo-200">
+                <LockKey size={14} weight="duotone" className="shrink-0" aria-hidden />
+                {t('addons.ldap_tag_encrypted')}
+              </span>
             </div>
+            <SettingsTopicPreviewGrid
+              accent="indigo"
+              icons={[Buildings, UsersThree, LockKey]}
+              items={t('addons.ldap_preview_cards', { returnObjects: true })}
+            />
             <button
               type="button"
               onClick={() => openModalForTopic('ldap')}
-              className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-indigo-700"
+              className="mt-6 inline-flex items-center justify-center rounded-lg bg-indigo-500/90 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-600"
             >
               {t('settings.topicNav.cta_configure')}
             </button>
+            <SettingsLastModifiedLine iso={ldapStatus.updated_at} />
           </div>
         )}
       </SettingsTopicLayout>
@@ -423,8 +510,8 @@ function AddOnsCard({ onTipsTopicChange }) {
         title={t('addons.config_title')}
         subtitle={t('addons.config_subtitle')}
         icon={
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shrink-0">
-            <span className="text-2xl">⚙️</span>
+          <div className="w-12 h-12 rounded-xl bg-blue-500/15 dark:bg-blue-400/20 flex items-center justify-center shrink-0 ring-1 ring-blue-500/20 dark:ring-blue-400/15">
+            <GearSix size={26} weight="duotone" className="text-blue-600 dark:text-blue-300" />
           </div>
         }
       >
@@ -453,8 +540,8 @@ function AddOnsCard({ onTipsTopicChange }) {
         title={t('addons.spotify_title')}
         subtitle={t('addons.spotify_subtitle')}
         icon={
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg shrink-0">
-            <span className="text-2xl">🎵</span>
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/15 dark:bg-emerald-400/20 flex items-center justify-center shrink-0 ring-1 ring-emerald-500/20 dark:ring-emerald-400/15">
+            <MusicNotes size={26} weight="duotone" className="text-emerald-600 dark:text-emerald-300" />
           </div>
         }
       >
@@ -480,8 +567,8 @@ function AddOnsCard({ onTipsTopicChange }) {
         title={t('addons.ldap_title')}
         subtitle={t('addons.ldap_subtitle')}
         icon={
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg shrink-0">
-            <span className="text-2xl">🔐</span>
+          <div className="w-12 h-12 rounded-xl bg-indigo-500/15 dark:bg-indigo-400/20 flex items-center justify-center shrink-0 ring-1 ring-indigo-500/20 dark:ring-indigo-400/15">
+            <Buildings size={26} weight="duotone" className="text-indigo-600 dark:text-indigo-300" />
           </div>
         }
       >
@@ -504,5 +591,15 @@ function AddOnsCard({ onTipsTopicChange }) {
     </div>
   );
 }
+
+AddOnsCard.propTypes = {
+  onTipsTopicChange: PropTypes.func,
+  dashboards: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number,
+      updated_at: PropTypes.string,
+    })
+  ),
+};
 
 export default AddOnsCard;

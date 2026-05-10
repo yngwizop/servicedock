@@ -1,5 +1,18 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  MusicNotes,
+  CheckCircle,
+  Warning,
+  Trash,
+  LinkSimple,
+  Lock,
+  PencilSimple,
+  GearSix,
+  CircleNotch,
+  Info,
+} from 'phosphor-react';
+import SettingsModalSectionTitle from './SettingsModalSectionTitle';
 
 function SpotifyAddon({
   BACKEND_URL,
@@ -24,15 +37,18 @@ function SpotifyAddon({
         {/* Status Badge */}
         <div className="flex items-center gap-3">
           {spotifyStatus.connected ? (
-            <span className="px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm font-semibold rounded-full">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm font-semibold rounded-full">
+              <CheckCircle size={18} weight="fill" className="shrink-0" aria-hidden />
               {t('spotifyAddon.connected')}
             </span>
           ) : spotifyStatus.configured ? (
-            <span className="px-4 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-sm font-semibold rounded-full">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-sm font-semibold rounded-full">
+              <GearSix size={18} weight="duotone" className="shrink-0" aria-hidden />
               {t('spotifyAddon.configured')}
             </span>
           ) : (
-            <span className="px-4 py-2 bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 text-sm font-semibold rounded-full">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 text-sm font-semibold rounded-full">
+              <MusicNotes size={18} weight="duotone" className="shrink-0 opacity-80" aria-hidden />
               {t('spotifyAddon.not_installed')}
             </span>
           )}
@@ -42,9 +58,9 @@ function SpotifyAddon({
           // Installation Form
           <form onSubmit={handleSaveSpotify} className="space-y-4">
             <div className="p-4 bg-blue-50/80 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-              <h5 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">
+              <SettingsModalSectionTitle icon={PencilSimple} variant="blue" dense>
                 {t('spotifyAddon.setup_required')}
-              </h5>
+              </SettingsModalSectionTitle>
               <p className="text-sm text-blue-700 dark:text-blue-400 mb-2">
                 {t('spotifyAddon.setup_intro')}
                 <a 
@@ -70,7 +86,7 @@ function SpotifyAddon({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-800 dark:text-slate-100 mb-2">
                 {t('spotifyAddon.client_id_label')}
               </label>
               <input
@@ -84,7 +100,7 @@ function SpotifyAddon({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-800 dark:text-slate-100 mb-2">
                 {t('spotifyAddon.client_secret_label')}
               </label>
               <input
@@ -98,7 +114,7 @@ function SpotifyAddon({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-800 dark:text-slate-100 mb-2">
                 {t('spotifyAddon.redirect_uri_label')}
               </label>
               <input
@@ -112,29 +128,44 @@ function SpotifyAddon({
             <button
               type="submit"
               disabled={isSavingSpotify}
-              className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-medium rounded-xl transition-all shadow-lg hover:shadow-xl disabled:cursor-not-allowed"
+              className="w-full py-2.5 px-4 text-sm font-medium bg-emerald-600/90 hover:bg-emerald-700 disabled:bg-gray-400 disabled:text-gray-100 text-white rounded-lg transition-colors shadow-sm disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
             >
-              {isSavingSpotify ? t('spotifyAddon.saving') : t('spotifyAddon.install_button')}
+              {isSavingSpotify ? (
+                <>
+                  <CircleNotch size={20} weight="bold" className="animate-spin shrink-0" aria-hidden />
+                  {t('spotifyAddon.saving')}
+                </>
+              ) : (
+                <>
+                  <CheckCircle size={20} weight="bold" className="shrink-0" aria-hidden />
+                  {t('spotifyAddon.install_button')}
+                </>
+              )}
             </button>
           </form>
         ) : !spotifyStatus.connected ? (
           // Connect Section
           <div className="space-y-4">
             <div className="p-4 bg-yellow-50/80 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl">
-              <p className="text-sm text-yellow-800 dark:text-yellow-300">
-                {t('spotifyAddon.connect_info')}
+              <p className="text-sm text-yellow-800 dark:text-yellow-300 flex items-start gap-2">
+                <Info size={18} weight="fill" className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" aria-hidden />
+                <span>{t('spotifyAddon.connect_info')}</span>
               </p>
             </div>
             <button
+              type="button"
               onClick={handleConnectSpotify}
-              className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium rounded-xl transition-all shadow-lg hover:shadow-xl"
+              className="w-full py-2.5 px-4 text-sm font-medium bg-emerald-600/90 hover:bg-emerald-700 text-white rounded-lg transition-colors shadow-sm inline-flex items-center justify-center gap-2"
             >
+              <LinkSimple size={20} weight="bold" className="shrink-0" aria-hidden />
               {t('spotifyAddon.connect_button')}
             </button>
             <button
+              type="button"
               onClick={handleUninstallSpotify}
-              className="w-full py-3 px-4 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-all shadow-lg hover:shadow-xl"
+              className="w-full py-2.5 px-4 text-sm font-medium bg-red-500/90 hover:bg-red-600 text-white rounded-lg transition-colors shadow-sm inline-flex items-center justify-center gap-2"
             >
+              <Trash size={20} weight="bold" className="shrink-0" aria-hidden />
               {t('spotifyAddon.remove_button')}
             </button>
           </div>
@@ -142,14 +173,17 @@ function SpotifyAddon({
           // Connected - Management
           <div className="space-y-4">
             <div className="p-4 bg-green-50/80 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl">
-              <p className="text-sm text-green-800 dark:text-green-300">
-                {t('spotifyAddon.connected_info')}
+              <p className="text-sm text-green-800 dark:text-green-300 flex items-start gap-2">
+                <CheckCircle size={18} weight="fill" className="shrink-0 mt-0.5 text-green-600 dark:text-green-400" aria-hidden />
+                <span>{t('spotifyAddon.connected_info')}</span>
               </p>
             </div>
             <button
+              type="button"
               onClick={handleUninstallSpotify}
-              className="w-full py-3 px-4 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-all shadow-lg hover:shadow-xl"
+              className="w-full py-2.5 px-4 text-sm font-medium bg-red-500/90 hover:bg-red-600 text-white rounded-lg transition-colors shadow-sm inline-flex items-center justify-center gap-2"
             >
+              <Trash size={20} weight="bold" className="shrink-0" aria-hidden />
               {t('spotifyAddon.remove_button')}
             </button>
           </div>
@@ -168,7 +202,7 @@ function SpotifyAddon({
       <div className="relative bg-gradient-to-r from-green-500/80 to-green-600/80 dark:from-green-600/90 dark:to-green-700/90 backdrop-blur-sm p-6 flex items-center justify-between border-b border-green-400/30 dark:border-green-500/30">
         <div className="flex items-center space-x-4">
           <div className="w-14 h-14 bg-white/90 dark:bg-white/95 rounded-2xl flex items-center justify-center shadow-lg">
-            <span className="text-3xl">🎵</span>
+            <MusicNotes size={32} weight="duotone" className="text-green-600 dark:text-green-500" aria-hidden />
           </div>
           <div>
             <h4 className="text-white font-semibold text-lg mb-1">{t('addons.spotify_title')}</h4>
@@ -177,15 +211,18 @@ function SpotifyAddon({
         </div>
         <div>
           {spotifyStatus.connected ? (
-            <span className="px-4 py-2 bg-white/90 dark:bg-white/95 text-green-600 dark:text-green-700 text-sm font-semibold rounded-full shadow-md">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-white/90 dark:bg-white/95 text-green-600 dark:text-green-700 text-sm font-semibold rounded-full shadow-md">
+              <CheckCircle size={18} weight="fill" className="shrink-0" aria-hidden />
               {t('spotifyAddon.connected')}
             </span>
           ) : spotifyStatus.configured ? (
-            <span className="px-4 py-2 bg-yellow-100/90 dark:bg-yellow-100/95 text-yellow-700 dark:text-yellow-800 text-sm font-semibold rounded-full shadow-md">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-100/90 dark:bg-yellow-100/95 text-yellow-700 dark:text-yellow-800 text-sm font-semibold rounded-full shadow-md">
+              <GearSix size={18} weight="duotone" className="shrink-0" aria-hidden />
               {t('spotifyAddon.configured')}
             </span>
           ) : (
-            <span className="px-4 py-2 bg-white/60 dark:bg-gray-700/80 text-gray-600 dark:text-gray-300 text-sm font-semibold rounded-full shadow-md">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 dark:bg-gray-700/80 text-gray-600 dark:text-gray-300 text-sm font-semibold rounded-full shadow-md">
+              <MusicNotes size={18} weight="duotone" className="shrink-0 opacity-80" aria-hidden />
               {t('spotifyAddon.not_installed')}
             </span>
           )}
@@ -198,9 +235,9 @@ function SpotifyAddon({
           // Installation Form
           <form onSubmit={handleSaveSpotify} className="space-y-4">
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg mb-4">
-              <h5 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">
+              <SettingsModalSectionTitle icon={PencilSimple} variant="blue" dense>
                 {t('spotifyAddon.setup_required')}
-              </h5>
+              </SettingsModalSectionTitle>
               <p className="text-sm text-blue-700 dark:text-blue-400 mb-2">
                 {t('spotifyAddon.setup_intro')}
                 <a 
@@ -226,7 +263,7 @@ function SpotifyAddon({
             </div>
 
             <div>
-              <label className="block text-base font-medium text-gray-700 dark:text-gray-200 mb-2">
+              <label className="block text-base font-semibold text-gray-800 dark:text-slate-100 mb-2">
                 {t('spotifyAddon.client_id_label')}
               </label>
               <input
@@ -240,7 +277,7 @@ function SpotifyAddon({
             </div>
 
             <div>
-              <label className="block text-base font-medium text-gray-700 dark:text-gray-200 mb-2">
+              <label className="block text-base font-semibold text-gray-800 dark:text-slate-100 mb-2">
                 {t('spotifyAddon.client_secret_label')}
               </label>
               <input
@@ -254,7 +291,7 @@ function SpotifyAddon({
             </div>
 
             <div>
-              <label className="block text-base font-medium text-gray-700 dark:text-gray-200 mb-2">
+              <label className="block text-base font-semibold text-gray-800 dark:text-slate-100 mb-2">
                 {t('spotifyAddon.redirect_uri_label')}
               </label>
               <input
@@ -270,7 +307,7 @@ function SpotifyAddon({
             <button
               type="submit"
               disabled={isSavingSpotify}
-              className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="w-full py-2.5 text-sm font-medium bg-emerald-600/90 hover:bg-emerald-700 text-white rounded-lg transition-colors shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {isSavingSpotify ? t('common.saving') : spotifySaved ? t('common.saved') : t('spotifyAddon.save_config')}
             </button>
@@ -287,8 +324,15 @@ function SpotifyAddon({
               </div>
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{t('spotifyAddon.status_label')}</p>
-                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                  {spotifyStatus.connected ? t('spotifyAddon.connected') : t('spotifyAddon.not_connected')}
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 inline-flex items-center gap-2">
+                  {spotifyStatus.connected ? (
+                    <>
+                      <CheckCircle size={18} weight="fill" className="shrink-0 text-green-600 dark:text-green-400" aria-hidden />
+                      {t('spotifyAddon.connected')}
+                    </>
+                  ) : (
+                    t('spotifyAddon.not_connected')
+                  )}
                 </p>
               </div>
             </div>
@@ -296,31 +340,37 @@ function SpotifyAddon({
             {!spotifyStatus.connected ? (
               <div className="space-y-3">
                 <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                  <p className="text-sm text-yellow-800 dark:text-yellow-300">
-                    {t('spotifyAddon.not_connected_warning')}
+                  <p className="text-sm text-yellow-800 dark:text-yellow-300 flex items-start gap-2">
+                    <Warning size={18} weight="fill" className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" aria-hidden />
+                    <span>{t('spotifyAddon.not_connected_warning')}</span>
                   </p>
                 </div>
 
                 <button
+                  type="button"
                   onClick={handleConnectSpotify}
-                  className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+                  className="w-full py-2.5 text-sm font-medium bg-emerald-600/90 hover:bg-emerald-700 text-white rounded-lg transition-colors shadow-sm inline-flex items-center justify-center gap-2"
                 >
+                  <LinkSimple size={20} weight="bold" className="shrink-0" aria-hidden />
                   {t('spotifyAddon.connect_button')}
                 </button>
               </div>
             ) : (
               <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                <p className="text-sm text-green-800 dark:text-green-300">
-                  {t('spotifyAddon.connected_info')}
+                <p className="text-sm text-green-800 dark:text-green-300 flex items-start gap-2">
+                  <CheckCircle size={18} weight="fill" className="shrink-0 mt-0.5 text-green-600 dark:text-green-400" aria-hidden />
+                  <span>{t('spotifyAddon.connected_info')}</span>
                 </p>
               </div>
             )}
 
             <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
               <button
+                type="button"
                 onClick={handleUninstallSpotify}
-                className="w-full py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
+                className="w-full py-2.5 text-sm font-medium bg-red-500/90 hover:bg-red-600 text-white rounded-lg transition-colors shadow-sm inline-flex items-center justify-center gap-2"
               >
+                <Trash size={20} weight="bold" className="shrink-0" aria-hidden />
                 {t('spotifyAddon.remove_button')}
               </button>
             </div>
@@ -330,6 +380,7 @@ function SpotifyAddon({
         {/* Security Info */}
         <div className="mt-6 p-4 bg-white/50 dark:bg-white/5 backdrop-blur-sm border border-gray-300/50 dark:border-white/10 rounded-xl shadow-sm">
           <h5 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+            <Lock size={20} weight="duotone" className="shrink-0 text-slate-600 dark:text-slate-300" aria-hidden />
             {t('spotifyAddon.security_title')}
           </h5>
           <p className="text-sm text-gray-700 dark:text-gray-300">

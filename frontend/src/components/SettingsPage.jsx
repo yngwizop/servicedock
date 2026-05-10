@@ -330,7 +330,9 @@ function SettingsPage({
               />
             )}
 
-            {activeSection === 'addons' && <AddOnsCard onTipsTopicChange={handleTipsTopicChange} />}
+            {activeSection === 'addons' && (
+              <AddOnsCard onTipsTopicChange={handleTipsTopicChange} dashboards={dashboards} />
+            )}
 
             {activeSection === 'language' && <LanguageCard onTipsTopicChange={handleTipsTopicChange} />}
 

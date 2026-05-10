@@ -279,7 +279,7 @@ async def get_spotify_status(
     """
     cur = db.cursor()
     cur.execute("""
-        SELECT client_id, redirect_uri, token_expires_at, connected
+        SELECT client_id, redirect_uri, token_expires_at, connected, updated_at
         FROM spotify_config WHERE id = 1;
     """)
     row = cur.fetchone()
@@ -291,17 +291,19 @@ async def get_spotify_status(
             connected=False,
             client_id=None,
             redirect_uri=None,
-            token_expires_at=None
+            token_expires_at=None,
+            updated_at=None,
         )
     
-    client_id, redirect_uri, token_expires_at, connected = row
+    client_id, redirect_uri, token_expires_at, connected, updated_at = row
     
     return SpotifyConfigResponse(
         configured=True,
         connected=connected,
         client_id=client_id,
         redirect_uri=redirect_uri,
-        token_expires_at=token_expires_at
+        token_expires_at=token_expires_at,
+        updated_at=updated_at,
     )
 
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import SettingsTopicLayout from './SettingsTopicLayout';
+import SettingsModalShell from './SettingsModalShell';
 import { useTranslation } from 'react-i18next';
 import { Users, Plus, Trash, Key, WarningCircle } from 'phosphor-react';
 import { authenticatedFetch } from '../../utils/auth';
@@ -10,6 +11,7 @@ import { BACKEND_URL } from '../../utils/backendUrl';
 const sectionCard =
   'bg-white/30 dark:bg-gray-800/55 sd-night-surface rounded-2xl p-5 border border-gray-200/25 dark:border-white/[0.07] night:border-white/[0.06] shadow-sm shadow-black/[0.03] dark:shadow-black/20 night:shadow-black/40';
 const labelClass = 'block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5';
+const modalLabelClass = 'block text-sm font-semibold text-gray-800 dark:text-slate-100 mb-2';
 const controlClass =
   'w-full border border-gray-300/50 dark:border-white/10 bg-white/50 dark:bg-white/10 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-xl backdrop-blur-sm transition-all text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
 const inputClass = `${controlClass} px-3 py-2.5`;
@@ -27,6 +29,8 @@ function UsersTab({ onTipsTopicChange }) {
   const [newDisplayName, setNewDisplayName] = useState('');
   const [adEnabled, setAdEnabled] = useState(false);
   const [activeTopic, setActiveTopic] = useState('accounts');
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [createModalError, setCreateModalError] = useState('');
 
   useLayoutEffect(() => {
     onTipsTopicChange?.('users', activeTopic);
@@ -84,9 +88,23 @@ function UsersTab({ onTipsTopicChange }) {
     void load();
   }, [load]);
 
+  const openCreateUserModal = () => {
+    setCreateModalError('');
+    setShowCreateUserModal(true);
+  };
+
+  const closeCreateUserModal = () => {
+    setShowCreateUserModal(false);
+    setCreateModalError('');
+    setNewUsername('');
+    setNewPassword('');
+    setNewRole('viewer');
+    setNewDisplayName('');
+  };
+
   const createUser = async (e) => {
     e.preventDefault();
-    setError('');
+    setCreateModalError('');
     setBusyId(-1);
     try {
       const res = await authenticatedFetch(`${BACKEND_URL}/api/users`, {
@@ -105,6 +123,7 @@ function UsersTab({ onTipsTopicChange }) {
       setNewPassword('');
       setNewRole('viewer');
       setNewDisplayName('');
+      setShowCreateUserModal(false);
       await load();
       try {
         const modeRes = await fetch(`${BACKEND_URL}/api/auth/mode`);
@@ -116,7 +135,7 @@ function UsersTab({ onTipsTopicChange }) {
         /* ignore */
       }
     } catch (e) {
-      setError(e.message || String(e));
+      setCreateModalError(e.message || String(e));
     } finally {
       setBusyId(null);
     }
@@ -228,15 +247,131 @@ function UsersTab({ onTipsTopicChange }) {
               </div>
             )}
 
-            <form onSubmit={createUser} className={`${sectionCard} space-y-4 ${ldapBlocksLocal ? 'opacity-75' : ''}`}>
-        <fieldset disabled={ldapBlocksLocal} className="space-y-4 min-w-0 border-0 p-0 m-0 disabled:pointer-events-none">
-          <h3 className="text-sm font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-            <Plus size={18} weight="bold" className="text-blue-500 dark:text-blue-400" />
-            {t('settings.users.create_heading')}
-          </h3>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-gray-600 dark:text-slate-400 m-0">{t('settings.users.create_intro')}</p>
+              <button
+                type="button"
+                onClick={openCreateUserModal}
+                disabled={ldapBlocksLocal}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-500/90 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 disabled:pointer-events-none disabled:opacity-50 shrink-0"
+              >
+                <Plus size={18} weight="bold" />
+                {t('settings.users.create_open')}
+              </button>
+            </div>
+
+            <div className={`${sectionCard} overflow-hidden p-0 ${ldapBlocksLocal ? 'opacity-75' : ''}`}>
+              <div className="px-5 py-3 border-b border-gray-200/30 dark:border-white/[0.08] text-sm font-semibold text-gray-800 dark:text-white">
+                {t('settings.users.list_heading')}
+              </div>
+              {loading ? (
+                <div className="p-6 text-sm text-gray-500">{t('settings.users.loading')}</div>
+              ) : (
+                <div className={`overflow-x-auto ${ldapBlocksLocal ? 'pointer-events-none' : ''}`}>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 border-b border-white/15 dark:border-white/[0.06]">
+                        <th className="px-4 py-2">{t('settings.users.col_user')}</th>
+                        <th className="px-4 py-2">{t('settings.users.col_role')}</th>
+                        <th className="px-4 py-2">{t('settings.users.col_enabled')}</th>
+                        <th className="px-4 py-2 text-right">{t('settings.users.col_actions')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map((u) => (
+                        <tr key={u.id} className="border-b border-white/10 dark:border-white/[0.04] last:border-0">
+                          <td className="px-4 py-3">
+                            <div className="font-medium text-gray-900 dark:text-white">{u.username}</div>
+                            {u.display_name && (
+                              <div className="text-xs text-gray-500 dark:text-gray-400">{u.display_name}</div>
+                            )}
+                            {u.force_change && (
+                              <span className="text-xs text-amber-600 dark:text-amber-400">
+                                {t('settings.users.must_change_password')}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <CustomSelect
+                              value={u.role}
+                              onChange={(val) => patchUser(u.id, { role: val })}
+                              options={roleOptions}
+                              className="min-w-[9rem] w-full max-w-[11rem]"
+                              disabled={busyId === u.id || ldapBlocksLocal}
+                              compact
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <label
+                              className={`inline-flex items-center gap-2 ${ldapBlocksLocal ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={u.enabled}
+                                disabled={busyId === u.id || ldapBlocksLocal}
+                                onChange={(e) => patchUser(u.id, { enabled: e.target.checked })}
+                                className="rounded border-gray-300"
+                              />
+                              <span className="text-xs text-gray-700 dark:text-gray-300">
+                                {u.enabled ? t('settings.users.enabled_yes') : t('settings.users.enabled_no')}
+                              </span>
+                            </label>
+                          </td>
+                          <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => resetPassword(u.id)}
+                              disabled={busyId === u.id || ldapBlocksLocal}
+                              className="inline-flex items-center gap-1 rounded-lg border border-gray-300/60 dark:border-white/15 bg-white/40 dark:bg-white/5 px-2 py-1 text-xs text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-white/10"
+                              title={t('settings.users.reset_password')}
+                            >
+                              <Key size={14} />
+                              {t('settings.users.reset_password')}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteUser(u.id)}
+                              disabled={busyId === u.id || ldapBlocksLocal}
+                              className="inline-flex items-center gap-1 rounded-lg border border-red-400/40 px-2 py-1 text-xs text-red-700 dark:text-red-300 hover:bg-red-500/10"
+                            >
+                              <Trash size={14} />
+                              {t('settings.users.delete')}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </SettingsTopicLayout>
+
+      <SettingsModalShell
+        open={showCreateUserModal}
+        onClose={closeCreateUserModal}
+        title={t('settings.users.create_heading')}
+        subtitle={t('settings.users.create_modal_subtitle')}
+        icon={
+          <div className="w-12 h-12 rounded-xl bg-blue-500/15 dark:bg-blue-400/20 flex items-center justify-center shrink-0 ring-1 ring-blue-500/20 dark:ring-blue-400/15">
+            <Users size={26} weight="duotone" className="text-blue-600 dark:text-blue-300" />
+          </div>
+        }
+      >
+        <form onSubmit={createUser} className="space-y-4">
+          {createModalError ? (
+            <div
+              className="rounded-xl border border-red-400/50 bg-red-500/10 px-4 py-3 text-sm text-red-800 dark:text-red-200"
+              role="alert"
+            >
+              {createModalError}
+            </div>
+          ) : null}
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className={labelClass}>{t('settings.users.field_username')}</label>
+              <label className={modalLabelClass}>{t('settings.users.field_username')}</label>
               <input
                 value={newUsername}
                 onChange={(e) => setNewUsername(e.target.value)}
@@ -246,7 +381,7 @@ function UsersTab({ onTipsTopicChange }) {
               />
             </div>
             <div>
-              <label className={labelClass}>{t('settings.users.field_password')}</label>
+              <label className={modalLabelClass}>{t('settings.users.field_password')}</label>
               <input
                 type="password"
                 value={newPassword}
@@ -258,11 +393,11 @@ function UsersTab({ onTipsTopicChange }) {
               />
             </div>
             <div>
-              <label className={labelClass}>{t('settings.users.field_role')}</label>
+              <label className={modalLabelClass}>{t('settings.users.field_role')}</label>
               <CustomSelect value={newRole} onChange={setNewRole} options={roleOptions} className="w-full" />
             </div>
             <div>
-              <label className={labelClass}>{t('settings.users.field_display_name')}</label>
+              <label className={modalLabelClass}>{t('settings.users.field_display_name')}</label>
               <input
                 value={newDisplayName}
                 onChange={(e) => setNewDisplayName(e.target.value)}
@@ -271,105 +406,26 @@ function UsersTab({ onTipsTopicChange }) {
               />
             </div>
           </div>
-          <button
-            type="submit"
-            disabled={busyId === -1}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-          >
-            <Plus size={18} weight="bold" />
-            {t('settings.users.create_submit')}
-          </button>
-        </fieldset>
-      </form>
-
-      <div className={`${sectionCard} overflow-hidden p-0 ${ldapBlocksLocal ? 'opacity-75' : ''}`}>
-        <div className="px-5 py-3 border-b border-gray-200/30 dark:border-white/[0.08] text-sm font-semibold text-gray-800 dark:text-white">
-          {t('settings.users.list_heading')}
-        </div>
-        {loading ? (
-          <div className="p-6 text-sm text-gray-500">{t('settings.users.loading')}</div>
-        ) : (
-          <div className={`overflow-x-auto ${ldapBlocksLocal ? 'pointer-events-none' : ''}`}>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 border-b border-white/15 dark:border-white/[0.06]">
-                  <th className="px-4 py-2">{t('settings.users.col_user')}</th>
-                  <th className="px-4 py-2">{t('settings.users.col_role')}</th>
-                  <th className="px-4 py-2">{t('settings.users.col_enabled')}</th>
-                  <th className="px-4 py-2 text-right">{t('settings.users.col_actions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u.id} className="border-b border-white/10 dark:border-white/[0.04] last:border-0">
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900 dark:text-white">{u.username}</div>
-                      {u.display_name && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400">{u.display_name}</div>
-                      )}
-                      {u.force_change && (
-                        <span className="text-xs text-amber-600 dark:text-amber-400">
-                          {t('settings.users.must_change_password')}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <CustomSelect
-                        value={u.role}
-                        onChange={(val) => patchUser(u.id, { role: val })}
-                        options={roleOptions}
-                        className="min-w-[9rem] w-full max-w-[11rem]"
-                        disabled={busyId === u.id || ldapBlocksLocal}
-                        compact
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <label
-                        className={`inline-flex items-center gap-2 ${ldapBlocksLocal ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={u.enabled}
-                          disabled={busyId === u.id || ldapBlocksLocal}
-                          onChange={(e) => patchUser(u.id, { enabled: e.target.checked })}
-                          className="rounded border-gray-300"
-                        />
-                        <span className="text-xs text-gray-700 dark:text-gray-300">
-                          {u.enabled ? t('settings.users.enabled_yes') : t('settings.users.enabled_no')}
-                        </span>
-                      </label>
-                    </td>
-                    <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
-                      <button
-                        type="button"
-                        onClick={() => resetPassword(u.id)}
-                        disabled={busyId === u.id || ldapBlocksLocal}
-                        className="inline-flex items-center gap-1 rounded-lg border border-gray-300/60 dark:border-white/15 bg-white/40 dark:bg-white/5 px-2 py-1 text-xs text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-white/10"
-                        title={t('settings.users.reset_password')}
-                      >
-                        <Key size={14} />
-                        {t('settings.users.reset_password')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => deleteUser(u.id)}
-                        disabled={busyId === u.id || ldapBlocksLocal}
-                        className="inline-flex items-center gap-1 rounded-lg border border-red-400/40 px-2 py-1 text-xs text-red-700 dark:text-red-300 hover:bg-red-500/10"
-                      >
-                        <Trash size={14} />
-                        {t('settings.users.delete')}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="flex flex-wrap gap-3 pt-1">
+            <button
+              type="submit"
+              disabled={busyId === -1}
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-500/90 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 disabled:opacity-50"
+            >
+              <Plus size={18} weight="bold" />
+              {t('settings.users.create_submit')}
+            </button>
+            <button
+              type="button"
+              onClick={closeCreateUserModal}
+              disabled={busyId === -1}
+              className="inline-flex items-center rounded-lg border border-gray-300/60 dark:border-white/15 bg-white/40 dark:bg-white/5 px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-white/10 disabled:opacity-50"
+            >
+              {t('settings.users.create_cancel')}
+            </button>
           </div>
-        )}
-      </div>
-          </div>
-        )}
-      </SettingsTopicLayout>
+        </form>
+      </SettingsModalShell>
     </div>
   );
 }

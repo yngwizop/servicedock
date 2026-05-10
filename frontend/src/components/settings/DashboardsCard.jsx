@@ -6,9 +6,10 @@ import { BACKEND_URL } from '../../utils/backendUrl';
 import CustomSelect from '../CustomSelect';
 import SettingsModalShell from './SettingsModalShell';
 import SettingsTopicLayout from './SettingsTopicLayout';
+import SettingsLastModifiedLine from './SettingsLastModifiedLine';
 
 const inputClass = "w-full border border-gray-300/50 dark:border-white/15 bg-white/50 dark:bg-gray-700/70 dark:text-white dark:placeholder-gray-400 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm";
-const labelClass = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2";
+const labelClass = "block text-sm font-semibold text-gray-800 dark:text-slate-100 mb-2";
 
 // Wiederverwendbarer Toggle-Schalter (wie in AppearanceTab)
 function ToggleSwitch({ checked, onChange, label, description }) {
@@ -180,7 +181,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
               <button
                 type="button"
                 onClick={openCreateModal}
-                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm transition-all shadow-lg hover:shadow-xl shrink-0"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/90 hover:bg-blue-600 text-white rounded-lg font-medium text-sm transition-colors shadow-sm shrink-0"
               >
                 <Plus size={18} weight="bold" />
                 {t('dashboards.add')}
@@ -267,6 +268,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
                           </span>
                         )}
                       </div>
+                      <SettingsLastModifiedLine iso={dashboard.updated_at} className="mt-3 border-t border-gray-200/30 pt-3 dark:border-white/[0.06]" />
                     </div>
                   </div>
                 ))}
@@ -295,7 +297,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
         title={editingDashboard ? t('dashboards.edit_dashboard') : t('dashboards.create_dashboard')}
         subtitle={null}
         icon={
-          <div className="w-12 h-12 rounded-xl bg-blue-500/15 dark:bg-blue-400/20 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-blue-500/15 dark:bg-blue-400/20 flex items-center justify-center shrink-0 ring-1 ring-blue-500/20 dark:ring-blue-400/15">
             {editingDashboard ? (
               <Pencil size={24} weight="duotone" className="text-blue-600 dark:text-blue-300" />
             ) : (
@@ -303,7 +305,6 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
             )}
           </div>
         }
-        contentClassName="px-6 py-5 overflow-y-auto flex-1 min-h-0"
       >
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name */}
@@ -361,18 +362,18 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 pt-2">
+              <div className="flex flex-wrap justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 px-4 py-3 bg-gray-200/60 dark:bg-white/10 text-gray-700 dark:text-gray-300 rounded-xl font-semibold text-sm hover:bg-gray-300/60 dark:hover:bg-white/15 transition-all"
+                  className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium bg-gray-200/70 dark:bg-white/10 text-gray-800 dark:text-gray-200 hover:bg-gray-300/80 dark:hover:bg-white/15 transition-colors"
                 >
                   {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingDashboard || !dashboardName.trim()}
-                  className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-semibold text-sm transition-all shadow-lg hover:shadow-xl"
+                  className="inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium bg-blue-500/90 hover:bg-blue-600 disabled:bg-gray-400 dark:disabled:bg-slate-600/50 disabled:cursor-not-allowed text-white shadow-sm transition-colors min-w-[8.5rem]"
                 >
                   {isSavingDashboard ? t('dashboards.saving') : (editingDashboard ? t('dashboards.update') : t('dashboards.create'))}
                 </button>
@@ -391,23 +392,23 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
             : ''
         }
         icon={
-          <div className="w-12 h-12 rounded-xl bg-red-500/15 dark:bg-red-500/20 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-red-500/15 dark:bg-red-500/20 flex items-center justify-center shrink-0 ring-1 ring-red-500/20 dark:ring-red-400/15">
             <Trash size={24} weight="duotone" className="text-red-600 dark:text-red-400" />
           </div>
         }
         footer={
-          <div className="flex gap-3">
+          <div className="flex flex-wrap justify-end gap-2">
             <button
               type="button"
               onClick={() => setShowDeleteConfirm(null)}
-              className="flex-1 px-4 py-2.5 bg-gray-200/60 dark:bg-white/10 text-gray-700 dark:text-gray-300 rounded-xl font-semibold text-sm hover:bg-gray-300/60 dark:hover:bg-white/15 transition-all"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium bg-gray-200/70 dark:bg-white/10 text-gray-800 dark:text-gray-200 hover:bg-gray-300/80 dark:hover:bg-white/15 transition-colors"
             >
               {t('common.cancel')}
             </button>
             <button
               type="button"
               onClick={() => showDeleteConfirm && handleDelete(showDeleteConfirm)}
-              className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold text-sm transition-all shadow-lg"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium bg-red-500/90 hover:bg-red-600 text-white shadow-sm transition-colors"
             >
               {t('common.yes_delete')}
             </button>

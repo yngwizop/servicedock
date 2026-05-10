@@ -99,7 +99,7 @@ async def get_proxmox_config(request: Request, dashboard_id: int = 1, token: dic
         cur = db.cursor()
         try:
             cur.execute(
-                "SELECT id, host, port, token_name, verify_ssl, node, is_cluster FROM proxmox_config WHERE dashboard_id = %s;",
+                "SELECT id, host, port, token_name, verify_ssl, node, is_cluster, updated_at FROM proxmox_config WHERE dashboard_id = %s;",
                 (dashboard_id,)
             )
             row = cur.fetchone()
@@ -112,7 +112,8 @@ async def get_proxmox_config(request: Request, dashboard_id: int = 1, token: dic
                     "token_name": None,
                     "verify_ssl": False,
                     "node": None,
-                    "is_cluster": False
+                    "is_cluster": False,
+                    "updated_at": None,
                 }
             
             # Maskiere token_name: zeige nur user@realm!*** statt vollem Token-Namen
@@ -132,7 +133,8 @@ async def get_proxmox_config(request: Request, dashboard_id: int = 1, token: dic
                 "token_name": masked_token_name,
                 "verify_ssl": row[4],
                 "node": row[5],
-                "is_cluster": row[6]
+                "is_cluster": row[6],
+                "updated_at": row[7].isoformat() if row[7] else None,
             }
         finally:
             cur.close()
@@ -163,7 +165,7 @@ async def update_proxmox_config(config: ProxmoxConfig, request: Request, dashboa
                 if token_was_updated:
                     cur.execute(
                         """UPDATE proxmox_config 
-                           SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s, is_cluster=%s, token_created_at=NOW() 
+                           SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s, is_cluster=%s, token_created_at=NOW(), updated_at=NOW() 
                            WHERE dashboard_id=%s 
                            RETURNING id;""",
                         (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node, config.is_cluster, dashboard_id)
@@ -171,15 +173,15 @@ async def update_proxmox_config(config: ProxmoxConfig, request: Request, dashboa
                 else:
                     cur.execute(
                         """UPDATE proxmox_config 
-                           SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s, is_cluster=%s 
+                           SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s, is_cluster=%s, updated_at=NOW() 
                            WHERE dashboard_id=%s 
                            RETURNING id;""",
                         (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node, config.is_cluster, dashboard_id)
                     )
             else:
                 cur.execute(
-                    """INSERT INTO proxmox_config (host, port, token_name, token_value, verify_ssl, node, is_cluster, dashboard_id) 
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s) 
+                    """INSERT INTO proxmox_config (host, port, token_name, token_value, verify_ssl, node, is_cluster, dashboard_id, updated_at) 
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW()) 
                        RETURNING id;""",
                     (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node, config.is_cluster, dashboard_id)
                 )
