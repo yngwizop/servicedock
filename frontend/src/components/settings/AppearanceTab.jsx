@@ -1,17 +1,40 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
-import { Image, Palette, SquaresFour, Eye, CloudSun, UploadSimple, Trash, CheckCircle, Link as LinkIcon, CaretDown, CaretUp, XCircle } from 'phosphor-react';
+import {
+  Image,
+  Palette,
+  SquaresFour,
+  Eye,
+  CloudSun,
+  UploadSimple,
+  Trash,
+  CheckCircle,
+  Link as LinkIcon,
+  CaretDown,
+  CaretUp,
+  XCircle,
+  ThermometerSimple,
+  Drop,
+  Wind,
+  CloudRain,
+  Cloud,
+  Gauge,
+  Lightbulb,
+  Sun,
+  Moon,
+} from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
 import { BACKEND_URL } from '../../utils/backendUrl';
+import { WEATHER_METRIC_ICON_COLORS } from '../../utils/weatherWidgetVisuals';
 import SettingsTopicLayout from './SettingsTopicLayout';
 
 const WEATHER_FIELDS = [
-  { key: 'temperature', labelKey: 'appearance.temperature', icon: '🌡️' },
-  { key: 'humidity', labelKey: 'appearance.humidity', icon: '💧' },
-  { key: 'wind', labelKey: 'appearance.wind', icon: '🌀' },
-  { key: 'precipitation', labelKey: 'appearance.precipitation', icon: '🌧️' },
-  { key: 'cloudCover', labelKey: 'appearance.cloud_cover', icon: '☁️' },
-  { key: 'pressure', labelKey: 'appearance.pressure', icon: '🔽' }
+  { key: 'temperature', labelKey: 'appearance.temperature', Icon: ThermometerSimple, iconColor: WEATHER_METRIC_ICON_COLORS.temperature },
+  { key: 'humidity', labelKey: 'appearance.humidity', Icon: Drop, iconColor: WEATHER_METRIC_ICON_COLORS.humidity },
+  { key: 'wind', labelKey: 'appearance.wind', Icon: Wind, iconColor: WEATHER_METRIC_ICON_COLORS.wind },
+  { key: 'precipitation', labelKey: 'appearance.precipitation', Icon: CloudRain, iconColor: WEATHER_METRIC_ICON_COLORS.precipitation },
+  { key: 'cloudCover', labelKey: 'appearance.cloud_cover', Icon: Cloud, iconColor: WEATHER_METRIC_ICON_COLORS.cloudCover },
+  { key: 'pressure', labelKey: 'appearance.pressure', Icon: Gauge, iconColor: WEATHER_METRIC_ICON_COLORS.pressure },
 ];
 
 // Gebundelte Preset-Wallpapers (Unsplash, lizenzfrei)
@@ -432,12 +455,22 @@ function AppearanceTab({
         <SectionHeader icon={Palette} title={t('appearance.font_colors')} color="text-pink-400" />
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">{t('settings.topicNav.appearance_colors_detail')}</p>
 
-        <div className="p-3 mb-5 bg-blue-500/10 dark:bg-blue-500/10 rounded-xl border border-blue-500/20">
-          <p className="text-sm text-blue-700 dark:text-blue-300">
+        <div className="p-3 mb-5 flex items-start gap-2.5 bg-blue-500/10 dark:bg-blue-500/10 rounded-xl border border-blue-500/20">
+          <Lightbulb
+            size={20}
+            weight="duotone"
+            className="shrink-0 mt-0.5 text-amber-500/90 dark:text-amber-400/85"
+            aria-hidden
+          />
+          <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed min-w-0 flex-1">
             {t('appearance.mode_info', {
               mode: currentTheme === 'light' ? t('appearance.mode_light') : t('appearance.mode_dark'),
-              icon: '☀/🌙'
             })}
+            <span className="inline-flex items-center gap-1 align-text-bottom ml-1" aria-hidden>
+              <Sun size={15} weight="fill" className="text-amber-500/90 dark:text-amber-400/85 shrink-0" />
+              <span className="text-blue-600/55 dark:text-blue-200/45 text-xs select-none">/</span>
+              <Moon size={15} weight="fill" className="text-indigo-500/85 dark:text-indigo-400/80 shrink-0" />
+            </span>
           </p>
         </div>
 
@@ -613,7 +646,9 @@ function AppearanceTab({
           <div>
             <label className={labelClass}>{t('appearance.weather_fields')}</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {WEATHER_FIELDS.map(f => (
+              {WEATHER_FIELDS.map((f) => {
+                const FieldIcon = f.Icon;
+                return (
                 <label
                   key={f.key}
                   className={`flex items-center gap-3 cursor-pointer p-3 rounded-xl border transition-all duration-200 ${
@@ -634,10 +669,11 @@ function AppearanceTab({
                     }}
                     className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-2 focus:ring-blue-500"
                   />
-                  <span className="text-lg flex-shrink-0" aria-hidden="true">{f.icon}</span>
+                  <FieldIcon className="shrink-0" color={f.iconColor} size={22} weight="regular" aria-hidden />
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t(f.labelKey)}</span>
                 </label>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

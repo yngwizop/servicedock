@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Translate, Check } from 'phosphor-react';
+import { Translate, Check, Lightbulb } from 'phosphor-react';
 import SettingsTopicLayout from './SettingsTopicLayout';
 
 // SVG Flaggen statt Emojis (Alpine/Docker hat keine Emoji-Font für Flaggen)
@@ -100,8 +100,9 @@ function LanguageCard({ onTipsTopicChange }) {
           );
         })}
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-              💡 {t('language.persistence_info')}
+            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-start gap-2" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+              <Lightbulb size={18} weight="duotone" className="shrink-0 mt-0.5 text-amber-500/90 dark:text-amber-400/85" aria-hidden />
+              <span>{t('language.persistence_info')}</span>
             </p>
           </div>
         )}

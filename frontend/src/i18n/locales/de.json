@@ -414,7 +414,7 @@
           "colors": {
             "title": "Schrift & Farben",
             "tips": [
-              "Die primäre Schriftfarbe gilt für Standard- und Nacht-Theme. Eine zweite Farbe bleibt gespeichert — mit ☀/🌙 in der Sidebar zwischen Standard und Nacht wechseln.",
+              "Die primäre Schriftfarbe gilt für Standard- und Nacht-Theme. Eine zweite Farbe bleibt gespeichert — über die Theme-Schaltfläche in der Sidebar wechselst du zwischen Standard und Nacht.",
               "Hex-Eingabe und Color-Picker sind synchronisiert — du kannst exakte Farbwerte direkt eintippen."
             ]
           },
@@ -554,7 +554,7 @@
     "bg_image_url": "Hintergrundbild URL",
     "bg_opacity": "Bild-Deckkraft:",
     "font_colors": "Schriftfarben",
-    "mode_info": "💡 Aktives Theme: {{mode}}. Umschalten mit {{icon}} in der Sidebar (Standard ↔ Nacht).",
+    "mode_info": "Aktives Theme: {{mode}}. In der Sidebar wechselst du mit der Theme-Schaltfläche zwischen Standard- und Nachtansicht.",
     "mode_light": "Standard (dim)",
     "mode_dark": "Nacht",
     "layout": "Layout & Spalten",

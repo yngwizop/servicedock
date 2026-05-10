@@ -192,18 +192,18 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
                 {dashboards.map((dashboard) => (
                   <div
                     key={dashboard.id}
-                    className={`group relative isolate overflow-hidden rounded-2xl transition-all duration-300 ${
+                    className={`group relative isolate overflow-hidden rounded-2xl transition-all duration-200 ease-out motion-safe:hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/[0.06] dark:hover:shadow-black/35 night:hover:shadow-black/50 ${
                       dashboard.id === activeDashboard ? 'ring-1 ring-inset ring-blue-400/30 dark:ring-blue-400/25' : ''
                     }`}
                   >
                     <div
-                      className={`absolute inset-0 ${
+                      className={`pointer-events-none absolute inset-0 ${
                         dashboard.id === activeDashboard
                           ? 'bg-gradient-to-br from-blue-500/15 via-blue-400/5 to-transparent dark:from-blue-400/35 dark:via-blue-500/15 dark:to-transparent'
                           : 'bg-gradient-to-br from-gray-500/5 via-transparent to-transparent dark:from-white/[0.06] dark:via-transparent dark:to-transparent'
                       }`}
                     />
-                    <div className="relative rounded-2xl bg-white/30 dark:bg-gray-800/55 sd-night-surface border border-gray-200/25 dark:border-white/[0.07] night:border-white/[0.06] p-4 shadow-sm shadow-black/[0.03] dark:shadow-black/15 night:shadow-black/40">
+                    <div className="relative rounded-2xl bg-white/30 dark:bg-gray-800/55 sd-night-surface border border-gray-200/25 dark:border-white/[0.07] night:border-white/[0.06] p-4 shadow-sm shadow-black/[0.03] dark:shadow-black/15 night:shadow-black/40 transition-[background-color,border-color,box-shadow] duration-200 ease-out group-hover:bg-white/45 dark:group-hover:bg-gray-800/68 night:group-hover:bg-sd-night-900/80 group-hover:border-blue-400/30 dark:group-hover:border-blue-400/20 night:group-hover:border-white/[0.1] group-hover:shadow-md dark:group-hover:shadow-black/25">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">

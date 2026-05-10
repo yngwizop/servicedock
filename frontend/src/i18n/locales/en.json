@@ -414,7 +414,7 @@
           "colors": {
             "title": "Fonts & colors",
             "tips": [
-              "Primary text color applies to the dim and night themes. A secondary color is still stored for optional use — switch themes with the ☀/🌙 control in the sidebar to preview.",
+              "Primary text color applies to standard and night themes. A second color stays saved — use the theme control in the sidebar to switch between standard and night to preview.",
               "Hex input and color picker are synchronized — you can type exact color values directly."
             ]
           },
@@ -554,7 +554,7 @@
     "bg_image_url": "Background Image URL",
     "bg_opacity": "Image Opacity:",
     "font_colors": "Font Colors",
-    "mode_info": "💡 Active theme: {{mode}}. Toggle with the {{icon}} control in the sidebar (standard ↔ night).",
+    "mode_info": "Active theme: {{mode}}. Use the theme control in the sidebar to switch between standard and night appearance.",
     "mode_light": "Standard (dim)",
     "mode_dark": "Night",
     "layout": "Layout & Columns",

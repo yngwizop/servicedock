@@ -1,7 +1,24 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
+import {
+  ArrowsClockwise,
+  CircleNotch,
+  CloudFog,
+  CloudLightning,
+  CloudRain,
+  CloudSun,
+  Drop,
+  Gauge,
+  Snowflake,
+  Sun,
+  ThermometerSimple,
+  WarningCircle,
+  Wind,
+  Cloud,
+} from 'phosphor-react';
 import HeaderWidgetCapsule from './HeaderWidgetCapsule';
+import { getConditionIconColor, WEATHER_METRIC_ICON_COLORS } from '../utils/weatherWidgetVisuals';
 
 /**
  * WeatherWidget Component
@@ -186,20 +203,21 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
     }
   };
 
-  // Map WMO weather codes to emoji icons
-  const getWeatherIcon = (weatherCode) => {
-    // WMO Weather interpretation codes (WW)
-    // https://open-meteo.com/en/docs
-    if (weatherCode === 0) return '☀️'; // Clear sky
-    if (weatherCode <= 3) return '⛅'; // Partly cloudy
-    if (weatherCode <= 49) return '🌫️'; // Fog
-    if (weatherCode <= 59) return '🌦️'; // Drizzle
-    if (weatherCode <= 69) return '🌧️'; // Rain
-    if (weatherCode <= 79) return '🌨️'; // Snow
-    if (weatherCode <= 84) return '🌧️'; // Rain showers
-    if (weatherCode <= 99) return '⛈️'; // Thunderstorm
-    return '🌡️'; // Default
+  /** WMO weather codes → Phosphor icon (https://open-meteo.com/en/docs) */
+  const getConditionIcon = (weatherCode) => {
+    if (weatherCode === 0) return Sun;
+    if (weatherCode <= 3) return CloudSun;
+    if (weatherCode <= 49) return CloudFog;
+    if (weatherCode <= 59) return CloudRain;
+    if (weatherCode <= 69) return CloudRain;
+    if (weatherCode <= 79) return Snowflake;
+    if (weatherCode <= 84) return CloudRain;
+    if (weatherCode <= 99) return CloudLightning;
+    return ThermometerSimple;
   };
+
+  const metricIconSize = 22;
+  const conditionIconSize = 34;
 
   // Fetch weather data on mount and when city changes
   useEffect(() => {
@@ -354,7 +372,12 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
           aria-label={t('weather.loading_aria')}
           aria-busy="true"
         >
-          <span>🌡️</span>
+          <CircleNotch
+            className="shrink-0 animate-spin text-sky-500/80 dark:text-sky-400/75"
+            size={24}
+            weight="regular"
+            aria-hidden
+          />
           <span>{t('common.loading')}</span>
         </div>
       </HeaderWidgetCapsule>
@@ -375,22 +398,14 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
           aria-label={t('weather.error_aria')}
           title={t('weather.error_title') + ': ' + error}
         >
-          <span>⚠️</span>
+          <WarningCircle
+            className="shrink-0 text-amber-400/90 dark:text-amber-300/85"
+            size={24}
+            weight="regular"
+            aria-hidden
+          />
           <span>{t('weather.unavailable')}</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 opacity-50"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-            />
-          </svg>
+          <ArrowsClockwise className="shrink-0 opacity-55 text-slate-400 dark:text-slate-500" size={16} weight="regular" aria-hidden />
         </div>
       </HeaderWidgetCapsule>
     );
@@ -398,7 +413,7 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
 
   // Success state
   if (weather) {
-    const icon = getWeatherIcon(weather.weatherCode);
+    const ConditionIcon = getConditionIcon(weather.weatherCode);
     const temp = Math.round(weather.temperature);
     const wind = Math.round(weather.windSpeed);
     const humidity = Math.round(weather.humidity);
@@ -442,20 +457,7 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
           title={isFromCache ? t('weather.updated_tooltip', { time: cacheAgeText }) : t('weather.just_updated_tooltip')}
           aria-label={t('weather.refresh_aria')}
         >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-4 w-4" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
-            />
-          </svg>
+          <ArrowsClockwise size={16} weight="regular" aria-hidden />
           {isFromCache && cacheAgeMinutes > 0 && (
             <span className="absolute -top-1 -right-1 flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -463,18 +465,127 @@ export default function WeatherWidget({ city = 'Berlin', textColor = '#1f2937', 
             </span>
           )}
         </button>
-        <span className="text-3xl md:text-4xl" aria-hidden="true">{icon}</span>
+        <ConditionIcon
+          className="shrink-0"
+          color={getConditionIconColor(weather.weatherCode)}
+          size={conditionIconSize}
+          weight="regular"
+          aria-hidden
+        />
         <span className="text-gray-400 dark:text-gray-500" aria-hidden="true">•</span>
         {(() => {
-          const activeFields = [];
-          if (weatherFields.includes('temperature')) activeFields.push(<span className="whitespace-nowrap flex items-center gap-1" style={{ color: textColor }}><span className="text-xl md:text-2xl" aria-hidden="true">🌡️</span>{temp}°C</span>);
-          if (weatherFields.includes('humidity')) activeFields.push(<span className="whitespace-nowrap flex items-center gap-1" style={{ color: textColor }}><span className="text-xl md:text-2xl" aria-hidden="true">💧</span>{humidity}%</span>);
-          if (weatherFields.includes('wind')) activeFields.push(<span className="whitespace-nowrap flex items-center gap-1" style={{ color: textColor }}><span className="text-xl md:text-2xl" aria-hidden="true">🌀</span>{wind} km/h</span>);
-          if (weatherFields.includes('precipitation')) activeFields.push(<span className="whitespace-nowrap flex items-center gap-1" style={{ color: textColor }}><span className="text-xl md:text-2xl" aria-hidden="true">🌧️</span>{precipitation} mm</span>);
-          if (weatherFields.includes('cloudCover')) activeFields.push(<span className="whitespace-nowrap flex items-center gap-1" style={{ color: textColor }}><span className="text-xl md:text-2xl" aria-hidden="true">☁️</span>{cloudCover}%</span>);
-          if (weatherFields.includes('pressure')) activeFields.push(<span className="whitespace-nowrap flex items-center gap-1" style={{ color: textColor }}><span className="text-xl md:text-2xl" aria-hidden="true">🔽</span>{pressure} hPa</span>);
-          return activeFields.map((field, index) => (
-            <>{field}{index < activeFields.length - 1 && <span className="text-gray-400 dark:text-gray-500" aria-hidden="true">•</span>}</>
+          const rows = [];
+          if (weatherFields.includes('temperature')) {
+            rows.push({
+              key: 'temperature',
+              node: (
+                <span className="flex items-center gap-1.5 whitespace-nowrap" style={{ color: textColor }}>
+                  <ThermometerSimple
+                    className="shrink-0"
+                    color={WEATHER_METRIC_ICON_COLORS.temperature}
+                    size={metricIconSize}
+                    weight="regular"
+                    aria-hidden
+                  />
+                  {temp}°C
+                </span>
+              ),
+            });
+          }
+          if (weatherFields.includes('humidity')) {
+            rows.push({
+              key: 'humidity',
+              node: (
+                <span className="flex items-center gap-1.5 whitespace-nowrap" style={{ color: textColor }}>
+                  <Drop
+                    className="shrink-0"
+                    color={WEATHER_METRIC_ICON_COLORS.humidity}
+                    size={metricIconSize}
+                    weight="regular"
+                    aria-hidden
+                  />
+                  {humidity}%
+                </span>
+              ),
+            });
+          }
+          if (weatherFields.includes('wind')) {
+            rows.push({
+              key: 'wind',
+              node: (
+                <span className="flex items-center gap-1.5 whitespace-nowrap" style={{ color: textColor }}>
+                  <Wind
+                    className="shrink-0"
+                    color={WEATHER_METRIC_ICON_COLORS.wind}
+                    size={metricIconSize}
+                    weight="regular"
+                    aria-hidden
+                  />
+                  {wind} km/h
+                </span>
+              ),
+            });
+          }
+          if (weatherFields.includes('precipitation')) {
+            rows.push({
+              key: 'precipitation',
+              node: (
+                <span className="flex items-center gap-1.5 whitespace-nowrap" style={{ color: textColor }}>
+                  <CloudRain
+                    className="shrink-0"
+                    color={WEATHER_METRIC_ICON_COLORS.precipitation}
+                    size={metricIconSize}
+                    weight="regular"
+                    aria-hidden
+                  />
+                  {precipitation} mm
+                </span>
+              ),
+            });
+          }
+          if (weatherFields.includes('cloudCover')) {
+            rows.push({
+              key: 'cloudCover',
+              node: (
+                <span className="flex items-center gap-1.5 whitespace-nowrap" style={{ color: textColor }}>
+                  <Cloud
+                    className="shrink-0"
+                    color={WEATHER_METRIC_ICON_COLORS.cloudCover}
+                    size={metricIconSize}
+                    weight="regular"
+                    aria-hidden
+                  />
+                  {cloudCover}%
+                </span>
+              ),
+            });
+          }
+          if (weatherFields.includes('pressure')) {
+            rows.push({
+              key: 'pressure',
+              node: (
+                <span className="flex items-center gap-1.5 whitespace-nowrap" style={{ color: textColor }}>
+                  <Gauge
+                    className="shrink-0"
+                    color={WEATHER_METRIC_ICON_COLORS.pressure}
+                    size={metricIconSize}
+                    weight="regular"
+                    aria-hidden
+                  />
+                  {pressure} hPa
+                </span>
+              ),
+            });
+          }
+          return rows.map((row, index) => (
+            <Fragment key={row.key}>
+              {row.node}
+              {index < rows.length - 1 ? (
+                <span className="text-gray-400 dark:text-gray-500" aria-hidden="true">
+                  •
+                </span>
+              ) : null}
+            </Fragment>
           ));
         })()}
         {/* Cache indicator (subtle dot) */}
