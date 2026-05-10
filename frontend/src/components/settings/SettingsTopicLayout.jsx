@@ -18,7 +18,7 @@ function SettingsTopicLayout({
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
       <nav
-        className="flex w-full min-w-0 shrink-0 flex-col gap-1 rounded-xl border border-gray-300/40 bg-white/40 p-2 dark:border-white/10 dark:bg-white/[0.04] lg:w-56 xl:w-60 night:border-white/[0.07]"
+        className="flex w-full min-w-0 shrink-0 flex-col gap-1 rounded-xl border border-gray-300/40 bg-white/40 p-2 dark:border-white/10 dark:bg-white/[0.06] dark:ring-1 dark:ring-white/[0.04] dark:shadow-black/20 lg:w-56 xl:w-60 night:border-white/[0.07]"
         aria-label={navAriaLabel}
       >
         <div className="flex max-h-[min(70vh,560px)] flex-col gap-3 overflow-y-auto pr-0.5">
@@ -54,7 +54,8 @@ function SettingsTopicLayout({
       {/* Kein overflow-y hier: Scroll passiert in der App-Hauptspalte (Rand wie andere Dashboards), nicht innerhalb des Rahmens */}
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <div
-          className={`rounded-xl border border-gray-300/40 bg-white/35 p-4 dark:border-white/10 dark:bg-white/[0.04] sm:p-6 night:border-white/[0.07] ${detailClassName}`}
+          key={activeId}
+          className={`animate-settings-pane-in rounded-xl border border-gray-300/40 bg-white/35 p-4 dark:border-white/10 dark:bg-white/[0.06] dark:ring-1 dark:ring-white/[0.04] dark:shadow-black/20 sm:p-6 night:border-white/[0.07] ${detailClassName}`}
         >
           {children}
         </div>
@@ -62,7 +63,7 @@ function SettingsTopicLayout({
           <div
             className={
               'shrink-0 flex flex-wrap items-center justify-end gap-2 rounded-xl border border-gray-300/40 ' +
-              'bg-white/30 px-4 py-3 dark:border-white/10 dark:bg-white/[0.05] sm:px-5 night:border-white/[0.07]'
+              'bg-white/30 px-4 py-3 dark:border-white/10 dark:bg-white/[0.06] dark:ring-1 dark:ring-white/[0.04] dark:shadow-black/20 sm:px-5 night:border-white/[0.07]'
             }
           >
             {footer}

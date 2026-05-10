@@ -34,6 +34,8 @@
     "search": "Search",
     "search_shortcut": "Search (Ctrl+F)",
     "logout": "Log out",
+    "theme_label_dark": "Dark mode",
+    "theme_label_light": "Light mode",
     "theme_switch_night": "Switch to night theme",
     "theme_switch_standard": "Switch to standard theme",
     "health": "Integration health",

@@ -34,6 +34,8 @@
     "search": "Suche",
     "search_shortcut": "Suche (Strg+F)",
     "logout": "Abmelden",
+    "theme_label_dark": "Dunkelmodus",
+    "theme_label_light": "Hellmodus",
     "theme_switch_night": "Zum Nacht-Theme wechseln",
     "theme_switch_standard": "Zum Standard-Theme wechseln",
     "health": "Integrations-Status",

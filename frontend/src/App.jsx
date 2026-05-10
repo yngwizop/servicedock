@@ -340,11 +340,11 @@ function App() {
       {/* pt-3/sm:pt-3.5 = wie Sidebar-Außenpadding → PageHeader bündig mit Glas-Rail der Navbar */}
       <div
         className={`${sidebarCollapsed ? 'ml-20' : 'ml-52'} transition-all duration-300 relative z-10 flex flex-col ${
-          activeTab === 'settings' ? 'h-screen overflow-hidden pr-0' : 'min-h-screen pr-4 md:pr-6'
-        } pt-3 sm:pt-3.5 pl-8 md:pl-12 pb-2`}
+          activeTab === 'settings' ? 'h-screen overflow-hidden' : 'min-h-screen'
+        } pt-3 sm:pt-3.5 px-4 md:px-6 pb-2`}
       >
         <PageHeader
-          className={activeTab === 'settings' ? 'shrink-0 pr-4 md:pr-6' : ''}
+          className={activeTab === 'settings' ? 'shrink-0' : ''}
           icon={PageIcon}
           title={pageTitle}
           subtitle={pageSubtitle}

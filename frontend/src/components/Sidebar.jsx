@@ -411,7 +411,7 @@ function Sidebar({
         <button
           onClick={toggleTheme}
           className={`flex w-full items-center ${collapsed ? 'justify-center px-1 py-2.5' : 'min-w-0 gap-3 px-4 py-3'} rounded-xl text-white dark:text-gray-300 hover:bg-white/15 dark:hover:bg-white/10 transition-all duration-300 ease-in-out`}
-          title={collapsed ? (theme === 'light' ? t('sidebar.theme_switch_night') : t('sidebar.theme_switch_standard')) : ''}
+          title={collapsed ? (theme === 'light' ? t('sidebar.theme_label_dark') : t('sidebar.theme_label_light')) : ''}
         >
           {theme === 'light' ? (
             <Moon size={izTheme} weight="bold" className="shrink-0" />
@@ -421,14 +421,14 @@ function Sidebar({
           {!collapsed ? (
             <div className="min-w-0 flex-1 text-left">
               <MarqueeOrTruncate
-                text={theme === 'light' ? t('sidebar.theme_switch_night') : t('sidebar.theme_switch_standard')}
+                text={theme === 'light' ? t('sidebar.theme_label_dark') : t('sidebar.theme_label_light')}
                 className="font-medium text-white dark:text-gray-300"
                 style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
               />
             </div>
           ) : (
             <span className="sr-only">
-              {theme === 'light' ? t('sidebar.theme_switch_night') : t('sidebar.theme_switch_standard')}
+              {theme === 'light' ? t('sidebar.theme_label_dark') : t('sidebar.theme_label_light')}
             </span>
           )}
         </button>

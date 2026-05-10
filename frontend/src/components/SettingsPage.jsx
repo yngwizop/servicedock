@@ -224,20 +224,20 @@ function SettingsPage({
 
   // Shell: hell = lesbar; dunkel = Slate-Glas (weniger „reines Schwarz“), weiterhin blur
   const settingsShell =
-    'overflow-hidden rounded-3xl border border-white/28 dark:border-white/[0.07] night:border-white/[0.05] ' +
-    'bg-gradient-to-br from-white/[0.78] via-white/[0.65] to-white/[0.55] ' +
-    'dark:from-slate-900/55 dark:via-slate-800/48 dark:to-slate-900/52 ' +
-    'night:from-sd-night-900/92 night:via-sd-night-950/78 night:to-sd-night-900/95 ' +
-    'backdrop-blur-2xl shadow-2xl dark:shadow-black/25 night:shadow-black/50 ' +
-    'ring-1 ring-black/[0.05] dark:ring-0 night:ring-0';
+    'overflow-hidden rounded-3xl border border-white/28 dark:border-white/10 night:border-white/[0.06] ' +
+    'bg-white/45 ' +
+    'dark:bg-white/[0.06] ' +
+    'night:bg-sd-night-900/85 ' +
+    'backdrop-blur-2xl shadow-2xl dark:shadow-black/25 night:shadow-black/45 ' +
+    'ring-1 ring-black/[0.05] dark:ring-white/[0.05] night:ring-white/[0.04]';
   const rowDivider = 'lg:divide-x lg:divide-white/18 dark:lg:divide-white/[0.06]';
 
   return (
-    <div className="w-full max-w-none pb-2 pr-4 md:pr-6">
+    <div className="w-full max-w-none pb-2">
       <div className={settingsShell}>
         {/* Mobile: Sub-Nav oben in der Shell */}
         <nav
-          className="lg:hidden border-b border-white/22 dark:border-white/[0.06] night:border-white/[0.05] bg-white/35 dark:bg-white/[0.06] sd-night-shade-flat px-2 py-2 overflow-x-auto"
+          className="lg:hidden border-b border-white/22 dark:border-white/[0.06] night:border-white/[0.05] bg-white/25 dark:bg-white/[0.06] sd-night-veil-flat px-2 py-2 overflow-x-auto"
           aria-label={t('settings.nav_sections_aria')}
         >
           <div className="flex gap-1 min-w-min">
@@ -265,7 +265,7 @@ function SettingsPage({
 
         <div className={`lg:flex lg:items-stretch lg:min-h-[min(70vh,680px)] ${rowDivider}`}>
           {/* Desktop-Subnav */}
-          <div className="hidden lg:flex flex-col w-56 xl:w-60 shrink-0 bg-white/30 dark:bg-white/[0.05] sd-night-veil-flat p-3">
+          <div className="hidden lg:flex flex-col w-56 xl:w-60 shrink-0 bg-white/26 dark:bg-white/[0.06] sd-night-veil-flat p-3 dark:ring-1 dark:ring-white/[0.04] dark:shadow-black/20">
             <nav className="space-y-1 sticky top-4 self-start w-full" role="navigation" aria-label={t('settings.nav_sections_aria')}>
               {displaySections.map((section) => {
                 const Icon = section.icon;
@@ -290,7 +290,7 @@ function SettingsPage({
           </div>
 
           {/* Hauptinhalt */}
-          <main className="flex-1 min-w-0 bg-white/22 dark:bg-white/[0.04] sd-night-tint-flat px-5 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
+          <main className="flex-1 min-w-0 bg-white/18 dark:bg-white/[0.06] sd-night-tint-flat px-5 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8 dark:shadow-black/20 dark:ring-1 dark:ring-white/[0.04]">
             {searchTerm.trim() && !settingsSearchHasMatches && (
               <div
                 role="status"
@@ -299,52 +299,54 @@ function SettingsPage({
                 {t('search.settings_no_match')}
               </div>
             )}
-            {activeSection === 'appearance' && (
-              <AppearanceTab
-                editAppearance={editAppearance}
-                setEditAppearance={setEditAppearance}
-                currentTheme={currentTheme}
-                weatherLocationInfo={weatherLocationInfo}
-                isSavingAppearance={isSavingAppearance}
-                showSaved={showSaved}
-                onSaveAppearance={onSaveAppearance}
-                onTipsTopicChange={handleTipsTopicChange}
-              />
-            )}
+            <div key={activeSection} className="animate-settings-pane-in">
+              {activeSection === 'appearance' && (
+                <AppearanceTab
+                  editAppearance={editAppearance}
+                  setEditAppearance={setEditAppearance}
+                  currentTheme={currentTheme}
+                  weatherLocationInfo={weatherLocationInfo}
+                  isSavingAppearance={isSavingAppearance}
+                  showSaved={showSaved}
+                  onSaveAppearance={onSaveAppearance}
+                  onTipsTopicChange={handleTipsTopicChange}
+                />
+              )}
 
-            {activeSection === 'dashboards' && (
-              <DashboardsCard
-                dashboards={dashboards}
-                activeDashboard={activeDashboard}
-                onDashboardsChange={onDashboardsChange}
-                onTipsTopicChange={handleTipsTopicChange}
-              />
-            )}
+              {activeSection === 'dashboards' && (
+                <DashboardsCard
+                  dashboards={dashboards}
+                  activeDashboard={activeDashboard}
+                  onDashboardsChange={onDashboardsChange}
+                  onTipsTopicChange={handleTipsTopicChange}
+                />
+              )}
 
-            {activeSection === 'proxmox' && (
-              <ProxmoxTab
-                activeDashboard={activeDashboard}
-                savedTokenName={savedTokenName}
-                onSettingsChange={handleProxmoxSettingsChange}
-                onTipsTopicChange={handleTipsTopicChange}
-              />
-            )}
+              {activeSection === 'proxmox' && (
+                <ProxmoxTab
+                  activeDashboard={activeDashboard}
+                  savedTokenName={savedTokenName}
+                  onSettingsChange={handleProxmoxSettingsChange}
+                  onTipsTopicChange={handleTipsTopicChange}
+                />
+              )}
 
-            {activeSection === 'addons' && (
-              <AddOnsCard onTipsTopicChange={handleTipsTopicChange} dashboards={dashboards} />
-            )}
+              {activeSection === 'addons' && (
+                <AddOnsCard onTipsTopicChange={handleTipsTopicChange} dashboards={dashboards} />
+              )}
 
-            {activeSection === 'language' && <LanguageCard onTipsTopicChange={handleTipsTopicChange} />}
+              {activeSection === 'language' && <LanguageCard onTipsTopicChange={handleTipsTopicChange} />}
 
-            {activeSection === 'users' && <UsersTab onTipsTopicChange={handleTipsTopicChange} />}
+              {activeSection === 'users' && <UsersTab onTipsTopicChange={handleTipsTopicChange} />}
 
-            {activeSection === 'help' && <HelpTab textColor={textColor} />}
+              {activeSection === 'help' && <HelpTab textColor={textColor} />}
+            </div>
           </main>
 
           {/* Tipps rechts (Hilfe-Tab hat eigene Topic-Navigation) */}
           {activeSection !== 'help' && (
             <aside
-              className="hidden lg:flex lg:flex-col lg:w-56 xl:w-64 shrink-0 border-t border-white/22 dark:border-white/[0.06] night:border-white/[0.05] lg:border-t-0 lg:border-l bg-white/28 dark:bg-white/[0.05] sd-night-veil-flat p-4 xl:p-5"
+              className="hidden lg:flex lg:flex-col lg:w-56 xl:w-64 shrink-0 border-t border-white/22 dark:border-white/[0.06] night:border-white/[0.05] lg:border-t-0 lg:border-l bg-white/24 dark:bg-white/[0.06] sd-night-veil-flat p-4 xl:p-5 dark:ring-1 dark:ring-white/[0.04] dark:shadow-black/20"
               aria-label={t('settings.tips_aside_aria')}
             >
               <div className="space-y-3">

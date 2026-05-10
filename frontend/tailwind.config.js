@@ -13,6 +13,15 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      keyframes: {
+        settingsPaneIn: {
+          '0%': { opacity: '0', transform: 'translateY(6px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'settings-pane-in': 'settingsPaneIn 0.2s ease-out both',
+      },
       colors: {
         /* Nacht-UI: Werte kommen aus index.css (--sd-night-*) */
         'sd-night': {
