@@ -57,6 +57,8 @@ RELEASE_GUIDE.md
 docs/LOKAL_TESTEN.md
 docs/DEPLOY.md
 docs/RELEASE_GUIDE.md
+DOCKERHUB_SETUP.md
+docs/DOCKERHUB_SETUP.md
 
 # Samba AD Test-Daten (Zugangsdaten, nicht committen!)
 /SAMBA_TEST_DATA.md
