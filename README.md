@@ -63,70 +63,82 @@ Built for homelab enthusiasts and self-hosters — a sleek personal start page w
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Installation
+
+ServiceDock ships as **pre-built Docker images** on [Docker Hub](https://hub.docker.com/u/servicedockapp) (`servicedockapp/servicedock-*`).  
+You do **not** need to clone the repo or edit `.env` by hand — one setup script does everything.
 
 ### Prerequisites
-- Docker & Docker Compose
-- Git
 
-### 1. Clone & Configure
+- **Docker** and **Docker Compose** ([install guide](https://docs.docker.com/get-docker/))
+- **Python 3** with the `cryptography` package (`pip3 install cryptography` or `apt install python3-cryptography`)
+- **OpenSSL**
+- Ports **80** and **443** available on the host
+
+### One-command install
+
+Run on any Linux host (creates a `servicedock/` folder in your current directory):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/yngwizop/servicedock/main/setup-servicedock.sh -o setup-servicedock.sh
+chmod +x setup-servicedock.sh
+./setup-servicedock.sh
+```
+
+The script automatically:
+
+- Downloads `docker-compose.production.yml` and `db/init.sql`
+- Generates **PostgreSQL** TLS certs (`db/ssl/`) and **Nginx** HTTPS certs (`nginx/ssl/`)
+- Creates a complete `.env` (secrets, database password, `FRONTEND_URL`, Docker Hub image prefix)
+- Pulls images from Docker Hub and runs `docker compose up -d`
+
+When it finishes, open the URL shown in the terminal (your machine’s IP over HTTPS).
+
+| | |
+|--|--|
+| **Dashboard login** | `admin` / `changeme` — you will be prompted to change the password in the UI |
+| **Browser** | Accept the self-signed certificate warning (normal for local HTTPS) |
+| **Secrets** | Stored in `servicedock/.env` (mode `600`) — no manual editing required |
+
+### Optional environment variables
+
+```bash
+# Use a hostname instead of auto-detected IP
+SERVICEDOCK_URL=https://dashboard.homelab.local ./setup-servicedock.sh
+
+# Overwrite existing ./servicedock without confirmation
+SERVICEDOCK_FORCE=1 ./setup-servicedock.sh
+
+# Different Docker Hub namespace (default: servicedockapp)
+DOCKERHUB_USER=servicedockapp ./setup-servicedock.sh
+```
+
+### After install
+
+```bash
+cd servicedock
+docker compose ps          # check containers
+docker compose logs -f     # follow logs
+docker compose down        # stop
+```
+
+**Spotify:** add this redirect URI in the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard):  
+`https://<your-host>/api/spotify/callback` (same host as `FRONTEND_URL` in `.env`).
+
+More detail: [docs/QUICKSTART.md](docs/QUICKSTART.md) · HTTPS: [docs/HTTPS_SETUP.md](docs/HTTPS_SETUP.md)
+
+### Develop from source (optional)
+
+For local development with live builds instead of Docker Hub images:
 
 ```bash
 git clone https://github.com/yngwizop/servicedock.git
 cd servicedock
-```
-
-### 2. Generate SSL Certificates
-
-**PostgreSQL SSL:**
-```bash
-mkdir -p db/ssl
-openssl req -new -x509 -days 365 -nodes -text \
-  -out db/ssl/server.crt -keyout db/ssl/server.key -subj "/CN=postgres"
-chmod 600 db/ssl/server.key
-sudo chown 999:999 db/ssl/server.key db/ssl/server.crt
-```
-
-**Nginx SSL:**
-```bash
-./generate-ssl.sh
-```
-> Or manually: see [HTTPS_SETUP.md](docs/HTTPS_SETUP.md)
-
-### 3. Generate Security Keys
-
-```bash
-# Encryption key (Fernet) — never change after first start!
-python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-
-# JWT secret key
-openssl rand -hex 32
-```
-
-### 4. Create `.env`
-
-Copy the template and fill in your values:
-
-```bash
-cp .env.template .env
-nano .env
-```
-
-> See [.env.template](.env.template) for all available options with descriptions.
-
-### 5. Start
-
-```bash
+cp .env.template .env   # edit values for development
 docker compose up -d --build
 ```
 
-### 6. Open
-
-```
-https://your-ip
-```
-
-> For detailed setup instructions, see [QUICKSTART.md](docs/QUICKSTART.md).
+Use `ENVIRONMENT=development` in `.env` when running `docker-compose.yml` (not the production compose file).
 
 ---
 

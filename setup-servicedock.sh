@@ -1,6 +1,12 @@
 #!/bin/bash
 # ServiceDock automated setup script
-# Downloads required files and configures a production install
+# One-shot install: compose, db schema, Postgres + Nginx TLS, .env, images, stack up.
+#
+# Usage:
+#   curl -fsSL https://raw.githubusercontent.com/yngwizop/servicedock/main/setup-servicedock.sh -o setup-servicedock.sh
+#   chmod +x setup-servicedock.sh && ./setup-servicedock.sh
+#
+# Optional: SERVICEDOCK_FORCE=1 to overwrite an existing ./servicedock directory without asking.
 
 set -e
 
@@ -37,19 +43,31 @@ if ! command -v openssl &> /dev/null; then
     exit 1
 fi
 
+# Fernet key generation needs cryptography
+if ! python3 -c "from cryptography.fernet import Fernet" 2>/dev/null; then
+    echo -e "${RED}❌ Python package 'cryptography' is required.${NC}"
+    echo "Install with: pip3 install cryptography   (or: apt install python3-cryptography)"
+    exit 1
+fi
+
 echo -e "${GREEN}✅ Docker, Python, and OpenSSL found${NC}"
 echo ""
 
 # Create install directory
 INSTALL_DIR="servicedock"
 if [ -d "$INSTALL_DIR" ]; then
-    echo -e "${YELLOW}⚠️  Directory $INSTALL_DIR already exists${NC}"
-    read -p "Overwrite it? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
+    if [ "${SERVICEDOCK_FORCE:-}" = "1" ]; then
+        echo -e "${YELLOW}⚠️  Removing existing $INSTALL_DIR (SERVICEDOCK_FORCE=1)${NC}"
+        rm -rf "$INSTALL_DIR"
+    else
+        echo -e "${YELLOW}⚠️  Directory $INSTALL_DIR already exists${NC}"
+        read -p "Overwrite it? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            exit 1
+        fi
+        rm -rf "$INSTALL_DIR"
     fi
-    rm -rf "$INSTALL_DIR"
 fi
 
 mkdir -p "$INSTALL_DIR"
@@ -57,11 +75,10 @@ cd "$INSTALL_DIR"
 
 echo "📁 Creating directory structure..."
 
-# Docker Hub (public images: user/servicedock-<component>)
-DEFAULT_DOCKERHUB_USER="${DOCKERHUB_USER:-servicedockapp}"
-read -p "Docker Hub username [${DEFAULT_DOCKERHUB_USER}]: " INPUT_HUB_USER
-DOCKERHUB_USER="${INPUT_HUB_USER:-$DEFAULT_DOCKERHUB_USER}"
+# Docker Hub (public images — default publisher account)
+DOCKERHUB_USER="${DOCKERHUB_USER:-servicedockapp}"
 export DOCKERHUB_USER
+echo "📦 Docker Hub images: ${DOCKERHUB_USER}/servicedock-*"
 
 GITHUB_REPO="yngwizop/servicedock"
 GITHUB_RAW="https://raw.githubusercontent.com/${GITHUB_REPO}/main"
@@ -108,17 +125,19 @@ mkdir -p db nginx/ssl db/ssl
 echo "🗄️  Downloading database schema (db/init.sql)..."
 fetch_repo_file "db/init.sql" "db/init.sql"
 
-# Host / FRONTEND_URL (CORS, nginx certificate, Spotify redirect)
+# Host / FRONTEND_URL (auto-detected; override with SERVICEDOCK_URL=https://your-host)
 IP_ADDRESS=$(hostname -I | awk '{print $1}')
-echo ""
-echo -e "${YELLOW}Detected IP address: ${IP_ADDRESS}${NC}"
-read -p "IP or domain for HTTPS access (Enter for ${IP_ADDRESS}): " CUSTOM_IP
-HOST_INPUT=${CUSTOM_IP:-$IP_ADDRESS}
+if [ -n "${SERVICEDOCK_URL:-}" ]; then
+  HOST_INPUT="$SERVICEDOCK_URL"
+else
+  HOST_INPUT="${IP_ADDRESS:-localhost}"
+fi
 if [[ "$HOST_INPUT" == http://* ]] || [[ "$HOST_INPUT" == https://* ]]; then
   FRONTEND_URL="$HOST_INPUT"
 else
   FRONTEND_URL="https://${HOST_INPUT}"
 fi
+echo "🌐 Dashboard URL: ${FRONTEND_URL}"
 # Host for certificate SAN (strip scheme/port)
 CERT_HOST="${HOST_INPUT#https://}"
 CERT_HOST="${CERT_HOST#http://}"
@@ -153,16 +172,11 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 chmod 644 nginx/ssl/cert.pem
 chmod 600 nginx/ssl/key.pem
 
-# Generate secrets
-echo "🔑 Generating security keys..."
+# Generate secrets (no manual .env editing required)
+echo "🔑 Generating security keys and database password..."
 ENCRYPTION_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
 JWT_SECRET_KEY=$(openssl rand -hex 32)
-
-echo ""
-echo -e "${YELLOW}Enter the database password:${NC}"
-read -sp "Database password: " DB_PASSWORD
-echo ""
-echo ""
+DB_PASSWORD=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
 
 # Create .env
 echo "📝 Creating .env file..."
@@ -220,8 +234,11 @@ echo -e "${GREEN}🎉 ServiceDock is running!${NC}"
 echo ""
 echo "🌐 Access:"
 echo "   Browser: ${FRONTEND_URL}"
-echo "   First login: admin / changeme (change password in the UI)"
+echo "   Dashboard login: admin / changeme (you will be asked to change this in the UI)"
 echo "   (Accept the self-signed certificate warning in your browser)"
+echo ""
+echo "🔒 Generated secrets are stored in: $(pwd)/.env (chmod 600)"
+echo "   Postgres password was auto-generated — only needed for direct DB access, not for the web UI."
 echo ""
 echo "🎵 Spotify redirect URI (developer dashboard):"
 echo "   ${FRONTEND_URL}/api/spotify/callback"
