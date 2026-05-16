@@ -91,7 +91,7 @@ sudo chown 999:999 db/ssl/server.key db/ssl/server.crt
 ```bash
 ./generate-ssl.sh
 ```
-> Or manually: see [HTTPS_SETUP.md](HTTPS_SETUP.md)
+> Or manually: see [HTTPS_SETUP.md](docs/HTTPS_SETUP.md)
 
 ### 3. Generate Security Keys
 
@@ -126,7 +126,7 @@ docker compose up -d --build
 https://your-ip
 ```
 
-> For detailed setup instructions, see [INITIAL_SETUP.md](INITIAL_SETUP.md).
+> For detailed setup instructions, see [INITIAL_SETUP.md](docs/INITIAL_SETUP.md).
 
 ---
 
@@ -134,16 +134,19 @@ https://your-ip
 
 | Guide | Description |
 |-------|-------------|
-| [INITIAL_SETUP.md](INITIAL_SETUP.md) | Full setup walkthrough |
-| [HTTPS_SETUP.md](HTTPS_SETUP.md) | Nginx reverse proxy & SSL certificates |
-| [PROXMOX_SETUP.md](PROXMOX_SETUP.md) | Proxmox API token setup |
-| [SPOTIFY_ADDON.md](SPOTIFY_ADDON.md) | Spotify widget configuration |
-| [ENCRYPTION.md](ENCRYPTION.md) | Token encryption details |
-| [API_DOCUMENTATION.md](API_DOCUMENTATION.md) | Full API reference |
-| [RATE_LIMITS.md](RATE_LIMITS.md) | Rate limits for all endpoints |
-| [TOKEN_ROTATION_GUIDE.md](TOKEN_ROTATION_GUIDE.md) | Proxmox token rotation |
-| [RE_ENCRYPTION_GUIDE.md](RE_ENCRYPTION_GUIDE.md) | Encryption key rotation |
-| [TECH_DEBT_UPGRADES.md](TECH_DEBT_UPGRADES.md) | Summary of recent debt-reduction upgrades (tests, migrations, redis, etc.) |
+| [docs/](docs/) | All guides (install, addons, API, security) |
+| [INITIAL_SETUP.md](docs/INITIAL_SETUP.md) | Full setup walkthrough |
+| [QUICKSTART.md](docs/QUICKSTART.md) | Short install path |
+| [DEPLOY.md](docs/DEPLOY.md) | Production deployment |
+| [DOCKERHUB_SETUP.md](docs/DOCKERHUB_SETUP.md) | Publish images to Docker Hub |
+| [HTTPS_SETUP.md](docs/HTTPS_SETUP.md) | Nginx reverse proxy & SSL certificates |
+| [PROXMOX_SETUP.md](docs/PROXMOX_SETUP.md) | Proxmox API token setup |
+| [SPOTIFY_ADDON.md](docs/SPOTIFY_ADDON.md) | Spotify widget configuration |
+| [ENCRYPTION.md](docs/ENCRYPTION.md) | Token encryption details |
+| [API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md) | Full API reference |
+| [RATE_LIMITS.md](docs/RATE_LIMITS.md) | Rate limits for all endpoints |
+| [TOKEN_ROTATION_GUIDE.md](docs/TOKEN_ROTATION_GUIDE.md) | Proxmox token rotation |
+| [RE_ENCRYPTION_GUIDE.md](docs/RE_ENCRYPTION_GUIDE.md) | Encryption key rotation |
 
 ---
 

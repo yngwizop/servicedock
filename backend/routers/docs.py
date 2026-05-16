@@ -9,7 +9,7 @@ from dependencies.auth import require_help_docs_access
 router = APIRouter(prefix="/api/docs", tags=["docs"])
 
 # Dev: backend/routers/docs.py → …/backend → repo root (servicedock).
-# Docker: build copies *.md to SERVICEDOCK_HELP_DOCS_DIR (see backend/Dockerfile).
+# Docker: build copies README.md + docs/*.md to SERVICEDOCK_HELP_DOCS_DIR (see backend/Dockerfile).
 def _help_docs_root() -> Path:
     raw = (os.environ.get("SERVICEDOCK_HELP_DOCS_DIR") or "").strip()
     if raw:

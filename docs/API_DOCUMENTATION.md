@@ -838,7 +838,7 @@ curl -X GET http://localhost:8000/api/admin/audit-logs?limit=10 \
 
 ## 📚 Weitere Dokumentation
 
-- **[README.md](README.md)** - Hauptdokumentation
+- **[README.md](../README.md)** - Hauptdokumentation
 - **[RATE_LIMITS.md](RATE_LIMITS.md)** - Comprehensive Rate Limits Reference (NEW in v3.0)
 - **[FINAL_SECURITY_CHECK.md](FINAL_SECURITY_CHECK.md)** - Security-Details
 - **[PROXMOX_SETUP.md](PROXMOX_SETUP.md)** - Proxmox-Integration

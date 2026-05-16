@@ -1,0 +1,16 @@
+# ServiceDock documentation
+
+| Topic | Guide |
+|-------|--------|
+| Install | [QUICKSTART.md](QUICKSTART.md), [INITIAL_SETUP.md](INITIAL_SETUP.md), [DEPLOY.md](DEPLOY.md) |
+| Local dev | [LOKAL_TESTEN.md](LOKAL_TESTEN.md) |
+| Docker Hub | [DOCKERHUB_SETUP.md](DOCKERHUB_SETUP.md), [RELEASE_GUIDE.md](RELEASE_GUIDE.md) |
+| HTTPS / SSL | [HTTPS_SETUP.md](HTTPS_SETUP.md), [POSTGRES_SSL_SETUP.md](POSTGRES_SSL_SETUP.md) |
+| Proxmox | [PROXMOX_SETUP.md](PROXMOX_SETUP.md), [TOKEN_ROTATION_GUIDE.md](TOKEN_ROTATION_GUIDE.md) |
+| Spotify | [SPOTIFY_ADDON.md](SPOTIFY_ADDON.md) |
+| LDAP | [LDAP_INTEGRATION.md](LDAP_INTEGRATION.md) |
+| Samba AD | [SAMBA_AD_SETUP.md](SAMBA_AD_SETUP.md) |
+| Security | [ENCRYPTION.md](ENCRYPTION.md), [RE_ENCRYPTION_GUIDE.md](RE_ENCRYPTION_GUIDE.md), [RATE_LIMITS.md](RATE_LIMITS.md) |
+| API | [API_DOCUMENTATION.md](API_DOCUMENTATION.md) |
+
+Project overview: [../README.md](../README.md)

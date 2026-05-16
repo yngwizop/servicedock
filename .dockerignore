@@ -9,8 +9,18 @@
 *.env
 !.env.template
 
-# Dokumentation: kein globales *.md — Backend-Image kopiert Repo-Root-*.md nach /app/help_docs (Hilfe-Tab).
-docs/
+# Dokumentation: Backend kopiert README.md + öffentliche docs/*.md (backend/Dockerfile).
+# Interne Dateien in docs/ nicht ins Image:
+docs/claude.md
+docs/SECURITY_AUDIT_*
+docs/SECURITY_FIX_PLAN_*
+docs/FEATURE_IDEAS.md
+docs/DESIGN_ANALYSIS.md
+docs/TECH_DEBT_UPGRADES.md
+docs/GHCR_SETUP.md
+docs/cheatsheet-statusdashboard.md
+docs/CheatSheet.md
+docs/SAMBA_TEST_DATA.md
 
 # Development files
 .vscode

@@ -20,9 +20,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Application Code (nur backend/)
 COPY backend/ .
 
-# Markdown-Hilfe aus Repo-Root für GET /api/docs/help/{id}
+# Markdown-Hilfe (README + docs/) für GET /api/docs/help/{id}
 RUN mkdir -p /app/help_docs
-COPY *.md /app/help_docs/
+COPY README.md /app/help_docs/
+COPY docs/*.md /app/help_docs/
 ENV SERVICEDOCK_HELP_DOCS_DIR=/app/help_docs
 
 # Upload-Verzeichnis erstellen (für Docker Volume Init)

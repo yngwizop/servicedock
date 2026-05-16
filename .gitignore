@@ -30,19 +30,29 @@ frontend/dist/
 # Claude / KI-Anweisungen (nicht öffentlich)
 /CLAUDE.md
 claude.md
+docs/claude.md
 
 # Interne Audits & Planung (nur privates Repo)
 SECURITY_AUDIT_*.md
 SECURITY_FIX_PLAN_*.md
+docs/SECURITY_AUDIT_*.md
+docs/SECURITY_FIX_PLAN_*.md
 FEATURE_IDEAS.md
 DESIGN_ANALYSIS.md
 TECH_DEBT_UPGRADES.md
 GHCR_SETUP.md
 cheatsheet-statusdashboard.md
 CheatSheet.md
+docs/FEATURE_IDEAS.md
+docs/DESIGN_ANALYSIS.md
+docs/TECH_DEBT_UPGRADES.md
+docs/GHCR_SETUP.md
+docs/cheatsheet-statusdashboard.md
+docs/CheatSheet.md
 
 # Samba AD Test-Daten (Zugangsdaten, nicht committen!)
 /SAMBA_TEST_DATA.md
+docs/SAMBA_TEST_DATA.md
 
 # Lokale SSL-Kopien außerhalb db/ssl und nginx/ssl
 /ssl/
