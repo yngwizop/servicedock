@@ -30,7 +30,6 @@ HELP_DOCS = [
     {"id": "proxmox", "file": "PROXMOX_SETUP.md"},
     {"id": "spotify", "file": "SPOTIFY_ADDON.md"},
     {"id": "ldap", "file": "LDAP_INTEGRATION.md"},
-    {"id": "deploy", "file": "DEPLOY.md"},
     {"id": "https", "file": "HTTPS_SETUP.md"},
 ]
 

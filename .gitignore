@@ -50,6 +50,14 @@ docs/GHCR_SETUP.md
 docs/cheatsheet-statusdashboard.md
 docs/CheatSheet.md
 
+# Nur lokal / privat (nicht ins öffentliche Repo)
+LOKAL_TESTEN.md
+DEPLOY.md
+RELEASE_GUIDE.md
+docs/LOKAL_TESTEN.md
+docs/DEPLOY.md
+docs/RELEASE_GUIDE.md
+
 # Samba AD Test-Daten (Zugangsdaten, nicht committen!)
 /SAMBA_TEST_DATA.md
 docs/SAMBA_TEST_DATA.md

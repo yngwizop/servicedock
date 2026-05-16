@@ -137,8 +137,7 @@ https://your-ip
 | [docs/](docs/) | All guides (install, addons, API, security) |
 | [INITIAL_SETUP.md](docs/INITIAL_SETUP.md) | Full setup walkthrough |
 | [QUICKSTART.md](docs/QUICKSTART.md) | Short install path |
-| [DEPLOY.md](docs/DEPLOY.md) | Production deployment |
-| [DOCKERHUB_SETUP.md](docs/DOCKERHUB_SETUP.md) | Publish images to Docker Hub |
+| [DOCKERHUB_SETUP.md](docs/DOCKERHUB_SETUP.md) | Docker Hub images & production install |
 | [HTTPS_SETUP.md](docs/HTTPS_SETUP.md) | Nginx reverse proxy & SSL certificates |
 | [PROXMOX_SETUP.md](docs/PROXMOX_SETUP.md) | Proxmox API token setup |
 | [SPOTIFY_ADDON.md](docs/SPOTIFY_ADDON.md) | Spotify widget configuration |
