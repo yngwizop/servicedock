@@ -128,4 +128,4 @@ Your database connection is now secured with a new, valid certificate.
 
 ---
 
-**For more details, see the main INITIAL_SETUP.md.**
+**For more details, see [QUICKSTART.md](QUICKSTART.md) and [HTTPS_SETUP.md](HTTPS_SETUP.md).**

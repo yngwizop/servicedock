@@ -25,7 +25,6 @@ REPO_ROOT = _help_docs_root()
 HELP_DOCS = [
     {"id": "readme", "file": "README.md"},
     {"id": "quickstart", "file": "QUICKSTART.md"},
-    {"id": "initial-setup", "file": "INITIAL_SETUP.md"},
     {"id": "token-rotation", "file": "TOKEN_ROTATION_GUIDE.md"},
     {"id": "proxmox", "file": "PROXMOX_SETUP.md"},
     {"id": "spotify", "file": "SPOTIFY_ADDON.md"},

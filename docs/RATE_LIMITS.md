@@ -282,9 +282,9 @@ limiter = Limiter(
 
 ## 📚 Related Documentation
 
-- **FINAL_SECURITY_CHECK.md** - Complete security audit
 - **API_DOCUMENTATION.md** - Full API reference
-- **README.md** - Project setup and deployment
+- **[README.md](../README.md)** - Project overview
+- **ENCRYPTION.md** - Encryption & security keys
 - **HTTPS_SETUP.md** - SSL/TLS configuration
 
 ---

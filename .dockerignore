@@ -21,6 +21,8 @@ docs/GHCR_SETUP.md
 docs/cheatsheet-statusdashboard.md
 docs/CheatSheet.md
 docs/SAMBA_TEST_DATA.md
+docs/PUBLISH_GUIDE.md
+docs/INITIAL_SETUP.md
 
 # Development files
 .vscode

@@ -126,7 +126,7 @@ docker compose up -d --build
 https://your-ip
 ```
 
-> For detailed setup instructions, see [INITIAL_SETUP.md](docs/INITIAL_SETUP.md).
+> For detailed setup instructions, see [QUICKSTART.md](docs/QUICKSTART.md).
 
 ---
 
@@ -135,8 +135,7 @@ https://your-ip
 | Guide | Description |
 |-------|-------------|
 | [docs/](docs/) | All guides (install, addons, API, security) |
-| [INITIAL_SETUP.md](docs/INITIAL_SETUP.md) | Full setup walkthrough |
-| [QUICKSTART.md](docs/QUICKSTART.md) | Short install path (`setup-servicedock.sh`, images: `servicedockapp` on Docker Hub) |
+| [QUICKSTART.md](docs/QUICKSTART.md) | Install (`setup-servicedock.sh`, images: `servicedockapp` on Docker Hub) |
 | [HTTPS_SETUP.md](docs/HTTPS_SETUP.md) | Nginx reverse proxy & SSL certificates |
 | [PROXMOX_SETUP.md](docs/PROXMOX_SETUP.md) | Proxmox API token setup |
 | [SPOTIFY_ADDON.md](docs/SPOTIFY_ADDON.md) | Spotify widget configuration |

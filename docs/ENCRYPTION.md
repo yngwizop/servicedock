@@ -462,7 +462,7 @@ docker compose logs backend | grep -i encryption
 
 ## 📚 Weiterführende Dokumentation
 
-- **Setup**: [INITIAL_SETUP.md](INITIAL_SETUP.md) - Ersteinrichtung mit Key-Generierung
+- **Setup**: [QUICKSTART.md](QUICKSTART.md) - Ersteinrichtung mit Key-Generierung
 - **Re-Encryption**: [RE_ENCRYPTION_GUIDE.md](RE_ENCRYPTION_GUIDE.md) - Key-Wechsel durchführen
 - **Token-Rotation**: [TOKEN_ROTATION_GUIDE.md](TOKEN_ROTATION_GUIDE.md) - Proxmox Tokens erneuern
 - **Proxmox**: [PROXMOX_SETUP.md](PROXMOX_SETUP.md) - Proxmox Integration einrichten

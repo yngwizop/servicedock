@@ -677,8 +677,8 @@ If re-encryption does not work:
 
 ## 📚 Further reading
 
-- [SECURITY_FEATURES.md](SECURITY_FEATURES.md) — Overview of security features
 - [ENCRYPTION.md](ENCRYPTION.md) — Encryption details
+- [RATE_LIMITS.md](RATE_LIMITS.md) — API rate limits
 - [PROXMOX_SETUP.md](PROXMOX_SETUP.md) — Proxmox integration setup
 
 ---

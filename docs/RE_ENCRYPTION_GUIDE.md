@@ -296,7 +296,7 @@ chmod +x change_admin_password.sh
 ## 📚 Weiterführende Links
 
 - [TOKEN_ROTATION_GUIDE.md](TOKEN_ROTATION_GUIDE.md) - Token-Rotation
-- [SECURITY_FEATURES.md](SECURITY_FEATURES.md) - Alle Security-Features
+- [ENCRYPTION.md](ENCRYPTION.md) - Verschlüsselung & Keys
 - [Fernet Encryption](https://cryptography.io/en/latest/fernet/) - Technische Details
 
 ---

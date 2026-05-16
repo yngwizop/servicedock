@@ -30,8 +30,8 @@ curl -o docker-compose.yml https://raw.githubusercontent.com/yngwizop/servicedoc
 
 ### 3. Create environment file
 ```bash
-curl -o .env.example https://raw.githubusercontent.com/yngwizop/servicedock/main/.env.example
-cp .env.example .env
+curl -o .env.template https://raw.githubusercontent.com/yngwizop/servicedock/main/.env.template
+cp .env.template .env
 ```
 
 ### 4. Generate SSL certificates

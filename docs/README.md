@@ -2,7 +2,7 @@
 
 | Topic | Guide |
 |-------|--------|
-| Install | [QUICKSTART.md](QUICKSTART.md), [INITIAL_SETUP.md](INITIAL_SETUP.md) |
+| Install | [QUICKSTART.md](QUICKSTART.md) |
 | HTTPS / SSL | [HTTPS_SETUP.md](HTTPS_SETUP.md), [POSTGRES_SSL_SETUP.md](POSTGRES_SSL_SETUP.md) |
 | Proxmox | [PROXMOX_SETUP.md](PROXMOX_SETUP.md), [TOKEN_ROTATION_GUIDE.md](TOKEN_ROTATION_GUIDE.md) |
 | Spotify | [SPOTIFY_ADDON.md](SPOTIFY_ADDON.md) |

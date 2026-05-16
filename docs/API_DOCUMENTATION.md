@@ -1,8 +1,8 @@
 # 📡 API Documentation - ServiceDock v3.1
 
 **Backend-Version:** 3.1 (Performance & Security Hardening)  
-**Base URL:** `https://10.10.10.50/api`  
-**Hinweis:** Im lokalen Netzwerk immer die zentrale Nginx-Adresse verwenden: `https://10.10.10.50/api/...`. Alle OAuth-Redirects (z.B. Spotify) und API-Aufrufe funktionieren im gesamten Netz nur über diese Adresse.
+**Base URL:** `https://<your-host>/api` (wie in `FRONTEND_URL`, z. B. `https://192.168.1.10/api`)  
+**Hinweis:** Alle API-Aufrufe und OAuth-Redirects (z. B. Spotify) laufen über die zentrale Nginx-HTTPS-Adresse.
 **Authentication:** JWT Bearer Token  
 **Update:** 05.12.2025  
 **Repository:** [github.com/yngwizop/servicedock](https://github.com/yngwizop/servicedock)
@@ -840,10 +840,9 @@ curl -X GET http://localhost:8000/api/admin/audit-logs?limit=10 \
 
 - **[README.md](../README.md)** - Hauptdokumentation
 - **[RATE_LIMITS.md](RATE_LIMITS.md)** - Comprehensive Rate Limits Reference (NEW in v3.0)
-- **[FINAL_SECURITY_CHECK.md](FINAL_SECURITY_CHECK.md)** - Security-Details
+- **[ENCRYPTION.md](ENCRYPTION.md)** - Verschlüsselung & Keys
 - **[PROXMOX_SETUP.md](PROXMOX_SETUP.md)** - Proxmox-Integration
 - **[TOKEN_ROTATION_GUIDE.md](TOKEN_ROTATION_GUIDE.md)** - Token-Rotation
-- **[ENCRYPTION.md](ENCRYPTION.md)** - Verschlüsselung
 
 ---
 
