@@ -52,7 +52,7 @@ cd "$INSTALL_DIR"
 echo "📁 Erstelle Verzeichnisstruktur..."
 
 # Docker Hub (öffentliche Images: user/servicedock-<component>)
-DEFAULT_DOCKERHUB_USER="${DOCKERHUB_USER:-yngwizop}"
+DEFAULT_DOCKERHUB_USER="${DOCKERHUB_USER:-servicedockapp}"
 read -p "Docker Hub Benutzername [${DEFAULT_DOCKERHUB_USER}]: " INPUT_HUB_USER
 DOCKERHUB_USER="${INPUT_HUB_USER:-$DEFAULT_DOCKERHUB_USER}"
 export DOCKERHUB_USER
@@ -97,7 +97,6 @@ cat > .env.template << 'ENVTEMPLATE'
 POSTGRES_USER=servicedock
 POSTGRES_PASSWORD=dein-db-passwort-hier
 POSTGRES_DB=servicedock
-DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=require
 
 # VERSCHLÜSSELUNG (PFLICHTFELD!)
 # Generieren: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
@@ -270,6 +269,7 @@ openssl req -new -x509 -days 365 -nodes -text \
   -keyout db-ssl/server.key \
   -subj "/CN=postgres" 2>/dev/null
 chmod 600 db-ssl/server.key
+chown 999:999 db-ssl/server.key db-ssl/server.crt 2>/dev/null || true
 
 # Nginx SSL generieren
 echo "🔐 Generiere Nginx SSL-Zertifikate..."
@@ -312,8 +312,7 @@ cat > .env <<EOF
 # Docker Hub Image-Prefix (user/servicedock-backend etc.)
 DOCKERHUB_USER=${DOCKERHUB_USER}
 
-# Database Configuration
-DATABASE_URL=postgresql://servicedock:${DB_PASSWORD}@db:5432/servicedock?sslmode=require
+# Database Configuration (DATABASE_URL baut Compose aus POSTGRES_*)
 POSTGRES_USER=servicedock
 POSTGRES_PASSWORD=${DB_PASSWORD}
 POSTGRES_DB=servicedock

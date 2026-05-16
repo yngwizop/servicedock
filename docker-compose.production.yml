@@ -12,7 +12,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./ssl:/etc/nginx/ssl:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       - frontend
       - backend
@@ -45,7 +45,7 @@ services:
       - backend
     restart: always
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -62,7 +62,7 @@ services:
     expose:
       - "8000"
     environment:
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=require
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - FRONTEND_URL=${FRONTEND_URL:?Set FRONTEND_URL in .env e.g. https://dashboard.example.com}
@@ -106,7 +106,7 @@ services:
     image: ${DOCKERHUB_USER}/servicedock-backend:latest
     container_name: servicedock-migrate
     environment:
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=require
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - ENVIRONMENT=production
@@ -125,13 +125,14 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db-init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./db-ssl:/var/lib/postgresql/ssl:ro
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/ssl/server.crt:/var/lib/postgresql/server.crt:ro
+      - ./db/ssl/server.key:/var/lib/postgresql/server.key:ro
     command: [
       "postgres",
       "-c", "ssl=on",
-      "-c", "ssl_cert_file=/var/lib/postgresql/ssl/server.crt",
-      "-c", "ssl_key_file=/var/lib/postgresql/ssl/server.key"
+      "-c", "ssl_cert_file=/var/lib/postgresql/server.crt",
+      "-c", "ssl_key_file=/var/lib/postgresql/server.key"
     ]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
