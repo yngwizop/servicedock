@@ -1,8 +1,8 @@
-# Production Docker Compose — nutzt vorgebaute Images von Docker Hub
-# Verwendung:
-#   1. .env anlegen (DOCKERHUB_USER, FRONTEND_URL, Secrets — siehe setup-servicedock.sh)
-#   2. docker compose -f docker-compose.production.yml pull
-#   3. docker compose -f docker-compose.production.yml up -d
+# Production Docker Compose — pre-built images from Docker Hub
+# Usage:
+#   1. Run setup-servicedock.sh (creates .env, db/init.sql, nginx/ssl/*.pem, db/ssl/*)
+#   2. docker compose pull && docker compose up -d
+# SSL: nginx/ssl/cert.pem + key.pem | Postgres: db/ssl/server.crt + server.key (UID 999)
 
 services:
   nginx:
