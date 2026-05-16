@@ -27,6 +27,7 @@ from core.logging import logger
 from core.audit import log_audit
 from core.limiter import limiter
 from core.oauth_state_store import put_state, pop_state
+from core.spotify_oauth_i18n import normalize_locale, render_spotify_callback_success_html
 from dependencies.auth import require_role, get_client_ip
 from config.database import get_db
 
@@ -311,6 +312,7 @@ async def get_spotify_status(
 @limiter.limit("10/minute")
 async def get_auth_url(
     request: Request,
+    locale: Optional[str] = None,
     token: dict = Depends(require_role("admin")),
 ):
     """
@@ -328,8 +330,14 @@ async def get_auth_url(
     # Generate CSRF State Token
     state = secrets.token_urlsafe(32)
 
-    # Speichere State mit redirect_uri (für Token-Exchange) (TTL 10 Minuten)
-    put_state("spotify", state, {"redirect_uri": spotify_config["redirect_uri"]}, ttl_seconds=600)
+    lang = normalize_locale(locale or request.headers.get("accept-language"))
+    # Speichere State mit redirect_uri + UI-Sprache für Callback-HTML (TTL 10 Minuten)
+    put_state(
+        "spotify",
+        state,
+        {"redirect_uri": spotify_config["redirect_uri"], "locale": lang},
+        ttl_seconds=600,
+    )
     logger.info(f"[SPOTIFY OAUTH] Auth-Request: redirect_uri={spotify_config['redirect_uri']}")
     
     # Build Authorization URL
@@ -444,61 +452,10 @@ async def spotify_callback(
             
             logger.info(f"Spotify successfully connected from {ip}")
             
-            # Return HTML page with success message
-            html_content = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>Spotify Verbindung erfolgreich</title>
-                <style>
-                    body {
-                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        min-height: 100vh;
-                        margin: 0;
-                        background: linear-gradient(135deg, #1DB954 0%, #191414 100%);
-                        color: white;
-                    }
-                    .container {
-                        text-align: center;
-                        padding: 2rem;
-                    }
-                    .success-icon {
-                        font-size: 4rem;
-                        margin-bottom: 1rem;
-                        animation: scaleIn 0.5s ease-out;
-                    }
-                    @keyframes scaleIn {
-                        from { transform: scale(0); }
-                        to { transform: scale(1); }
-                    }
-                    h1 { margin: 0 0 0.5rem 0; font-size: 2rem; }
-                    p { margin: 0.5rem 0; opacity: 0.9; font-size: 1.1rem; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="success-icon">✓</div>
-                    <h1>Spotify erfolgreich verbunden!</h1>
-                    <p>Du kannst dieses Fenster jetzt schließen.</p>
-                </div>
-                <script>
-                    // Notify parent window if opened as popup
-                    if (window.opener) {
-                        try {
-                            window.opener.postMessage({ type: 'spotify-connected' }, window.location.origin);
-                        } catch(e) {
-                            console.log('postMessage failed:', e);
-                        }
-                    }
-                </script>
-            </body>
-            </html>
-            """
-            
+            callback_locale = (
+                state_data.get("locale") if isinstance(state_data, dict) else None
+            )
+            html_content = render_spotify_callback_success_html(callback_locale)
             return HTMLResponse(content=html_content, status_code=200)
         
         finally:

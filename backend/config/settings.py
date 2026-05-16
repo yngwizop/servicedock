@@ -24,11 +24,6 @@ if not ENCRYPTION_KEY:
         "Generate one with: python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'"
     )
 
-# --- Admin Configuration ---
-# ADMIN_PASSWORD aus .env ist DEPRECATED — Passwort wird jetzt in der DB gespeichert.
-# Falls gesetzt, wird es beim Start als Migration verwendet (einmalig in DB geschrieben).
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")  # Optional — kann entfernt werden
-
 # --- Rate Limiting Configuration ---
 MAX_FAILED_ATTEMPTS = int(os.getenv("MAX_FAILED_LOGIN_ATTEMPTS", "5"))
 LOCKOUT_DURATION_MINUTES = int(os.getenv("LOGIN_LOCKOUT_MINUTES", "15"))
@@ -36,7 +31,23 @@ LOCKOUT_RESET_MINUTES = 60  # Nach 60min ohne Versuch → Reset Counter
 
 # --- CORS Configuration ---
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
-ENVIRONMENT = os.getenv("ENVIRONMENT", "production")  # Fail-safe Default
+ENVIRONMENT = os.getenv("ENVIRONMENT", "production").strip().lower()  # Fail-safe Default
+
+# --- Redis (rate limits, login lockout, refresh jti, Spotify OAuth state) ---
+REDIS_URL = os.getenv("REDIS_URL", "").strip()
+
+if ENVIRONMENT == "production":
+    if not REDIS_URL:
+        raise ValueError(
+            "REDIS_URL is required when ENVIRONMENT=production. "
+            "In Docker Compose use: REDIS_URL=redis://redis:6379/0"
+        )
+    _frontend_lower = FRONTEND_URL.lower()
+    if "localhost" in _frontend_lower or "127.0.0.1" in _frontend_lower:
+        raise ValueError(
+            "FRONTEND_URL must be your public HTTPS origin in production (not localhost). "
+            "Example: https://dashboard.example.com"
+        )
 
 # --- Database Configuration ---
 DATABASE_URL = os.getenv("DATABASE_URL")

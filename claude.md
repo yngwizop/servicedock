@@ -104,7 +104,7 @@ ServiceDock ist ein **Self-Hosted Web Dashboard** für Homelabs. Es aggregiert B
 - **Hosting:** Self-Hosted (Docker Compose)
 - **SSL:** Self-signed Certs (nginx + PostgreSQL)
 - **CI/CD:** Kein automatisiertes CI — manuelles `docker compose up --build`
-- **Container Registry:** GHCR (optional, siehe GHCR_SETUP.md)
+- **Container Registry:** Docker Hub (siehe DOCKERHUB_SETUP.md; GHCR_SETUP.md ist Legacy)
 
 ---
 

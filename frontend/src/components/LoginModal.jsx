@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LockKey, User } from 'phosphor-react';
+import { cssBackgroundImageValue } from '../utils/sanitize';
 
 function LoginModal({
   onSubmit,
@@ -20,11 +21,11 @@ function LoginModal({
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="loginmodal-title">
       {/* Background Image Layer (wenn vorhanden) */}
-      {appearance.bg_image_url && (
+      {appearance.bg_image_url && cssBackgroundImageValue(appearance.bg_image_url) && (
         <div
           className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat -z-10"
           style={{
-            backgroundImage: `url(${appearance.bg_image_url})`,
+            backgroundImage: cssBackgroundImageValue(appearance.bg_image_url),
             opacity: appearance.bg_opacity || 0.6,
           }}
         ></div>

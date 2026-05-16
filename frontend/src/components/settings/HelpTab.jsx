@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import { BookOpen, CircleNotch, WarningCircle } from 'phosphor-react';
 import { authenticatedFetch } from '../../utils/auth';
+import { sanitizeUrl } from '../../utils/sanitize';
 
 /** Reihenfolge der Hilfe-Themen in der Sidebar (API liefert nur Dateinamen; Gruppierung ist UI). */
 const HELP_NAV_BLUEPRINT = [
@@ -50,14 +51,23 @@ const markdownComponents = {
   ul: (props) => <ul className="mb-3 list-disc space-y-1.5 pl-5 text-gray-800 dark:text-slate-100/95" {...props} />,
   ol: (props) => <ol className="mb-3 list-decimal space-y-1.5 pl-5 text-gray-800 dark:text-slate-100/95" {...props} />,
   li: (props) => <li className="leading-relaxed" {...props} />,
-  a: (props) => (
-    <a
-      className="font-medium text-blue-600 underline decoration-blue-600/40 underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-      target="_blank"
-      rel="noopener noreferrer"
-      {...props}
-    />
-  ),
+  a: ({ href, children, ...rest }) => {
+    const safeHref = sanitizeUrl(href || '');
+    if (!safeHref) {
+      return <span className="text-blue-600 dark:text-blue-400">{children}</span>;
+    }
+    return (
+      <a
+        href={safeHref}
+        className="font-medium text-blue-600 underline decoration-blue-600/40 underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+        target="_blank"
+        rel="noopener noreferrer"
+        {...rest}
+      >
+        {children}
+      </a>
+    );
+  },
   code: ({ inline, className, children, ...rest }) =>
     inline ? (
       <code

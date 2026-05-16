@@ -65,7 +65,7 @@ function SettingsPage({
   activeDashboard,
   onDashboardsChange,
   textColor,
-  isAdmin = true,
+  isAdmin = false,
   userRole = 'admin',
   searchTerm = ''
 }) {

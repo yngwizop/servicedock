@@ -131,7 +131,7 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
               Token Rotation
             </h3>
           </div>
-          {tokenInfo?.rotation_recommended && (
+          {Boolean(tokenInfo?.rotation_recommended) && (
             <Warning size={24} className="text-red-500 animate-pulse" weight="fill" />
           )}
         </div>
@@ -350,7 +350,8 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
               <span className="text-sm text-gray-600 dark:text-gray-400">Proxmox Control</span>
               <span className="text-sm font-bold text-gray-800 dark:text-gray-100">30/min</span>
             </div>
-            <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 night:bg-emerald-950/45 rounded-xl">
+            <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 night:bg-emerald-950/45 rounded-xl flex items-center gap-2">
+              <CheckCircle size={16} weight="fill" className="text-green-600 dark:text-green-400 shrink-0" />
               <p className="text-sm font-semibold text-green-800 dark:text-green-300">{t('security.rate_limiting_active')}</p>
             </div>
           </div>

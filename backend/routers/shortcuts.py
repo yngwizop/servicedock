@@ -63,10 +63,11 @@ async def reorder_shortcuts(request: Request, reorder_request: ReorderRequest, t
     def _reorder_shortcuts_sync():
         cur = db.cursor()
         try:
+            dashboard_id = reorder_request.dashboard_id
             for idx, shortcut_id in enumerate(reorder_request.newOrder):
                 cur.execute(
-                    "UPDATE shortcuts SET position = %s WHERE id = %s;",
-                    (idx, shortcut_id)
+                    "UPDATE shortcuts SET position = %s WHERE id = %s AND dashboard_id = %s;",
+                    (idx, shortcut_id, dashboard_id)
                 )
             db.commit()
             return {"message": "Shortcuts reordered successfully"}
@@ -85,9 +86,10 @@ async def update_shortcut(request: Request, shortcut_id: int, shortcut: Shortcut
     def _update_shortcut_sync():
         cur = db.cursor()
         try:
+            dashboard_id = shortcut.dashboard_id or 1
             cur.execute(
-                "UPDATE shortcuts SET name=%s, url=%s, icon=%s WHERE id=%s RETURNING id;",
-                (shortcut.name, shortcut.url, shortcut.icon, shortcut_id)
+                "UPDATE shortcuts SET name=%s, url=%s, icon=%s WHERE id=%s AND dashboard_id=%s RETURNING id;",
+                (shortcut.name, shortcut.url, shortcut.icon, shortcut_id, dashboard_id)
             )
             updated = cur.fetchone()
             db.commit()
@@ -101,12 +103,19 @@ async def update_shortcut(request: Request, shortcut_id: int, shortcut: Shortcut
 
 @router.delete("/{shortcut_id}")
 @limiter.limit("10/minute")  # Delete operations - prevent abuse
-async def delete_shortcut(request: Request, shortcut_id: int, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+async def delete_shortcut(
+    request: Request,
+    shortcut_id: int,
+    dashboard_id: int = 1,
+    token: dict = Depends(require_role("admin")),
+    db = Depends(get_db),
+):
     def _delete_shortcut_sync():
         cur = db.cursor()
         try:
             cur.execute(
-                "DELETE FROM shortcuts WHERE id = %s RETURNING id;", (shortcut_id,)
+                "DELETE FROM shortcuts WHERE id = %s AND dashboard_id = %s RETURNING id;",
+                (shortcut_id, dashboard_id),
             )
             deleted = cur.fetchone()
             db.commit()

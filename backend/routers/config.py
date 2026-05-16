@@ -10,6 +10,7 @@ from dependencies.auth import require_role, verify_destructive_password
 from config.database import get_db
 from core.logging import logger
 from core.limiter import limiter
+from core.appearance_url import validate_bg_image_url
 
 router = APIRouter(prefix="/api/config", tags=["config"])
 
@@ -166,8 +167,14 @@ async def import_config(
     if len(config.dashboards) > 50:
         raise HTTPException(status_code=400, detail="Too many dashboards (max 50)")
 
+    # Validate appearance background URL
+    try:
+        validate_bg_image_url(config.appearance.bg_image_url)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
     # Validate all URLs in imported data - block dangerous schemes
-    dangerous_schemes = ('javascript:', 'data:', 'vbscript:', 'blob:')
+    dangerous_schemes = ('javascript:', 'data:', 'vbscript:', 'blob:', 'file:')
     for dashboard in config.dashboards:
         for svc in dashboard.services:
             if any(svc.url.lower().startswith(s) for s in dangerous_schemes):

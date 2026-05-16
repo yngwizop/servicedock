@@ -30,7 +30,7 @@ def get_audit_logs(
     if filter_type == "failed":
         where_clause = "WHERE status = 'failed'"
     elif filter_type == "failed_logins":
-        where_clause = "WHERE action = 'LOGIN' AND status = 'failed'"
+        where_clause = "WHERE action IN ('LOGIN_FAILED', 'LOGIN_BLOCKED')"
     elif filter_type == "permission_errors":
         where_clause = "WHERE status = 'failed' AND (details::text ILIKE '%permission%' OR details::text ILIKE '%forbidden%' OR details::text ILIKE '%403%')"
     elif filter_type == "vm_operations":
@@ -260,7 +260,7 @@ def get_token_info(request: Request, dashboard_id: int = 1, token: dict = Depend
         last_rotated_str = None
     
     # Empfehlung
-    rotation_recommended = age_days and age_days > 60  # Empfehle Rotation nach 60 Tagen
+    rotation_recommended = bool(age_days is not None and age_days > 60)
     
     return {
         "configured": True,
@@ -341,7 +341,13 @@ def get_rate_limit_usage(request: Request, token: dict = Depends(require_role("a
 
 @router.post("/api/admin/proxmox/rotate-token")
 @limiter.limit("5/hour")
-def rotate_token(request: Request, config: ProxmoxConfig, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+def rotate_token(
+    request: Request,
+    config: ProxmoxConfig,
+    dashboard_id: int = 1,
+    token: dict = Depends(require_role("admin")),
+    db = Depends(get_db),
+):
     """
     Rotiert den Proxmox-Token (speichert neuen Token und updated Zeitstempel)
     """
@@ -356,9 +362,9 @@ def rotate_token(request: Request, config: ProxmoxConfig, token: dict = Depends(
         SET token_value = %s,
             token_name = %s,
             token_last_rotated = NOW()
-        WHERE id = 1
+        WHERE dashboard_id = %s
         RETURNING id;
-    """, (encrypted_token, config.token_name))
+    """, (encrypted_token, config.token_name, dashboard_id))
     
     updated = cur.fetchone()
     db.commit()

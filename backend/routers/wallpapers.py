@@ -1,6 +1,6 @@
 """Wallpaper upload & serving router"""
+import io
 import os
-import uuid
 import hashlib
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, Depends, Request, UploadFile, File
@@ -65,7 +65,23 @@ async def upload_wallpaper(
             status_code=400,
             detail="File too small — does not appear to be a valid image"
         )
-    
+
+    # Magic-byte validation (Pillow)
+    try:
+        from PIL import Image
+
+        img = Image.open(io.BytesIO(content))
+        img.verify()
+        if img.format and img.format.upper() not in ("JPEG", "PNG", "WEBP"):
+            raise HTTPException(status_code=400, detail="Unsupported image format")
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="File is not a valid image (magic-byte check failed)",
+        )
+
     # Einzigartigen Dateinamen generieren (Hash-basiert, verhindert Duplikate)
     file_hash = hashlib.md5(content).hexdigest()[:12]
     safe_name = f"custom-{file_hash}{ext}"

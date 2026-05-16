@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LockKey, ShieldCheck } from 'phosphor-react';
 import { BACKEND_URL } from '../utils/backendUrl';
+import { cssBackgroundImageValue } from '../utils/sanitize';
 
 function ChangePasswordModal({ onComplete, appearance = {} }) {
   const { t } = useTranslation();
@@ -68,11 +69,11 @@ function ChangePasswordModal({ onComplete, appearance = {} }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
       {/* Background */}
-      {appearance.bg_image_url && (
+      {appearance.bg_image_url && cssBackgroundImageValue(appearance.bg_image_url) && (
         <div
           className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat -z-10"
           style={{
-            backgroundImage: `url(${appearance.bg_image_url})`,
+            backgroundImage: cssBackgroundImageValue(appearance.bg_image_url),
             opacity: appearance.bg_opacity || 0.6,
           }}
         />

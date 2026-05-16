@@ -8,7 +8,8 @@ class ProxmoxConfig(BaseModel):
     port: int = Field(8006, ge=1, le=65535)
     token_name: str = Field(..., min_length=1, max_length=255)  # z.B. "user@pam!tokenname"
     token_value: str = Field(..., min_length=1, max_length=1000)  # Der Secret
-    verify_ssl: bool = False
+    # Default True for production safety; homelab may set False in UI
+    verify_ssl: bool = True
     node: Optional[str] = Field(None, max_length=100)  # Optional: spezifischer Node
     is_cluster: bool = False  # NEU: Cluster oder Standalone?
     

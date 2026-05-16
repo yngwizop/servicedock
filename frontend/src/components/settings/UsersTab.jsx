@@ -187,7 +187,15 @@ function UsersTab({ onTipsTopicChange }) {
 
   const resetPassword = async (id) => {
     const pw = window.prompt(t('settings.users.reset_password_prompt'));
-    if (!pw || pw.length < 8) return;
+    if (pw === null) return;
+    if (!pw.trim()) {
+      setError(t('settings.users.reset_password_empty'));
+      return;
+    }
+    if (pw.length < 8) {
+      setError(t('passwordChange.too_short'));
+      return;
+    }
     await patchUser(id, { new_password: pw });
   };
 

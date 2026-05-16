@@ -20,7 +20,8 @@ export function useAppearance({ onSessionExpired }) {
   const [isSavingAppearance, setIsSavingAppearance] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
 
-  // `html` bleibt immer `class="dark"` damit Tailwind `dark:` greift.
+  // `html` bleibt immer `class="dark"` damit Tailwind `dark:` greift (bewusstes Design).
+  // `theme` steuert nur `data-sd-theme` (dim vs night) und Body-Hintergrund — kein klassisches Tailwind-Light.
   // `data-sd-theme` steuert Scrollbars / .glass / CSS-Variablen --sd-night-* (index.css); Mesh liegt im App-Stack.
   useEffect(() => {
     const root = document.documentElement;
@@ -41,7 +42,8 @@ export function useAppearance({ onSessionExpired }) {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
-  const getTextColor = () => appearance.text_color_dark;
+  const getTextColor = () =>
+    theme === 'dark' ? appearance.text_color_dark : appearance.text_color_light;
 
   const fetchAppearance = async () => {
     try {
@@ -95,8 +97,8 @@ export function useAppearance({ onSessionExpired }) {
       if (err.message.includes('Session expired')) {
         onSessionExpired();
       }
+      await fetchAppearance();
     } finally {
-      fetchAppearance();
       setIsSavingAppearance(false);
     }
   };

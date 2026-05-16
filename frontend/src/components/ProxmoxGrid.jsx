@@ -9,7 +9,7 @@ import { authenticatedFetch } from '../utils/auth';
 import { fetchProxmoxVmBundle, fetchProxmoxClusterStatsPrefetch } from '../utils/fetchProxmoxBundle';
 import { BACKEND_URL } from '../utils/backendUrl';
 
-function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, searchTerm = "", isAdmin = true, proxmoxWarm = null }) {
+function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, searchTerm = "", isAdmin = false, proxmoxWarm = null }) {
   const { t } = useTranslation();
   // Sub-Navigation State
   const [activeView, setActiveView] = useState('resources'); // 'resources' oder 'status'

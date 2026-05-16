@@ -1,10 +1,13 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Play, Stop, ArrowsClockwise, Desktop, HardDrives } from 'phosphor-react';
+import { sanitizeText } from '../utils/sanitize';
 
 function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin, animationDelay = 0 }) {
   const { t } = useTranslation();
   const isRunning = resource.status === 'running';
+  const safeName = sanitizeText(resource.name);
+  const safeStatus = sanitizeText(resource.status);
   
   // Berechne Prozentsätze für CPU, RAM, Disk
   const cpuPercent = (resource.cpu * 100).toFixed(1);
@@ -80,7 +83,7 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin, animationDe
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-sm text-gray-950 dark:text-white truncate" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-              {resource.name}
+              {safeName}
             </h3>
             <p className="text-xs text-gray-600 dark:text-white/40 font-light" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
               {resource.type === 'qemu' ? 'VM' : 'CT'} #{resource.vmid}
@@ -90,7 +93,7 @@ function ProxmoxCard({ resource, onStart, onStop, onReboot, isAdmin, animationDe
         {/* Status-Badge */}
         <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${isRunning ? 'bg-green-500/15 text-green-600 dark:text-green-400' : 'bg-red-500/15 text-red-600 dark:text-red-400'}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor()}`}></span>
-          {resource.status}
+          {safeStatus}
         </span>
       </div>
       

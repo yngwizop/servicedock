@@ -67,10 +67,11 @@ async def reorder_services(request: Request, reorder_request: ReorderRequest, to
     def _reorder_services_sync():
         cur = db.cursor()
         try:
+            dashboard_id = reorder_request.dashboard_id
             for idx, service_id in enumerate(reorder_request.newOrder):
                 cur.execute(
-                    "UPDATE services SET position = %s WHERE id = %s;",
-                    (idx, service_id)
+                    "UPDATE services SET position = %s WHERE id = %s AND dashboard_id = %s;",
+                    (idx, service_id, dashboard_id)
                 )
             db.commit()
             return {"message": "Services reordered successfully"}
@@ -89,9 +90,10 @@ async def update_service(request: Request, service_id: int, service: Service, to
     def _update_service_sync():
         cur = db.cursor()
         try:
+            dashboard_id = service.dashboard_id or 1
             cur.execute(
-                "UPDATE services SET name=%s, description=%s, url=%s, icon=%s, is_favorite=%s WHERE id=%s RETURNING id;",
-                (service.name, service.description, service.url, service.icon, service.is_favorite or False, service_id)
+                "UPDATE services SET name=%s, description=%s, url=%s, icon=%s, is_favorite=%s WHERE id=%s AND dashboard_id=%s RETURNING id;",
+                (service.name, service.description, service.url, service.icon, service.is_favorite or False, service_id, dashboard_id)
             )
             updated = cur.fetchone()
             db.commit()
@@ -105,12 +107,19 @@ async def update_service(request: Request, service_id: int, service: Service, to
 
 @router.delete("/{service_id}")
 @limiter.limit("10/minute")  # Delete operations - prevent abuse
-async def delete_service(request: Request, service_id: int, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
+async def delete_service(
+    request: Request,
+    service_id: int,
+    dashboard_id: int = 1,
+    token: dict = Depends(require_role("admin")),
+    db = Depends(get_db),
+):
     def _delete_service_sync():
         cur = db.cursor()
         try:
             cur.execute(
-                "DELETE FROM services WHERE id = %s RETURNING id;", (service_id,)
+                "DELETE FROM services WHERE id = %s AND dashboard_id = %s RETURNING id;",
+                (service_id, dashboard_id),
             )
             deleted = cur.fetchone()
             db.commit()

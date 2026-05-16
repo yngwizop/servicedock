@@ -1,10 +1,12 @@
-# Production Docker Compose - Nutzer laden nur diese Datei
-# Verwendung: docker compose -f docker-compose.production.yml up -d
+# Production Docker Compose — nutzt vorgebaute Images von Docker Hub
+# Verwendung:
+#   1. .env anlegen (DOCKERHUB_USER, FRONTEND_URL, Secrets — siehe setup-servicedock.sh)
+#   2. docker compose -f docker-compose.production.yml pull
+#   3. docker compose -f docker-compose.production.yml up -d
 
 services:
-  # Nginx Reverse Proxy (HTTPS)
   nginx:
-    image: ghcr.io/yngwizop/servicedock-nginx:latest
+    image: ${DOCKERHUB_USER:?Set DOCKERHUB_USER in .env}/servicedock-nginx:latest
     container_name: servicedock-nginx
     ports:
       - "80:80"
@@ -28,7 +30,7 @@ services:
         max-file: "2"
 
   frontend:
-    image: ghcr.io/yngwizop/servicedock-frontend:latest
+    image: ${DOCKERHUB_USER}/servicedock-frontend:latest
     container_name: servicedock-frontend
     expose:
       - "80"
@@ -55,23 +57,22 @@ services:
         max-file: "2"
 
   backend:
-    image: ghcr.io/yngwizop/servicedock-backend:latest
+    image: ${DOCKERHUB_USER}/servicedock-backend:latest
     container_name: servicedock-backend
     expose:
       - "8000"
     environment:
       - DATABASE_URL=${DATABASE_URL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
-      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - FRONTEND_URL=${FRONTEND_URL:?Set FRONTEND_URL in .env e.g. https://dashboard.example.com}
+      - ENVIRONMENT=production
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
       - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-7}
       - MAX_FAILED_LOGIN_ATTEMPTS=${MAX_FAILED_LOGIN_ATTEMPTS:-5}
       - LOGIN_LOCKOUT_MINUTES=${LOGIN_LOCKOUT_MINUTES:-15}
-      - TRUST_FORWARDED_HEADERS=${TRUST_FORWARDED_HEADERS:-false}
-      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-}
+      - TRUST_FORWARDED_HEADERS=${TRUST_FORWARDED_HEADERS:-true}
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
     security_opt:
       - no-new-privileges:true
@@ -100,16 +101,15 @@ services:
         max-file: "3"
         compress: "true"
 
-  # Optional: run DB migrations on demand (profile)
   migrate:
     profiles: ["migrations"]
-    image: ghcr.io/yngwizop/servicedock-backend:latest
+    image: ${DOCKERHUB_USER}/servicedock-backend:latest
     container_name: servicedock-migrate
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - ENVIRONMENT=production
     depends_on:
       db:
         condition: service_healthy

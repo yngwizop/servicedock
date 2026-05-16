@@ -3,6 +3,8 @@ from pydantic import BaseModel, Field, validator
 from typing import Optional, List
 import re
 
+from core.appearance_url import validate_bg_image_url
+
 class Appearance(BaseModel):
     id: int = 1
     bg_color: Optional[str] = Field(None, max_length=50)
@@ -38,6 +40,10 @@ class Appearance(BaseModel):
             raise ValueError('Clock format must be "12h" or "24h"')
         return v
     
+    @validator('bg_image_url')
+    def validate_bg_image_url_field(cls, v):
+        return validate_bg_image_url(v)
+
     @validator('weather_fields')
     def validate_weather_fields(cls, v):
         if v is None:

@@ -40,7 +40,7 @@ function Sidebar({
   switchDashboard,
   editMode = false,
   setEditMode,
-  isAdmin = true,
+  isAdmin = false,
   displayName = null,
   authMethod = 'local',
   sessionUsername = null,

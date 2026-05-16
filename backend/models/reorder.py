@@ -4,6 +4,7 @@ from typing import List
 
 class ReorderRequest(BaseModel):
     newOrder: List[int] = Field(..., min_items=0, max_items=1000)
+    dashboard_id: int = Field(1, ge=1)
     
     @validator('newOrder')
     def validate_order(cls, v):

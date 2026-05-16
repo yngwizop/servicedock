@@ -6,12 +6,19 @@ from pydantic import BaseModel, Field, validator
 
 from models.auth import AdminLogin
 from core.security import create_access_token, get_password_hash, verify_password
+from core.refresh_token_store import (
+    store_refresh_session,
+    validate_refresh_jti,
+    revoke_refresh_session,
+    new_refresh_jti,
+)
 from core.rate_limiting import check_login_rate_limit, record_failed_login, reset_failed_login
 from core.audit import log_audit
 from core.limiter import limiter
 from core.ldap_auth import ldap_authenticate, get_ldap_config
 from dependencies.auth import (
     get_client_ip,
+    get_force_change_for_username,
     update_local_user_password,
     require_any_role,
 )
@@ -26,7 +33,14 @@ from jose import JWTError, jwt
 router = APIRouter()
 
 
-def _set_auth_cookies(response: Response, user_sub: str, user_type: str, auth_method: str, display_name: str = None):
+def _set_auth_cookies(
+    response: Response,
+    user_sub: str,
+    user_type: str,
+    auth_method: str,
+    display_name: str = None,
+    refresh_jti: Optional[str] = None,
+):
     """Helper: JWT-Cookies setzen für beliebigen User/Rolle"""
     token_data = {
         "sub": user_sub,
@@ -35,15 +49,19 @@ def _set_auth_cookies(response: Response, user_sub: str, user_type: str, auth_me
     }
     if display_name:
         token_data["display_name"] = display_name
-    
+
+    jti = refresh_jti or new_refresh_jti()
+    refresh_ttl_seconds = REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+    store_refresh_session(user_sub, jti, refresh_ttl_seconds)
+
     # Access Token (short-lived)
     access_token = create_access_token(
         data=token_data,
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    
-    # Refresh Token (long-lived)
-    refresh_data = {**token_data, "token_type": "refresh"}
+
+    # Refresh Token (long-lived, server-tracked jti)
+    refresh_data = {**token_data, "token_type": "refresh", "jti": jti}
     refresh_token = create_access_token(
         data=refresh_data,
         expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
@@ -272,18 +290,26 @@ def refresh_token(
         username = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-        
+
+        token_jti = payload.get("jti")
+        if token_jti and not validate_refresh_jti(username, token_jti):
+            raise HTTPException(
+                status_code=401,
+                detail="Refresh token revoked or reused",
+            )
+
         # Payload-Daten durchreichen (sub, type, auth_method, display_name)
         user_type = payload.get("type", "admin")
         auth_method = payload.get("auth_method", "local")
         display_name = payload.get("display_name")
-        
+
         _set_auth_cookies(
             response=response,
             user_sub=username,
             user_type=user_type,
             auth_method=auth_method,
             display_name=display_name,
+            refresh_jti=new_refresh_jti(),
         )
         
         client_ip = get_client_ip(request)
@@ -304,10 +330,22 @@ def refresh_token(
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
 @router.post("/api/logout")
-def logout(response: Response):
+def logout(
+    response: Response,
+    refresh_token: Optional[str] = Cookie(None),
+):
     """
-    Logout endpoint - removes httpOnly cookies
+    Logout endpoint - removes httpOnly cookies and revokes server-side refresh session
     """
+    if refresh_token:
+        try:
+            payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+            sub = payload.get("sub")
+            if sub:
+                revoke_refresh_session(sub)
+        except JWTError:
+            pass
+
     response.delete_cookie(
         key="access_token",
         path="/",
@@ -337,16 +375,16 @@ def get_auth_mode(request: Request):
     """
     ldap_config = get_ldap_config()
     ad_enabled = bool(ldap_config and ldap_config.get("enabled"))
-    domain = ldap_config.get("domain") if ad_enabled else None
-    n_local = count_all_local_users()
-    local_username_required = n_local > 1
+    local_username_required = count_all_local_users() > 1
 
-    return {
+    result = {
         "ad_enabled": ad_enabled,
-        "domain": domain,
         "local_username_required": local_username_required,
-        "local_users_count": n_local,
     }
+    # Domain nur wenn AD aktiv (Login-UI); kein User-Count-Leak
+    if ad_enabled and ldap_config.get("domain"):
+        result["domain"] = ldap_config["domain"]
+    return result
 
 
 @router.get("/api/auth/me")
@@ -357,12 +395,20 @@ def get_current_session(
 ):
     """
     Aktuelle Session aus dem JWT (ohne Secrets) — für UI z. B. PageHeader.
+    force_password_change: lokaler User mit force_change in DB (auch nach Reload).
     """
+    auth_method = token.get("auth_method") or "local"
+    sub = token.get("sub")
+    force_password_change = False
+    if auth_method != "ad" and sub:
+        force_password_change = get_force_change_for_username(sub)
+
     return {
-        "username": token.get("sub"),
+        "username": sub,
         "display_name": token.get("display_name"),
-        "auth_method": token.get("auth_method") or "local",
+        "auth_method": auth_method,
         "role": token.get("type") or "admin",
+        "force_password_change": force_password_change,
     }
 
 
@@ -411,6 +457,7 @@ def change_password(request: Request, body: ChangePasswordRequest, token: dict =
         raise HTTPException(status_code=400, detail="New password must be different from current")
 
     update_local_user_password(sub, body.new_password)
+    revoke_refresh_session(sub)
 
     log_audit(
         action="PASSWORD_CHANGED",

@@ -41,7 +41,7 @@ async function broadcastAuthModeFromServer() {
 }
 
 function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [activeTopic, setActiveTopic] = useState('config');
 
   useLayoutEffect(() => {
@@ -121,6 +121,25 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
     if (!showSpotifyModal) void fetchSpotifyStatus();
   }, [showSpotifyModal]);
 
+  useEffect(() => {
+    const onSpotifyMessage = (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type !== 'spotify-connected') return;
+      void (async () => {
+        try {
+          const statusRes = await authenticatedFetch(`${BACKEND_URL}/api/spotify/status`);
+          if (statusRes.ok) {
+            setSpotifyStatus(await statusRes.json());
+          }
+        } catch {
+          /* ignore */
+        }
+      })();
+    };
+    window.addEventListener('message', onSpotifyMessage);
+    return () => window.removeEventListener('message', onSpotifyMessage);
+  }, []);
+
   // LDAP Status (beim Start und wenn das Modal geschlossen wird)
   useEffect(() => {
     const fetchLdapStatus = async () => {
@@ -186,10 +205,11 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
 
   const handleConnectSpotify = async () => {
     try {
-      const res = await authenticatedFetch(`${BACKEND_URL}/api/spotify/auth-url`);
+      const locale = encodeURIComponent(i18n.language || 'en');
+      const res = await authenticatedFetch(`${BACKEND_URL}/api/spotify/auth-url?locale=${locale}`);
       const data = await res.json();
       if (data.auth_url) {
-        window.open(data.auth_url, '_blank');
+        window.open(data.auth_url, 'spotify-oauth', 'noopener,noreferrer,width=520,height=720');
         const pollInterval = setInterval(async () => {
           const statusRes = await authenticatedFetch(`${BACKEND_URL}/api/spotify/status`);
           const statusData = await statusRes.json();

@@ -51,29 +51,37 @@ cd "$INSTALL_DIR"
 
 echo "📁 Erstelle Verzeichnisstruktur..."
 
-# Version festlegen
-VERSION="v1.0.0"
-GITHUB_REPO="yngwizop/servicedock"
-RELEASE_URL="https://github.com/${GITHUB_REPO}/releases/download/${VERSION}"
+# Docker Hub (öffentliche Images: user/servicedock-<component>)
+DEFAULT_DOCKERHUB_USER="${DOCKERHUB_USER:-yngwizop}"
+read -p "Docker Hub Benutzername [${DEFAULT_DOCKERHUB_USER}]: " INPUT_HUB_USER
+DOCKERHUB_USER="${INPUT_HUB_USER:-$DEFAULT_DOCKERHUB_USER}"
+export DOCKERHUB_USER
 
-# Check ob Images private oder public sind
-echo "🔐 Prüfe GHCR Zugriff..."
-if ! docker pull ghcr.io/yngwizop/servicedock-frontend:latest &>/dev/null; then
-    echo -e "${YELLOW}⚠️  Images sind private - Docker Login erforderlich${NC}"
-    echo "Erstelle einen GitHub Token mit 'read:packages' Scope:"
-    echo "https://github.com/settings/tokens"
+GITHUB_REPO="yngwizop/servicedock"
+COMPOSE_URL="https://raw.githubusercontent.com/${GITHUB_REPO}/main/docker-compose.production.yml"
+
+echo "🔐 Prüfe Docker Hub Images (${DOCKERHUB_USER}/servicedock-*)..."
+if ! docker pull "${DOCKERHUB_USER}/servicedock-frontend:latest" &>/dev/null; then
+    echo -e "${YELLOW}⚠️  Pull fehlgeschlagen — evtl. private Repos oder falscher Benutzername${NC}"
+    echo "Docker Hub Access Token: https://hub.docker.com/settings/security"
     echo ""
-    read -p "GitHub Username (yngwizop): " GH_USER
-    GH_USER=${GH_USER:-yngwizop}
-    read -sp "GitHub Token: " GH_TOKEN
+    read -p "Docker Hub Login [${DOCKERHUB_USER}]: " DH_USER
+    DH_USER=${DH_USER:-$DOCKERHUB_USER}
+    read -sp "Docker Hub Token/Passwort: " DH_TOKEN
     echo ""
-    echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_USER" --password-stdin
+    echo "$DH_TOKEN" | docker login -u "$DH_USER" --password-stdin
     echo ""
 fi
 
-# Docker Compose herunterladen
+# Docker Compose herunterladen (oder lokale Datei nutzen wenn Script im Repo liegt)
 echo "📦 Lade Docker Compose Konfiguration..."
-curl -sS -L -o docker-compose.yml "${RELEASE_URL}/docker-compose.production.yml"
+if [ -f "../docker-compose.production.yml" ]; then
+    cp "../docker-compose.production.yml" docker-compose.yml
+elif [ -f "docker-compose.production.yml" ]; then
+    cp docker-compose.production.yml docker-compose.yml
+else
+    curl -sS -L -o docker-compose.yml "$COMPOSE_URL"
+fi
 
 # .env Vorlage herunterladen (mit Fallback falls nicht verfügbar)
 echo "🔧 Erstelle Environment Template..."
@@ -83,8 +91,7 @@ cat > .env.template << 'ENVTEMPLATE'
 # ========================================
 # WICHTIG: Kopiere diese Datei zu ".env" und passe die Werte an!
 
-# ADMIN-ZUGANGSDATEN (PFLICHTFELD!)
-ADMIN_PASSWORD=dein-sicheres-passwort-hier
+# LOKALE ANMELDUNG: Erster Login admin / changeme — danach in der UI ändern
 
 # DATENBANK
 POSTGRES_USER=servicedock
@@ -106,6 +113,9 @@ FRONTEND_URL=https://192.168.178.11
 # ENVIRONMENT
 ENVIRONMENT=production
 
+# REDIS (Pflicht bei ENVIRONMENT=production)
+REDIS_URL=redis://redis:6379/0
+
 # TOKEN CONFIGURATION
 ACCESS_TOKEN_EXPIRE_MINUTES=15
 REFRESH_TOKEN_EXPIRE_DAYS=7
@@ -113,6 +123,10 @@ REFRESH_TOKEN_EXPIRE_DAYS=7
 # RATE-LIMITING
 MAX_FAILED_LOGIN_ATTEMPTS=5
 LOGIN_LOCKOUT_MINUTES=15
+
+# Hinter nginx Reverse Proxy
+TRUST_FORWARDED_HEADERS=true
+TRUSTED_PROXIES=172.16.0.0/12,10.0.0.0/8,192.168.0.0/16
 ENVTEMPLATE
 
 # init.sql erstellen (vollständiges Schema)
@@ -274,9 +288,6 @@ echo ""
 echo -e "${YELLOW}Bitte gib die folgenden Passwörter ein:${NC}"
 echo ""
 
-read -sp "Admin-Passwort (für Login): " ADMIN_PASSWORD
-echo ""
-
 read -sp "Datenbank-Passwort: " DB_PASSWORD
 echo ""
 echo ""
@@ -285,7 +296,12 @@ echo ""
 IP_ADDRESS=$(hostname -I | awk '{print $1}')
 echo -e "${YELLOW}Erkannte IP-Adresse: $IP_ADDRESS${NC}"
 read -p "Möchtest du eine andere IP/Domain nutzen? (Enter für $IP_ADDRESS): " CUSTOM_IP
-FRONTEND_URL=${CUSTOM_IP:-https://$IP_ADDRESS}
+HOST_INPUT=${CUSTOM_IP:-$IP_ADDRESS}
+if [[ "$HOST_INPUT" == http://* ]] || [[ "$HOST_INPUT" == https://* ]]; then
+  FRONTEND_URL="$HOST_INPUT"
+else
+  FRONTEND_URL="https://${HOST_INPUT}"
+fi
 
 # .env erstellen
 echo "📝 Erstelle .env Datei..."
@@ -293,14 +309,14 @@ cat > .env <<EOF
 # ServiceDock Environment Configuration
 # Generiert am $(date)
 
+# Docker Hub Image-Prefix (user/servicedock-backend etc.)
+DOCKERHUB_USER=${DOCKERHUB_USER}
+
 # Database Configuration
 DATABASE_URL=postgresql://servicedock:${DB_PASSWORD}@db:5432/servicedock?sslmode=require
 POSTGRES_USER=servicedock
 POSTGRES_PASSWORD=${DB_PASSWORD}
 POSTGRES_DB=servicedock
-
-# Admin Configuration
-ADMIN_PASSWORD=${ADMIN_PASSWORD}
 
 # Encryption & Security Keys
 ENCRYPTION_KEY=${ENCRYPTION_KEY}
@@ -319,6 +335,13 @@ REFRESH_TOKEN_EXPIRE_DAYS=7
 # Security Configuration
 MAX_FAILED_LOGIN_ATTEMPTS=5
 LOGIN_LOCKOUT_MINUTES=15
+
+# Redis (Pflicht in production — Rate-Limits, Login-Lockout, Refresh-Rotation, Spotify OAuth state)
+REDIS_URL=redis://redis:6379/0
+
+# Hinter mitgeliefertem nginx: echte Client-IP für Lockout/Audit
+TRUST_FORWARDED_HEADERS=true
+TRUSTED_PROXIES=172.16.0.0/12,10.0.0.0/8,192.168.0.0/16
 EOF
 
 chmod 600 .env
@@ -338,7 +361,7 @@ echo -e "${GREEN}🎉 ServiceDock läuft!${NC}"
 echo ""
 echo "🌐 Zugriff:"
 echo "   Browser: ${FRONTEND_URL}"
-echo "   Login: admin / [dein Passwort]"
+echo "   Erster Login: admin / changeme (Passwort in der UI ändern)"
 echo ""
 echo "📊 Status prüfen:"
 echo "   docker compose logs -f"

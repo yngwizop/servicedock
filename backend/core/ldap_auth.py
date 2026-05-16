@@ -2,11 +2,15 @@
 LDAP/Active Directory Authentication Module
 Handles LDAP bind, user search, and group membership verification
 """
+import os
+import ssl
 import time
 from typing import Optional, Dict, Any
-from ldap3 import Server, Connection, ALL, SUBTREE, Tls
-import ssl
 
+from ldap3 import Server, Connection, ALL, SUBTREE, Tls
+from ldap3.utils.conv import escape_filter_chars
+
+from config.settings import ENVIRONMENT
 from core.logging import logger
 from core.security import decrypt_value
 import config.database as database_module
@@ -113,12 +117,31 @@ def is_ldap_signin_enabled() -> bool:
         pool.putconn(db)
 
 
+def _ldap_tls_config() -> Optional[Tls]:
+    """
+    TLS für LDAPS/StartTLS.
+    Production: CERT_REQUIRED unless LDAP_TLS_INSECURE=true (homelab).
+    Optional LDAP_CA_FILE für eigene CA.
+    """
+    insecure = os.getenv("LDAP_TLS_INSECURE", "").lower() == "true"
+    if ENVIRONMENT == "production" and insecure:
+        logger.warning(
+            "LDAP_TLS_INSECURE=true in production — LDAP traffic is vulnerable to MITM"
+        )
+    ca_file = os.getenv("LDAP_CA_FILE", "").strip()
+    if insecure:
+        return Tls(validate=ssl.CERT_NONE)
+    if ca_file:
+        return Tls(validate=ssl.CERT_REQUIRED, ca_certs_file=ca_file)
+    return Tls(validate=ssl.CERT_REQUIRED)
+
+
 def _create_server(config: Dict[str, Any]) -> Server:
     """Erstellt einen ldap3 Server mit optionalem SSL/TLS"""
     tls_config = None
     if config["use_ssl"] or config["use_starttls"]:
-        tls_config = Tls(validate=ssl.CERT_NONE)  # Für Self-Signed Certs
-    
+        tls_config = _ldap_tls_config()
+
     return Server(
         config["host"],
         port=config["port"],
@@ -178,7 +201,8 @@ def ldap_authenticate(username: str, password: str) -> Optional[Dict[str, Any]]:
         else:
             search_base = base_dn
         user_attr = config.get("user_attribute", "sAMAccountName")
-        search_filter = f"({user_attr}={username})"
+        safe_username = escape_filter_chars(username)
+        search_filter = f"({user_attr}={safe_username})"
         
         search_conn.search(
             search_base=search_base,
@@ -262,8 +286,8 @@ def test_ldap_connection(config: Dict[str, Any]) -> Dict[str, Any]:
         # Server erstellen
         tls_config = None
         if config.get("use_ssl") or config.get("use_starttls"):
-            tls_config = Tls(validate=ssl.CERT_NONE)
-        
+            tls_config = _ldap_tls_config()
+
         server = Server(
             config["host"],
             port=config.get("port", 389),
@@ -299,9 +323,10 @@ def test_ldap_connection(config: Dict[str, Any]) -> Dict[str, Any]:
         for group_key in ["admin_group_dn", "viewer_group_dn"]:
             group_dn = config.get(group_key)
             if group_dn:
+                safe_group_dn = escape_filter_chars(group_dn)
                 conn.search(
                     search_base=base_dn,
-                    search_filter=f"(distinguishedName={group_dn})",
+                    search_filter=f"(distinguishedName={safe_group_dn})",
                     search_scope=SUBTREE,
                     attributes=["cn", "member"]
                 )

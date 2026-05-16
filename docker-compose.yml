@@ -65,10 +65,10 @@ services:
     environment:
       # Holt sich die Werte jetzt aus der .env-Datei
       - DATABASE_URL=${DATABASE_URL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      # Lokale Entwicklung: development (lockere CSP). Produktion: docker-compose.production.yml
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
       - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-7}

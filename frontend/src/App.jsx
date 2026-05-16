@@ -24,6 +24,7 @@ import { useDashboards } from './hooks/useDashboards';
 import { useAppearance } from './hooks/useAppearance';
 import { useServices } from './hooks/useServices';
 import { BACKEND_URL } from './utils/backendUrl';
+import { cssBackgroundImageValue } from './utils/sanitize';
 
 /** Ohne Wallpaper: Standard-Hellgrau/Weiß aus der API würde das Theme-Mesh vollständig verdecken (opacity oft 1). */
 function shouldShowAppearanceColorTint(bg) {
@@ -116,17 +117,18 @@ function App() {
   };
 
   useEffect(() => {
-    if (auth.isLoggedIn) {
-      // Bei Login: Tab auf Dashboard setzen + Edit-Mode aus
-      setActiveTab("services");
-      setEditMode(false);
-      fetchDashboards();
+    if (!auth.isLoggedIn || !auth.sessionReady) return;
+    // Nach Login: zuerst Dashboards, dann Services (vermeidet Race mit localStorage activeDashboard)
+    setActiveTab("services");
+    setEditMode(false);
+    (async () => {
+      await fetchDashboards();
       fetchData();
       fetchAppearance();
       fetchSpotifyStatus();
       fetchIntegrationHealth();
-    }
-  }, [auth.isLoggedIn]);
+    })();
+  }, [auth.isLoggedIn, auth.sessionReady]);
 
   /* html hat global overflow-y: scroll; Settings scrollen in der Hauptspalte → sonst zwei Scrollbars */
   useEffect(() => {
@@ -273,11 +275,11 @@ function App() {
         />
       )}
 
-      {bg.bg_image_url && (
+      {bg.bg_image_url && cssBackgroundImageValue(bg.bg_image_url) && (
         <div
           className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url(${bg.bg_image_url})`,
+            backgroundImage: cssBackgroundImageValue(bg.bg_image_url),
             opacity: bg.bg_opacity,
             backgroundAttachment: 'fixed',
           }}
@@ -286,7 +288,7 @@ function App() {
     </div>
 
     {/* Login or App */}
-    {!auth.isLoggedIn ? (
+    {!auth.sessionReady ? null : !auth.isLoggedIn ? (
       <LoginModal
         onSubmit={auth.handleLogin}
         password={auth.password}

@@ -35,7 +35,8 @@ from routers.docs import router as docs_router  # Help / Markdown from repo root
 from routers.users import router as users_router  # Local user accounts
 from routers.integrations import router as integrations_router  # Integration health summary
 
-# Disable SSL warnings for Proxmox connections
+# Homelab only: suppress urllib3 warnings when Proxmox verify_ssl=false in dashboard config.
+# Prefer verify_ssl=true (default) in production; do not disable warnings globally without reason.
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # Initialize FastAPI app
@@ -93,8 +94,9 @@ async def startup_event():
     """Initialize database connection pool and validate environment on startup"""
     # Validate critical environment variables
     from config.settings import (
-        SECRET_KEY, ENCRYPTION_KEY, ADMIN_PASSWORD, DATABASE_URL, 
-        FRONTEND_URL, ENVIRONMENT, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
+        SECRET_KEY, ENCRYPTION_KEY, DATABASE_URL,
+        FRONTEND_URL, ENVIRONMENT, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS,
+        REDIS_URL,
     )
     
     missing_vars = []
@@ -121,8 +123,13 @@ async def startup_event():
     logger.info(f"  - Frontend URL: {FRONTEND_URL}")
     logger.info(f"  - Access Token Expiry: {ACCESS_TOKEN_EXPIRE_MINUTES} minutes")
     logger.info(f"  - Refresh Token Expiry: {REFRESH_TOKEN_EXPIRE_DAYS} days")
+    logger.info(f"  - Redis: {'enabled' if REDIS_URL else 'disabled (in-memory fallback)'}")
     
     # Security warnings
+    if ENVIRONMENT == "production" and not REDIS_URL:
+        raise ValueError("REDIS_URL is required in production")
+    if ENVIRONMENT != "production":
+        warnings.append("ENVIRONMENT is not production — relaxed CSP and OpenAPI may be enabled")
     if REFRESH_TOKEN_EXPIRE_DAYS > 7:
         warnings.append(f"REFRESH_TOKEN_EXPIRE_DAYS is {REFRESH_TOKEN_EXPIRE_DAYS} days (recommended: ≤7)")
     
@@ -139,9 +146,6 @@ async def startup_event():
     # Lokale Benutzer-Tabelle + Migration admin_auth → local_users
     from core.local_users import ensure_local_users_schema_and_bootstrap
     ensure_local_users_schema_and_bootstrap()
-    # Admin-Passwort Migration (.env → DB) bzw. Validierung
-    from dependencies.auth import initialize_admin_password
-    initialize_admin_password()
     
     logger.info("✅ Application startup complete")
 

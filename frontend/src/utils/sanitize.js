@@ -46,6 +46,38 @@ export function sanitizeUrl(url) {
 }
 
 /**
+ * Validates background image URLs for CSS url() — blocks breakout chars and bad schemes.
+ */
+export function sanitizeCssBackgroundUrl(url) {
+  if (!url) return '';
+  const cleaned = sanitizeUrl(String(url).trim());
+  if (!cleaned) return '';
+  if (/["'();\\]/.test(cleaned)) {
+    console.warn('Blocked unsafe CSS background URL:', cleaned);
+    return '';
+  }
+  if (
+    cleaned.startsWith('https://') ||
+    cleaned.startsWith('/wallpapers/') ||
+    cleaned.startsWith('/api/wallpapers/')
+  ) {
+    return cleaned;
+  }
+  console.warn('Blocked background URL (not allowlisted):', cleaned);
+  return '';
+}
+
+/**
+ * Safe value for style.backgroundImage from a user-controlled URL string.
+ */
+export function cssBackgroundImageValue(url) {
+  const safe = sanitizeCssBackgroundUrl(url);
+  if (!safe) return undefined;
+  const escaped = safe.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return `url("${escaped}")`;
+}
+
+/**
  * Sanitizes object properties recursively
  * Use for API responses containing user data
  */
