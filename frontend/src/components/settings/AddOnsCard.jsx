@@ -494,15 +494,15 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
             </div>
             <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed mb-4">{t('addons.ldap_description')}</p>
             <div className="mb-4 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/12 px-3 py-1 text-xs font-medium text-indigo-900 dark:text-indigo-200">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/12 px-3 py-1 text-xs font-medium text-indigo-800 dark:bg-indigo-400/15 dark:text-indigo-200">
                 <Buildings size={14} weight="duotone" className="shrink-0" aria-hidden />
                 {t('addons.ldap_tag_ad')}
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/12 px-3 py-1 text-xs font-medium text-indigo-900 dark:text-indigo-200">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/12 px-3 py-1 text-xs font-medium text-indigo-800 dark:bg-indigo-400/15 dark:text-indigo-200">
                 <UsersThree size={14} weight="duotone" className="shrink-0" aria-hidden />
                 {t('addons.ldap_tag_roles')}
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/12 px-3 py-1 text-xs font-medium text-indigo-900 dark:text-indigo-200">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/12 px-3 py-1 text-xs font-medium text-indigo-800 dark:bg-indigo-400/15 dark:text-indigo-200">
                 <LockKey size={14} weight="duotone" className="shrink-0" aria-hidden />
                 {t('addons.ldap_tag_encrypted')}
               </span>

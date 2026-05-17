@@ -110,6 +110,9 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
     if (check.name === 'spotify' && check.status === 'disabled') {
       return t('sidebar.health_spotify_widget_off');
     }
+    if (check.name === 'ldap' && check.status === 'disabled') {
+      return t('sidebar.health_ldap_not_in_use');
+    }
     return check.detail;
   };
 

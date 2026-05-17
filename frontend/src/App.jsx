@@ -417,6 +417,7 @@ function App() {
         )}
 
         {/* === CONTENT BASED ON ACTIVE TAB === */}
+        {/* No AnimatedPane here — opacity/transform on this wrapper breaks backdrop-blur on glass cards */}
         <div
           className={`${
             activeTab === 'settings'

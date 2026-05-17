@@ -12,7 +12,7 @@ function CephHealthCard({ ceph }) {
   if (!ceph || !ceph.available) {
     return (
       <StatCard 
-        title="Ceph Health"
+        title={t('statusDashboard.card_ceph_health')}
         icon={<Activity size={28} weight="duotone" />}
       >
         <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -52,7 +52,7 @@ function CephHealthCard({ ceph }) {
 
   return (
     <StatCard 
-      title="Ceph Health"
+      title={t('statusDashboard.card_ceph_health')}
       icon={<Activity size={28} weight="duotone" />}
     >
       <div className="flex flex-col h-full">

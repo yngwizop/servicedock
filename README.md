@@ -87,7 +87,7 @@ chmod +x setup-servicedock.sh
 
 The script automatically:
 
-- Downloads `docker-compose.production.yml` and `db/init.sql`
+- Downloads `docker-compose.yml` and `db/init.sql`
 - Generates **PostgreSQL** TLS certs (`db/ssl/`) and **Nginx** HTTPS certs (`nginx/ssl/`)
 - Creates a complete `.env` (secrets, database password, `FRONTEND_URL`, Docker Hub image prefix)
 - Pulls images from Docker Hub and runs `docker compose up -d`
@@ -126,19 +126,6 @@ docker compose down        # stop
 `https://<your-host>/api/spotify/callback` (same host as `FRONTEND_URL` in `.env`).
 
 More detail: [docs/QUICKSTART.md](docs/QUICKSTART.md) · HTTPS: [docs/HTTPS_SETUP.md](docs/HTTPS_SETUP.md)
-
-### Develop from source (optional)
-
-For local development with live builds instead of Docker Hub images:
-
-```bash
-git clone https://github.com/yngwizop/servicedock.git
-cd servicedock
-cp .env.template .env   # edit values for development
-docker compose up -d --build
-```
-
-Use `ENVIRONMENT=development` in `.env` when running `docker-compose.yml` (not the production compose file).
 
 ---
 

@@ -111,15 +111,9 @@ fi
 
 # Download Docker Compose (or use local file when script is run from the repo)
 echo "📦 Downloading Docker Compose configuration..."
-if [ -f "../docker-compose.production.yml" ]; then
-    cp "../docker-compose.production.yml" docker-compose.yml
-elif [ -f "docker-compose.production.yml" ]; then
-    cp docker-compose.production.yml docker-compose.yml
-else
-    curl -sS -f -L -o docker-compose.yml "${GITHUB_RAW}/docker-compose.production.yml"
-fi
+fetch_repo_file "docker-compose.yml" "docker-compose.yml"
 
-# Directory layout expected by docker-compose.production.yml
+# Directory layout expected by docker-compose.yml
 mkdir -p db nginx/ssl db/ssl
 
 echo "🗄️  Downloading database schema (db/init.sql)..."
@@ -144,7 +138,7 @@ CERT_HOST="${CERT_HOST#http://}"
 CERT_HOST="${CERT_HOST%%/*}"
 CERT_HOST="${CERT_HOST%%:*}"
 
-# PostgreSQL SSL (path: db/ssl — matches docker-compose.production.yml)
+# PostgreSQL SSL (path: db/ssl — matches docker-compose.yml)
 echo "🔐 Generating PostgreSQL SSL certificates (db/ssl/)..."
 openssl req -new -x509 -days 365 -nodes \
   -out db/ssl/server.crt \

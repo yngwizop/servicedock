@@ -58,3 +58,36 @@ def test_integrations_health_shape(monkeypatch):
   finally:
     app.dependency_overrides.clear()
 
+
+def test_integrations_health_ldap_disabled_does_not_warn(monkeypatch):
+  import routers.integrations as integ
+
+  monkeypatch.setattr(
+    integ,
+    "_check_proxmox",
+    lambda dashboard_id: {"name": "proxmox", "status": "ok", "configured": True, "detail": "mock"},
+  )
+  monkeypatch.setattr(
+    integ,
+    "_check_spotify_for_health",
+    lambda: {"name": "spotify", "status": "ok", "configured": True, "detail": "mock"},
+  )
+  monkeypatch.setattr(
+    integ,
+    "_check_ldap",
+    lambda: {"name": "ldap", "status": "disabled", "configured": False, "detail": "LDAP not in use"},
+  )
+
+  app = build_app()
+  app.dependency_overrides[require_any_role] = lambda *roles: (lambda: {"sub": "t", "type": "admin"})
+  try:
+    client = TestClient(app)
+    r = client.get("/api/integrations/health?dashboard_id=1")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["overall_status"] == "ok"
+    ldap = next(c for c in body["checks"] if c["name"] == "ldap")
+    assert ldap["status"] == "disabled"
+  finally:
+    app.dependency_overrides.clear()
+

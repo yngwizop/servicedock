@@ -45,7 +45,8 @@
     "health_status_not_configured": "Not configured",
     "health_status_down": "Error",
     "health_status_unknown": "Unknown",
-    "health_spotify_widget_off": "Spotify widget is turned off under Appearance → Widgets."
+    "health_spotify_widget_off": "Spotify widget is turned off under Appearance → Widgets.",
+    "health_ldap_not_in_use": "LDAP/AD is optional and not enabled."
   },
   "session": {
     "auth_local": "Local",
@@ -89,16 +90,19 @@
     "success": "Password changed successfully!",
     "error": "Error changing password."
   },
+  "serviceIcon": {
+    "label": "Icon URL",
+    "placeholder": "https://selfh.st/icons/portainer.png",
+    "hint_prefix": "Free dashboard icons at"
+  },
   "editModal": {
     "edit_service": "Edit Service",
     "edit_shortcut": "Edit Shortcut",
     "close_modal": "Close modal",
+    "name_label": "Name",
     "name_placeholder": "Enter name",
     "description": "Description",
     "description_placeholder": "Enter description",
-    "icon_label": "Icon (URL or Emoji)",
-    "tip": "Tip:",
-    "icons_from": "Icons from",
     "save": "Save",
     "delete": "Delete",
     "confirm_delete": "Really delete?",
@@ -125,13 +129,12 @@
     "description_placeholder": "Short description of the service",
     "url_placeholder_service": "https://your-app.domain.com",
     "url_placeholder_shortcut": "https://example.com",
-    "icon_placeholder": "Icon URL or Emoji 🌐",
+    "tab_service": "Service",
+    "tab_shortcut": "Shortcut",
     "add_service": "Add Service",
     "add_shortcut": "Add Shortcut",
     "shortcut_name": "Shortcut Name",
-    "shortcut_name_placeholder": "e.g. GitHub, YouTube, Reddit",
-    "icons_tip": "Icons from",
-    "icons_tip_suffix": "or just use emojis!"
+    "shortcut_name_placeholder": "e.g. GitHub, YouTube, Reddit"
   },
   "pageHeader": {
     "subtitle_services_default": "Jump to your services and shortcuts from one place.",
@@ -192,6 +195,16 @@
     "reset_error": "Error resetting",
     "reset_network_error": "Network error while resetting",
     "loading": "Loading cluster statistics...",
+    "loading_tips": [
+      "Ceph Health is the overall cluster status; OSD % only shows how many disks are up.",
+      "Hide or show cards in the layout panel — your choice is saved per browser.",
+      "Rotate your Proxmox API token regularly (Security tab).",
+      "Task summary uses the time range from your dashboard preferences.",
+      "Large clusters can take a few seconds — stats are fetched live from the API.",
+      "Offline nodes are excluded from the compute pool totals.",
+      "Drag cards to rearrange; use Save layout when you are done.",
+      "Storage totals reflect hypervisor storage, not guest disk usage inside VMs."
+    ],
     "error_loading": "Error loading statistics",
     "no_data": "No data available",
     "reset_layout": "Reset Layout",
@@ -234,7 +247,14 @@
     "no_storage_type": "No storage type data available",
     "ceph_unavailable": "Ceph not available",
     "ceph_not_used": "This cluster does not use Ceph storage",
-    "no_osd": "No OSD data available"
+    "no_osd": "No OSD data available",
+    "ceph_osd_total": "Total OSDs",
+    "ceph_osd_up_percent": "{{percent}}% OSDs up",
+    "ceph_osd_up_hint": "Reachability only",
+    "ceph_osd_legend_up": "OSD is running and reachable",
+    "ceph_osd_legend_in": "OSD is part of the cluster",
+    "ceph_osd_legend_down": "OSD is not responding",
+    "ceph_osd_legend_out": "OSD is removed from data distribution"
   },
   "security": {
     "admin_required": "Please log in as admin to see the security features.",

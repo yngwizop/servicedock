@@ -142,9 +142,11 @@ def _check_ldap() -> Dict[str, Any]:
         )
         row = cur.fetchone()
         if not row:
-            return _status_payload("ldap", "not_configured", False, "Not configured")
+            return _status_payload("ldap", "disabled", False, "LDAP not in use (optional)")
         if not row[0]:
-            return _status_payload("ldap", "warning", True, "Configured but disabled")
+            return _status_payload("ldap", "disabled", True, "LDAP disabled")
+        if not (row[1] or "").strip():
+            return _status_payload("ldap", "disabled", False, "LDAP not in use (optional)")
 
         cfg = {
             "enabled": row[0],

@@ -18,9 +18,15 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(6px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        /* Fade only — no transform (transform on a parent breaks descendant backdrop-blur) */
+        settingsPaneFadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
       },
       animation: {
         'settings-pane-in': 'settingsPaneIn 0.2s ease-out both',
+        'settings-pane-fade-in': 'settingsPaneFadeIn 0.2s ease-out both',
       },
       colors: {
         /* Nacht-UI: Werte kommen aus index.css (--sd-night-*) */

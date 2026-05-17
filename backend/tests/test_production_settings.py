@@ -12,7 +12,7 @@ def test_settings_enforces_redis_in_production():
 
 
 def test_production_compose_defaults():
-    compose = (BACKEND.parent / "docker-compose.production.yml").read_text(encoding="utf-8")
+    compose = (BACKEND.parent / "docker-compose.yml").read_text(encoding="utf-8")
     assert "ENVIRONMENT=production" in compose
     assert "REDIS_URL=${REDIS_URL:-redis://redis:6379/0}" in compose
     assert "DOCKERHUB_USER" in compose

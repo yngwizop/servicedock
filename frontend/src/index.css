@@ -279,6 +279,11 @@ html.sd-settings-scroll-contained {
   .sd-marquee-track {
     animation: none !important;
   }
+
+  .animate-settings-pane-in,
+  .animate-settings-pane-fade-in {
+    animation: none !important;
+  }
 }
 
 /* Glass — Standard (dim): html.dark; Nacht: data-sd-theme="night" */

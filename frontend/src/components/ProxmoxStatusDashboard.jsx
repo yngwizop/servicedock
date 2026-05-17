@@ -24,6 +24,7 @@ import CephHealthCard from './stats/CephHealthCard';
 import CephOSDCard from './stats/CephOSDCard';
 import ClusterComputeCard from './stats/ClusterComputeCard';
 import CardVisibilityPanel, { CARD_DEFINITIONS, loadVisibleCards, saveVisibleCardsLocal, getDefaultVisibleCards } from './stats/CardVisibilityPanel';
+import ClusterStatsLoading from './stats/ClusterStatsLoading';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -726,22 +727,8 @@ function ProxmoxStatusDashboard({
     }
   };
 
-  // Loading State
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="text-center space-y-4">
-          <ArrowsClockwise 
-            size={48} 
-            weight="bold"
-            className="mx-auto text-blue-600 dark:text-blue-400 animate-spin"
-          />
-          <p className="text-gray-600 dark:text-gray-400">
-            {t('statusDashboard.loading')}
-          </p>
-        </div>
-      </div>
-    );
+    return <ClusterStatsLoading />;
   }
 
   // Error State

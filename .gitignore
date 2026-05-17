@@ -7,6 +7,10 @@ nginx/ssl/cert.pem
 # SEHR WICHTIG: Deine geheime Konfiguration
 .env
 
+# Local dev (VM only — not in public repo)
+docker-compose.dev.yml
+dev-local.sh
+
 # SSL-Zertifikate und Schlüssel (niemals ins Repo!)
 db/ssl/
 db/ssl/server.key

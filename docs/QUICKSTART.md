@@ -25,7 +25,7 @@ mkdir servicedock && cd servicedock
 
 ### 2. Download Docker Compose file
 ```bash
-curl -o docker-compose.yml https://raw.githubusercontent.com/yngwizop/servicedock/main/docker-compose.production.yml
+curl -o docker-compose.yml https://raw.githubusercontent.com/yngwizop/servicedock/main/docker-compose.yml
 ```
 
 ### 3. Create environment file

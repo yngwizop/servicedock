@@ -1,41 +1,96 @@
+# ServiceDock — Docker Hub images (production install)
+# Usage: setup-servicedock.sh, then: docker compose pull && docker compose up -d
+# SSL: nginx/ssl/cert.pem + key.pem | Postgres: db/ssl/server.crt + server.key (UID 999)
+
+x-log-small: &log-small
+  driver: json-file
+  options:
+    max-size: "5m"
+    max-file: "2"
+
+x-log-backend: &log-backend
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+    compress: "true"
+
+x-security-ro: &security-ro
+  security_opt:
+    - no-new-privileges:true
+  read_only: true
+
+x-health-nginx: &health-nginx
+  test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "--no-check-certificate", "https://127.0.0.1/"]
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 10s
+
+x-health-frontend: &health-frontend
+  test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/"]
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 30s
+
+x-health-backend: &health-backend
+  test: ["CMD-SHELL", "python3 -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/\")' || exit 1'"]
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-health-db: &health-db
+  test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+  interval: 10s
+  timeout: 5s
+  retries: 5
+  start_period: 10s
+
+x-health-redis: &health-redis
+  test: ["CMD", "redis-cli", "ping"]
+  interval: 10s
+  timeout: 3s
+  retries: 5
+  start_period: 5s
+
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=require
+  ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+  JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+  FRONTEND_URL: ${FRONTEND_URL:?Set FRONTEND_URL in .env e.g. https://dashboard.example.com}
+  ENVIRONMENT: production
+  ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+  REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+  MAX_FAILED_LOGIN_ATTEMPTS: ${MAX_FAILED_LOGIN_ATTEMPTS:-5}
+  LOGIN_LOCKOUT_MINUTES: ${LOGIN_LOCKOUT_MINUTES:-15}
+  TRUST_FORWARDED_HEADERS: ${TRUST_FORWARDED_HEADERS:-true}
+  TRUSTED_PROXIES: ${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}
+  REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+
 services:
-  # Nginx Reverse Proxy (HTTPS)
   nginx:
-    image: nginx:alpine
-    container_name: webdashboard-nginx
+    image: ${DOCKERHUB_USER:?Set DOCKERHUB_USER in .env}/servicedock-nginx:latest
+    container_name: servicedock-nginx
     ports:
-      - "80:80"      # HTTP (redirect to HTTPS)
-      - "443:443"    # HTTPS
+      - "80:80"
+      - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       - frontend
       - backend
     restart: always
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "--no-check-certificate", "https://127.0.0.1/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "5m"
-        max-file: "2"
+    healthcheck: *health-nginx
+    logging: *log-small
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    # Kein direkter Port-Expose mehr (läuft über nginx)
+    image: ${DOCKERHUB_USER}/servicedock-frontend:latest
+    container_name: servicedock-frontend
     expose:
       - "80"
-    # ✅ Security Hardening
-    security_opt:
-      - no-new-privileges:true
-    read_only: true
+    <<: *security-ro
     tmpfs:
       - /var/cache/nginx:uid=101,gid=101
       - /var/run:uid=101,gid=101
@@ -43,44 +98,16 @@ services:
     depends_on:
       - backend
     restart: always
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "5m"       # Max 5MB pro Log-Datei
-        max-file: "2"        # Maximal 2 Dateien (= 10MB total)
+    healthcheck: *health-frontend
+    logging: *log-small
 
   backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
-    # Kein direkter Port-Expose mehr (läuft über nginx)
+    image: ${DOCKERHUB_USER}/servicedock-backend:latest
+    container_name: servicedock-backend
     expose:
       - "8000"
-    environment:
-      # Holt sich die Werte jetzt aus der .env-Datei
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=require
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
-      # Lokale Entwicklung: development (lockere CSP). Produktion: docker-compose.production.yml
-      - ENVIRONMENT=${ENVIRONMENT:-development}
-      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
-      - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-7}
-      - MAX_FAILED_LOGIN_ATTEMPTS=${MAX_FAILED_LOGIN_ATTEMPTS:-5}
-      - LOGIN_LOCKOUT_MINUTES=${LOGIN_LOCKOUT_MINUTES:-15}
-      - TRUST_FORWARDED_HEADERS=${TRUST_FORWARDED_HEADERS:-false}
-      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-}
-      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
-    # ✅ Security Hardening
-    security_opt:
-      - no-new-privileges:true
-    read_only: true
+    environment: *backend-env
+    <<: *security-ro
     volumes:
       - wallpaper_uploads:/app/uploads
     tmpfs:
@@ -92,30 +119,15 @@ services:
       redis:
         condition: service_started
     restart: always
-    healthcheck:
-      test: ["CMD-SHELL", "python3 -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/\")' || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"      # Max 10MB pro Log-Datei
-        max-file: "3"        # Maximal 3 Dateien (= 30MB total)
-        compress: "true"     # Alte Logs komprimieren
+    healthcheck: *health-backend
+    logging: *log-backend
 
-  # Optional: run DB migrations on demand
   migrate:
     profiles: ["migrations"]
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
+    image: ${DOCKERHUB_USER}/servicedock-backend:latest
+    container_name: servicedock-migrate
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=require
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - ENVIRONMENT=${ENVIRONMENT:-development}
+      <<: *backend-env
     depends_on:
       db:
         condition: service_healthy
@@ -123,10 +135,9 @@ services:
 
   db:
     image: postgres:16
-    container_name: webdashboard-db
+    container_name: servicedock-db
     restart: always
     environment:
-      # Holt sich die Werte jetzt aus der .env-Datei
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
@@ -135,41 +146,24 @@ services:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./db/ssl/server.crt:/var/lib/postgresql/server.crt:ro
       - ./db/ssl/server.key:/var/lib/postgresql/server.key:ro
-    command: [
-      "postgres",
-      "-c", "ssl=on",
-      "-c", "ssl_cert_file=/var/lib/postgresql/server.crt",
-      "-c", "ssl_key_file=/var/lib/postgresql/server.key"
-    ]
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    # Keine externe Portfreigabe, nur intern im Docker-Netzwerk erreichbar
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"      # Max 10MB pro Log-Datei
-        max-file: "3"        # Maximal 3 Dateien (= 30MB total)
+    command:
+      - postgres
+      - -c
+      - ssl=on
+      - -c
+      - ssl_cert_file=/var/lib/postgresql/server.crt
+      - -c
+      - ssl_key_file=/var/lib/postgresql/server.key
+    healthcheck: *health-db
+    logging: *log-backend
 
   redis:
     image: redis:7-alpine
-    container_name: webdashboard-redis
+    container_name: servicedock-redis
     restart: always
     command: ["redis-server", "--save", "", "--appendonly", "no"]
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 5s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "5m"
-        max-file: "2"
+    healthcheck: *health-redis
+    logging: *log-small
 
 volumes:
   postgres_data:
