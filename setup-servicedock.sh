@@ -1,5 +1,5 @@
 #!/bin/bash
-# ServiceDock automated setup script
+# Servicedock automated setup script
 # One-shot install: compose, db schema, Postgres + Nginx TLS, .env, images, stack up.
 #
 # Usage:
@@ -10,7 +10,7 @@
 
 set -e
 
-echo "🚀 Starting ServiceDock setup..."
+echo "🚀 Starting Servicedock setup..."
 echo ""
 
 # Output colors
@@ -175,7 +175,7 @@ DB_PASSWORD=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
 # Create .env
 echo "📝 Creating .env file..."
 cat > .env <<EOF
-# ServiceDock environment configuration
+# Servicedock environment configuration
 # Generated on $(date)
 
 # Docker Hub image prefix (user/servicedock-backend, etc.)
@@ -224,7 +224,7 @@ docker compose pull
 docker compose up -d
 
 echo ""
-echo -e "${GREEN}🎉 ServiceDock is running!${NC}"
+echo -e "${GREEN}🎉 Servicedock is running!${NC}"
 echo ""
 echo "🌐 Access:"
 echo "   Browser: ${FRONTEND_URL}"

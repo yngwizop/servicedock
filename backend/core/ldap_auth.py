@@ -242,7 +242,7 @@ def ldap_authenticate(username: str, password: str) -> Optional[Dict[str, Any]]:
         # --- Schritt 4: Gruppen-Check ---
         role = _determine_role(config, member_of)
         if not role:
-            logger.info(f"LDAP: User '{username}' ist in keiner ServiceDock-Gruppe")
+            logger.info(f"LDAP: User '{username}' ist in keiner Servicedock-Gruppe")
             return None
         
         logger.info(f"LDAP: User '{username}' authentifiziert als '{role}'")

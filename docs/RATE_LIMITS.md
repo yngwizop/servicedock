@@ -1,6 +1,6 @@
 # 🚦 API Rate Limits - Comprehensive Reference
 
-**Web Dashboard - ServiceDock v2.0**  
+**Web Dashboard - Servicedock v2.0**  
 **Last Updated:** 2025-11-14  
 **Status:** Production Implementation
 
@@ -305,5 +305,5 @@ limiter = Limiter(
 ---
 
 **Last Modified:** 2025-11-14  
-**Author:** ServiceDock Development Team  
+**Author:** Servicedock Development Team  
 **Version:** 3.0 (Comprehensive Rate Limiting Update)

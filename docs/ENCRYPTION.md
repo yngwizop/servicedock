@@ -1,10 +1,10 @@
-# 🔐 Verschlüsselung & Security - ServiceDock
+# 🔐 Verschlüsselung & Security - Servicedock
 
 ## Übersicht
 
 > **Hinweis:** Alle API-Aufrufe und OAuth-Redirects (z.B. Spotify) laufen im lokalen Netzwerk über die zentrale Nginx-Adresse `https://10.10.10.50`.
 
-ServiceDock verwendet **mehrschichtige Sicherheitsmaßnahmen** zum Schutz sensibler Daten. Dieses Dokument erklärt die verschiedenen Verschlüsselungsmechanismen und deren Einsatzzwecke.
+Servicedock verwendet **mehrschichtige Sicherheitsmaßnahmen** zum Schutz sensibler Daten. Dieses Dokument erklärt die verschiedenen Verschlüsselungsmechanismen und deren Einsatzzwecke.
 
 **Security-Level:** 🟢 High  
 **Standards:** AES-128-CBC + HMAC, bcrypt, JWT (HS256)  
@@ -14,7 +14,7 @@ ServiceDock verwendet **mehrschichtige Sicherheitsmaßnahmen** zum Schutz sensib
 
 ## 🔑 Die drei Security-Keys erklärt
 
-ServiceDock nutzt **drei verschiedene Secrets** für unterschiedliche Sicherheitsaufgaben:
+Servicedock nutzt **drei verschiedene Secrets** für unterschiedliche Sicherheitsaufgaben:
 
 ### 1. **ENCRYPTION_KEY** - Datenverschlüsselung
 

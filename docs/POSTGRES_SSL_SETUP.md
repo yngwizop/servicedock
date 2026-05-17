@@ -1,6 +1,6 @@
 # PostgreSQL SSL Setup Guide
 
-This guide explains how to generate and use self-signed SSL certificates for encrypted PostgreSQL connections in your Docker-based ServiceDock setup.
+This guide explains how to generate and use self-signed SSL certificates for encrypted PostgreSQL connections in your Docker-based Servicedock setup.
 
 ---
 

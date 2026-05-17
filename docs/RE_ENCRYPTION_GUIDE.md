@@ -1,4 +1,4 @@
-# Token Re-Encryption Guide - ServiceDock
+# Token Re-Encryption Guide - Servicedock
 
 **Stand:** 08.11.2025  
 **Zweck:** Encryption Key wechseln ohne Datenverlust  

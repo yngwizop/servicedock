@@ -1,8 +1,11 @@
-# 🌐 ServiceDock
+<h1 align="left">
+  <img src="frontend/public/servicedock-icon.svg" width="48" height="48" alt="Servicedock" style="vertical-align: middle;" />
+  Servicedock
+</h1>
 
-**A modern, self-hosted dashboard for managing your web services, shortcuts, Proxmox VMs, and more.**
+**A modern, self-hosted dashboard for managing your web services, shortcuts, Proxmox clusters, and more.**
 
-Built for homelab enthusiasts and self-hosters — a sleek personal start page with glassmorphism design, real-time VM management, and Spotify integration.
+Built for **homelab enthusiasts**, **self-hosters**, and **teams** who want a private operations portal on their own infrastructure — from a personal start page to an **enterprise-style, self-hosted** dashboard behind your firewall. Glassmorphism UI, real-time VM control, cluster monitoring, and optional Spotify integration.
 
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Python-009688?logo=fastapi&logoColor=white)
@@ -16,56 +19,68 @@ Built for homelab enthusiasts and self-hosters — a sleek personal start page w
 ## ✨ Features
 
 ### 🎨 Customizable Design
-- Light & Dark mode with automatic detection
-- Custom background colors, images, and opacity
+- Light & dark mode with automatic detection, plus an optional **night** theme
+- Custom background colors, preset wallpapers, uploads, and opacity
 - Glassmorphism UI with backdrop-blur effects
-- Flexible grid layouts (2–12 columns)
-- Per-mode text color settings
+- Independent column layouts for services (**2–10**) and shortcuts (**2–8**)
+- Per-theme text colors; clock (12h/24h) and weather widgets
 
 ### 📱 Services & Shortcuts
 - Service cards with name, description, URL, and icon
 - Compact shortcut links for quick access
-- Drag & drop reordering
-- Emoji and URL-based icon support ([selfh.st/icons](https://selfh.st/icons/))
+- Drag & drop reordering on the home screen (edit mode)
+- Custom icon URLs ([selfh.st/icons](https://selfh.st/icons/)) — emoji/text icons still work when entered manually
 
 ### 📊 Multi-Dashboard
 - Create and switch between multiple dashboards
-- Each dashboard has its own services, shortcuts, and layout
-- Full config export & import (JSON) with merge or replace modes
+- Each dashboard has its own services, shortcuts, layout, and Proxmox settings
+- Full config export & import (JSON) with merge or replace modes (Settings → AddOns)
 
-### 🖥️ Proxmox Monitoring
-- Live VM and LXC container overview with status indicators
-- Remote control: start, stop, reboot directly from the dashboard
-- Sorting, filtering by type and status
-- Encrypted API token storage (Fernet AES-128)
-- Token rotation tracking with 60-day reminders
+### 📈 Cluster Status (Monitoring)
+- Dedicated **Monitoring** tab with draggable, resizable stat cards
+- Node, VM/LXC, storage, and task summaries across the cluster
+- Optional **Ceph** health and OSD reachability cards
+- Per-dashboard visibility and refresh preferences
+
+### 🖥️ Proxmox Control
+- Live VM and LXC overview with status indicators
+- Remote control: start, stop, reboot from the dashboard
+- Sorting and filtering by type and status
+- Multi-node API token support with Fernet AES-128 encryption
+- Token rotation tracking with 60-day reminders (Security tab)
 
 ### 🎵 Spotify Integration
-- Now Playing widget with real-time song info and album cover
+- Now Playing widget with song info and album cover
 - Progress bar and auto-refresh
 - OAuth 2.0 with encrypted token storage
-- Easy setup via the Settings panel
+- Configured under **Settings → AddOns → Spotify**
+
+### 🔐 Identity & Access
+- Local admin login with JWT (httpOnly cookies); forced password change on first login
+- Optional **LDAP/Active Directory** sign-in (Settings → AddOns)
+- Local user accounts and role-based access for dashboard features
+- Interface languages: **English** and **German**
 
 ### 🛡️ Security
-- Password-protected admin login with JWT (httpOnly cookies)
-- Rate limiting on all endpoints (SlowAPI + IP lockout)
+- Rate limiting (SlowAPI + Redis-backed IP lockout)
 - Audit logging with 6 filter types and auto-cleanup
-- Security Dashboard with threat tracking and live rate limit monitoring
-- Fernet encryption for all stored API tokens
+- **Security** sidebar tab: threat stats, token rotation, integration health, live rate-limit view
+- Fernet encryption for stored API tokens and integration secrets
 - HTTPS via nginx reverse proxy with CSP, HSTS, and security headers
-- RBAC — all API endpoints require authentication
+- Protected APIs use JWT; public endpoints are limited to login, OAuth callbacks, and health checks
 
-### ⚙️ Settings Panel
-- Tabbed interface: Appearance, Services & Shortcuts, Proxmox, Spotify, Security
-- Live preview for design changes
-- Proxmox connection management with multi-node support
-- Config export/import with password confirmation for destructive operations
+### ⚙️ Settings & Navigation
+- **Home** — services, shortcuts, widgets (edit mode on the page itself)
+- **Monitoring** — cluster status dashboard (when Proxmox is enabled for the active dashboard)
+- **Security** — audit logs, integration health, token rotation
+- **Settings** — Appearance, Dashboards, Proxmox, AddOns (config/Spotify/LDAP), Language, Users, Help
+- Global search across settings; integration health indicator in the sidebar
 
 ---
 
 ## 🚀 Installation
 
-ServiceDock ships as **pre-built Docker images** on [Docker Hub](https://hub.docker.com/u/servicedockapp) (`servicedockapp/servicedock-*`).  
+Servicedock ships as **pre-built Docker images** on [Docker Hub](https://hub.docker.com/u/servicedockapp) (`servicedockapp/servicedock-*`).  
 You do **not** need to clone the repo or edit `.env` by hand — one setup script does everything.
 
 ### Prerequisites
@@ -138,6 +153,8 @@ More detail: [docs/QUICKSTART.md](docs/QUICKSTART.md) · HTTPS: [docs/HTTPS_SETU
 | [HTTPS_SETUP.md](docs/HTTPS_SETUP.md) | Nginx reverse proxy & SSL certificates |
 | [PROXMOX_SETUP.md](docs/PROXMOX_SETUP.md) | Proxmox API token setup |
 | [SPOTIFY_ADDON.md](docs/SPOTIFY_ADDON.md) | Spotify widget configuration |
+| [LDAP_INTEGRATION.md](docs/LDAP_INTEGRATION.md) | Optional LDAP / Active Directory login |
+| [SAMBA_AD_SETUP.md](docs/SAMBA_AD_SETUP.md) | Samba AD lab setup for testing LDAP |
 | [ENCRYPTION.md](docs/ENCRYPTION.md) | Token encryption details |
 | [API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md) | Full API reference |
 | [RATE_LIMITS.md](docs/RATE_LIMITS.md) | Rate limits for all endpoints |
@@ -150,19 +167,22 @@ More detail: [docs/QUICKSTART.md](docs/QUICKSTART.md) · HTTPS: [docs/HTTPS_SETU
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 19, Vite 7, Tailwind CSS |
+| Frontend | React 19, Vite 7, Tailwind CSS, i18next (EN/DE) |
 | Backend | FastAPI (Python), modular router architecture |
 | Database | PostgreSQL 16 with connection pooling |
-| Auth | JWT (httpOnly cookies), bcrypt, Fernet AES-128 |
+| Cache | Redis (rate limits, lockout, OAuth state) |
+| Auth | JWT (httpOnly cookies), bcrypt, optional LDAP, Fernet AES-128 |
 | Deployment | Docker Compose with health checks |
 | Proxy | Nginx with HTTPS, CSP, HSTS |
-| Icons | Phosphor Icons + custom URL/emoji support |
+| Icons | Phosphor Icons + custom icon URLs |
 
 ---
 
 ## 📄 License
 
 MIT License — see [LICENSE](LICENSE) for details.
+
+The app logo (`frontend/public/servicedock-icon.svg`) and UI icons are based on [Phosphor Icons](https://phosphoricons.com) ([MIT](https://github.com/phosphor-icons/core/blob/master/LICENSE)).
 
 ## 📷 Photo Credits
 
@@ -182,4 +202,4 @@ Bundled preset wallpapers are sourced from [Unsplash](https://unsplash.com) (fre
 
 ---
 
-**Made with ❤️ for the self-hosting community**
+**Made with ❤️ for homelabs, self-hosters, and teams who keep their infrastructure in-house**

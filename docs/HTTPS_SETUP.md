@@ -1,4 +1,4 @@
-# HTTPS setup for ServiceDock
+# HTTPS setup for Servicedock
 
 ## 🔒 Overview
 
@@ -33,7 +33,7 @@ Add to your Spotify app:
 https://10.10.10.50/api/spotify/callback
 ```
 
-### 2. ServiceDock dashboard
+### 2. Servicedock dashboard
 
 1. Open `https://10.10.10.50`
 2. Accept the certificate warning (see below)

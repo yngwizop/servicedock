@@ -1,4 +1,4 @@
-# 📡 API Documentation - ServiceDock v3.1
+# 📡 API Documentation - Servicedock v3.1
 
 **Backend-Version:** 3.1 (Performance & Security Hardening)  
 **Base URL:** `https://<your-host>/api` (wie in `FRONTEND_URL`, z. B. `https://192.168.1.10/api`)  
@@ -848,4 +848,4 @@ curl -X GET http://localhost:8000/api/admin/audit-logs?limit=10 \
 
 **Version:** 3.0 - Enhanced Security & Monitoring Edition  
 **Last Updated:** 14.11.2025  
-**Maintained by:** ServiceDock Team
+**Maintained by:** Servicedock Team

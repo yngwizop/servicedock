@@ -1,4 +1,4 @@
-# ServiceDock documentation
+# Servicedock documentation
 
 | Topic | Guide |
 |-------|--------|

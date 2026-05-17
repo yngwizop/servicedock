@@ -2,7 +2,7 @@
 
 ## 🎵 Overview
 
-The Spotify add-on adds a **Now Playing** widget to your ServiceDock dashboard. It shows the current track in real time with album art, artist, title, and a progress bar.
+The Spotify add-on adds a **Now Playing** widget to your Servicedock dashboard. It shows the current track in real time with album art, artist, title, and a progress bar.
 
 ### Features
 
@@ -16,7 +16,7 @@ The Spotify add-on adds a **Now Playing** widget to your ServiceDock dashboard. 
 
 1. **Spotify account** (Free or Premium)
 2. **Spotify Developer account** (free)
-3. **ServiceDock** with admin access
+3. **Servicedock** with admin access
 
 ## 🚀 Setup
 
@@ -47,7 +47,7 @@ The Spotify add-on adds a **Now Playing** widget to your ServiceDock dashboard. 
 3. Click **View client secret** and copy **Client secret**
 4. **Never** publish the client secret
 
-### Step 3: Configure ServiceDock
+### Step 3: Configure Servicedock
 
 1. Open the dashboard (e.g. `http://127.0.0.1:3000` or your HTTPS URL)
 2. Sign in as **admin**
@@ -69,7 +69,7 @@ The Spotify add-on adds a **Now Playing** widget to your ServiceDock dashboard. 
 3. Complete Spotify login if prompted, then **Agree**
 4. You should see a success page
 5. The window closes after a few seconds (or close it manually)
-6. Back in ServiceDock the status should show **Connected**
+6. Back in Servicedock the status should show **Connected**
 
 **Note:** You can close the callback tab after success; playback polling runs server-side.
 
@@ -125,8 +125,8 @@ Sensitive values are stored encrypted:
 
 ### OAuth: `Redirect URI mismatch`
 
-1. Spotify app **Settings** → redirect URIs must **exactly** match ServiceDock (scheme, host, port, path, no stray slash)
-2. Copy the URI shown in ServiceDock AddOns into Spotify
+1. Spotify app **Settings** → redirect URIs must **exactly** match Servicedock (scheme, host, port, path, no stray slash)
+2. Copy the URI shown in Servicedock AddOns into Spotify
 
 ### Reconnect
 
@@ -139,7 +139,7 @@ Sensitive values are stored encrypted:
 
 1. Terminate TLS with a real certificate (e.g. Let’s Encrypt)
 2. In the Spotify app, add `https://your-domain.com/api/spotify/callback`
-3. ServiceDock will surface the correct redirect when opened on that host
+3. Servicedock will surface the correct redirect when opened on that host
 4. Connect again
 
 You can register **multiple** redirect URIs in Spotify (local + production).

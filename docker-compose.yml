@@ -1,4 +1,4 @@
-# ServiceDock — Docker Hub images (production install)
+# Servicedock — Docker Hub images (production install)
 # Usage: setup-servicedock.sh, then: docker compose pull && docker compose up -d
 # SSL: nginx/ssl/cert.pem + key.pem | Postgres: db/ssl/server.crt + server.key (UID 999)
 

@@ -221,7 +221,7 @@ function LdapAddon({
               type="text"
               value={ldapConfig.admin_group_dn || ''}
               onChange={(e) => setLdapConfig(prev => ({ ...prev, admin_group_dn: e.target.value }))}
-              placeholder="CN=ServiceDock-Admins,CN=Users,DC=domain,DC=local"
+              placeholder="CN=Servicedock-Admins,CN=Users,DC=domain,DC=local"
               className={inputClass}
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('ldapAddon.admin_group_hint')}</p>
@@ -233,7 +233,7 @@ function LdapAddon({
               type="text"
               value={ldapConfig.viewer_group_dn || ''}
               onChange={(e) => setLdapConfig(prev => ({ ...prev, viewer_group_dn: e.target.value }))}
-              placeholder="CN=ServiceDock-Viewers,CN=Users,DC=domain,DC=local"
+              placeholder="CN=Servicedock-Viewers,CN=Users,DC=domain,DC=local"
               className={inputClass}
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('ldapAddon.viewer_group_hint')}</p>

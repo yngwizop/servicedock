@@ -1,8 +1,8 @@
-# AD / LDAP integration — ServiceDock
+# AD / LDAP integration — Servicedock
 
 ## Overview
 
-ServiceDock supports **Active Directory / LDAP authentication** as an optional add-on. AD users sign in with their domain account; the role (admin or viewer) is determined by group membership.
+Servicedock supports **Active Directory / LDAP authentication** as an optional add-on. AD users sign in with their domain account; the role (admin or viewer) is determined by group membership.
 
 **Features:**
 - AD login with username + password (UPN bind: `user@domain`)
@@ -44,36 +44,36 @@ Create two security groups for role mapping:
 
 ```bash
 # Admin group
-samba-tool group add ServiceDock-Admins
+samba-tool group add Servicedock-Admins
 
 # Viewer group
-samba-tool group add ServiceDock-Viewers
+samba-tool group add Servicedock-Viewers
 ```
 
 ### 3. Add users to groups
 
 ```bash
 # Add admin user
-samba-tool group addmembers ServiceDock-Admins adminuser
+samba-tool group addmembers Servicedock-Admins adminuser
 
 # Add viewer user
-samba-tool group addmembers ServiceDock-Viewers vieweruser
+samba-tool group addmembers Servicedock-Viewers vieweruser
 ```
 
 ### 4. Look up group DNs
 
 ```bash
 # Look up group DN
-samba-tool group show ServiceDock-Admins | grep dn
-# → dn: CN=ServiceDock-Admins,CN=Users,DC=domain,DC=local
+samba-tool group show Servicedock-Admins | grep dn
+# → dn: CN=Servicedock-Admins,CN=Users,DC=domain,DC=local
 
-samba-tool group show ServiceDock-Viewers | grep dn
-# → dn: CN=ServiceDock-Viewers,CN=Users,DC=domain,DC=local
+samba-tool group show Servicedock-Viewers | grep dn
+# → dn: CN=Servicedock-Viewers,CN=Users,DC=domain,DC=local
 ```
 
 ---
 
-## Configure ServiceDock
+## Configure Servicedock
 
 ### Web UI
 
@@ -93,8 +93,8 @@ samba-tool group show ServiceDock-Viewers | grep dn
 | **Bind password** | Service account password | *(stored encrypted)* |
 | **User attribute** | LDAP attribute for the username | `sAMAccountName` (default for AD) |
 | **Domain** | AD domain for UPN bind | `domain.local` |
-| **Admin group DN** | DN of the admin group | `CN=ServiceDock-Admins,CN=Users,DC=domain,DC=local` |
-| **Viewer group DN** | DN of the viewer group | `CN=ServiceDock-Viewers,CN=Users,DC=domain,DC=local` |
+| **Admin group DN** | DN of the admin group | `CN=Servicedock-Admins,CN=Users,DC=domain,DC=local` |
+| **Viewer group DN** | DN of the viewer group | `CN=Servicedock-Viewers,CN=Users,DC=domain,DC=local` |
 
 4. **Test connection** → shows user count and group details  
 5. **Save** → configuration is persisted in the database  

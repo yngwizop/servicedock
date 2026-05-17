@@ -1,6 +1,6 @@
 # Samba AD DC — LXC Setup auf Proxmox
 
-Anleitung zum Aufsetzen eines Samba Active Directory Domain Controllers als LXC Container auf Proxmox. Dient als Test-AD für die ServiceDock LDAP-Authentifizierung.
+Anleitung zum Aufsetzen eines Samba Active Directory Domain Controllers als LXC Container auf Proxmox. Dient als Test-AD für die Servicedock LDAP-Authentifizierung.
 
 ---
 
@@ -137,11 +137,11 @@ Wenn alle drei Tests durchlaufen → AD läuft! 🎉
 ## 3. Test-User und Gruppen anlegen
 
 ```bash
-# Gruppe für ServiceDock Admins erstellen
-samba-tool group add ServiceDock-Admins
+# Gruppe für Servicedock Admins erstellen
+samba-tool group add Servicedock-Admins
 
-# Gruppe für ServiceDock Viewer (optional, readonly)
-samba-tool group add ServiceDock-Viewers
+# Gruppe für Servicedock Viewer (optional, readonly)
+samba-tool group add Servicedock-Viewers
 
 # Test-User erstellen
 samba-tool user create testadmin 'Test1234!' \
@@ -155,12 +155,12 @@ samba-tool user create testviewer 'Test1234!' \
   --mail-address="testviewer@homelab.local"
 
 # User zu Gruppen hinzufügen
-samba-tool group addmembers ServiceDock-Admins testadmin
-samba-tool group addmembers ServiceDock-Viewers testviewer
+samba-tool group addmembers Servicedock-Admins testadmin
+samba-tool group addmembers Servicedock-Viewers testviewer
 
 # Verifizieren
 samba-tool user list
-samba-tool group listmembers ServiceDock-Admins
+samba-tool group listmembers Servicedock-Admins
 ```
 
 ---
@@ -184,7 +184,7 @@ ldapsearch -x -H ldap://192.168.178.200 \
   "(sAMAccountName=testadmin)" \
   sAMAccountName memberOf mail displayName
 
-# Bind als testadmin (so wie ServiceDock es machen wird)
+# Bind als testadmin (so wie Servicedock es machen wird)
 ldapsearch -x -H ldap://192.168.178.200 \
   -D "CN=testadmin,CN=Users,DC=homelab,DC=local" \
   -w 'Test1234!' \
@@ -193,7 +193,7 @@ ldapsearch -x -H ldap://192.168.178.200 \
   memberOf
 ```
 
-### Erwartete LDAP-Werte für ServiceDock-Konfiguration
+### Erwartete LDAP-Werte für Servicedock-Konfiguration
 
 | Parameter | Wert |
 |---|---|
@@ -205,7 +205,7 @@ ldapsearch -x -H ldap://192.168.178.200 \
 | **Bind Passwort** | `Passw0rd!` |
 | **User Attribut** | `sAMAccountName` |
 | **Gruppen Attribut** | `memberOf` |
-| **Admin-Gruppe DN** | `CN=ServiceDock-Admins,CN=Users,DC=homelab,DC=local` |
+| **Admin-Gruppe DN** | `CN=Servicedock-Admins,CN=Users,DC=homelab,DC=local` |
 | **SSL** | Nein (intern im Homelab okay) |
 
 ---
@@ -274,7 +274,7 @@ Nach dieser Anleitung hast du:
 - ✅ Einen laufenden Samba AD DC auf `192.168.178.200`
 - ✅ Domain: `HOMELAB.LOCAL`  
 - ✅ Administrator-Account + 2 Test-User
-- ✅ 2 Gruppen: `ServiceDock-Admins` und `ServiceDock-Viewers`
+- ✅ 2 Gruppen: `Servicedock-Admins` und `Servicedock-Viewers`
 - ✅ LDAP auf Port 389 erreichbar
 
-ServiceDock kann dann gegen diesen AD per LDAP Bind authentifizieren — gleicher Code funktioniert später auch mit einem echten Windows AD.
+Servicedock kann dann gegen diesen AD per LDAP Bind authentifizieren — gleicher Code funktioniert später auch mit einem echten Windows AD.

@@ -2,7 +2,7 @@
 
 ## Overview
 
-ServiceDock can monitor and manage your Proxmox VMs and LXC containers. This guide walks you through a secure setup with encrypted token storage.
+Servicedock can monitor and manage your Proxmox VMs and LXC containers. This guide walks you through a secure setup with encrypted token storage.
 
 **Features:**
 

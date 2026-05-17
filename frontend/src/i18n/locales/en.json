@@ -644,7 +644,7 @@
     "description": "Connect your Proxmox system and monitor your infrastructure",
     "connection": "Proxmox Connection",
     "connection_desc": "Configure server credentials",
-    "connection_body": "Connect your ServiceDock with your Proxmox server via API token. Supports single-node and cluster setups with SSL verification.",
+    "connection_body": "Connect your Servicedock with your Proxmox server via API token. Supports single-node and cluster setups with SSL verification.",
     "configured": "Configured",
     "monitoring_dashboard": "Monitoring Dashboard",
     "dashboard_desc": "Customize display and layout",
