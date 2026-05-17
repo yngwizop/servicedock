@@ -1,6 +1,6 @@
-<h1 align="left">
-  <img src="frontend/public/servicedock-icon.svg" width="48" height="48" alt="Servicedock" style="vertical-align: middle;" />
-  Servicedock
+<h1 align="left" style="display: flex; align-items: center; gap: 10px; margin: 0 0 16px; border: none; padding: 0;">
+  <img src="frontend/public/servicedock-icon.svg" width="48" height="48" alt="" style="display: block; flex-shrink: 0;" />
+  <span>Servicedock</span>
 </h1>
 
 **A modern, self-hosted dashboard for managing your web services, shortcuts, Proxmox clusters, and more.**
