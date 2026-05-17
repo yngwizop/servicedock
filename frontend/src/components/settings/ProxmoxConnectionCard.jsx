@@ -255,20 +255,23 @@ function ProxmoxConnectionCard({ activeDashboard, onSettingsChange, onClose }) {
           </label>
         </div>
 
-        {config.is_cluster && (
-          <div className="animate-fadeIn">
-            <label className={labelClass}>
-              {t('proxmoxConnection.specific_node')}
-            </label>
-            <input
-              type="text"
-              value={config.node}
-              onChange={(e) => setConfig({ ...config, node: e.target.value })}
-              placeholder={t('proxmoxConnection.node_placeholder')}
-              className={inputClass}
-            />
-          </div>
-        )}
+        <div>
+          <label className={labelClass}>
+            {t('proxmoxConnection.specific_node')}
+          </label>
+          <input
+            type="text"
+            value={config.node}
+            onChange={(e) => setConfig({ ...config, node: e.target.value })}
+            placeholder={t('proxmoxConnection.node_placeholder')}
+            className={inputClass}
+          />
+          <p className="mt-1.5 text-xs text-gray-600 dark:text-gray-400">
+            {config.is_cluster
+              ? t('proxmoxConnection.node_hint_cluster')
+              : t('proxmoxConnection.node_hint_standalone')}
+          </p>
+        </div>
 
         {saveStatus.message && (
           <div className={`${statusBoxBase} ${

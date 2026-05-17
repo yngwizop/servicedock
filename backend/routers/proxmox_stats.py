@@ -475,23 +475,84 @@ def get_cluster_stats(
         storage_by_type_dict = {}  # Dict[storage_type, List[StorageItem]]
         
         try:
-            # Hole alle Nodes
+            def _node_is_online_flag(value) -> bool:
+                if value in (1, True, "1"):
+                    return True
+                if value in (0, False, "0", None):
+                    return False
+                return bool(value)
+
+            # Nodes für Storage-Abfrage (gleiche Logik wie VM/Stats: nicht nur configured_node)
             nodes_to_check = []
             if is_cluster:
                 try:
                     cluster_nodes = proxmox.cluster.status.get()
                     for item in cluster_nodes:
-                        if item.get('type') == 'node' and item.get('online', 0) == 1:
-                            node_name = item.get('name')
-                            if configured_node and node_name != configured_node:
-                                continue
-                            nodes_to_check.append(node_name)
+                        if item.get('type') != 'node':
+                            continue
+                        if not _node_is_online_flag(item.get('online')):
+                            continue
+                        node_name = item.get('name')
+                        if configured_node and node_name != configured_node:
+                            continue
+                        nodes_to_check.append(node_name)
                 except Exception as e:
                     logger.warning(f"Could not fetch cluster nodes for storage: {e}")
-            else:
-                # Standalone: Nutze configured_node
-                if configured_node:
-                    nodes_to_check.append(configured_node)
+
+            # Standalone oder leere Cluster-Liste: alle (passenden) Nodes von /nodes
+            if not nodes_to_check:
+                try:
+                    for node_data in proxmox.nodes.get():
+                        node_name = node_data.get('node')
+                        if not node_name:
+                            continue
+                        if configured_node and node_name != configured_node:
+                            continue
+                        if node_data.get('status', 'online') != 'online':
+                            continue
+                        nodes_to_check.append(node_name)
+                except Exception as e:
+                    logger.warning(f"Could not list nodes for storage: {e}")
+
+            # Case-insensitive Node-Name (häufig pve vs PVE)
+            if not nodes_to_check and configured_node:
+                try:
+                    want = configured_node.strip().lower()
+                    for node_data in proxmox.nodes.get():
+                        node_name = node_data.get('node') or ''
+                        if node_name.lower() != want:
+                            continue
+                        if node_data.get('status', 'online') != 'online':
+                            continue
+                        nodes_to_check.append(node_name)
+                except Exception as e:
+                    logger.warning(f"Could not match configured node for storage: {e}")
+
+            # Einzelner Host: auch bei falschem/leerem Node-Namen Storage nicht leer lassen
+            if not nodes_to_check:
+                try:
+                    online = [
+                        n['node']
+                        for n in proxmox.nodes.get()
+                        if n.get('status') == 'online' and n.get('node')
+                    ]
+                    if len(online) == 1:
+                        logger.info(
+                            "Storage: using sole online node %r (configured_node=%r, is_cluster=%s)",
+                            online[0],
+                            configured_node,
+                            is_cluster,
+                        )
+                        nodes_to_check = online
+                except Exception as e:
+                    logger.warning(f"Could not resolve single node for storage: {e}")
+
+            if not nodes_to_check:
+                logger.warning(
+                    "Storage: no nodes to query (is_cluster=%s, configured_node=%r)",
+                    is_cluster,
+                    configured_node,
+                )
 
             # Feste Reihenfolge: API liefert Node-Reihenfolge nicht garantiert stabil
             nodes_to_check.sort()
@@ -504,12 +565,10 @@ def get_cluster_stats(
                         storage_name = storage.get('storage')
                         storage_type = storage.get('type', 'unknown')
                         
-                        # Nur aktive/enabled Storages
+                        # Deaktivierte Storages überspringen; inactive trotzdem versuchen (dir/lvm oft status-fähig)
                         if storage.get('enabled', 1) != 1:
                             continue
-                        if storage.get('active', 1) != 1:
-                            continue
-                        
+
                         # Hole Status (mit Disk-Daten)
                         try:
                             status = proxmox.nodes(node_name).storage(storage_name).status.get()
