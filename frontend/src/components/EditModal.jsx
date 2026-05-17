@@ -134,7 +134,8 @@ function EditModal({ item, type, onClose, onSave, onDelete }) {
             </span>
           </label>
           <input
-            type="url"
+            type="text"
+            inputMode="text"
             value={formData.icon || ''}
             onChange={(e) => handleChange('icon', e.target.value)}
             className={inputClass}

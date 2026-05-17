@@ -177,7 +177,8 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
               <div>
                 <label className={labelClass}>{t('serviceIcon.label')}</label>
                 <input
-                  type="url"
+                  type="text"
+                  inputMode="text"
                   placeholder={t('serviceIcon.placeholder')}
                   value={serviceIcon}
                   onChange={(e) => setServiceIcon(e.target.value)}
@@ -218,7 +219,8 @@ function AddItemFAB({ activeDashboard, onItemAdded }) {
               <div>
                 <label className={labelClass}>{t('serviceIcon.label')}</label>
                 <input
-                  type="url"
+                  type="text"
+                  inputMode="text"
                   placeholder={t('serviceIcon.placeholder')}
                   value={shortcutIcon}
                   onChange={(e) => setShortcutIcon(e.target.value)}

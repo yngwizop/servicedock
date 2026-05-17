@@ -261,10 +261,12 @@ function App() {
     <ErrorBoundary>
     {/* Background-Layer: Mesh unten, optional Tint, Wallpaper oben (Tint nicht undurchsichtig über Default-Grau) */}
     <div className="fixed inset-0 w-full h-full -z-10 pointer-events-none">
-      <div
-        aria-hidden
-        className={`absolute inset-0 ${theme === 'dark' ? 'sd-theme-mesh-night' : 'sd-theme-mesh-dim'}`}
-      />
+      {(!cssBackgroundImageValue(bg.bg_image_url) || theme === 'dark') && (
+        <div
+          aria-hidden
+          className={`absolute inset-0 ${theme === 'dark' ? 'sd-theme-mesh-night' : 'sd-theme-mesh-dim'}`}
+        />
+      )}
       {shouldShowAppearanceColorTint(bg) && (
         <div
           className="absolute inset-0 w-full h-full"

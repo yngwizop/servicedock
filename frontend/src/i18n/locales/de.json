@@ -91,9 +91,9 @@
     "error": "Fehler beim Ändern des Passworts."
   },
   "serviceIcon": {
-    "label": "Icon-URL",
-    "placeholder": "https://selfh.st/icons/portainer.png",
-    "hint_prefix": "Kostenlose Dashboard-Icons unter"
+    "label": "Icon (URL oder Emoji)",
+    "placeholder": "https://selfh.st/icons/portainer.png oder 🏠",
+    "hint_prefix": "Icon-URL oder Emoji — kostenlose Icons unter"
   },
   "editModal": {
     "edit_service": "Service bearbeiten",

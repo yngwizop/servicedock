@@ -14,6 +14,10 @@ Built for **homelab enthusiasts**, **self-hosters**, and **teams** who want a pr
 ![Security](https://img.shields.io/badge/Security-Hardened-success)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
+![Servicedock — demo dashboard (home)](docs/images/Screenshot1.png)
+
+*Demo data only — services, shortcuts, and widgets on the home screen.*
+
 ---
 
 ## ✨ Features
@@ -75,6 +79,20 @@ Built for **homelab enthusiasts**, **self-hosters**, and **teams** who want a pr
 - **Security** — audit logs, integration health, token rotation
 - **Settings** — Appearance, Dashboards, Proxmox, AddOns (config/Spotify/LDAP), Language, Users, Help
 - Global search across settings; integration health indicator in the sidebar
+
+---
+
+## 📷 Screenshots
+
+The image above shows the main dashboard. More views (dark/night theme, Proxmox, cluster monitoring, security) live in **[`docs/images/`](docs/images/)**:
+
+| | |
+|--|--|
+| [Screenshot2.png](docs/images/Screenshot2.png) | Dark theme — home |
+| [Screenshot3.png](docs/images/Screenshot3.png) | Night theme — home |
+| [Screenshot4-PRX.png](docs/images/Screenshot4-PRX.png) | Proxmox workloads |
+| [Screenshot5-PRX.png](docs/images/Screenshot5-PRX.png) | Cluster status |
+| [Screenshot6.png](docs/images/Screenshot6.png) | Security overview |
 
 ---
 

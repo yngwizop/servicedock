@@ -91,9 +91,9 @@
     "error": "Error changing password."
   },
   "serviceIcon": {
-    "label": "Icon URL",
-    "placeholder": "https://selfh.st/icons/portainer.png",
-    "hint_prefix": "Free dashboard icons at"
+    "label": "Icon (URL or emoji)",
+    "placeholder": "https://selfh.st/icons/portainer.png or 🏠",
+    "hint_prefix": "Icon URL or emoji — free icons at"
   },
   "editModal": {
     "edit_service": "Edit Service",

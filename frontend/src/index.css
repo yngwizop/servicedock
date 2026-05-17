@@ -344,18 +344,10 @@ html.dark[data-sd-theme="night"] .glass-btn:hover {
   }
 }
 
-/* Theme-Hintergrund-Mesh (App fixed layer — nicht von Appearance bg_color verdecken) */
+/* Standard theme (data-sd-theme=dim): neutral base only — no colored mesh over wallpapers */
 .sd-theme-mesh-dim {
   background-color: #020617;
-  background-image:
-    radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0px, transparent 50%),
-    radial-gradient(at 50% 0%, hsla(225, 39%, 25%, 1) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, hsla(217, 71%, 35%, 1) 0px, transparent 50%),
-    radial-gradient(at 100% 50%, hsla(291, 44%, 28%, 1) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(261, 48%, 32%, 1) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, hsla(228, 35%, 22%, 1) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(203, 45%, 28%, 1) 0px, transparent 50%);
+  background-image: none;
   background-attachment: fixed;
 }
 
