@@ -357,7 +357,18 @@
   "settings": {
     "last_modified": "Zuletzt geändert: {{datetime}}",
     "nav_sections_aria": "Einstellungsbereiche",
+    "topic_subnav_aria": "Unterthemen für diesen Bereich",
     "tips_aside_aria": "Hinweise zu diesem Bereich",
+    "tips_toggle_show": "Hinweise anzeigen",
+    "tips_toggle_hide": "Hinweise ausblenden",
+    "unsaved_badge": "Ungespeichert",
+    "unsaved": {
+      "title": "Ungespeicherte Änderungen",
+      "message": "Du hast Änderungen vorgenommen, die noch nicht gespeichert wurden. Möchtest du sie verwerfen oder speichern?",
+      "discard": "Verwerfen",
+      "stay": "Abbrechen",
+      "save": "Speichern"
+    },
     "tabs": {
       "appearance": "Appearance",
       "dashboards": "Dashboards",
@@ -544,8 +555,13 @@
         "Fehlt eine Datei auf dem Server, schlägt der Eintrag fehl, bis die Datei im Deployment enthalten ist."
       ]
     },
+    "appearance": {
+      "overview_hint": "Wähle unten ein Thema, oder tippe erneut auf Appearance, um die Themenliste in der Seitenleiste ein- oder auszublenden.",
+      "overview_unsaved_hint": "Klappe die Themenliste auf, öffne ein Thema und speichere deine Änderungen."
+    },
     "help": {
-      "intro": "Dokumentation für Betrieb und Admins. Wähle links ein Thema.",
+      "intro": "Dokumentation für Betrieb und Admins. Tippe erneut auf Hilfe, um die Themen in der Seitenleiste ein- oder auszublenden, oder wähle unten ein Dokument.",
+      "overview_hint": "Klappe die Themenliste in der Seitenleiste auf, um einzelne Anleitungen zu öffnen.",
       "load_error": "Dokumentation konnte nicht geladen werden. Prüfe API und Login.",
       "nav_aria": "Hilfe-Themen",
       "nav_title": "Themen",
@@ -715,6 +731,7 @@
     "reset_success": "Einstellungen zurückgesetzt! Seite wird neu geladen...",
     "save_settings": "Einstellungen speichern",
     "reset_confirm": "Dashboard-Einstellungen auf Standardwerte zurücksetzen?",
+    "reload_hint": "Änderungen werden im Browser gespeichert; die Seite lädt nach dem Speichern neu.",
     "note": "Nach dem Speichern wird die Seite automatisch neu geladen, damit die Änderungen sofort wirksam werden."
   },
   "addons": {

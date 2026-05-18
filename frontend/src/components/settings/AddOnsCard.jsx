@@ -24,6 +24,7 @@ import SettingsModalShell from './SettingsModalShell';
 import SettingsTopicLayout from './SettingsTopicLayout';
 import SettingsTopicPreviewGrid from './SettingsTopicPreviewGrid';
 import SettingsLastModifiedLine from './SettingsLastModifiedLine';
+import { useSettingsUnsaved } from '../../contexts/SettingsUnsavedContext';
 
 const SPOTIFY_REDIRECT_URI = window.location.protocol === 'https:' 
   ? `https://${window.location.hostname}/api/spotify/callback`
@@ -42,6 +43,7 @@ async function broadcastAuthModeFromServer() {
 
 function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
   const { t, i18n } = useTranslation();
+  const { registerDirty, unregisterDirty } = useSettingsUnsaved();
   const [activeTopic, setActiveTopic] = useState('config');
 
   useLayoutEffect(() => {
@@ -50,6 +52,8 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showSpotifyModal, setShowSpotifyModal] = useState(false);
   const [showLdapModal, setShowLdapModal] = useState(false);
+  const [spotifySnapshot, setSpotifySnapshot] = useState(null);
+  const [ldapSnapshot, setLdapSnapshot] = useState(null);
 
   // Config Import/Export State
   const [importMode, setImportMode] = useState('append');
@@ -344,10 +348,67 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
     [t]
   );
 
+  const configModalDirty = showConfigModal && (importFile != null || importPreview != null);
+
+  const spotifyModalDirty = Boolean(
+    showSpotifyModal &&
+      spotifySnapshot &&
+      (spotifyConfig.client_id !== spotifySnapshot.client_id ||
+        spotifyConfig.client_secret !== spotifySnapshot.client_secret)
+  );
+
+  const ldapModalDirty = Boolean(
+    showLdapModal &&
+      ldapSnapshot &&
+      JSON.stringify(ldapConfig) !== JSON.stringify(ldapSnapshot)
+  );
+
+  const discardConfigModal = () => {
+    setImportFile(null);
+    setImportPreview(null);
+    setImportError(null);
+    setImportSuccess(false);
+  };
+
+  const discardSpotifyModal = () => {
+    if (spotifySnapshot) setSpotifyConfig({ ...spotifySnapshot });
+  };
+
+  const discardLdapModal = () => {
+    if (ldapSnapshot) setLdapConfig({ ...ldapSnapshot });
+  };
+
+  useEffect(() => {
+    if (!showConfigModal) unregisterDirty('addons-config');
+    else registerDirty('addons-config', configModalDirty);
+    return () => unregisterDirty('addons-config');
+  }, [showConfigModal, configModalDirty, registerDirty, unregisterDirty]);
+
+  useEffect(() => {
+    if (!showSpotifyModal) unregisterDirty('addons-spotify');
+    else registerDirty('addons-spotify', spotifyModalDirty);
+    return () => unregisterDirty('addons-spotify');
+  }, [showSpotifyModal, spotifyModalDirty, registerDirty, unregisterDirty]);
+
+  useEffect(() => {
+    if (!showLdapModal) unregisterDirty('addons-ldap');
+    else registerDirty('addons-ldap', ldapModalDirty);
+    return () => unregisterDirty('addons-ldap');
+  }, [showLdapModal, ldapModalDirty, registerDirty, unregisterDirty]);
+
   const openModalForTopic = (id) => {
-    if (id === 'config') setShowConfigModal(true);
-    if (id === 'spotify') setShowSpotifyModal(true);
-    if (id === 'ldap') setShowLdapModal(true);
+    if (id === 'config') {
+      discardConfigModal();
+      setShowConfigModal(true);
+    }
+    if (id === 'spotify') {
+      setSpotifySnapshot({ ...spotifyConfig });
+      setShowSpotifyModal(true);
+    }
+    if (id === 'ldap') {
+      setLdapSnapshot({ ...ldapConfig });
+      setShowLdapModal(true);
+    }
   };
 
   /** Näherungsweise: letzte Änderung an Dashboard-Metadaten (Export enthält diese Daten). */
@@ -369,11 +430,11 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+        <h3 className="text-lg font-bold dim:text-slate-100 night:text-white mb-1 flex items-center gap-2.5">
           <Plug size={22} weight="duotone" className="text-green-400" />
           {t('addons.title')}
         </h3>
-        <p className="text-gray-700 dark:text-gray-300 text-sm" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6), 0 0 8px rgba(255,255,255,0.5)' }}>
+        <p className="dim:text-slate-300 night:text-gray-300 text-sm">
           {t('addons.description')}
         </p>
       </div>
@@ -386,9 +447,8 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
       >
         {activeTopic === 'config' && (
           <div>
-            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.config_title')}</h4>
-            <p className="text-sm text-gray-600 dark:text-slate-300 mb-3">{t('addons.config_subtitle')}</p>
-            <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed mb-4">{t('addons.config_description')}</p>
+            <p className="text-base font-semibold dim:text-slate-50 night:text-white mb-2">{t('addons.config_subtitle')}</p>
+            <p className="text-sm dim:text-slate-300 night:text-slate-200/95 leading-relaxed mb-4">{t('addons.config_description')}</p>
             <div className="mb-4 flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/12 px-3 py-1 text-xs font-medium text-blue-800 dark:bg-blue-400/15 dark:text-blue-200">
                 <DownloadSimple size={14} weight="duotone" className="shrink-0" aria-hidden />
@@ -420,8 +480,7 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
         )}
         {activeTopic === 'spotify' && (
           <div>
-            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.spotify_title')}</h4>
-            <p className="text-sm text-gray-600 dark:text-slate-300 mb-3">{t('addons.spotify_subtitle')}</p>
+            <p className="text-base font-semibold dim:text-slate-50 night:text-white mb-2">{t('addons.spotify_subtitle')}</p>
             <div className="mb-3 flex flex-wrap gap-2">
               {spotifyStatus.connected ? (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/15 dark:bg-green-400/20 text-green-800 dark:text-green-200 text-sm font-semibold rounded-full">
@@ -434,13 +493,13 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
                   {t('addons.configured')}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/40 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-full">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/40 dark:bg-white/10 dim:text-slate-300 night:text-gray-300 text-sm font-semibold rounded-full">
                   <MusicNotes size={16} weight="duotone" className="shrink-0 opacity-80" aria-hidden />
                   {t('addons.not_installed')}
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed mb-4">{t('addons.spotify_description')}</p>
+            <p className="text-sm dim:text-slate-300 night:text-slate-200/95 leading-relaxed mb-4">{t('addons.spotify_description')}</p>
             <div className="mb-4 flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-3 py-1 text-xs font-medium text-emerald-900 dark:bg-emerald-400/15 dark:text-emerald-200">
                 <MusicNotes size={14} weight="duotone" className="shrink-0" aria-hidden />
@@ -472,8 +531,7 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
         )}
         {activeTopic === 'ldap' && (
           <div>
-            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('addons.ldap_title')}</h4>
-            <p className="text-sm text-gray-600 dark:text-slate-300 mb-3">{t('addons.ldap_subtitle')}</p>
+            <p className="text-base font-semibold dim:text-slate-50 night:text-white mb-2">{t('addons.ldap_subtitle')}</p>
             <div className="mb-3 flex flex-wrap gap-2">
               {ldapStatus.enabled ? (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/15 dark:bg-blue-400/20 text-blue-800 dark:text-blue-200 text-sm font-semibold rounded-full">
@@ -486,13 +544,13 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
                   {t('addons.configured')}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/40 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-full">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/40 dark:bg-white/10 dim:text-slate-300 night:text-gray-300 text-sm font-semibold rounded-full">
                   <ShieldCheck size={16} weight="duotone" className="shrink-0 opacity-80" aria-hidden />
                   {t('addons.not_installed')}
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed mb-4">{t('addons.ldap_description')}</p>
+            <p className="text-sm dim:text-slate-300 night:text-slate-200/95 leading-relaxed mb-4">{t('addons.ldap_description')}</p>
             <div className="mb-4 flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/12 px-3 py-1 text-xs font-medium text-indigo-800 dark:bg-indigo-400/15 dark:text-indigo-200">
                 <Buildings size={14} weight="duotone" className="shrink-0" aria-hidden />
@@ -527,6 +585,8 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
       <SettingsModalShell
         open={showConfigModal}
         onClose={() => setShowConfigModal(false)}
+        dirty={configModalDirty}
+        onDiscard={discardConfigModal}
         title={t('addons.config_title')}
         subtitle={t('addons.config_subtitle')}
         icon={
@@ -557,6 +617,8 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
       <SettingsModalShell
         open={showSpotifyModal}
         onClose={() => setShowSpotifyModal(false)}
+        dirty={spotifyModalDirty}
+        onDiscard={discardSpotifyModal}
         title={t('addons.spotify_title')}
         subtitle={t('addons.spotify_subtitle')}
         icon={
@@ -584,6 +646,8 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
       <SettingsModalShell
         open={showLdapModal}
         onClose={() => setShowLdapModal(false)}
+        dirty={ldapModalDirty}
+        onDiscard={discardLdapModal}
         title={t('addons.ldap_title')}
         subtitle={t('addons.ldap_subtitle')}
         icon={

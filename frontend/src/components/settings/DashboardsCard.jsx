@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useLayoutEffect } from 'react';
+import React, { useMemo, useState, useEffect, useLayoutEffect } from 'react';
 import { Pencil, SquaresFour, Plus, Desktop, Trash, Tag, Package, Link as LinkIcon } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
@@ -7,17 +7,18 @@ import CustomSelect from '../CustomSelect';
 import SettingsModalShell from './SettingsModalShell';
 import SettingsTopicLayout from './SettingsTopicLayout';
 import SettingsLastModifiedLine from './SettingsLastModifiedLine';
+import { useSettingsUnsaved } from '../../contexts/SettingsUnsavedContext';
 
-const inputClass = "w-full border border-gray-300/50 dark:border-white/15 bg-white/50 dark:bg-gray-700/70 dark:text-white dark:placeholder-gray-400 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm";
-const labelClass = "block text-sm font-semibold text-gray-800 dark:text-slate-100 mb-2";
+const inputClass = "w-full border border-gray-300/50 dark:border-white/15 bg-white/50 dark:bg-gray-700/70 night:text-white dark:placeholder-gray-400 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm";
+const labelClass = "block text-sm font-semibold dim:text-slate-200 night:text-slate-100 mb-2";
 
 // Wiederverwendbarer Toggle-Schalter (wie in AppearanceTab)
 function ToggleSwitch({ checked, onChange, label, description }) {
   return (
     <div className="flex items-center justify-between py-3">
       <div>
-        <div className="text-sm font-medium text-gray-800 dark:text-gray-200">{label}</div>
-        {description && <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{description}</div>}
+        <div className="text-sm font-medium dim:text-slate-200 night:text-gray-200">{label}</div>
+        {description && <div className="text-xs text-gray-500 night:text-gray-400 mt-0.5">{description}</div>}
       </div>
       <button
         type="button"
@@ -40,6 +41,7 @@ function ToggleSwitch({ checked, onChange, label, description }) {
 
 function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTipsTopicChange }) {
   const { t } = useTranslation();
+  const { registerDirty, unregisterDirty } = useSettingsUnsaved();
   const [activeTopic, setActiveTopic] = useState('overview');
 
   useLayoutEffect(() => {
@@ -63,6 +65,30 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
   const [showModal, setShowModal] = useState(false);
   const [isSavingDashboard, setIsSavingDashboard] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [modalSnapshot, setModalSnapshot] = useState(null);
+
+  const dashboardModalDirty = Boolean(
+    showModal &&
+      modalSnapshot &&
+      (dashboardName !== modalSnapshot.name ||
+        dashboardDesc !== modalSnapshot.desc ||
+        dashboardType !== modalSnapshot.type ||
+        dashboardShowProxmox !== modalSnapshot.showProxmox)
+  );
+
+  useEffect(() => {
+    if (!showModal) unregisterDirty('dashboard-form');
+    else registerDirty('dashboard-form', dashboardModalDirty);
+    return () => unregisterDirty('dashboard-form');
+  }, [showModal, dashboardModalDirty, registerDirty, unregisterDirty]);
+
+  const discardDashboardModal = () => {
+    if (!modalSnapshot) return;
+    setDashboardName(modalSnapshot.name);
+    setDashboardDesc(modalSnapshot.desc);
+    setDashboardType(modalSnapshot.type);
+    setDashboardShowProxmox(modalSnapshot.showProxmox);
+  };
 
   // Modal öffnen für neues Dashboard
   const openCreateModal = () => {
@@ -71,16 +97,24 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
     setDashboardDesc('');
     setDashboardType('default');
     setDashboardShowProxmox(true);
+    setModalSnapshot({ name: '', desc: '', type: 'default', showProxmox: true });
     setShowModal(true);
   };
 
   // Modal öffnen für Dashboard bearbeiten
   const openEditModal = (dashboard) => {
     setEditingDashboard(dashboard);
-    setDashboardName(dashboard.name);
-    setDashboardDesc(dashboard.description || '');
-    setDashboardType(dashboard.type || 'default');
-    setDashboardShowProxmox(dashboard.show_proxmox !== undefined ? dashboard.show_proxmox : true);
+    const snap = {
+      name: dashboard.name,
+      desc: dashboard.description || '',
+      type: dashboard.type || 'default',
+      showProxmox: dashboard.show_proxmox !== undefined ? dashboard.show_proxmox : true,
+    };
+    setDashboardName(snap.name);
+    setDashboardDesc(snap.desc);
+    setDashboardType(snap.type);
+    setDashboardShowProxmox(snap.showProxmox);
+    setModalSnapshot(snap);
     setShowModal(true);
   };
 
@@ -91,6 +125,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
     setDashboardDesc('');
     setDashboardType('default');
     setDashboardShowProxmox(true);
+    setModalSnapshot(null);
   };
 
   const handleSubmit = async (e) => {
@@ -158,11 +193,11 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+        <h3 className="text-lg font-bold dim:text-slate-100 night:text-white mb-1 flex items-center gap-2.5">
           <SquaresFour size={22} weight="duotone" className="text-blue-400" />
           {t('dashboards.title')}
         </h3>
-        <p className="text-gray-700 dark:text-gray-300 text-sm" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6), 0 0 8px rgba(255,255,255,0.5)' }}>
+        <p className="dim:text-slate-300 night:text-gray-300 text-sm">
           {t('dashboards.description')}
         </p>
       </div>
@@ -175,9 +210,9 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
       >
         {activeTopic === 'overview' && (
           <div className="space-y-5">
-            <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed">{t('settings.topicNav.dashboards_overview_detail')}</p>
+            <p className="text-sm dim:text-slate-300 night:text-slate-200/95 leading-relaxed">{t('settings.topicNav.dashboards_overview_detail')}</p>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{t('settings.topicNav.dashboards_overview_item')}</span>
+              <span className="text-sm font-medium dim:text-slate-200 night:text-gray-200">{t('settings.topicNav.dashboards_overview_item')}</span>
               <button
                 type="button"
                 onClick={openCreateModal}
@@ -208,7 +243,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <h5 className="text-base font-semibold text-gray-900 dark:text-white truncate">{dashboard.name}</h5>
+                            <h5 className="text-base font-semibold dim:text-slate-50 night:text-white truncate">{dashboard.name}</h5>
                             {dashboard.id === activeDashboard && (
                               <span className="text-[11px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium shrink-0">
                                 {t('dashboards.active')}
@@ -221,7 +256,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
                             )}
                           </div>
                           {dashboard.description && (
-                            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{dashboard.description}</p>
+                            <p className="text-sm text-gray-500 night:text-gray-400 truncate">{dashboard.description}</p>
                           )}
                         </div>
 
@@ -229,7 +264,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
                           <button
                             type="button"
                             onClick={() => openEditModal(dashboard)}
-                            className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
+                            className="p-2 text-gray-500 night:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
                             title={t('common.edit')}
                           >
                             <Pencil size={16} weight="bold" />
@@ -239,7 +274,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
                             <button
                               type="button"
                               onClick={() => setShowDeleteConfirm(dashboard)}
-                              className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                              className="p-2 text-gray-500 night:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                               title={t('common.delete')}
                             >
                               <Trash size={16} weight="bold" />
@@ -257,7 +292,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
                           <LinkIcon size={13} weight="duotone" />
                           {dashboard.shortcut_count} Shortcuts
                         </span>
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-gray-500/10 text-gray-600 dark:text-gray-300 capitalize">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-gray-500/10 text-gray-600 night:text-gray-300 capitalize">
                           <Tag size={13} weight="duotone" />
                           {dashboard.type}
                         </span>
@@ -276,7 +311,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
             ) : (
               <div className="py-8 text-center">
                 <SquaresFour size={40} weight="duotone" className="text-gray-400 dark:text-gray-500 mx-auto mb-3" />
-                <p className="text-gray-500 dark:text-gray-400 text-sm">{t('dashboards.no_dashboards')}</p>
+                <p className="text-gray-500 night:text-gray-400 text-sm">{t('dashboards.no_dashboards')}</p>
                 <button type="button" onClick={openCreateModal} className="mt-3 text-blue-600 dark:text-blue-400 text-sm font-semibold hover:underline">
                   {t('dashboards.create_first')}
                 </button>
@@ -293,6 +328,8 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
       <SettingsModalShell
         open={showModal}
         onClose={closeModal}
+        dirty={dashboardModalDirty}
+        onDiscard={discardDashboardModal}
         maxWidthClass="max-w-lg"
         title={editingDashboard ? t('dashboards.edit_dashboard') : t('dashboards.create_dashboard')}
         subtitle={null}
@@ -366,7 +403,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium bg-gray-200/70 dark:bg-white/10 text-gray-800 dark:text-gray-200 hover:bg-gray-300/80 dark:hover:bg-white/15 transition-colors"
+                  className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium bg-gray-200/70 dark:bg-white/10 dim:text-slate-200 night:text-gray-200 hover:bg-gray-300/80 dark:hover:bg-white/15 transition-colors"
                 >
                   {t('common.cancel')}
                 </button>
@@ -401,7 +438,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
             <button
               type="button"
               onClick={() => setShowDeleteConfirm(null)}
-              className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium bg-gray-200/70 dark:bg-white/10 text-gray-800 dark:text-gray-200 hover:bg-gray-300/80 dark:hover:bg-white/15 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium bg-gray-200/70 dark:bg-white/10 dim:text-slate-200 night:text-gray-200 hover:bg-gray-300/80 dark:hover:bg-white/15 transition-colors"
             >
               {t('common.cancel')}
             </button>

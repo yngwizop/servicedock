@@ -357,7 +357,18 @@
   "settings": {
     "last_modified": "Last changed: {{datetime}}",
     "nav_sections_aria": "Settings sections",
+    "topic_subnav_aria": "Subtopics for this section",
     "tips_aside_aria": "Tips for this section",
+    "tips_toggle_show": "Show tips",
+    "tips_toggle_hide": "Hide tips",
+    "unsaved_badge": "Unsaved",
+    "unsaved": {
+      "title": "Unsaved changes",
+      "message": "You have changes that have not been saved yet. Do you want to discard or save them?",
+      "discard": "Discard",
+      "stay": "Cancel",
+      "save": "Save"
+    },
     "tabs": {
       "appearance": "Appearance",
       "dashboards": "Dashboards",
@@ -544,8 +555,13 @@
         "If a file is missing on the server, that entry may fail to load until the deployment includes it."
       ]
     },
+    "appearance": {
+      "overview_hint": "Choose a topic below, or tap Appearance again to show or hide the topic list in the sidebar.",
+      "overview_unsaved_hint": "Expand the topic list and open a topic to review and save your changes."
+    },
     "help": {
-      "intro": "Documentation for operators and admins. Select a topic on the left.",
+      "intro": "Documentation for operators and admins. Tap Help again to show or hide topics in the sidebar, or pick a document below.",
+      "overview_hint": "Expand the topic list in the sidebar to open individual guides.",
       "load_error": "Could not load documentation. Check that the API is running and you are logged in.",
       "nav_aria": "Help topics",
       "nav_title": "Topics",
@@ -715,6 +731,7 @@
     "reset_success": "Settings reset! Page is reloading...",
     "save_settings": "Save Settings",
     "reset_confirm": "Reset dashboard settings to default values?",
+    "reload_hint": "Changes are stored in the browser; the page reloads after saving.",
     "note": "After saving, the page reloads automatically so changes take effect immediately."
   },
   "addons": {

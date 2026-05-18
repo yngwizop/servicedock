@@ -1,10 +1,31 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import AnimatedPane from '../AnimatedPane';
+import SettingsTopicSegmented from './SettingsTopicSegmented';
+import {
+  settingsGlassCard,
+  settingsNestedNavActive,
+  settingsNestedNavInactive,
+} from './settingsSurfaces';
+
+export const settingsDetailCardClass = settingsGlassCard;
+
+const detailCardClass = settingsGlassCard;
+
+const footerWrapClass =
+  'shrink-0 flex flex-wrap items-center justify-end gap-2 rounded-xl border border-gray-300/40 ' +
+  'bg-white/30 px-4 py-3 sm:px-5 night:border-white/[0.08] night:bg-white/[0.08]';
+
+const sideNavClass =
+  'flex w-full min-w-0 shrink-0 flex-col gap-1 rounded-xl border border-gray-300/40 bg-white/40 p-2 ' +
+  'lg:w-56 xl:w-60 night:border-white/[0.08] night:bg-white/[0.08]';
+
+function flattenItems(groups) {
+  if (!groups?.length) return [];
+  return groups.flatMap((g) => g.items || []);
+}
 
 /**
- * Help-style two-pane layout: grouped topic nav (left) + scrollable detail (right).
- * Optional footer (e.g. global Save) stays below the detail pane.
- *
- * @param {{ key: string, label: string, items: { id: string, label: string }[] }[]} groups
+ * Adaptive topic layout: no nav (1 topic), segmented (2–3), side nav (4+).
  */
 function SettingsTopicLayout({
   groups,
@@ -14,13 +35,65 @@ function SettingsTopicLayout({
   footer = null,
   navAriaLabel,
   detailClassName = '',
+  navPlacement = 'auto',
 }) {
+  const items = useMemo(() => flattenItems(groups), [groups]);
+  const itemCount = items.length;
+  const detailPane = (
+    <AnimatedPane
+      paneKey={activeId}
+      mode="crossfade"
+      className={`${detailCardClass} ${detailClassName}`}
+    >
+      {children}
+    </AnimatedPane>
+  );
+
+  if (navPlacement === 'none') {
+    return (
+      <div className="flex min-w-0 flex-col gap-3">
+        {detailPane}
+        {footer ? <div className={footerWrapClass}>{footer}</div> : null}
+      </div>
+    );
+  }
+
+  if (itemCount <= 0) {
+    return (
+      <div className="flex min-w-0 flex-col gap-3">
+        {detailPane}
+        {footer ? <div className={footerWrapClass}>{footer}</div> : null}
+      </div>
+    );
+  }
+
+  if (itemCount === 1) {
+    return (
+      <div className="flex min-w-0 flex-col gap-3">
+        {detailPane}
+        {footer ? <div className={footerWrapClass}>{footer}</div> : null}
+      </div>
+    );
+  }
+
+  if (itemCount <= 3) {
+    return (
+      <div className="flex min-w-0 flex-col gap-3">
+        <SettingsTopicSegmented
+          items={items}
+          activeId={activeId}
+          onSelect={onSelect}
+          ariaLabel={navAriaLabel}
+        />
+        {detailPane}
+        {footer ? <div className={footerWrapClass}>{footer}</div> : null}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
-      <nav
-        className="flex w-full min-w-0 shrink-0 flex-col gap-1 rounded-xl border border-gray-300/40 bg-white/40 p-2 dark:border-white/10 dark:bg-white/[0.06] dark:ring-1 dark:ring-white/[0.04] dark:shadow-black/20 lg:w-56 xl:w-60 night:border-white/[0.07]"
-        aria-label={navAriaLabel}
-      >
+      <nav className={sideNavClass} aria-label={navAriaLabel}>
         <div className="flex max-h-[min(70vh,560px)] flex-col gap-3 overflow-y-auto pr-0.5">
           {groups.map((section) => (
             <div key={section.key}>
@@ -36,9 +109,7 @@ function SettingsTopicLayout({
                       type="button"
                       onClick={() => onSelect(item.id)}
                       className={`rounded-lg px-3 py-2 text-left text-sm font-medium leading-snug transition-colors ${
-                        active
-                          ? 'bg-blue-500 text-white shadow-md shadow-blue-500/25'
-                          : 'text-gray-800 hover:bg-white/70 dark:text-slate-100 dark:hover:bg-white/[0.08]'
+                        active ? settingsNestedNavActive : settingsNestedNavInactive
                       }`}
                     >
                       {item.label}
@@ -50,25 +121,9 @@ function SettingsTopicLayout({
           ))}
         </div>
       </nav>
-
-      {/* Kein overflow-y hier: Scroll passiert in der App-Hauptspalte (Rand wie andere Dashboards), nicht innerhalb des Rahmens */}
       <div className="flex min-w-0 flex-1 flex-col gap-3">
-        <div
-          key={activeId}
-          className={`animate-settings-pane-in rounded-xl border border-gray-300/40 bg-white/35 p-4 dark:border-white/10 dark:bg-white/[0.06] dark:ring-1 dark:ring-white/[0.04] dark:shadow-black/20 sm:p-6 night:border-white/[0.07] ${detailClassName}`}
-        >
-          {children}
-        </div>
-        {footer ? (
-          <div
-            className={
-              'shrink-0 flex flex-wrap items-center justify-end gap-2 rounded-xl border border-gray-300/40 ' +
-              'bg-white/30 px-4 py-3 dark:border-white/10 dark:bg-white/[0.06] dark:ring-1 dark:ring-white/[0.04] dark:shadow-black/20 sm:px-5 night:border-white/[0.07]'
-            }
-          >
-            {footer}
-          </div>
-        ) : null}
+        {detailPane}
+        {footer ? <div className={footerWrapClass}>{footer}</div> : null}
       </div>
     </div>
   );

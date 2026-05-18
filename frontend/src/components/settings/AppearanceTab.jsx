@@ -1,10 +1,6 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Image,
   Palette,
-  SquaresFour,
-  Eye,
-  CloudSun,
   UploadSimple,
   Trash,
   CheckCircle,
@@ -26,7 +22,9 @@ import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
 import { BACKEND_URL } from '../../utils/backendUrl';
 import { WEATHER_METRIC_ICON_COLORS } from '../../utils/weatherWidgetVisuals';
-import SettingsTopicLayout from './SettingsTopicLayout';
+import AnimatedPane from '../AnimatedPane';
+import SettingsTopicLayout, { settingsDetailCardClass } from './SettingsTopicLayout';
+import { settingsTopicTile } from './settingsSurfaces';
 
 const WEATHER_FIELDS = [
   { key: 'temperature', labelKey: 'appearance.temperature', Icon: ThermometerSimple, iconColor: WEATHER_METRIC_ICON_COLORS.temperature },
@@ -50,27 +48,26 @@ const PRESET_WALLPAPERS = [
   { id: 'desert', nameKey: 'wallpaper.desert', file: '/wallpapers/desert.jpg', author: 'Keith Hardy', unsplash: 'https://unsplash.com/@keithhardy2001' },
 ];
 
-// Leichtere Sub-Sektion innerhalb der äußeren Glass-Card (kein doppelter Glaseffekt)
-const sectionCard =
-  'bg-white/30 dark:bg-gray-800/55 sd-night-surface rounded-2xl p-5 border border-gray-200/25 dark:border-white/[0.07] night:border-white/[0.06] shadow-sm shadow-black/[0.03] dark:shadow-black/20 night:shadow-black/40';
-const inputClass = "w-full border border-gray-300/50 dark:border-white/10 bg-white/50 dark:bg-white/5 dark:text-white dark:placeholder-gray-400 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all text-sm";
-const labelClass = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2";
+const inputClass =
+  'w-full border border-gray-300/50 dim:border-white/10 dim:bg-sd-night-900/50 night:border-white/10 night:bg-white/5 ' +
+  'dim:text-slate-50 night:text-white placeholder-gray-500 dim:placeholder-slate-500 night:placeholder-gray-400 p-3 rounded-xl ' +
+  'focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all text-sm';
+const labelClass = "block text-sm font-medium dim:text-slate-300 night:text-gray-300 mb-2";
 
-function SectionHeader({ icon: Icon, title, color = "text-blue-400" }) {
-  return (
-    <h4 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2.5 mb-5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
-      <Icon size={22} weight="duotone" className={color} />
-      {title}
-    </h4>
-  );
-}
+const TOPIC_DETAIL_KEYS = {
+  wallpaper: 'settings.topicNav.appearance_wallpaper_detail',
+  colors: 'settings.topicNav.appearance_colors_detail',
+  layout: 'settings.topicNav.appearance_layout_detail',
+  widgets: 'settings.topicNav.appearance_widgets_detail',
+  weather: 'settings.topicNav.appearance_weather_detail',
+};
 
 function ToggleSwitch({ checked, onChange, label, description }) {
   return (
     <div className="flex items-center justify-between py-3">
       <div>
-        <div className="text-sm font-medium text-gray-800 dark:text-gray-200">{label}</div>
-        {description && <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{description}</div>}
+        <div className="text-sm font-medium dim:text-slate-200 night:text-gray-200">{label}</div>
+        {description && <div className="text-xs text-gray-500 night:text-gray-400 mt-0.5">{description}</div>}
       </div>
       <button
         type="button"
@@ -92,6 +89,10 @@ function ToggleSwitch({ checked, onChange, label, description }) {
 }
 
 function AppearanceTab({
+  activeTopic = null,
+  topics = [],
+  onTopicSelect,
+  appearanceDirty = false,
   editAppearance,
   setEditAppearance,
   currentTheme,
@@ -99,35 +100,12 @@ function AppearanceTab({
   isSavingAppearance,
   showSaved,
   onSaveAppearance,
-  onTipsTopicChange,
 }) {
   const { t } = useTranslation();
   const fileInputRef = useRef(null);
   const [uploadedWallpapers, setUploadedWallpapers] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
-  const [activeTopic, setActiveTopic] = useState('wallpaper');
-
-  useLayoutEffect(() => {
-    onTipsTopicChange?.('appearance', activeTopic);
-  }, [activeTopic, onTipsTopicChange]);
-
-  const appearanceTopicGroups = useMemo(
-    () => [
-      {
-        key: 'appearance',
-        label: t('settings.tabs.appearance'),
-        items: [
-          { id: 'wallpaper', label: t('wallpaper.title') },
-          { id: 'colors', label: t('appearance.font_colors') },
-          { id: 'layout', label: t('appearance.layout') },
-          { id: 'widgets', label: t('appearance.widgets') },
-          { id: 'weather', label: t('appearance.weather_section') },
-        ],
-      },
-    ],
-    [t]
-  );
 
   // Hochgeladene Wallpapers vom Backend laden
   useEffect(() => {
@@ -212,40 +190,75 @@ function AppearanceTab({
     <div className="space-y-6">
       {/* Tab Header */}
       <div>
-        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+        <h3 className="text-lg font-bold dim:text-slate-100 night:text-white mb-1 flex items-center gap-2.5">
           <Palette size={22} weight="duotone" className="text-pink-400" />
           {t('settings.tabs.appearance')}
         </h3>
-        <p className="text-gray-700 dark:text-gray-300 text-sm" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6), 0 0 8px rgba(255,255,255,0.5)' }}>
+        <p className="dim:text-slate-300 night:text-gray-300 text-sm">
           {t('appearance.description')}
         </p>
       </div>
 
+      <AnimatedPane paneKey={activeTopic ? 'detail' : 'overview'} mode="crossfade" variant="fade">
+      {!activeTopic ? (
+        <div className={settingsDetailCardClass}>
+          <p className="text-sm dim:text-slate-300 night:text-slate-200/95 leading-relaxed">
+            {t('settings.appearance.overview_hint')}
+          </p>
+          {appearanceDirty && (
+            <p className="mt-3 text-sm text-amber-800 dark:text-amber-200/95 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2">
+              {t('settings.unsaved_badge')}: {t('settings.appearance.overview_unsaved_hint')}
+            </p>
+          )}
+          <ul className="mt-6 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2">
+            {topics.map((topic) => (
+              <li key={topic.id}>
+                <button
+                  type="button"
+                  onClick={() => onTopicSelect?.(topic.id)}
+                  className={settingsTopicTile}
+                >
+                  <span className="text-sm font-semibold dim:text-slate-50 night:text-white">{topic.label}</span>
+                  <span className="text-xs leading-relaxed dim:text-slate-400 night:text-gray-400">
+                    {t(TOPIC_DETAIL_KEYS[topic.id])}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
       <SettingsTopicLayout
-        groups={appearanceTopicGroups}
+        groups={[]}
         activeId={activeTopic}
-        onSelect={setActiveTopic}
-        navAriaLabel={t('settings.topicNav.appearance_nav_aria')}
+        onSelect={() => {}}
+        navPlacement="none"
         footer={
           <button
             type="button"
             onClick={onSaveAppearance}
             disabled={isSavingAppearance}
-            className={`inline-flex min-w-[9rem] items-center justify-center py-2.5 px-5 rounded-lg text-sm font-semibold text-white shadow-sm transition-colors duration-200 ${
+            className={`inline-flex min-w-[9rem] items-center justify-center gap-2 py-2.5 px-5 rounded-lg text-sm font-semibold text-white shadow-sm transition-colors duration-200 ${
               showSaved
                 ? 'bg-emerald-600/90 hover:bg-emerald-600'
-                : 'bg-blue-500/90 hover:bg-blue-600'
+                : appearanceDirty
+                  ? 'bg-amber-500/90 hover:bg-amber-600 ring-2 ring-amber-400/40'
+                  : 'bg-blue-500/90 hover:bg-blue-600'
             } ${isSavingAppearance ? 'opacity-70 cursor-wait' : ''}`}
           >
+            {appearanceDirty && !showSaved && !isSavingAppearance && (
+              <span className="w-2 h-2 rounded-full bg-white/90 shrink-0" aria-hidden />
+            )}
             {isSavingAppearance ? t('common.saving') : showSaved ? `✓ ${t('common.saved')}` : t('common.save')}
           </button>
         }
       >
-      {activeTopic === 'wallpaper' && (
-      <div className={sectionCard}>
-        <SectionHeader icon={Image} title={t('wallpaper.title')} />
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">{t('settings.topicNav.appearance_wallpaper_detail')}</p>
+        <p className="text-sm dim:text-slate-300 night:text-slate-200/95 leading-relaxed mb-5">
+          {t(TOPIC_DETAIL_KEYS[activeTopic])}
+        </p>
 
+      {activeTopic === 'wallpaper' && (
+      <div>
         {/* Preset-Galerie */}
         <div className="mb-5">
           <label className={`${labelClass} mb-3`}>{t('wallpaper.presets')}</label>
@@ -382,7 +395,7 @@ function AppearanceTab({
                 />
               </label>
             </div>
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-2 text-xs text-gray-500 night:text-gray-400">
               {t('wallpaper.upload_hint')}
             </p>
           </div>
@@ -393,7 +406,7 @@ function AppearanceTab({
           <button
             type="button"
             onClick={() => setShowUrlInput(!showUrlInput)}
-            className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+            className="flex items-center gap-2 text-sm font-medium text-gray-500 night:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
           >
             <LinkIcon size={16} weight="duotone" />
             {t('wallpaper.custom_url')}
@@ -435,7 +448,7 @@ function AppearanceTab({
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.bg_opacity')}</label>
+              <label className="text-sm font-medium dim:text-slate-300 night:text-gray-300">{t('appearance.bg_opacity')}</label>
               <span className="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400">{editAppearance.bg_opacity}</span>
             </div>
             <input
@@ -451,10 +464,7 @@ function AppearanceTab({
       )}
 
       {activeTopic === 'colors' && (
-      <div className={sectionCard}>
-        <SectionHeader icon={Palette} title={t('appearance.font_colors')} color="text-pink-400" />
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">{t('settings.topicNav.appearance_colors_detail')}</p>
-
+      <div>
         <div className="p-3 mb-5 flex items-start gap-2.5 bg-blue-500/10 dark:bg-blue-500/10 rounded-xl border border-blue-500/20">
           <Lightbulb
             size={20}
@@ -517,14 +527,10 @@ function AppearanceTab({
       )}
 
       {activeTopic === 'layout' && (
-      <div className={sectionCard}>
-        <SectionHeader icon={SquaresFour} title={t('appearance.layout')} color="text-cyan-400" />
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">{t('settings.topicNav.appearance_layout_detail')}</p>
-
-        <div className="space-y-5">
+      <div className="space-y-5">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.service_cols')}</label>
+              <label className="text-sm font-medium dim:text-slate-300 night:text-gray-300">{t('appearance.service_cols')}</label>
               <span className="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400">{editAppearance.service_cols}</span>
             </div>
             <input
@@ -538,7 +544,7 @@ function AppearanceTab({
           
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('appearance.shortcut_cols')}</label>
+              <label className="text-sm font-medium dim:text-slate-300 night:text-gray-300">{t('appearance.shortcut_cols')}</label>
               <span className="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400">{editAppearance.shortcut_cols}</span>
             </div>
             <input
@@ -549,15 +555,11 @@ function AppearanceTab({
               className="w-full h-2 bg-gray-300/30 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-600"
             />
           </div>
-        </div>
       </div>
       )}
 
       {activeTopic === 'widgets' && (
-      <div className={sectionCard}>
-        <SectionHeader icon={Eye} title={t('appearance.widgets')} color="text-violet-400" />
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">{t('settings.topicNav.appearance_widgets_detail')}</p>
-
+      <div>
         <div className="divide-y divide-gray-200/50 dark:divide-white/[0.06]">
           <ToggleSwitch
             checked={editAppearance.show_clock ?? true}
@@ -604,8 +606,8 @@ function AppearanceTab({
                   className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
                 />
                 <div>
-                  <div className="text-sm font-medium text-gray-800 dark:text-gray-200">{opt.label}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">{opt.example}</div>
+                  <div className="text-sm font-medium dim:text-slate-200 night:text-gray-200">{opt.label}</div>
+                  <div className="text-xs text-gray-500 night:text-gray-400">{opt.example}</div>
                 </div>
               </label>
             ))}
@@ -615,10 +617,7 @@ function AppearanceTab({
       )}
 
       {activeTopic === 'weather' && (
-      <div className={sectionCard}>
-        <SectionHeader icon={CloudSun} title={t('appearance.weather_section')} color="text-amber-400" />
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">{t('settings.topicNav.appearance_weather_detail')}</p>
-
+      <div>
         <div className="space-y-5">
           <div>
             <label className={labelClass}>{t('appearance.city')}</label>
@@ -630,7 +629,7 @@ function AppearanceTab({
               className={inputClass}
             />
             {weatherLocationInfo && weatherLocationInfo.name && weatherLocationInfo.country && (
-              <div className="mt-2 text-sm text-gray-700 dark:text-gray-200 bg-white/40 dark:bg-white/5 rounded-xl px-3 py-2 border border-gray-300/30 dark:border-white/[0.06]">
+              <div className="mt-2 text-sm text-gray-700 night:text-gray-200 bg-white/40 dark:bg-white/5 rounded-xl px-3 py-2 border border-gray-300/30 dark:border-white/[0.06]">
                 <span className="font-semibold">{t('appearance.found_location')}</span> {weatherLocationInfo.name}, {weatherLocationInfo.country}
                 {weatherLocationInfo.postal_code ? `${t('appearance.postal_code')}${weatherLocationInfo.postal_code}` : ''}
                 {typeof weatherLocationInfo.latitude === 'number' && typeof weatherLocationInfo.longitude === 'number' ?
@@ -638,7 +637,7 @@ function AppearanceTab({
                   : ''}
               </div>
             )}
-            <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-1.5 text-xs text-gray-500 night:text-gray-400">
               {t('appearance.weather_cache_info')}
             </p>
           </div>
@@ -670,7 +669,7 @@ function AppearanceTab({
                     className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-2 focus:ring-blue-500"
                   />
                   <FieldIcon className="shrink-0" color={f.iconColor} size={22} weight="regular" aria-hidden />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t(f.labelKey)}</span>
+                  <span className="text-sm font-medium dim:text-slate-300 night:text-gray-300">{t(f.labelKey)}</span>
                 </label>
                 );
               })}
@@ -680,6 +679,8 @@ function AppearanceTab({
       </div>
       )}
       </SettingsTopicLayout>
+      )}
+      </AnimatedPane>
     </div>
   );
 }

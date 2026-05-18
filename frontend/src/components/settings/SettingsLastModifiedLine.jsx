@@ -11,7 +11,7 @@ function SettingsLastModifiedLine({ iso, className = '' }) {
 
   return (
     <p
-      className={`mt-3 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 ${className}`.trim()}
+      className={`mt-3 flex items-center gap-1.5 text-xs text-gray-500 night:text-gray-400 ${className}`.trim()}
     >
       <ClockCounterClockwise size={15} weight="duotone" className="shrink-0 opacity-90" aria-hidden />
       <span>{t('settings.last_modified', { datetime: formatted })}</span>

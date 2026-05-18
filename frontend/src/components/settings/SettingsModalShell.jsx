@@ -1,11 +1,8 @@
-import React, { useEffect, useId } from 'react';
+import React, { useEffect, useId, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'phosphor-react';
+import { useSettingsUnsavedOptional } from '../../contexts/SettingsUnsavedContext';
 
-/**
- * Modalshell: hohe Deckkraft, kein Panel-Blur (nur Overlay blur), damit Dim/Night
- * nicht mit dem hellen Settings-Hintergrund „einwaschen“.
- */
 const overlayClass =
   'fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 ' +
   'bg-black/35 dark:bg-black/50 night:bg-black/55 backdrop-blur-md';
@@ -28,7 +25,7 @@ const footerClass =
   'bg-white/35 dark:bg-slate-950 night:bg-sd-night-950';
 
 const closeButtonClass =
-  'shrink-0 p-2 rounded-xl text-gray-800 dark:text-slate-200 ' +
+  'shrink-0 p-2 rounded-xl dim:text-slate-200 night:text-slate-200 ' +
   'hover:bg-white/60 dark:hover:bg-white/[0.1] transition-colors';
 
 const defaultContentClass =
@@ -45,22 +42,33 @@ function SettingsModalShell({
   footer = null,
   maxWidthClass = 'max-w-2xl',
   contentClassName = defaultContentClass,
+  dirty = false,
+  onDiscard = null,
 }) {
   const titleId = useId();
+  const unsavedCtx = useSettingsUnsavedOptional();
+
+  const requestClose = useCallback(() => {
+    if (dirty && unsavedCtx) {
+      unsavedCtx.confirmLeave(onClose, { onDiscard: onDiscard || undefined });
+    } else {
+      onClose();
+    }
+  }, [dirty, unsavedCtx, onClose, onDiscard]);
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') requestClose();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+  }, [open, requestClose]);
 
   if (!open) return null;
 
   return createPortal(
-    <div className={overlayClass} onClick={onClose} role="presentation">
+    <div className={overlayClass} onClick={requestClose} role="presentation">
       <div
         className={`relative ${maxWidthClass} ${panelClass}`}
         onClick={(e) => e.stopPropagation()}
@@ -75,7 +83,7 @@ function SettingsModalShell({
               <div className="min-w-0">
                 <h3
                   id={titleId}
-                  className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight"
+                  className="text-lg sm:text-xl font-bold dim:text-slate-50 night:text-white leading-tight"
                   style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
                 >
                   {title}
@@ -89,7 +97,7 @@ function SettingsModalShell({
             </div>
             <button
               type="button"
-              onClick={onClose}
+              onClick={requestClose}
               className={closeButtonClass}
               aria-label="Close"
             >

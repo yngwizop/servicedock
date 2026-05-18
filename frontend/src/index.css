@@ -59,6 +59,14 @@ html.dark {
   scrollbar-color: var(--sd-scrollbar-thumb) var(--sd-scrollbar-track);
 }
 
+/* Dim (Hell-Toggle): sd-night-* nur für Akzente (Nav, Topic-Kästen), nicht für Shell */
+html.dark[data-sd-theme="dim"] {
+  --sd-night-950: 22 32 52;
+  --sd-night-900: 40 52 78;
+  --sd-night-800: 58 72 98;
+  --sd-night-700: 78 94 120;
+}
+
 html.dark[data-sd-theme="night"] {
   /*
    * Zentrale Nacht-Palette (RGB ohne Kommas = Tailwind <alpha-value>); Scrollbar-Farben von html.dark.
@@ -144,6 +152,57 @@ html.dark[data-sd-theme="night"] {
   html.dark[data-sd-theme="night"] .sd-night-muted.sd-night-surface--solid {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+  }
+
+  /* Settings: one blur on shell only; columns are flat tints (no stacked backdrop-filter) */
+  html.dark .settings-shell.settings-glass-shell {
+    background-color: rgb(255 255 255 / 0.11) !important;
+    backdrop-filter: blur(16px) saturate(1.08) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(1.08) !important;
+    box-shadow: 0 12px 40px rgb(0 0 0 / 0.22);
+  }
+
+  html.dark[data-sd-theme='night'] .settings-shell.settings-glass-shell {
+    background-color: rgb(var(--sd-night-900) / var(--sd-night-surface-op)) !important;
+  }
+
+  /* Dim (Hell-Toggle): Slate-Grau — bewusst anders als Night-Blau-Glas */
+  html.dark[data-sd-theme='dim'] .settings-shell {
+    color: rgb(226 232 240);
+  }
+
+  html.dark[data-sd-theme='dim'] .settings-shell.settings-glass-shell {
+    background-color: rgb(148 163 184 / 0.52) !important;
+    backdrop-filter: blur(22px) saturate(1.06) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(1.06) !important;
+    box-shadow:
+      0 2px 4px rgb(15 23 42 / 0.1),
+      0 10px 28px rgb(15 23 42 / 0.16),
+      0 24px 56px rgb(15 23 42 / 0.22),
+      0 40px 80px rgb(15 23 42 / 0.14),
+      0 0 0 1px rgb(100 116 139 / 0.2);
+  }
+
+  html.dark[data-sd-theme='dim'] .settings-glass-column-nav,
+  html.dark[data-sd-theme='dim'] .settings-glass-column-main,
+  html.dark[data-sd-theme='dim'] .settings-glass-column-aside,
+  html.dark[data-sd-theme='dim'] .settings-glass-mobile-nav,
+  html.dark[data-sd-theme='dim'] .settings-glass-mobile-subnav {
+    background-color: rgb(100 116 139 / 0.2) !important;
+  }
+
+  html.dark[data-sd-theme='dim'] .settings-glass-inner-card {
+    background-color: rgb(var(--sd-night-900) / 0.62) !important;
+    border-color: rgb(255 255 255 / 0.1) !important;
+    box-shadow:
+      inset 0 1px 0 0 rgb(255 255 255 / 0.06),
+      0 4px 14px rgb(0 0 0 / 0.18),
+      0 16px 36px rgb(0 0 0 / 0.22);
+  }
+
+  html.dark[data-sd-theme='dim'] .settings-glass-inner-card p,
+  html.dark[data-sd-theme='dim'] .settings-glass-inner-card .dim\:text-slate-300 {
+    color: rgb(226 232 240 / 0.92);
   }
 }
 
@@ -281,9 +340,57 @@ html.sd-settings-scroll-contained {
   }
 
   .animate-settings-pane-in,
-  .animate-settings-pane-fade-in {
+  .animate-settings-pane-out,
+  .animate-settings-pane-fade-in,
+  .animate-settings-pane-fade-out,
+  .animate-settings-subnav-in,
+  .animate-settings-subnav-out {
     animation: none !important;
   }
+
+  .settings-collapsible-grid {
+    transition: none !important;
+  }
+}
+
+/* Settings → Help: rendered README / docs markdown */
+.help-markdown {
+  color: rgb(30 41 59);
+}
+
+html.dark .help-markdown,
+html[data-sd-theme='night'] .help-markdown {
+  color: rgb(241 245 249);
+}
+
+.help-markdown strong {
+  font-weight: 600;
+  color: inherit;
+}
+
+.help-markdown em {
+  font-style: italic;
+}
+
+.help-markdown > *:first-child {
+  margin-top: 0;
+}
+
+/* Fenced / indented code blocks — no inline “milky” chip inside dark <pre> */
+.help-markdown pre code {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0;
+  color: inherit !important;
+}
+
+.help-markdown .task-list-item {
+  list-style: none;
+}
+
+.help-markdown .task-list-item input[type='checkbox'] {
+  margin-right: 0.5rem;
+  vertical-align: middle;
 }
 
 /* Glass — Standard (dim): html.dark; Nacht: data-sd-theme="night" */

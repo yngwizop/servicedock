@@ -10,10 +10,10 @@ import { BACKEND_URL } from '../../utils/backendUrl';
 /** Wie AppearanceTab — lesbare Felder im hellen & dunklen Settings-Glas */
 const sectionCard =
   'bg-white/30 dark:bg-gray-800/55 sd-night-surface rounded-2xl p-5 border border-gray-200/25 dark:border-white/[0.07] night:border-white/[0.06] shadow-sm shadow-black/[0.03] dark:shadow-black/20 night:shadow-black/40';
-const labelClass = 'block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5';
-const modalLabelClass = 'block text-sm font-semibold text-gray-800 dark:text-slate-100 mb-2';
+const labelClass = 'block text-xs font-medium dim:text-slate-300 night:text-gray-300 mb-1.5';
+const modalLabelClass = 'block text-sm font-semibold dim:text-slate-200 night:text-slate-100 mb-2';
 const controlClass =
-  'w-full border border-gray-300/50 dark:border-white/10 bg-white/50 dark:bg-white/10 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-xl backdrop-blur-sm transition-all text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+  'w-full border border-gray-300/50 dark:border-white/10 bg-white/50 dark:bg-white/10 dim:text-slate-50 night:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-xl backdrop-blur-sm transition-all text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
 const inputClass = `${controlClass} px-3 py-2.5`;
 
 function UsersTab({ onTipsTopicChange }) {
@@ -214,10 +214,10 @@ function UsersTab({ onTipsTopicChange }) {
       <div className="flex items-center gap-3">
         <Users size={28} className="text-blue-500 dark:text-blue-400 shrink-0" weight="duotone" />
         <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.25)' }}>
+          <h2 className="text-xl font-bold dim:text-slate-50 night:text-white">
             {t('settings.users.title')}
           </h2>
-          <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5">{t('settings.users.subtitle')}</p>
+          <p className="text-sm dim:text-slate-300 night:text-gray-300 mt-0.5">{t('settings.users.subtitle')}</p>
         </div>
       </div>
 
@@ -229,7 +229,7 @@ function UsersTab({ onTipsTopicChange }) {
       >
         {activeTopic === 'accounts' && (
           <div className="space-y-6">
-            <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed">{t('settings.topicNav.users_accounts_detail')}</p>
+            <p className="text-sm dim:text-slate-300 night:text-slate-200/95 leading-relaxed">{t('settings.topicNav.users_accounts_detail')}</p>
 
             {error && (
               <div
@@ -269,7 +269,7 @@ function UsersTab({ onTipsTopicChange }) {
             </div>
 
             <div className={`${sectionCard} overflow-hidden p-0 ${ldapBlocksLocal ? 'opacity-75' : ''}`}>
-              <div className="px-5 py-3 border-b border-gray-200/30 dark:border-white/[0.08] text-sm font-semibold text-gray-800 dark:text-white">
+              <div className="px-5 py-3 border-b border-gray-200/30 dark:border-white/[0.08] text-sm font-semibold dim:text-slate-100 night:text-white">
                 {t('settings.users.list_heading')}
               </div>
               {loading ? (
@@ -278,7 +278,7 @@ function UsersTab({ onTipsTopicChange }) {
                 <div className={`overflow-x-auto ${ldapBlocksLocal ? 'pointer-events-none' : ''}`}>
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 border-b border-white/15 dark:border-white/[0.06]">
+                      <tr className="text-left text-xs uppercase tracking-wide text-gray-500 night:text-gray-400 border-b border-white/15 dark:border-white/[0.06]">
                         <th className="px-4 py-2">{t('settings.users.col_user')}</th>
                         <th className="px-4 py-2">{t('settings.users.col_role')}</th>
                         <th className="px-4 py-2">{t('settings.users.col_enabled')}</th>
@@ -289,9 +289,9 @@ function UsersTab({ onTipsTopicChange }) {
                       {users.map((u) => (
                         <tr key={u.id} className="border-b border-white/10 dark:border-white/[0.04] last:border-0">
                           <td className="px-4 py-3">
-                            <div className="font-medium text-gray-900 dark:text-white">{u.username}</div>
+                            <div className="font-medium dim:text-slate-50 night:text-white">{u.username}</div>
                             {u.display_name && (
-                              <div className="text-xs text-gray-500 dark:text-gray-400">{u.display_name}</div>
+                              <div className="text-xs text-gray-500 night:text-gray-400">{u.display_name}</div>
                             )}
                             {u.force_change && (
                               <span className="text-xs text-amber-600 dark:text-amber-400">
@@ -320,7 +320,7 @@ function UsersTab({ onTipsTopicChange }) {
                                 onChange={(e) => patchUser(u.id, { enabled: e.target.checked })}
                                 className="rounded border-gray-300"
                               />
-                              <span className="text-xs text-gray-700 dark:text-gray-300">
+                              <span className="text-xs dim:text-slate-300 night:text-gray-300">
                                 {u.enabled ? t('settings.users.enabled_yes') : t('settings.users.enabled_no')}
                               </span>
                             </label>
@@ -330,7 +330,7 @@ function UsersTab({ onTipsTopicChange }) {
                               type="button"
                               onClick={() => resetPassword(u.id)}
                               disabled={busyId === u.id || ldapBlocksLocal}
-                              className="inline-flex items-center gap-1 rounded-lg border border-gray-300/60 dark:border-white/15 bg-white/40 dark:bg-white/5 px-2 py-1 text-xs text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-white/10"
+                              className="inline-flex items-center gap-1 rounded-lg border border-gray-300/60 dark:border-white/15 bg-white/40 dark:bg-white/5 px-2 py-1 text-xs dim:text-slate-200 night:text-gray-200 hover:bg-white/60 dark:hover:bg-white/10"
                               title={t('settings.users.reset_password')}
                             >
                               <Key size={14} />
@@ -427,7 +427,7 @@ function UsersTab({ onTipsTopicChange }) {
               type="button"
               onClick={closeCreateUserModal}
               disabled={busyId === -1}
-              className="inline-flex items-center rounded-lg border border-gray-300/60 dark:border-white/15 bg-white/40 dark:bg-white/5 px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-white/10 disabled:opacity-50"
+              className="inline-flex items-center rounded-lg border border-gray-300/60 dark:border-white/15 bg-white/40 dark:bg-white/5 px-4 py-2 text-sm font-medium dim:text-slate-200 night:text-gray-200 hover:bg-white/60 dark:hover:bg-white/10 disabled:opacity-50"
             >
               {t('settings.users.create_cancel')}
             </button>

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useLayoutEffect, useEffect } from 'react';
+import React, { useMemo, useState, useLayoutEffect, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Desktop,
@@ -18,6 +18,7 @@ import SettingsTopicPreviewGrid from './SettingsTopicPreviewGrid';
 import SettingsLastModifiedLine from './SettingsLastModifiedLine';
 import { authenticatedFetch } from '../../utils/auth';
 import { BACKEND_URL } from '../../utils/backendUrl';
+import { useSettingsUnsaved } from '../../contexts/SettingsUnsavedContext';
 
 /**
  * Proxmox Settings Tab - Haupt-Container mit Modal-Popups
@@ -30,6 +31,7 @@ function ProxmoxTab({
   onTipsTopicChange,
 }) {
   const { t } = useTranslation();
+  const { registerDirty, unregisterDirty } = useSettingsUnsaved();
   const [activeTopic, setActiveTopic] = useState('connection');
 
   useLayoutEffect(() => {
@@ -37,6 +39,10 @@ function ProxmoxTab({
   }, [activeTopic, onTipsTopicChange]);
   const [showConnectionModal, setShowConnectionModal] = useState(false);
   const [showDashboardModal, setShowDashboardModal] = useState(false);
+  const [connectionDirty, setConnectionDirty] = useState(false);
+  const [dashboardDirty, setDashboardDirty] = useState(false);
+  const connectionDiscardRef = useRef(() => {});
+  const dashboardDiscardRef = useRef(() => {});
   const [connectionUpdatedAt, setConnectionUpdatedAt] = useState(null);
   const [monitoringUpdatedAt, setMonitoringUpdatedAt] = useState(null);
 
@@ -66,6 +72,24 @@ function ProxmoxTab({
     };
   }, [activeDashboard, showConnectionModal, showDashboardModal]);
 
+  useEffect(() => {
+    if (!showConnectionModal) {
+      unregisterDirty('proxmox-connection');
+      return;
+    }
+    registerDirty('proxmox-connection', connectionDirty);
+    return () => unregisterDirty('proxmox-connection');
+  }, [showConnectionModal, connectionDirty, registerDirty, unregisterDirty]);
+
+  useEffect(() => {
+    if (!showDashboardModal) {
+      unregisterDirty('proxmox-dashboard');
+      return;
+    }
+    registerDirty('proxmox-dashboard', dashboardDirty);
+    return () => unregisterDirty('proxmox-dashboard');
+  }, [showDashboardModal, dashboardDirty, registerDirty, unregisterDirty]);
+
   const proxmoxGroups = useMemo(
     () => [
       {
@@ -83,11 +107,11 @@ function ProxmoxTab({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+        <h3 className="text-lg font-bold dim:text-slate-100 night:text-white mb-1 flex items-center gap-2.5">
           <Desktop size={22} weight="duotone" className="text-orange-400" />
           {t('proxmoxTab.title')}
         </h3>
-        <p className="text-gray-700 dark:text-gray-300 text-sm" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6), 0 0 8px rgba(255,255,255,0.5)' }}>
+        <p className="dim:text-slate-300 night:text-gray-300 text-sm">
           {t('proxmoxTab.description')}
         </p>
       </div>
@@ -100,9 +124,8 @@ function ProxmoxTab({
       >
         {activeTopic === 'connection' && (
           <div>
-            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('proxmoxTab.connection')}</h4>
-            <p className="text-sm text-gray-600 dark:text-slate-300 mb-3">{t('proxmoxTab.connection_desc')}</p>
-            <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed mb-4">{t('proxmoxTab.connection_body')}</p>
+            <p className="text-base font-semibold dim:text-slate-50 night:text-white mb-2">{t('proxmoxTab.connection_desc')}</p>
+            <p className="text-sm dim:text-slate-300 night:text-slate-200/95 leading-relaxed mb-4">{t('proxmoxTab.connection_body')}</p>
             <div className="mb-4 flex flex-wrap items-center gap-2">
               {savedTokenName ? (
                 <>
@@ -113,7 +136,7 @@ function ProxmoxTab({
                   <span className="text-xs text-slate-600 dark:text-slate-300">Token: {savedTokenName}</span>
                 </>
               ) : (
-                <span className="text-xs bg-white/50 dark:bg-white/12 text-gray-800 dark:text-gray-200 px-3 py-1.5 rounded-full font-medium">
+                <span className="text-xs bg-white/50 dark:bg-white/12 dim:text-slate-200 night:text-gray-200 px-3 py-1.5 rounded-full font-medium">
                   {t('common.not_configured')}
                 </span>
               )}
@@ -135,9 +158,8 @@ function ProxmoxTab({
         )}
         {activeTopic === 'dashboard' && (
           <div>
-            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('proxmoxTab.monitoring_dashboard')}</h4>
-            <p className="text-sm text-gray-600 dark:text-slate-300 mb-3">{t('proxmoxTab.dashboard_desc')}</p>
-            <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed mb-4">{t('proxmoxTab.dashboard_body')}</p>
+            <p className="text-base font-semibold dim:text-slate-50 night:text-white mb-2">{t('proxmoxTab.dashboard_desc')}</p>
+            <p className="text-sm dim:text-slate-300 night:text-slate-200/95 leading-relaxed mb-4">{t('proxmoxTab.dashboard_body')}</p>
             <div className="mb-4 flex items-center gap-2">
               <span className="text-xs bg-blue-500/85 text-white px-3 py-1 rounded-full font-medium">{t('proxmoxTab.dashboard_settings')}</span>
             </div>
@@ -161,6 +183,8 @@ function ProxmoxTab({
       <SettingsModalShell
         open={showConnectionModal}
         onClose={() => setShowConnectionModal(false)}
+        dirty={connectionDirty}
+        onDiscard={() => connectionDiscardRef.current()}
         title={t('proxmoxTab.connection')}
         subtitle={t('proxmoxTab.connection_header_desc')}
         icon={
@@ -173,12 +197,18 @@ function ProxmoxTab({
           activeDashboard={activeDashboard}
           onSettingsChange={onSettingsChange}
           onClose={() => setShowConnectionModal(false)}
+          onDirtyChange={setConnectionDirty}
+          onBindDiscard={(fn) => {
+            connectionDiscardRef.current = fn;
+          }}
         />
       </SettingsModalShell>
 
       <SettingsModalShell
         open={showDashboardModal}
         onClose={() => setShowDashboardModal(false)}
+        dirty={dashboardDirty}
+        onDiscard={() => dashboardDiscardRef.current()}
         title={t('proxmoxTab.monitoring_dashboard')}
         subtitle={t('proxmoxTab.dashboard_header_desc')}
         icon={
@@ -187,7 +217,13 @@ function ProxmoxTab({
           </div>
         }
       >
-        <ProxmoxDashboardSettingsCard activeDashboard={activeDashboard} />
+        <ProxmoxDashboardSettingsCard
+          activeDashboard={activeDashboard}
+          onDirtyChange={setDashboardDirty}
+          onBindDiscard={(fn) => {
+            dashboardDiscardRef.current = fn;
+          }}
+        />
       </SettingsModalShell>
     </div>
   );

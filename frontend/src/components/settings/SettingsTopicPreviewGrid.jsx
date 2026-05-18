@@ -19,17 +19,17 @@ function SettingsTopicPreviewGrid({ icons, items, accent = 'orange' }) {
   const iconClass = ACCENT[accent] || ACCENT.orange;
 
   return (
-    <ul className="mt-8 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-3">
+    <ul className="mt-8 grid max-w-4xl list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 xl:grid-cols-3">
       {list.map((card, i) => {
         const Icon = icons[i] ?? icons[0];
         return (
           <li
             key={`${card.title}-${i}`}
-            className="flex flex-col gap-2.5 rounded-xl border border-gray-200/35 bg-white/35 p-4 shadow-sm dark:border-white/[0.08] dark:bg-white/[0.04] dark:shadow-black/20 night:border-white/[0.06] night:bg-sd-night-900/50 night:shadow-black/40"
+            className="flex flex-col gap-2.5 rounded-xl border border-gray-200/35 bg-white/35 p-4 shadow-sm dim:border-white/10 dim:bg-sd-night-900/48 dim:shadow-md dim:shadow-black/20 night:border-white/[0.06] night:bg-sd-night-900/50 night:shadow-black/40"
           >
             <Icon size={24} weight="duotone" className={`shrink-0 ${iconClass}`} aria-hidden />
-            <h5 className="text-sm font-semibold text-gray-900 dark:text-white">{card.title}</h5>
-            <p className="m-0 text-xs leading-relaxed text-gray-600 dark:text-gray-400">{card.body}</p>
+            <h5 className="text-sm font-semibold dim:text-slate-50 night:text-white">{card.title}</h5>
+            <p className="m-0 text-xs leading-relaxed dim:text-slate-400 night:text-gray-400">{card.body}</p>
           </li>
         );
       })}

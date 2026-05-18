@@ -33,8 +33,8 @@ function LdapAddon({
   const { t } = useTranslation();
   const [showBindPassword, setShowBindPassword] = useState(false);
 
-  const inputClass = "w-full px-3 py-2 text-sm bg-white/70 dark:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all";
-  const labelClass = "block text-sm font-semibold text-gray-800 dark:text-slate-200 mb-1";
+  const inputClass = "w-full px-3 py-2 text-sm bg-white/70 dark:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 night:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all";
+  const labelClass = "block text-sm font-semibold dim:text-slate-200 night:text-slate-200 mb-1";
 
   // Im Modal-Modus: Content ohne eigenen Container/Header
   const renderContent = () => (
@@ -51,7 +51,7 @@ function LdapAddon({
               {t('ldapAddon.status_configured')}
             </span>
           ) : (
-            <span className="px-4 py-2 bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 text-sm font-semibold rounded-full">
+            <span className="px-4 py-2 bg-gray-100 dark:bg-gray-700/50 dim:text-slate-400 night:text-gray-400 text-sm font-semibold rounded-full">
               {t('ldapAddon.status_not_configured')}
             </span>
           )}
@@ -122,7 +122,7 @@ function LdapAddon({
                 placeholder="domain.local"
                 className={inputClass}
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('ldapAddon.domain_hint')}</p>
+              <p className="text-xs text-gray-500 night:text-gray-400 mt-1">{t('ldapAddon.domain_hint')}</p>
             </div>
           </div>
 
@@ -134,7 +134,7 @@ function LdapAddon({
                 onChange={(e) => setLdapConfig(prev => ({ ...prev, use_ssl: e.target.checked, port: e.target.checked ? 636 : 389 }))}
                 className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
               />
-              <span className="text-sm text-gray-700 dark:text-gray-300">LDAPS (SSL)</span>
+              <span className="text-sm dim:text-slate-300 night:text-gray-300">LDAPS (SSL)</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -143,7 +143,7 @@ function LdapAddon({
                 onChange={(e) => setLdapConfig(prev => ({ ...prev, use_starttls: e.target.checked }))}
                 className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
               />
-              <span className="text-sm text-gray-700 dark:text-gray-300">STARTTLS</span>
+              <span className="text-sm dim:text-slate-300 night:text-gray-300">STARTTLS</span>
             </label>
           </div>
         </div>
@@ -178,7 +178,7 @@ function LdapAddon({
               <button
                 type="button"
                 onClick={() => setShowBindPassword(!showBindPassword)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 night:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
               >
                 {showBindPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
               </button>
@@ -194,7 +194,7 @@ function LdapAddon({
               placeholder="CN=Users,DC=domain,DC=local"
               className={inputClass}
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('ldapAddon.user_search_base_hint')}</p>
+            <p className="text-xs text-gray-500 night:text-gray-400 mt-1">{t('ldapAddon.user_search_base_hint')}</p>
           </div>
 
           <div>
@@ -224,7 +224,7 @@ function LdapAddon({
               placeholder="CN=Servicedock-Admins,CN=Users,DC=domain,DC=local"
               className={inputClass}
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('ldapAddon.admin_group_hint')}</p>
+            <p className="text-xs text-gray-500 night:text-gray-400 mt-1">{t('ldapAddon.admin_group_hint')}</p>
           </div>
 
           <div>
@@ -236,15 +236,15 @@ function LdapAddon({
               placeholder="CN=Servicedock-Viewers,CN=Users,DC=domain,DC=local"
               className={inputClass}
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('ldapAddon.viewer_group_hint')}</p>
+            <p className="text-xs text-gray-500 night:text-gray-400 mt-1">{t('ldapAddon.viewer_group_hint')}</p>
           </div>
         </div>
 
         {/* Enable Toggle */}
         <div className="flex items-center justify-between p-4 bg-white/50 dark:bg-gray-700/30 rounded-xl border border-gray-200/50 dark:border-white/10">
           <div>
-            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{t('ldapAddon.enable_label')}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{t('ldapAddon.enable_hint')}</p>
+            <p className="text-sm font-semibold dim:text-slate-200 night:text-gray-200">{t('ldapAddon.enable_label')}</p>
+            <p className="text-xs text-gray-500 night:text-gray-400">{t('ldapAddon.enable_hint')}</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -331,7 +331,7 @@ function LdapAddon({
 
       {/* Security Note */}
       <div className="p-4 bg-gray-50/80 dark:bg-gray-700/30 rounded-xl border border-gray-200/50 dark:border-white/10">
-        <p className="text-xs text-gray-600 dark:text-gray-400">
+        <p className="text-xs dim:text-slate-400 night:text-gray-400">
           <span className="font-semibold">{t('ldapAddon.security_note_title')}</span>{' '}
           {t('ldapAddon.security_note_text')}
         </p>
@@ -371,7 +371,7 @@ function LdapAddon({
               {t('ldapAddon.status_configured')}
             </span>
           ) : (
-            <span className="px-4 py-2 bg-white/60 dark:bg-gray-700/80 text-gray-600 dark:text-gray-300 text-sm font-semibold rounded-full shadow-md">
+            <span className="px-4 py-2 bg-white/60 dark:bg-gray-700/80 text-gray-600 night:text-gray-300 text-sm font-semibold rounded-full shadow-md">
               {t('ldapAddon.status_not_configured')}
             </span>
           )}

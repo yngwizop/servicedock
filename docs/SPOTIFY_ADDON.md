@@ -40,12 +40,16 @@ The Spotify add-on adds a **Now Playing** widget to your Servicedock dashboard. 
 
 **Tip:** For purely local use you can register only `http://127.0.0.1:8000/api/spotify/callback`.
 
+---
+
 ### Step 2: Copy client credentials
 
 1. In your app, open **Settings**
 2. Copy **Client ID**
 3. Click **View client secret** and copy **Client secret**
 4. **Never** publish the client secret
+
+---
 
 ### Step 3: Configure Servicedock
 
@@ -62,6 +66,8 @@ The Spotify add-on adds a **Now Playing** widget to your Servicedock dashboard. 
 
 **Important:** For other devices on your LAN you should open the dashboard at **`https://10.10.10.50`** (or your HTTPS URL) so the OAuth redirect matches what Spotify expects.
 
+---
+
 ### Step 4: Connect your Spotify account
 
 1. After saving, click **Connect with Spotify**
@@ -72,6 +78,8 @@ The Spotify add-on adds a **Now Playing** widget to your Servicedock dashboard. 
 6. Back in Servicedock the status should show **Connected**
 
 **Note:** You can close the callback tab after success; playback polling runs server-side.
+
+---
 
 ### Step 5: Use the widget
 

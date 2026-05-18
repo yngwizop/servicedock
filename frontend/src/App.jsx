@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ServiceGrid from "./components/ServiceGrid";
 import ShortcutGrid from "./components/ShortcutGrid";
@@ -25,6 +25,7 @@ import { useAppearance } from './hooks/useAppearance';
 import { useServices } from './hooks/useServices';
 import { BACKEND_URL } from './utils/backendUrl';
 import { cssBackgroundImageValue } from './utils/sanitize';
+import { SettingsUnsavedProvider, useSettingsUnsaved } from './contexts/SettingsUnsavedContext';
 
 /** Ohne Wallpaper: Standard-Hellgrau/Weiß aus der API würde das Theme-Mesh vollständig verdecken (opacity oft 1). */
 function shouldShowAppearanceColorTint(bg) {
@@ -36,8 +37,9 @@ function shouldShowAppearanceColorTint(bg) {
 }
 
 // --- Haupt-App ---
-function App() {
+function AppContent() {
   const { t } = useTranslation();
+  const { isDirty, confirmLeave } = useSettingsUnsaved();
 
   // === Custom Hooks ===
   const auth = useAuth();
@@ -256,9 +258,23 @@ function App() {
   // Background-Daten: nach Login aus appearance, davor aus loginWallpaper
   const bg = auth.isLoggedIn ? appearance : (loginWallpaper || {});
 
+  const requestActiveTab = useCallback(
+    (nextTab) => {
+      if (activeTab === 'settings' && nextTab !== 'settings' && isDirty) {
+        confirmLeave(() => setActiveTab(nextTab), {
+          onDiscard: () => setEditAppearance(appearance),
+          onSave: saveAppearance,
+        });
+        return;
+      }
+      setActiveTab(nextTab);
+    },
+    [activeTab, isDirty, confirmLeave, appearance, setEditAppearance, saveAppearance]
+  );
+
   // === RENDER ===
   return (
-    <ErrorBoundary>
+    <>
     {/* Background-Layer: Mesh unten, optional Tint, Wallpaper oben (Tint nicht undurchsichtig über Default-Grau) */}
     <div className="fixed inset-0 w-full h-full -z-10 pointer-events-none">
       {(!cssBackgroundImageValue(bg.bg_image_url) || theme === 'dark') && (
@@ -315,7 +331,7 @@ function App() {
       {/* Sidebar */}
       <Sidebar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={requestActiveTab}
         theme={theme}
         toggleTheme={toggleTheme}
         onLogout={auth.handleLogout}
@@ -487,6 +503,7 @@ function App() {
 
           {activeTab === "settings" && (
             <SettingsPage
+              appearance={appearance}
               editAppearance={editAppearance}
               setEditAppearance={setEditAppearance}
               onSaveAppearance={saveAppearance}
@@ -515,6 +532,16 @@ function App() {
       )}
     </div>
     )}
+    </>
+  );
+}
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <SettingsUnsavedProvider>
+        <AppContent />
+      </SettingsUnsavedProvider>
     </ErrorBoundary>
   );
 }

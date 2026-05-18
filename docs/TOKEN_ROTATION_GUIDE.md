@@ -40,10 +40,10 @@ The dashboard shows a **red warning** in the Security tab when the token is olde
 
 ```
 ┌─────────────────────────────────┐
-│ 🔴 Token Rotation          ⚠️   │
+│ 🔴 Token Rotation          ⚠️  │
 │                                 │
 │ Token age: 65 days              │
-│ Created on: 2025-09-01, 14:30  │
+│ Created on: 2025-09-01, 14:30   │
 │                                 │
 │ ⚠️ Rotation recommended (>60 d) │
 └─────────────────────────────────┘

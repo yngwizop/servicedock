@@ -1,6 +1,9 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Palette, SquaresFour, Desktop, Plug, Lightbulb, Info, ShieldCheck, Lightning, Translate, Lifebuoy, BookOpen, Users } from 'phosphor-react';
+import React, { useState, useEffect, useMemo, useCallback, Fragment } from 'react';
+import { Palette, SquaresFour, Desktop, Plug, Lightbulb, Info, ShieldCheck, Lightning, Translate, Lifebuoy, BookOpen, Users, CaretLeft, CaretRight } from 'phosphor-react';
+import AnimatedPane from './AnimatedPane';
 import { useTranslation } from 'react-i18next';
+import { useSettingsUnsaved } from '../contexts/SettingsUnsavedContext';
+import { isAppearanceDirty } from '../utils/appearanceDirty';
 import { authenticatedFetch } from '../utils/auth';
 import { BACKEND_URL } from '../utils/backendUrl';
 import AppearanceTab from './settings/AppearanceTab';
@@ -10,6 +13,31 @@ import AddOnsCard from './settings/AddOnsCard';
 import LanguageCard from './settings/LanguageCard';
 import HelpTab from './settings/HelpTab';
 import UsersTab from './settings/UsersTab';
+import SettingsNestedSubNav from './settings/SettingsNestedSubNav';
+import SettingsCollapsible from './settings/SettingsCollapsible';
+import { buildHelpNavSections, helpDocTitleKey } from './settings/helpNav';
+import {
+  settingsGlassShell,
+  settingsGlassColumnNav,
+  settingsGlassColumnMain,
+  settingsGlassColumnAside,
+  settingsGlassMobileNav,
+  settingsGlassMobileSubnav,
+  settingsNavActive,
+  settingsNavInactive,
+  settingsColumnSeparator,
+} from './settings/settingsSurfaces';
+
+function SectionCaret({ open, size = 18 }) {
+  return (
+    <CaretRight
+      size={size}
+      weight="bold"
+      className={`shrink-0 opacity-90 transition-transform duration-200 ease-out ${open ? 'rotate-90' : ''}`}
+      aria-hidden
+    />
+  );
+}
 
 const TIP_ICON_CYCLE = [Lightbulb, Info, Lightning, ShieldCheck, BookOpen];
 
@@ -57,6 +85,7 @@ function collectTopicTipStrings(sectionId, t) {
 }
 
 function SettingsPage({
+  appearance,
   editAppearance, setEditAppearance, onSaveAppearance,
   isSavingAppearance, showSaved,
   currentTheme,
@@ -70,9 +99,91 @@ function SettingsPage({
   searchTerm = ''
 }) {
   const { t } = useTranslation();
+  const { confirmLeave, registerDirty, unregisterDirty } = useSettingsUnsaved();
 
   // Active section for mobile navigation
   const [activeSection, setActiveSection] = useState('appearance');
+  const [tipsExpanded, setTipsExpanded] = useState(false);
+  const [activeAppearanceTopic, setActiveAppearanceTopic] = useState('wallpaper');
+  const [activeHelpDocId, setActiveHelpDocId] = useState('readme');
+  const [appearanceSubNavOpen, setAppearanceSubNavOpen] = useState(false);
+  const [helpSubNavOpen, setHelpSubNavOpen] = useState(false);
+  const [helpNavSections, setHelpNavSections] = useState([]);
+  const [helpListLoading, setHelpListLoading] = useState(true);
+
+  const appearanceTopics = useMemo(
+    () => [
+      { id: 'wallpaper', label: t('wallpaper.title') },
+      { id: 'colors', label: t('appearance.font_colors') },
+      { id: 'layout', label: t('appearance.layout') },
+      { id: 'widgets', label: t('appearance.widgets') },
+      { id: 'weather', label: t('appearance.weather_section') },
+    ],
+    [t]
+  );
+
+  const helpGroupedNav = useMemo(
+    () =>
+      helpNavSections.map((section) => ({
+        key: section.key,
+        label: t(`settings.help.groups.${section.key}`),
+        items: section.items.map((d) => ({
+          id: d.id,
+          label: t(helpDocTitleKey(d.id), { defaultValue: d.id }),
+        })),
+      })),
+    [helpNavSections, t]
+  );
+
+  const appearanceDirty = useMemo(
+    () => isAppearanceDirty(appearance, editAppearance),
+    [appearance, editAppearance]
+  );
+
+  useEffect(() => {
+    registerDirty('appearance', appearanceDirty);
+    return () => unregisterDirty('appearance');
+  }, [appearanceDirty, registerDirty, unregisterDirty]);
+
+  const requestSection = useCallback(
+    (sectionId) => {
+      if (sectionId === activeSection) return;
+      confirmLeave(() => {
+        setActiveSection(sectionId);
+        if (sectionId === 'appearance') setAppearanceSubNavOpen(false);
+        if (sectionId === 'help') setHelpSubNavOpen(false);
+      }, {
+        onDiscard: () => {
+          if (appearanceDirty) setEditAppearance(appearance);
+        },
+        onSave: appearanceDirty ? onSaveAppearance : undefined,
+      });
+    },
+    [
+      activeSection,
+      appearanceDirty,
+      appearance,
+      confirmLeave,
+      onSaveAppearance,
+      setEditAppearance,
+    ]
+  );
+
+  const handleSectionClick = useCallback(
+    (sectionId) => {
+      if (sectionId === activeSection && (sectionId === 'appearance' || sectionId === 'help')) {
+        if (sectionId === 'appearance') setAppearanceSubNavOpen((open) => !open);
+        if (sectionId === 'help') setHelpSubNavOpen((open) => !open);
+        return;
+      }
+      requestSection(sectionId);
+    },
+    [activeSection, requestSection]
+  );
+
+  const showAppearanceSubNav = activeSection === 'appearance' && appearanceSubNavOpen;
+  const showHelpSubNav = activeSection === 'help' && helpSubNavOpen;
+  const appearanceShowDetail = showAppearanceSubNav && Boolean(activeAppearanceTopic);
 
   // Proxmox State (nur für savedTokenName in Overview)
   const [savedTokenName, setSavedTokenName] = useState('');
@@ -85,6 +196,50 @@ function SettingsPage({
       if (prev[sectionId] === topicId) return prev;
       return { ...prev, [sectionId]: topicId };
     });
+  }, []);
+
+  const selectAppearanceTopic = useCallback(
+    (topicId) => {
+      setAppearanceSubNavOpen(true);
+      setActiveAppearanceTopic(topicId);
+      handleTipsTopicChange('appearance', topicId);
+    },
+    [handleTipsTopicChange]
+  );
+
+  const selectHelpDoc = useCallback((docId) => {
+    setHelpSubNavOpen(true);
+    setActiveHelpDocId(docId);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setHelpListLoading(true);
+      try {
+        const res = await authenticatedFetch(`${BACKEND_URL}/api/docs/help`);
+        if (!res.ok) throw new Error(String(res.status));
+        const data = await res.json();
+        const list = data.docs || [];
+        if (cancelled) return;
+        const sections = buildHelpNavSections(list);
+        setHelpNavSections(sections);
+        setActiveHelpDocId((prev) => {
+          if (prev && list.some((d) => d.id === prev)) return prev;
+          return sections[0]?.items[0]?.id ?? list[0]?.id ?? null;
+        });
+      } catch (err) {
+        console.error('Failed to load help docs:', err);
+        if (!cancelled) {
+          setHelpNavSections([]);
+        }
+      } finally {
+        if (!cancelled) setHelpListLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const sections = useMemo(
@@ -153,9 +308,9 @@ function SettingsPage({
     const hits = sections.filter((s) => sectionSearchBlobs[s.id]?.includes(q));
     if (!hits.length) return;
     if (!hits.some((h) => h.id === activeSection)) {
-      setActiveSection(hits[0].id);
+      requestSection(hits[0].id);
     }
-  }, [searchTerm, sections, sectionSearchBlobs, activeSection]);
+  }, [searchTerm, sections, sectionSearchBlobs, activeSection, requestSection]);
 
   // Lade Proxmox Token Name für Overview
   useEffect(() => {
@@ -195,7 +350,10 @@ function SettingsPage({
   const currentTips = useMemo(() => {
     const meta = SECTION_TIP_META[activeSection] || SECTION_TIP_META.appearance;
     if (TIPS_TOPIC_KEYS[activeSection]) {
-      const topic = tipsTopicBySection[activeSection] || TIPS_TOPIC_DEFAULT[activeSection];
+      const topic =
+        activeSection === 'appearance' && !appearanceSubNavOpen
+          ? TIPS_TOPIC_DEFAULT.appearance
+          : tipsTopicBySection[activeSection] || TIPS_TOPIC_DEFAULT[activeSection];
       const tipsRaw = t(`settings.tips.topics.${activeSection}.${topic}.tips`, { returnObjects: true });
       const title = t(`settings.tips.topics.${activeSection}.${topic}.title`);
       const strings = Array.isArray(tipsRaw) ? tipsRaw : [];
@@ -212,32 +370,16 @@ function SettingsPage({
       title: t(`settings.tips.${activeSection}_title`),
       tips: stringsToTipRows(strings),
     };
-  }, [activeSection, tipsTopicBySection, t]);
+  }, [activeSection, appearanceSubNavOpen, tipsTopicBySection, t]);
 
   const TipsSectionIcon = currentTips.icon;
 
-  // Sub-Nav: gleiche aktive Fläche wie Sidebar
-  const navButtonActive =
-    'bg-blue-500 text-white shadow-lg shadow-blue-500/30';
-  const navButtonInactive =
-    'text-gray-800 dark:text-gray-100 hover:bg-white/60 dark:hover:bg-white/[0.12]';
-
-  // Shell: hell = lesbar; dunkel = Slate-Glas (weniger „reines Schwarz“), weiterhin blur
-  const settingsShell =
-    'overflow-hidden rounded-3xl border border-white/28 dark:border-white/10 night:border-white/[0.06] ' +
-    'bg-white/45 ' +
-    'dark:bg-white/[0.06] ' +
-    'night:bg-sd-night-900/85 ' +
-    'backdrop-blur-2xl shadow-2xl dark:shadow-black/25 night:shadow-black/45 ' +
-    'ring-1 ring-black/[0.05] dark:ring-white/[0.05] night:ring-white/[0.04]';
-  const rowDivider = 'lg:divide-x lg:divide-white/18 dark:lg:divide-white/[0.06]';
-
   return (
     <div className="w-full max-w-none pb-2">
-      <div className={settingsShell}>
+      <div className={settingsGlassShell}>
         {/* Mobile: Sub-Nav oben in der Shell */}
         <nav
-          className="lg:hidden border-b border-white/22 dark:border-white/[0.06] night:border-white/[0.05] bg-white/25 dark:bg-white/[0.06] sd-night-veil-flat px-2 py-2 overflow-x-auto"
+          className={`lg:hidden ${settingsGlassMobileNav}`}
           aria-label={t('settings.nav_sections_aria')}
         >
           <div className="flex gap-1 min-w-min">
@@ -248,49 +390,147 @@ function SettingsPage({
                 <button
                   key={section.id}
                   type="button"
-                  onClick={() => setActiveSection(section.id)}
+                  onClick={() => handleSectionClick(section.id)}
                   aria-current={isActive ? 'page' : undefined}
+                  aria-expanded={
+                    isActive && (section.id === 'appearance' || section.id === 'help')
+                      ? section.id === 'appearance'
+                        ? appearanceSubNavOpen
+                        : helpSubNavOpen
+                      : undefined
+                  }
                   className={`flex items-center gap-2 shrink-0 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ease-in-out ${
-                    isActive ? navButtonActive : navButtonInactive
+                    isActive ? settingsNavActive : settingsNavInactive
                   }`}
-                  style={isActive ? { textShadow: '0 1px 4px rgba(0,0,0,0.35)' } : undefined}
                 >
                   <Icon size={20} weight={isActive ? 'fill' : 'regular'} className="shrink-0" />
-                  {section.label}
+                  <span className="truncate">{section.label}</span>
+                  {section.id === 'appearance' && appearanceDirty && (
+                    <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" title={t('settings.unsaved_badge')} aria-hidden />
+                  )}
+                  {isActive && section.id === 'appearance' && (
+                    <SectionCaret open={appearanceSubNavOpen} size={16} />
+                  )}
+                  {isActive && section.id === 'help' && (
+                    <SectionCaret open={helpSubNavOpen} size={16} />
+                  )}
                 </button>
               );
             })}
           </div>
         </nav>
 
-        <div className={`lg:flex lg:items-stretch lg:min-h-[min(70vh,680px)] ${rowDivider}`}>
+        <SettingsCollapsible
+          open={showAppearanceSubNav || showHelpSubNav}
+          className={`lg:hidden ${settingsGlassMobileSubnav}`}
+          contentClassName="px-2 py-2 overflow-x-auto"
+        >
+          <nav aria-label={t('settings.topic_subnav_aria')}>
+            <div className="flex gap-1 min-w-min">
+              {showAppearanceSubNav &&
+                appearanceTopics.map((topic) => {
+                  const isTopicActive = activeAppearanceTopic === topic.id;
+                  return (
+                    <button
+                      key={topic.id}
+                      type="button"
+                      onClick={() => selectAppearanceTopic(topic.id)}
+                      aria-current={isTopicActive ? 'true' : undefined}
+                      className={`shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                        isTopicActive ? settingsNavActive : settingsNavInactive
+                      }`}
+                    >
+                      {topic.label}
+                    </button>
+                  );
+                })}
+              {showHelpSubNav &&
+                helpGroupedNav.flatMap((g) => g.items).map((item) => {
+                  const isDocActive = activeHelpDocId === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => selectHelpDoc(item.id)}
+                      aria-current={isDocActive ? 'true' : undefined}
+                      className={`shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                        isDocActive ? settingsNavActive : settingsNavInactive
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+            </div>
+          </nav>
+        </SettingsCollapsible>
+
+        <div className="lg:flex lg:items-stretch lg:min-h-[min(70vh,680px)]">
           {/* Desktop-Subnav */}
-          <div className="hidden lg:flex flex-col w-56 xl:w-60 shrink-0 bg-white/26 dark:bg-white/[0.06] sd-night-veil-flat p-3 dark:ring-1 dark:ring-white/[0.04] dark:shadow-black/20">
+          <div className={`hidden lg:flex flex-col w-56 xl:w-60 shrink-0 ${settingsGlassColumnNav} ${settingsColumnSeparator}`}>
             <nav className="space-y-1 sticky top-4 self-start w-full" role="navigation" aria-label={t('settings.nav_sections_aria')}>
               {displaySections.map((section) => {
                 const Icon = section.icon;
                 const isActive = activeSection === section.id;
                 return (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => setActiveSection(section.id)}
-                    aria-current={isActive ? 'page' : undefined}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[15px] font-medium transition-all duration-200 ease-in-out ${
-                      isActive ? navButtonActive : navButtonInactive
-                    }`}
-                    style={isActive ? { textShadow: '0 1px 4px rgba(0,0,0,0.35)' } : undefined}
-                  >
-                    <Icon size={22} weight={isActive ? 'fill' : 'regular'} className="shrink-0" />
-                    <span className="text-left truncate">{section.label}</span>
-                  </button>
+                  <Fragment key={section.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleSectionClick(section.id)}
+                      aria-current={isActive ? 'page' : undefined}
+                      aria-expanded={
+                        isActive && (section.id === 'appearance' || section.id === 'help')
+                          ? section.id === 'appearance'
+                            ? appearanceSubNavOpen
+                            : helpSubNavOpen
+                          : undefined
+                      }
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[15px] font-medium transition-all duration-200 ease-in-out ${
+                        isActive ? settingsNavActive : settingsNavInactive
+                      }`}
+                    >
+                      <Icon size={22} weight={isActive ? 'fill' : 'regular'} className="shrink-0" />
+                      <span className="text-left truncate flex-1">{section.label}</span>
+                      {section.id === 'appearance' && appearanceDirty && (
+                        <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" title={t('settings.unsaved_badge')} aria-hidden />
+                      )}
+                      {isActive && section.id === 'appearance' && (
+                        <SectionCaret open={appearanceSubNavOpen} />
+                      )}
+                      {isActive && section.id === 'help' && (
+                        <SectionCaret open={helpSubNavOpen} />
+                      )}
+                    </button>
+                    {section.id === 'appearance' && (
+                      <SettingsCollapsible open={showAppearanceSubNav}>
+                        <SettingsNestedSubNav
+                          items={appearanceTopics}
+                          activeId={activeAppearanceTopic}
+                          onSelect={selectAppearanceTopic}
+                          ariaLabel={t('settings.topicNav.appearance_nav_aria')}
+                        />
+                      </SettingsCollapsible>
+                    )}
+                    {section.id === 'help' && (
+                      <SettingsCollapsible open={showHelpSubNav}>
+                        <SettingsNestedSubNav
+                          groupedSections={helpGroupedNav}
+                          activeId={activeHelpDocId}
+                          onSelect={selectHelpDoc}
+                          loading={helpListLoading}
+                          loadingLabel={t('common.loading')}
+                          ariaLabel={t('settings.help.nav_aria')}
+                        />
+                      </SettingsCollapsible>
+                    )}
+                  </Fragment>
                 );
               })}
             </nav>
           </div>
 
           {/* Hauptinhalt */}
-          <main className="flex-1 min-w-0 bg-white/18 dark:bg-white/[0.06] sd-night-tint-flat px-5 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8 dark:shadow-black/20 dark:ring-1 dark:ring-white/[0.04]">
+          <main className={settingsGlassColumnMain}>
             {searchTerm.trim() && !settingsSearchHasMatches && (
               <div
                 role="status"
@@ -299,9 +539,13 @@ function SettingsPage({
                 {t('search.settings_no_match')}
               </div>
             )}
-            <div key={activeSection} className="animate-settings-pane-in">
+            <AnimatedPane paneKey={activeSection} mode="crossfade" className="mx-auto w-full max-w-5xl">
               {activeSection === 'appearance' && (
                 <AppearanceTab
+                  activeTopic={appearanceShowDetail ? activeAppearanceTopic : null}
+                  topics={appearanceTopics}
+                  onTopicSelect={selectAppearanceTopic}
+                  appearanceDirty={appearanceDirty}
                   editAppearance={editAppearance}
                   setEditAppearance={setEditAppearance}
                   currentTheme={currentTheme}
@@ -309,7 +553,6 @@ function SettingsPage({
                   isSavingAppearance={isSavingAppearance}
                   showSaved={showSaved}
                   onSaveAppearance={onSaveAppearance}
-                  onTipsTopicChange={handleTipsTopicChange}
                 />
               )}
 
@@ -339,20 +582,45 @@ function SettingsPage({
 
               {activeSection === 'users' && <UsersTab onTipsTopicChange={handleTipsTopicChange} />}
 
-              {activeSection === 'help' && <HelpTab textColor={textColor} />}
-            </div>
+              {activeSection === 'help' && (
+                <HelpTab
+                  activeDocId={activeHelpDocId}
+                  onDocSelect={selectHelpDoc}
+                  listLoading={helpListLoading}
+                  textColor={textColor}
+                />
+              )}
+            </AnimatedPane>
           </main>
 
           {/* Tipps rechts (Hilfe-Tab hat eigene Topic-Navigation) */}
           {activeSection !== 'help' && (
             <aside
-              className="hidden lg:flex lg:flex-col lg:w-56 xl:w-64 shrink-0 border-t border-white/22 dark:border-white/[0.06] night:border-white/[0.05] lg:border-t-0 lg:border-l bg-white/24 dark:bg-white/[0.06] sd-night-veil-flat p-4 xl:p-5 dark:ring-1 dark:ring-white/[0.04] dark:shadow-black/20"
+              className={`hidden lg:flex lg:flex-col ${settingsGlassColumnAside} transition-[width] duration-200 ${
+                tipsExpanded ? 'lg:w-56 xl:w-64 p-4 xl:p-5' : 'lg:w-12 xl:w-64 p-2 xl:p-5'
+              }`}
               aria-label={t('settings.tips_aside_aria')}
             >
-              <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => setTipsExpanded((v) => !v)}
+                className="xl:hidden flex items-center justify-center w-full py-2 mb-1 rounded-lg dim:text-slate-300 night:text-slate-200 hover:bg-white/50 dark:hover:bg-white/[0.08] transition-colors"
+                aria-expanded={tipsExpanded}
+                title={tipsExpanded ? t('settings.tips_toggle_hide') : t('settings.tips_toggle_show')}
+              >
+                {tipsExpanded ? (
+                  <CaretRight size={20} weight="bold" aria-hidden />
+                ) : (
+                  <CaretLeft size={20} weight="bold" aria-hidden />
+                )}
+                <span className="sr-only">
+                  {tipsExpanded ? t('settings.tips_toggle_hide') : t('settings.tips_toggle_show')}
+                </span>
+              </button>
+              <div className={`space-y-3 min-w-0 ${tipsExpanded ? 'block' : 'hidden xl:block'}`}>
                 <div className="flex items-start gap-2.5">
                   <TipsSectionIcon size={24} weight="duotone" className={`shrink-0 mt-0.5 ${currentTips.color}`} />
-                  <h4 className="text-base font-semibold text-gray-900 dark:text-slate-50 tracking-tight leading-snug">
+                  <h4 className="text-base font-semibold dim:text-slate-50 night:text-slate-50 tracking-tight leading-snug">
                     {currentTips.title}
                   </h4>
                 </div>
@@ -367,7 +635,7 @@ function SettingsPage({
                           className={`shrink-0 mt-0.5 ${currentTips.color} opacity-80`}
                           aria-hidden
                         />
-                        <p className="text-sm text-gray-800 dark:text-slate-100/95 leading-relaxed m-0">
+                        <p className="text-sm dim:text-slate-200/95 night:text-slate-100/95 leading-relaxed m-0">
                           {tip.text}
                         </p>
                       </li>

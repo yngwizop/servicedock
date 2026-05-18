@@ -29,7 +29,7 @@ function SettingsModalSectionTitle({
     : 'text-blue-600 dark:text-blue-400';
   const titleColor = isBlue
     ? 'text-blue-950 dark:text-blue-100'
-    : 'text-gray-900 dark:text-white';
+    : 'dim:text-slate-50 night:text-white';
   const descColor = isBlue ? 'text-blue-800/90 dark:text-blue-200/90' : 'text-gray-600 dark:text-slate-400';
 
   return (

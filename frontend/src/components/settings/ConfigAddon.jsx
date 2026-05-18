@@ -44,7 +44,7 @@ function ConfigAddon({
       {!isModal && (
         <button
           onClick={handleClose}
-          className="flex items-center gap-2 px-4 py-2 mb-4 bg-white/70 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/10 rounded-xl transition-all text-gray-700 dark:text-gray-300 font-medium shadow-lg"
+          className="flex items-center gap-2 px-4 py-2 mb-4 bg-white/70 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/10 rounded-xl transition-all dim:text-slate-300 night:text-gray-300 font-medium shadow-lg"
         >
           <CaretLeft size={20} weight="bold" className="shrink-0" aria-hidden />
           {t('configAddon.back')}
@@ -54,13 +54,13 @@ function ConfigAddon({
       <div className="space-y-6">
         {/* Export Section */}
         <div className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-blue-500/50 dark:border-blue-500/40">
-          <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2.5">
+          <h3 className="font-bold text-lg dim:text-slate-50 night:text-white mb-4 flex items-center gap-2.5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/15 dark:bg-blue-400/20 ring-1 ring-blue-500/25 dark:ring-blue-400/15">
               <DownloadSimple size={20} weight="duotone" className="text-blue-600 dark:text-blue-300" aria-hidden />
             </span>
             {t('configAddon.export_title')}
           </h3>
-          <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+          <p className="text-sm dim:text-slate-300 night:text-gray-300 mb-4">
             {t('configAddon.export_description')}
           </p>
           <button
@@ -93,7 +93,7 @@ function ConfigAddon({
 
         {/* Import Section */}
         <div className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-blue-500/50 dark:border-blue-500/40">
-          <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2.5">
+          <h3 className="font-bold text-lg dim:text-slate-50 night:text-white mb-4 flex items-center gap-2.5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/15 dark:bg-blue-400/20 ring-1 ring-blue-500/25 dark:ring-blue-400/15">
               <UploadSimple size={20} weight="duotone" className="text-blue-600 dark:text-blue-300" aria-hidden />
             </span>
@@ -102,7 +102,7 @@ function ConfigAddon({
 
           {/* Import Mode Selection */}
           <div className="mb-6">
-            <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-3">
+            <label className="block text-base font-medium dim:text-slate-300 night:text-gray-300 mb-3">
               {t('configAddon.import_mode')}
             </label>
             <div className="space-y-3">
@@ -116,11 +116,11 @@ function ConfigAddon({
                   className="mt-1 w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
                 />
                 <div className="flex-1">
-                  <div className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <div className="text-base font-semibold dim:text-slate-50 night:text-white flex items-center gap-2">
                     <Package size={18} weight="duotone" className="shrink-0 text-blue-600 dark:text-blue-400" aria-hidden />
                     {t('configAddon.mode_append')}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <div className="text-sm dim:text-slate-400 night:text-gray-400 mt-1">
                     {t('configAddon.mode_append_desc')}
                   </div>
                 </div>
@@ -135,11 +135,11 @@ function ConfigAddon({
                   className="mt-1 w-4 h-4 text-red-600 focus:ring-2 focus:ring-red-500"
                 />
                 <div className="flex-1">
-                  <div className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <div className="text-base font-semibold dim:text-slate-50 night:text-white flex items-center gap-2">
                     <Warning size={18} weight="fill" className="shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
                     {t('configAddon.mode_replace')}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <div className="text-sm dim:text-slate-400 night:text-gray-400 mt-1">
                     <strong>{t('configAddon.mode_replace_desc')}</strong>
                   </div>
                 </div>
@@ -149,7 +149,7 @@ function ConfigAddon({
 
           {/* File Upload */}
           <div className="mb-4">
-            <label className="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-base font-medium dim:text-slate-300 night:text-gray-300 mb-2">
               {t('configAddon.select_file')}
             </label>
             <div className="relative flex items-center gap-3">
@@ -160,7 +160,7 @@ function ConfigAddon({
               >
                 {t('configAddon.choose_file')}
               </button>
-              <span className="text-sm text-gray-500 dark:text-gray-400 truncate">
+              <span className="text-sm text-gray-500 night:text-gray-400 truncate">
                 {importFile ? importFile.name : t('configAddon.no_file_selected')}
               </span>
               <input
@@ -339,11 +339,11 @@ function ConfigAddon({
 
           {/* Info Box */}
           <div className="mt-6 p-4 bg-white/70 dark:bg-white/5 backdrop-blur-sm border border-blue-500/50 dark:border-blue-500/40 rounded-2xl shadow-lg">
-            <h5 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+            <h5 className="font-semibold dim:text-slate-50 night:text-white mb-2 flex items-center gap-2">
               <Lightbulb size={20} weight="duotone" className="shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
               {t('configAddon.notes_title')}
             </h5>
-            <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1 list-disc list-inside">
+            <ul className="text-sm dim:text-slate-300 night:text-gray-300 space-y-1 list-disc list-inside">
               <li>{t('configAddon.note_no_credentials')}</li>
               <li>{t('configAddon.note_appearance')}</li>
               <li>{t('configAddon.note_append')}</li>

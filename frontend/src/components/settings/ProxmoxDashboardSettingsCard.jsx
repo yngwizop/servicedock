@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { CheckCircle, Timer, ChartBar, CalendarBlank, Lightbulb, Palette } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -12,7 +12,7 @@ import SettingsModalSectionTitle from './SettingsModalSectionTitle';
 
 const choiceBase =
   'px-4 py-2.5 rounded-xl border font-medium text-sm transition-colors ' +
-  'bg-white/45 dark:bg-white/[0.07] text-gray-900 dark:text-slate-100 ' +
+  'bg-white/45 dark:bg-white/[0.07] text-gray-900 night:text-slate-100 ' +
   'border-gray-300/70 dark:border-white/[0.12] ' +
   'hover:bg-white/70 dark:hover:bg-white/[0.11] hover:border-gray-400/80 dark:hover:border-white/[0.18]';
 
@@ -21,24 +21,51 @@ const choiceActive =
   'bg-blue-500/95 dark:bg-blue-500/90 text-white border-blue-500/90 dark:border-blue-500/80 ' +
   'shadow-sm shadow-blue-900/10 dark:shadow-black/25';
 
-/**
- * Card für Proxmox Dashboard-Einstellungen (für Modal)
- */
-function ProxmoxDashboardSettingsCard({ activeDashboard }) {
+function settingsEqual(a, b) {
+  if (!a || !b) return true;
+  return (
+    a.autoRefreshInterval === b.autoRefreshInterval &&
+    a.topItemsCount === b.topItemsCount &&
+    a.taskTimeRange === b.taskTimeRange
+  );
+}
+
+function ProxmoxDashboardSettingsCard({ activeDashboard, onDirtyChange, onBindDiscard }) {
   const { t } = useTranslation();
 
-  const readDefaults = () => ({
-    autoRefreshInterval: getProxmoxRefreshInterval(activeDashboard),
-    topItemsCount: getProxmoxTopItems(activeDashboard),
-    taskTimeRange: getProxmoxTaskHours(activeDashboard),
-  });
+  const readDefaults = useCallback(
+    () => ({
+      autoRefreshInterval: getProxmoxRefreshInterval(activeDashboard),
+      topItemsCount: getProxmoxTopItems(activeDashboard),
+      taskTimeRange: getProxmoxTaskHours(activeDashboard),
+    }),
+    [activeDashboard]
+  );
 
   const [settings, setSettings] = useState(() => readDefaults());
+  const [snapshot, setSnapshot] = useState(() => readDefaults());
   const [saveStatus, setSaveStatus] = useState('');
 
+  const isDirty = useMemo(() => !settingsEqual(settings, snapshot), [settings, snapshot]);
+
+  const resetToSnapshot = useCallback(() => {
+    setSettings({ ...snapshot });
+    setSaveStatus('');
+  }, [snapshot]);
+
   useEffect(() => {
-    setSettings(readDefaults());
-  }, [activeDashboard]);
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
+  useEffect(() => {
+    onBindDiscard?.(resetToSnapshot);
+  }, [onBindDiscard, resetToSnapshot]);
+
+  useEffect(() => {
+    const defaults = readDefaults();
+    setSettings(defaults);
+    setSnapshot(defaults);
+  }, [activeDashboard, readDefaults]);
 
   const handleSave = () => {
     setProxmoxMonitoringPrefs(activeDashboard, {
@@ -47,6 +74,7 @@ function ProxmoxDashboardSettingsCard({ activeDashboard }) {
       taskTimeRange: settings.taskTimeRange,
     });
 
+    setSnapshot({ ...settings });
     setSaveStatus('success');
     setTimeout(() => setSaveStatus(''), 1500);
 
@@ -171,7 +199,7 @@ function ProxmoxDashboardSettingsCard({ activeDashboard }) {
           <button
             type="button"
             onClick={handleReset}
-            className="inline-flex items-center justify-center py-2 px-4 rounded-lg text-sm font-medium border border-gray-300/80 dark:border-white/[0.14] bg-white/50 dark:bg-white/[0.06] text-gray-900 dark:text-slate-100 hover:bg-white/80 dark:hover:bg-white/[0.1] transition-colors"
+            className="inline-flex items-center justify-center py-2 px-4 rounded-lg text-sm font-medium border border-gray-300/80 dark:border-white/[0.14] bg-white/50 dark:bg-white/[0.06] text-gray-900 night:text-slate-100 hover:bg-white/80 dark:hover:bg-white/[0.1] transition-colors"
           >
             {t('common.reset')}
           </button>
@@ -183,6 +211,9 @@ function ProxmoxDashboardSettingsCard({ activeDashboard }) {
             {t('proxmoxDashboardSettings.save_settings')}
           </button>
         </div>
+        <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed m-0">
+          {t('proxmoxDashboardSettings.reload_hint')}
+        </p>
 
         <div className="rounded-xl border border-amber-400/40 dark:border-amber-500/30 bg-amber-500/[0.09] dark:bg-amber-950/50 px-4 py-3">
           <div className="flex gap-2.5 items-start">

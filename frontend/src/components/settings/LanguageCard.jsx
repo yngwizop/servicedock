@@ -49,11 +49,11 @@ function LanguageCard({ onTipsTopicChange }) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+        <h3 className="text-lg font-bold dim:text-slate-100 night:text-white mb-1 flex items-center gap-2.5">
           <Translate size={22} weight="duotone" className="text-violet-400" />
           {t('language.title')}
         </h3>
-        <p className="text-gray-700 dark:text-gray-300 text-sm" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6), 0 0 8px rgba(255,255,255,0.5)' }}>
+        <p className="dim:text-slate-300 night:text-gray-300 text-sm">
           {t('language.description')}
         </p>
       </div>
@@ -66,7 +66,7 @@ function LanguageCard({ onTipsTopicChange }) {
       >
         {activeTopic === 'interface' && (
           <div className="space-y-5">
-            <p className="text-sm text-gray-700 dark:text-slate-200/95 leading-relaxed">{t('settings.topicNav.language_interface_detail')}</p>
+            <p className="text-sm dim:text-slate-300 night:text-slate-200/95 leading-relaxed">{t('settings.topicNav.language_interface_detail')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {languages.map((lang) => {
           const isActive = currentLang === lang.code;
@@ -82,10 +82,10 @@ function LanguageCard({ onTipsTopicChange }) {
             >
               <lang.Flag />
               <div className="text-left">
-                <p className={`text-lg font-bold ${isActive ? 'text-violet-700 dark:text-violet-300' : 'text-gray-800 dark:text-white'}`} style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+                <p className={`text-lg font-bold ${isActive ? 'text-violet-700 dark:text-violet-300' : 'dim:text-slate-100 night:text-white'}`}>
                   {lang.label}
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+                <p className="text-sm text-gray-500 night:text-gray-400">
                   {lang.description}
                 </p>
               </div>
@@ -100,7 +100,7 @@ function LanguageCard({ onTipsTopicChange }) {
           );
         })}
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-start gap-2" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+            <p className="text-sm text-gray-500 night:text-gray-400 flex items-start gap-2">
               <Lightbulb size={18} weight="duotone" className="shrink-0 mt-0.5 text-amber-500/90 dark:text-amber-400/85" aria-hidden />
               <span>{t('language.persistence_info')}</span>
             </p>
