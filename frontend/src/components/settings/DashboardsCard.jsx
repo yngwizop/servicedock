@@ -8,9 +8,7 @@ import SettingsModalShell from './SettingsModalShell';
 import SettingsTopicLayout from './SettingsTopicLayout';
 import SettingsLastModifiedLine from './SettingsLastModifiedLine';
 import { useSettingsUnsaved } from '../../contexts/SettingsUnsavedContext';
-
-const inputClass = "w-full border border-gray-300/50 dark:border-white/15 bg-white/50 dark:bg-gray-700/70 night:text-white dark:placeholder-gray-400 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm";
-const labelClass = "block text-sm font-semibold dim:text-slate-200 night:text-slate-100 mb-2";
+import { settingsInputClass, settingsLabelClass, settingsPanelClass } from './settingsSurfaces';
 
 // Wiederverwendbarer Toggle-Schalter (wie in AppearanceTab)
 function ToggleSwitch({ checked, onChange, label, description }) {
@@ -239,7 +237,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
                           : 'bg-gradient-to-br from-gray-500/5 via-transparent to-transparent dark:from-white/[0.06] dark:via-transparent dark:to-transparent'
                       }`}
                     />
-                    <div className="relative rounded-2xl bg-white/30 dark:bg-white/[0.06] sd-night-surface border border-gray-200/25 dark:border-white/10 night:border-white/[0.08] p-4 shadow-sm shadow-black/[0.03] dark:shadow-black/10 night:shadow-black/30 transition-[background-color,border-color,box-shadow] duration-200 ease-out group-hover:bg-white/45 dark:group-hover:bg-white/[0.09] night:group-hover:bg-sd-night-900/85 group-hover:border-blue-400/30 dark:group-hover:border-blue-400/25 night:group-hover:border-white/[0.12] group-hover:shadow-md dark:group-hover:shadow-black/20">
+                    <div className={`relative rounded-2xl ${settingsPanelClass} transition-[background-color,border-color,box-shadow] duration-200 ease-out group-hover:border-blue-400/30 dim:group-hover:border-white/18 dim:group-hover:bg-sd-dim-800/65 night:group-hover:border-white/[0.12] night:group-hover:bg-sd-night-900/85 group-hover:shadow-md dark:group-hover:shadow-black/20`}>
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
@@ -346,7 +344,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name */}
               <div>
-                <label className={labelClass}>{t('dashboards.dashboard_name')}</label>
+                <label className={settingsLabelClass}>{t('dashboards.dashboard_name')}</label>
                 <input
                   placeholder={t('dashboards.name_placeholder')}
                   value={dashboardName}
@@ -354,26 +352,26 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
                   required
                   maxLength={100}
                   autoFocus
-                  className={inputClass}
+                  className={settingsInputClass}
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className={labelClass}>{t('dashboards.description_label')}</label>
+                <label className={settingsLabelClass}>{t('dashboards.description_label')}</label>
                 <textarea
                   placeholder={t('dashboards.description_placeholder')}
                   value={dashboardDesc}
                   onChange={(e) => setDashboardDesc(e.target.value)}
                   maxLength={500}
                   rows={2}
-                  className={`${inputClass} resize-none`}
+                  className={`${settingsInputClass} resize-none`}
                 />
               </div>
 
               {/* Type */}
               <div>
-                <label className={labelClass}>{t('dashboards.type')}</label>
+                <label className={settingsLabelClass}>{t('dashboards.type')}</label>
                 <CustomSelect
                   value={dashboardType}
                   onChange={(val) => setDashboardType(val)}
@@ -389,7 +387,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
               </div>
 
               {/* Proxmox Toggle */}
-              <div className="bg-white/30 dark:bg-white/[0.05] sd-night-surface rounded-xl p-4 border border-gray-200/40 dark:border-white/10 night:border-white/[0.08] shadow-sm dark:shadow-black/10 night:shadow-black/30">
+              <div className={`${settingsPanelClass} sd-dim-surface--solid night:sd-night-surface--solid`}>
                 <ToggleSwitch
                   checked={dashboardShowProxmox}
                   onChange={setDashboardShowProxmox}
@@ -403,7 +401,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium bg-gray-200/70 dark:bg-white/10 dim:text-slate-200 night:text-gray-200 hover:bg-gray-300/80 dark:hover:bg-white/15 transition-colors"
+                  className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium dim:bg-sd-dim-800/50 dim:text-slate-100 night:bg-white/10 night:text-gray-200 dim:hover:bg-sd-dim-800/70 night:hover:bg-white/15 transition-colors"
                 >
                   {t('common.cancel')}
                 </button>

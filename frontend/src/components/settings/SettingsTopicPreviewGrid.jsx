@@ -25,7 +25,7 @@ function SettingsTopicPreviewGrid({ icons, items, accent = 'orange' }) {
         return (
           <li
             key={`${card.title}-${i}`}
-            className="flex flex-col gap-2.5 rounded-xl border border-gray-200/35 bg-white/35 p-4 shadow-sm dim:border-white/10 dim:bg-sd-night-900/48 dim:shadow-md dim:shadow-black/20 night:border-white/[0.06] night:bg-sd-night-900/50 night:shadow-black/40"
+            className="flex flex-col gap-2.5 rounded-xl border p-4 shadow-sm dim:border-white/12 sd-dim-surface night:border-white/[0.06] night:sd-night-surface night:shadow-black/40"
           >
             <Icon size={24} weight="duotone" className={`shrink-0 ${iconClass}`} aria-hidden />
             <h5 className="text-sm font-semibold dim:text-slate-50 night:text-white">{card.title}</h5>

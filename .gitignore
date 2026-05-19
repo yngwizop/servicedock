@@ -54,6 +54,10 @@ docs/GHCR_SETUP.md
 docs/cheatsheet-statusdashboard.md
 docs/CheatSheet.md
 
+# Theme-/Settings-Design (nur lokal, nicht ins öffentliche Repo)
+docs/THEME_DESIGN.local.md
+THEME_DESIGN.local.md
+
 # Nur lokal / privat (nicht ins öffentliche Repo)
 LOKAL_TESTEN.md
 DEPLOY.md

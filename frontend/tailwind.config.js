@@ -59,6 +59,12 @@ export default {
           800: 'rgb(var(--sd-night-800) / <alpha-value>)',
           700: 'rgb(var(--sd-night-700) / <alpha-value>)',
         },
+        'sd-dim': {
+          950: 'rgb(var(--sd-dim-950) / <alpha-value>)',
+          900: 'rgb(var(--sd-dim-900) / <alpha-value>)',
+          800: 'rgb(var(--sd-dim-800) / <alpha-value>)',
+          700: 'rgb(var(--sd-dim-700) / <alpha-value>)',
+        },
       },
     },
   },

@@ -136,7 +136,7 @@ function ProxmoxTab({
                   <span className="text-xs text-slate-600 dark:text-slate-300">Token: {savedTokenName}</span>
                 </>
               ) : (
-                <span className="text-xs bg-white/50 dark:bg-white/12 dim:text-slate-200 night:text-gray-200 px-3 py-1.5 rounded-full font-medium">
+                <span className="text-xs dim:bg-sd-dim-800/55 dim:text-slate-100 night:bg-white/12 night:text-gray-200 px-3 py-1.5 rounded-full font-medium">
                   {t('common.not_configured')}
                 </span>
               )}

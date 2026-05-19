@@ -19,7 +19,7 @@ function SettingsNestedSubNav({
   if (loading) {
     return (
       <div
-        className={`mt-1 mb-2 ml-2 pl-3 border-l-2 border-white/15 dark:border-white/10 flex items-center gap-2 py-2 text-sm text-gray-600 dark:text-slate-300 animate-settings-subnav-in ${className}`}
+        className={`mt-1 mb-2 ml-2 pl-3 border-l-2 border-slate-400/40 dim:border-white/12 night:border-white/10 flex items-center gap-2 py-2 text-sm dim:text-slate-400 night:text-slate-300 animate-settings-subnav-in ${className}`}
       >
         <CircleNotch className="animate-spin shrink-0" size={16} aria-hidden />
         {loadingLabel}
@@ -47,13 +47,13 @@ function SettingsNestedSubNav({
   if (groupedSections?.length) {
     return (
       <div
-        className={`mt-1 mb-2 ml-2 pl-3 border-l-2 border-white/15 dark:border-white/10 space-y-2 max-h-[min(50vh,420px)] overflow-y-auto pr-0.5 animate-settings-subnav-in ${className}`}
+        className={`mt-1 mb-2 ml-2 pl-3 border-l-2 border-slate-400/40 dim:border-white/12 night:border-white/10 space-y-2 max-h-[min(50vh,420px)] overflow-y-auto pr-0.5 animate-settings-subnav-in ${className}`}
         role="navigation"
         aria-label={ariaLabel}
       >
         {groupedSections.map((section) => (
           <div key={section.key}>
-            <p className="px-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+            <p className="px-1 pb-1 text-[10px] font-semibold uppercase tracking-wide dim:text-slate-500 night:text-slate-400">
               {section.label}
             </p>
             <div className="flex flex-col gap-0.5">{section.items.map(renderButton)}</div>
@@ -67,7 +67,7 @@ function SettingsNestedSubNav({
 
   return (
     <div
-      className={`mt-1 mb-2 ml-2 pl-3 border-l-2 border-white/15 dark:border-white/10 flex flex-col gap-0.5 max-h-[min(50vh,420px)] overflow-y-auto pr-0.5 animate-settings-subnav-in ${className}`}
+      className={`mt-1 mb-2 ml-2 pl-3 border-l-2 border-slate-400/40 dim:border-white/12 night:border-white/10 flex flex-col gap-0.5 max-h-[min(50vh,420px)] overflow-y-auto pr-0.5 animate-settings-subnav-in ${className}`}
       role="navigation"
       aria-label={ariaLabel}
     >

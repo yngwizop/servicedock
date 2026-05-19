@@ -1,31 +1,26 @@
 /**
- * Settings glass surfaces — Night-Palette (--sd-night-*) für dim + night.
- * dim = Hell-Toggle (dunkler App-Hintergrund); night = Dunkel-Toggle — night:-Werte nicht ändern.
- *
- * Hellmodus: neutrales Slate-Grau (unterscheidet sich vom Night-Blau-Glas).
+ * Settings glass surfaces — Night (--sd-night-*) und Dim (--sd-dim-*).
+ * dim = Hell-Toggle; night = Dunkel-Toggle — night:-Werte nicht ändern.
+ * Flächenfüllung für dim erfolgt primär über index.css (.settings-glass-*).
  */
 
 const glassBorder =
-  'border border-gray-400/60 dim:border-white/10 night:border-white/[0.08]';
+  'border border-slate-400/40 dim:border-white/12 night:border-white/[0.08]';
 
-const glassShadow =
-  'shadow-xl night:shadow-black/45';
+const glassShadow = 'shadow-xl dim:shadow-black/25 night:shadow-black/45';
 
-/** Innere Detail-Karte — dim: sd-night-900; night unverändert */
-const glassFill =
-  'settings-glass-inner-card bg-white/45 dim:bg-sd-night-900/60 ' +
-  'dim:shadow-xl dim:shadow-black/35 night:bg-sd-night-900/75';
+/** Innere Detail-Karte — Füllung via CSS .settings-glass-inner-card (dim + night) */
+const glassFill = 'settings-glass-inner-card dim:bg-transparent night:bg-transparent';
 
-/** Nav / Main / Tips — dim: Slate-Grau; night: sd-night-950 */
-const settingsGlassColumnFill =
-  'bg-white/28 dim:bg-slate-500/22 night:bg-sd-night-950/55';
+/** Nav / Main / Tips — dim via CSS column classes */
+const settingsGlassColumnFill = 'dim:bg-transparent night:bg-sd-night-950/55';
 
 export const settingsGlassCard =
   `rounded-2xl ${glassBorder} ${glassFill} ${glassShadow} p-4 sm:p-6`;
 
 export const settingsGlassShell =
   `settings-shell settings-glass-shell overflow-hidden rounded-3xl ${glassBorder} ` +
-  'bg-white/45 backdrop-blur-md isolate dim:bg-slate-400/52 dim:backdrop-blur-xl ' +
+  'dim:bg-transparent night:bg-transparent backdrop-blur-md isolate ' +
   `${glassShadow}`;
 
 export const settingsGlassColumnNav =
@@ -37,49 +32,65 @@ export const settingsGlassColumnMain =
 
 export const settingsGlassColumnAside =
   `settings-glass-column-aside shrink-0 lg:border-l ${settingsGlassColumnFill} ` +
-  'border-white/25 dim:border-white/10 night:border-white/[0.08]';
+  'border-slate-300/40 dim:border-white/10 night:border-white/[0.08]';
 
 export const settingsGlassMobileNav =
   `settings-glass-mobile-nav border-b ${settingsGlassColumnFill} ` +
-  'border-white/25 dim:border-white/10 night:border-white/[0.08] px-2 py-2 overflow-x-auto';
+  'border-slate-300/40 dim:border-white/10 night:border-white/[0.08] px-2 py-2 overflow-x-auto';
 
 export const settingsGlassMobileSubnav =
   `settings-glass-mobile-subnav border-b ${settingsGlassColumnFill} ` +
-  'border-white/25 dim:border-white/10 night:border-white/[0.08]';
+  'border-slate-300/40 dim:border-white/10 night:border-white/[0.08]';
 
+/** Gleiches Blau wie aktive Sidebar-Icons (bg-blue-500) */
 export const settingsNavActive =
-  'dim:bg-sd-night-800/55 dim:text-slate-50 night:bg-sd-night-950/80 night:text-white shadow-sm';
+  'bg-blue-500 text-white shadow-lg shadow-blue-500/30';
 
 export const settingsNavInactive =
-  'dim:text-slate-400 dim:hover:bg-sd-night-800/35 dim:hover:text-slate-100 ' +
-  'text-gray-800 night:text-gray-400 hover:bg-white/60 night:hover:bg-white/10 night:hover:text-gray-200';
+  'dim:text-slate-400 dim:hover:bg-sd-dim-800/40 dim:hover:text-slate-100 ' +
+  'night:text-gray-400 night:hover:bg-white/10 night:hover:text-gray-200';
 
 export const settingsTopicTile =
   'flex h-full w-full flex-col gap-2 rounded-xl border p-4 text-left transition-colors shadow-sm ' +
-  'border-gray-300/50 bg-white/50 hover:bg-white/70 hover:border-gray-400/60 ' +
-  'dim:border-white/10 dim:bg-sd-night-900/48 dim:hover:border-white/15 dim:hover:bg-sd-night-800/52 ' +
+  'dim:border-white/12 dim:bg-sd-dim-900/55 dim:hover:border-white/18 dim:hover:bg-sd-dim-800/60 ' +
   'night:border-white/10 night:bg-white/[0.06] night:hover:border-white/20 night:hover:bg-white/[0.10]';
 
 export const settingsSegmentContainer =
   `relative flex flex-wrap gap-0 rounded-xl p-1 ${glassBorder} ` +
-  'bg-white/40 dim:bg-slate-300/30 night:bg-sd-night-900/50 shadow-lg';
+  'dim:bg-sd-dim-950/40 night:bg-sd-night-900/50 shadow-lg';
 
 export const settingsSegmentPillActive =
-  'absolute top-1 bottom-1 rounded-lg bg-white/80 dim:bg-sd-night-800/65 night:bg-sd-night-950/80 shadow-sm';
+  'absolute top-1 bottom-1 rounded-lg bg-blue-500 shadow-md shadow-blue-500/30';
 
 export const settingsSegmentButtonActive =
-  'relative z-10 dim:text-slate-50 text-gray-900 night:text-white';
+  'relative z-10 text-white';
 
 export const settingsSegmentButtonInactive =
-  'relative z-10 dim:text-slate-400 text-gray-700 night:text-gray-400 ' +
-  'dim:hover:text-slate-100 hover:text-gray-900 night:hover:text-gray-200';
+  'relative z-10 dim:text-slate-400 dim:hover:text-slate-100 ' +
+  'night:text-gray-400 night:hover:text-gray-200';
 
 export const settingsNestedNavActive =
-  'dim:bg-sd-night-800/55 dim:text-slate-50 night:bg-sd-night-950/80 night:text-white';
+  'bg-blue-500/90 text-white shadow-md shadow-blue-500/25';
 
 export const settingsNestedNavInactive =
-  'dim:text-slate-400 text-gray-700 night:text-slate-200 ' +
-  'dim:hover:bg-sd-night-800/30 hover:bg-white/50 night:hover:bg-white/10';
+  'dim:text-slate-400 dim:hover:bg-sd-dim-800/35 ' +
+  'night:text-slate-200 night:hover:bg-white/10';
 
 export const settingsColumnSeparator =
-  'lg:border-r border-white/25 dim:border-white/10 night:border-white/[0.08]';
+  'lg:border-r border-slate-300/40 dim:border-white/10 night:border-white/[0.08]';
+
+/** Eingabefelder in Settings-Tabs */
+export const settingsInputClass =
+  'w-full border border-slate-400/45 dim:border-white/12 dim:bg-sd-dim-900/45 ' +
+  'dim:text-slate-100 dim:placeholder-slate-500 night:border-white/10 night:bg-white/5 ' +
+  'night:text-white night:placeholder-gray-400 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 ' +
+  'focus:border-transparent backdrop-blur-sm transition-all text-sm';
+
+export const settingsLabelClass =
+  'block text-sm font-medium dim:text-slate-200 night:text-gray-300 mb-2';
+
+/** Sekundäre Panel-Fläche (Modals, Dashboard-Kacheln) */
+export const settingsPanelClass =
+  'rounded-xl border border-slate-300/40 dim:border-white/10 sd-dim-surface ' +
+  'p-4 shadow-sm dim:shadow-black/15 night:border-white/[0.08] night:sd-night-surface ' +
+  'night:shadow-black/30';

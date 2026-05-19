@@ -534,7 +534,7 @@ function SettingsPage({
             {searchTerm.trim() && !settingsSearchHasMatches && (
               <div
                 role="status"
-                className="mb-5 rounded-xl border border-amber-400/45 bg-amber-500/12 px-4 py-3 text-sm text-amber-950 dark:border-amber-400/30 dark:bg-amber-500/15 dark:text-amber-50"
+                className="mb-5 rounded-xl border border-amber-400/45 bg-amber-500/12 px-4 py-3 text-sm text-amber-950 dim:border-amber-400/35 dim:bg-amber-500/15 dim:text-amber-100 night:border-amber-400/30 night:bg-amber-500/15 night:text-amber-50"
               >
                 {t('search.settings_no_match')}
               </div>

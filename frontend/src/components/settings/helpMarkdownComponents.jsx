@@ -170,7 +170,7 @@ export function buildHelpMarkdownComponents(onDocSelect) {
       }
       return (
         <code
-          className="rounded bg-slate-200/90 px-1.5 py-0.5 text-[0.9em] font-normal text-slate-800 night:bg-white/12 night:text-slate-100"
+          className="rounded bg-slate-200/90 px-1.5 py-0.5 text-[0.9em] font-normal dim:bg-sd-dim-950/60 dim:text-slate-100 night:bg-white/12 night:text-slate-100"
           {...rest}
         >
           {children}
@@ -185,7 +185,7 @@ export function buildHelpMarkdownComponents(onDocSelect) {
     ),
     blockquote: (props) => (
       <blockquote
-        className="mb-3 border-l-4 border-blue-500/50 bg-blue-500/5 py-2 pl-4 text-gray-800 night:border-blue-400/40 night:text-slate-100/90"
+        className="mb-3 border-l-4 border-blue-500/50 bg-blue-500/5 py-2 pl-4 dim:text-slate-200 night:border-blue-400/40 night:text-slate-100/90"
         {...props}
       />
     ),
@@ -195,7 +195,7 @@ export function buildHelpMarkdownComponents(onDocSelect) {
         <table className="min-w-full text-left text-sm dim:text-slate-200 night:text-slate-100" {...props} />
       </div>
     ),
-    thead: (props) => <thead className="bg-gray-100/80 dark:bg-white/5" {...props} />,
+    thead: (props) => <thead className="dim:bg-sd-dim-950/50 night:bg-white/5" {...props} />,
     th: (props) => (
       <th
         className="border-b border-gray-300/60 px-3 py-2 font-semibold dark:border-white/10"

@@ -24,7 +24,7 @@ import { BACKEND_URL } from '../../utils/backendUrl';
 import { WEATHER_METRIC_ICON_COLORS } from '../../utils/weatherWidgetVisuals';
 import AnimatedPane from '../AnimatedPane';
 import SettingsTopicLayout, { settingsDetailCardClass } from './SettingsTopicLayout';
-import { settingsTopicTile } from './settingsSurfaces';
+import { settingsInputClass, settingsLabelClass, settingsTopicTile } from './settingsSurfaces';
 
 const WEATHER_FIELDS = [
   { key: 'temperature', labelKey: 'appearance.temperature', Icon: ThermometerSimple, iconColor: WEATHER_METRIC_ICON_COLORS.temperature },
@@ -48,11 +48,12 @@ const PRESET_WALLPAPERS = [
   { id: 'desert', nameKey: 'wallpaper.desert', file: '/wallpapers/desert.jpg', author: 'Keith Hardy', unsplash: 'https://unsplash.com/@keithhardy2001' },
 ];
 
-const inputClass =
-  'w-full border border-gray-300/50 dim:border-white/10 dim:bg-sd-night-900/50 night:border-white/10 night:bg-white/5 ' +
-  'dim:text-slate-50 night:text-white placeholder-gray-500 dim:placeholder-slate-500 night:placeholder-gray-400 p-3 rounded-xl ' +
-  'focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm transition-all text-sm';
-const labelClass = "block text-sm font-medium dim:text-slate-300 night:text-gray-300 mb-2";
+const colorPickerClass =
+  'w-14 h-11 p-1 border border-slate-400/45 dim:border-white/12 rounded-xl cursor-pointer ' +
+  'dim:bg-sd-dim-900/45 night:border-white/10 night:bg-white/5 backdrop-blur-sm';
+
+const rangeTrackClass =
+  'w-full h-2 dim:bg-sd-dim-950/50 night:bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-600';
 
 const TOPIC_DETAIL_KEYS = {
   wallpaper: 'settings.topicNav.appearance_wallpaper_detail',
@@ -261,7 +262,7 @@ function AppearanceTab({
       <div>
         {/* Preset-Galerie */}
         <div className="mb-5">
-          <label className={`${labelClass} mb-3`}>{t('wallpaper.presets')}</label>
+          <label className={`${settingsLabelClass} mb-3`}>{t('wallpaper.presets')}</label>
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2.5">
             {/* "Kein Wallpaper" Option */}
             <button
@@ -328,7 +329,7 @@ function AppearanceTab({
         {/* Custom Uploads */}
         {(uploadedWallpapers.length > 0 || true) && (
           <div className="mb-5">
-            <label className={`${labelClass} mb-3`}>{t('wallpaper.custom_uploads')}</label>
+            <label className={`${settingsLabelClass} mb-3`}>{t('wallpaper.custom_uploads')}</label>
             <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2.5">
               {/* Hochgeladene Wallpapers */}
               {uploadedWallpapers.map(wp => (
@@ -419,7 +420,7 @@ function AppearanceTab({
                 placeholder="https://..."
                 value={editAppearance.bg_image_url || ""}
                 onChange={(e) => setEditAppearance({ ...editAppearance, bg_image_url: e.target.value })}
-                className={inputClass}
+                className={settingsInputClass}
               />
             </div>
           )}
@@ -428,19 +429,19 @@ function AppearanceTab({
         {/* Background Color */}
         <div className="space-y-4 pt-4 border-t border-gray-200/50 dark:border-white/[0.06]">
           <div>
-            <label className={labelClass}>{t('appearance.bg_color')}</label>
+            <label className={settingsLabelClass}>{t('appearance.bg_color')}</label>
             <div className="flex items-center gap-3">
               <input
                 type="color"
                 value={editAppearance.bg_color || "#ffffff"}
                 onChange={(e) => setEditAppearance({ ...editAppearance, bg_color: e.target.value })}
-                className="w-14 h-11 p-1 border border-gray-300/50 dark:border-white/10 rounded-xl cursor-pointer bg-white/50 dark:bg-white/5 backdrop-blur-sm"
+                className={colorPickerClass}
               />
               <input
                 type="text"
                 value={editAppearance.bg_color || "#ffffff"}
                 onChange={(e) => setEditAppearance({ ...editAppearance, bg_color: e.target.value })}
-                className={`${inputClass} font-mono`}
+                className={`${settingsInputClass} font-mono`}
                 placeholder="#ffffff"
               />
             </div>
@@ -456,7 +457,7 @@ function AppearanceTab({
               min="0" max="1" step="0.05"
               value={editAppearance.bg_opacity}
               onChange={(e) => setEditAppearance({ ...editAppearance, bg_opacity: parseFloat(e.target.value) })}
-              className="w-full h-2 bg-gray-300/30 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-600"
+              className={rangeTrackClass}
             />
           </div>
         </div>
@@ -486,38 +487,38 @@ function AppearanceTab({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label className={labelClass}>{t('appearance.light_mode')}</label>
+            <label className={settingsLabelClass}>{t('appearance.light_mode')}</label>
             <div className="flex items-center gap-3">
               <input
                 type="color"
                 value={editAppearance.text_color_light || "#1f2937"}
                 onChange={(e) => setEditAppearance({ ...editAppearance, text_color_light: e.target.value })}
-                className="w-14 h-11 p-1 border border-gray-300/50 dark:border-white/10 rounded-xl cursor-pointer bg-white/50 dark:bg-white/5"
+                className={colorPickerClass}
               />
               <input
                 type="text"
                 value={editAppearance.text_color_light || "#1f2937"}
                 onChange={(e) => setEditAppearance({ ...editAppearance, text_color_light: e.target.value })}
-                className={`${inputClass} font-mono`}
+                className={`${settingsInputClass} font-mono`}
                 placeholder="#1f2937"
               />
             </div>
           </div>
 
           <div>
-            <label className={labelClass}>{t('appearance.dark_mode')}</label>
+            <label className={settingsLabelClass}>{t('appearance.dark_mode')}</label>
             <div className="flex items-center gap-3">
               <input
                 type="color"
                 value={editAppearance.text_color_dark || "#e5e7eb"}
                 onChange={(e) => setEditAppearance({ ...editAppearance, text_color_dark: e.target.value })}
-                className="w-14 h-11 p-1 border border-gray-300/50 dark:border-white/10 rounded-xl cursor-pointer bg-white/50 dark:bg-white/5"
+                className={colorPickerClass}
               />
               <input
                 type="text"
                 value={editAppearance.text_color_dark || "#e5e7eb"}
                 onChange={(e) => setEditAppearance({ ...editAppearance, text_color_dark: e.target.value })}
-                className={`${inputClass} font-mono`}
+                className={`${settingsInputClass} font-mono`}
                 placeholder="#e5e7eb"
               />
             </div>
@@ -538,7 +539,7 @@ function AppearanceTab({
               min="2" max="10" step="1"
               value={editAppearance.service_cols}
               onChange={(e) => setEditAppearance({ ...editAppearance, service_cols: parseInt(e.target.value) })}
-              className="w-full h-2 bg-gray-300/30 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-600"
+              className={rangeTrackClass}
             />
           </div>
           
@@ -552,7 +553,7 @@ function AppearanceTab({
               min="2" max="8" step="1"
               value={editAppearance.shortcut_cols}
               onChange={(e) => setEditAppearance({ ...editAppearance, shortcut_cols: parseInt(e.target.value) })}
-              className="w-full h-2 bg-gray-300/30 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-600"
+              className={rangeTrackClass}
             />
           </div>
       </div>
@@ -583,7 +584,7 @@ function AppearanceTab({
 
         {/* Clock Format */}
         <div className="mt-5 pt-5 border-t border-gray-200/50 dark:border-white/[0.06]">
-          <label className={labelClass}>{t('appearance.time_format')}</label>
+          <label className={settingsLabelClass}>{t('appearance.time_format')}</label>
           <div className="flex gap-3">
             {[
               { value: '24h', label: t('appearance.format_24h'), example: '14:30' },
@@ -620,16 +621,16 @@ function AppearanceTab({
       <div>
         <div className="space-y-5">
           <div>
-            <label className={labelClass}>{t('appearance.city')}</label>
+            <label className={settingsLabelClass}>{t('appearance.city')}</label>
             <input
               type="text"
               value={editAppearance.weather_city || ''}
               onChange={(e) => setEditAppearance({ ...editAppearance, weather_city: e.target.value })}
               placeholder={t('appearance.city_placeholder')}
-              className={inputClass}
+              className={settingsInputClass}
             />
             {weatherLocationInfo && weatherLocationInfo.name && weatherLocationInfo.country && (
-              <div className="mt-2 text-sm text-gray-700 night:text-gray-200 bg-white/40 dark:bg-white/5 rounded-xl px-3 py-2 border border-gray-300/30 dark:border-white/[0.06]">
+              <div className="mt-2 text-sm dim:text-slate-200 night:text-gray-200 rounded-xl px-3 py-2 border border-slate-300/40 dim:border-white/10 dim:bg-sd-dim-950/40 night:bg-white/5 night:border-white/[0.06]">
                 <span className="font-semibold">{t('appearance.found_location')}</span> {weatherLocationInfo.name}, {weatherLocationInfo.country}
                 {weatherLocationInfo.postal_code ? `${t('appearance.postal_code')}${weatherLocationInfo.postal_code}` : ''}
                 {typeof weatherLocationInfo.latitude === 'number' && typeof weatherLocationInfo.longitude === 'number' ?
@@ -643,7 +644,7 @@ function AppearanceTab({
           </div>
 
           <div>
-            <label className={labelClass}>{t('appearance.weather_fields')}</label>
+            <label className={settingsLabelClass}>{t('appearance.weather_fields')}</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {WEATHER_FIELDS.map((f) => {
                 const FieldIcon = f.Icon;

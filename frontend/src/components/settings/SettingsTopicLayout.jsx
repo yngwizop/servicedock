@@ -12,12 +12,14 @@ export const settingsDetailCardClass = settingsGlassCard;
 const detailCardClass = settingsGlassCard;
 
 const footerWrapClass =
-  'shrink-0 flex flex-wrap items-center justify-end gap-2 rounded-xl border border-gray-300/40 ' +
-  'bg-white/30 px-4 py-3 sm:px-5 night:border-white/[0.08] night:bg-white/[0.08]';
+  'shrink-0 flex flex-wrap items-center justify-end gap-2 rounded-xl border border-slate-300/40 ' +
+  'dim:border-white/10 dim:bg-sd-dim-950/45 px-4 py-3 sm:px-5 ' +
+  'night:border-white/[0.08] night:bg-white/[0.08]';
 
 const sideNavClass =
-  'flex w-full min-w-0 shrink-0 flex-col gap-1 rounded-xl border border-gray-300/40 bg-white/40 p-2 ' +
-  'lg:w-56 xl:w-60 night:border-white/[0.08] night:bg-white/[0.08]';
+  'flex w-full min-w-0 shrink-0 flex-col gap-1 rounded-xl border border-slate-300/40 p-2 ' +
+  'dim:border-white/10 dim:bg-sd-dim-950/40 lg:w-56 xl:w-60 ' +
+  'night:border-white/[0.08] night:bg-white/[0.08]';
 
 function flattenItems(groups) {
   if (!groups?.length) return [];

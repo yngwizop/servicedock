@@ -8,13 +8,12 @@ import CustomSelect from '../CustomSelect';
 import { BACKEND_URL } from '../../utils/backendUrl';
 
 /** Wie AppearanceTab — lesbare Felder im hellen & dunklen Settings-Glas */
-const sectionCard =
-  'bg-white/30 dark:bg-gray-800/55 sd-night-surface rounded-2xl p-5 border border-gray-200/25 dark:border-white/[0.07] night:border-white/[0.06] shadow-sm shadow-black/[0.03] dark:shadow-black/20 night:shadow-black/40';
+import { settingsInputClass, settingsPanelClass } from './settingsSurfaces';
+
+const sectionCard = `${settingsPanelClass} rounded-2xl p-5 night:sd-night-surface`;
 const labelClass = 'block text-xs font-medium dim:text-slate-300 night:text-gray-300 mb-1.5';
 const modalLabelClass = 'block text-sm font-semibold dim:text-slate-200 night:text-slate-100 mb-2';
-const controlClass =
-  'w-full border border-gray-300/50 dark:border-white/10 bg-white/50 dark:bg-white/10 dim:text-slate-50 night:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-xl backdrop-blur-sm transition-all text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
-const inputClass = `${controlClass} px-3 py-2.5`;
+const inputClass = settingsInputClass;
 
 function UsersTab({ onTipsTopicChange }) {
   const { t } = useTranslation();
