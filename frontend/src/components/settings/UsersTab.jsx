@@ -8,12 +8,10 @@ import CustomSelect from '../CustomSelect';
 import { BACKEND_URL } from '../../utils/backendUrl';
 
 /** Wie AppearanceTab — lesbare Felder im hellen & dunklen Settings-Glas */
-import { settingsInputClass, settingsPanelClass } from './settingsSurfaces';
+import { settingsInputClass, settingsLabelClass, settingsPanelClass } from './settingsSurfaces';
 
 const sectionCard = `${settingsPanelClass} rounded-2xl p-5 night:sd-night-surface`;
 const labelClass = 'block text-xs font-medium dim:text-slate-300 night:text-gray-300 mb-1.5';
-const modalLabelClass = 'block text-sm font-semibold dim:text-slate-200 night:text-slate-100 mb-2';
-const inputClass = settingsInputClass;
 
 function UsersTab({ onTipsTopicChange }) {
   const { t } = useTranslation();
@@ -378,37 +376,37 @@ function UsersTab({ onTipsTopicChange }) {
           ) : null}
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className={modalLabelClass}>{t('settings.users.field_username')}</label>
+              <label className={settingsLabelClass}>{t('settings.users.field_username')}</label>
               <input
                 value={newUsername}
                 onChange={(e) => setNewUsername(e.target.value)}
-                className={inputClass}
+                className={settingsInputClass}
                 required
                 autoComplete="off"
               />
             </div>
             <div>
-              <label className={modalLabelClass}>{t('settings.users.field_password')}</label>
+              <label className={settingsLabelClass}>{t('settings.users.field_password')}</label>
               <input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className={inputClass}
+                className={settingsInputClass}
                 required
                 minLength={8}
                 autoComplete="new-password"
               />
             </div>
             <div>
-              <label className={modalLabelClass}>{t('settings.users.field_role')}</label>
+              <label className={settingsLabelClass}>{t('settings.users.field_role')}</label>
               <CustomSelect value={newRole} onChange={setNewRole} options={roleOptions} className="w-full" />
             </div>
             <div>
-              <label className={modalLabelClass}>{t('settings.users.field_display_name')}</label>
+              <label className={settingsLabelClass}>{t('settings.users.field_display_name')}</label>
               <input
                 value={newDisplayName}
                 onChange={(e) => setNewDisplayName(e.target.value)}
-                className={inputClass}
+                className={settingsInputClass}
                 autoComplete="off"
               />
             </div>
@@ -426,7 +424,7 @@ function UsersTab({ onTipsTopicChange }) {
               type="button"
               onClick={closeCreateUserModal}
               disabled={busyId === -1}
-              className="inline-flex items-center rounded-lg border border-gray-300/60 dark:border-white/15 bg-white/40 dark:bg-white/5 px-4 py-2 text-sm font-medium dim:text-slate-200 night:text-gray-200 hover:bg-white/60 dark:hover:bg-white/10 disabled:opacity-50"
+              className="inline-flex items-center rounded-lg border dim:border-white/12 night:border-white/15 dim:bg-sd-dim-800/55 night:bg-white/5 px-4 py-2 text-sm font-medium dim:text-slate-200 night:text-gray-200 dim:hover:bg-sd-dim-700/60 night:hover:bg-white/10 disabled:opacity-50"
             >
               {t('settings.users.create_cancel')}
             </button>

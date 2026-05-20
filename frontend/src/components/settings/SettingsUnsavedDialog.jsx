@@ -8,10 +8,11 @@ const overlayClass =
   'bg-black/40 dark:bg-black/55 backdrop-blur-md';
 
 const panelClass =
-  'w-full max-w-md rounded-2xl border border-white/28 dark:border-white/[0.12] ' +
-  'bg-gradient-to-br from-white/[0.92] via-white/[0.82] to-white/[0.72] ' +
-  'dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 ' +
-  'shadow-2xl ring-1 ring-black/[0.06] dark:ring-white/[0.08] p-6';
+  'settings-glass-inner-card w-full max-w-md rounded-2xl border p-6 ' +
+  'dim:border-white/12 night:border-white/[0.08] ' +
+  'dim:bg-transparent night:bg-transparent ' +
+  'shadow-2xl dim:shadow-black/25 night:shadow-black/55 ' +
+  'ring-1 dim:ring-white/[0.08] night:ring-white/[0.06]';
 
 function SettingsUnsavedDialog({ onDiscard, onStay, onSave, isSaving = false }) {
   const { t } = useTranslation();
@@ -32,7 +33,7 @@ function SettingsUnsavedDialog({ onDiscard, onStay, onSave, isSaving = false }) 
             <h3 id={titleId} className="text-lg font-bold dim:text-slate-50 night:text-white">
               {t('settings.unsaved.title')}
             </h3>
-            <p className="text-sm text-gray-700 dark:text-slate-300 mt-1.5 leading-relaxed">
+            <p className="text-sm dim:text-slate-300 night:text-slate-300 mt-1.5 leading-relaxed">
               {t('settings.unsaved.message')}
             </p>
           </div>
@@ -41,7 +42,7 @@ function SettingsUnsavedDialog({ onDiscard, onStay, onSave, isSaving = false }) 
           <button
             type="button"
             onClick={onStay}
-            className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium bg-gray-200/70 dark:bg-white/10 dim:text-slate-200 night:text-gray-200 hover:bg-gray-300/80 dark:hover:bg-white/15 transition-colors"
+            className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium dim:bg-sd-dim-800/55 dim:hover:bg-sd-dim-700/60 night:bg-white/10 night:hover:bg-white/15 dim:text-slate-200 night:text-gray-200 transition-colors"
           >
             {t('settings.unsaved.stay')}
           </button>

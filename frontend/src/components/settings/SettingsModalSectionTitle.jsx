@@ -2,7 +2,7 @@ import React from 'react';
 
 const iconWrapClass =
   'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ' +
-  'bg-white/55 dark:bg-white/[0.08] ring-1 ring-gray-200/70 dark:ring-white/[0.12]';
+  'dim:bg-sd-dim-800/55 dim:ring-white/12 night:bg-white/[0.08] night:ring-white/[0.12] ring-1';
 
 const iconWrapBlue =
   'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ' +
@@ -30,7 +30,7 @@ function SettingsModalSectionTitle({
   const titleColor = isBlue
     ? 'text-blue-950 dark:text-blue-100'
     : 'dim:text-slate-50 night:text-white';
-  const descColor = isBlue ? 'text-blue-800/90 dark:text-blue-200/90' : 'text-gray-600 dark:text-slate-400';
+  const descColor = isBlue ? 'text-blue-800/90 dark:text-blue-200/90' : 'dim:text-slate-300 night:text-slate-400';
 
   return (
     <div className={wrap}>

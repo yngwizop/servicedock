@@ -9,17 +9,15 @@ import {
   setProxmoxMonitoringPrefs,
 } from '../../utils/proxmoxDashboardPrefs';
 import SettingsModalSectionTitle from './SettingsModalSectionTitle';
-
-const choiceBase =
-  'px-4 py-2.5 rounded-xl border font-medium text-sm transition-colors ' +
-  'bg-white/45 dark:bg-white/[0.07] text-gray-900 night:text-slate-100 ' +
-  'border-gray-300/70 dark:border-white/[0.12] ' +
-  'hover:bg-white/70 dark:hover:bg-white/[0.11] hover:border-gray-400/80 dark:hover:border-white/[0.18]';
-
-const choiceActive =
-  'px-4 py-2.5 rounded-xl border font-medium text-sm transition-colors ' +
-  'bg-blue-500/95 dark:bg-blue-500/90 text-white border-blue-500/90 dark:border-blue-500/80 ' +
-  'shadow-sm shadow-blue-900/10 dark:shadow-black/25';
+import {
+  settingsModalChoiceActive,
+  settingsModalChoiceBase,
+  settingsModalInfoAmber,
+  settingsModalInfoBlue,
+  settingsModalSecondaryButton,
+  settingsModalStatusInfo,
+  settingsModalStatusSuccess,
+} from './settingsSurfaces';
 
 function settingsEqual(a, b) {
   if (!a || !b) return true;
@@ -115,13 +113,13 @@ function ProxmoxDashboardSettingsCard({ activeDashboard, onDirtyChange, onBindDi
                 key={seconds}
                 type="button"
                 onClick={() => setSettings({ ...settings, autoRefreshInterval: seconds })}
-                className={settings.autoRefreshInterval === seconds ? choiceActive : choiceBase}
+                className={settings.autoRefreshInterval === seconds ? settingsModalChoiceActive : settingsModalChoiceBase}
               >
                 {seconds}s
               </button>
             ))}
           </div>
-          <p className="text-xs sm:text-sm text-gray-700 dark:text-slate-300 mt-2.5 leading-relaxed">
+          <p className="text-xs sm:text-sm dim:text-slate-300 night:text-slate-300 mt-2.5 leading-relaxed">
             {t('proxmoxDashboardSettings.refresh_help')}
           </p>
         </div>
@@ -136,13 +134,13 @@ function ProxmoxDashboardSettingsCard({ activeDashboard, onDirtyChange, onBindDi
                 key={count}
                 type="button"
                 onClick={() => setSettings({ ...settings, topItemsCount: count })}
-                className={settings.topItemsCount === count ? choiceActive : choiceBase}
+                className={settings.topItemsCount === count ? settingsModalChoiceActive : settingsModalChoiceBase}
               >
                 Top {count}
               </button>
             ))}
           </div>
-          <p className="text-xs sm:text-sm text-gray-700 dark:text-slate-300 mt-2.5 leading-relaxed">
+          <p className="text-xs sm:text-sm dim:text-slate-300 night:text-slate-300 mt-2.5 leading-relaxed">
             {t('proxmoxDashboardSettings.top_items_help')}
           </p>
         </div>
@@ -161,36 +159,36 @@ function ProxmoxDashboardSettingsCard({ activeDashboard, onDirtyChange, onBindDi
                 key={hours}
                 type="button"
                 onClick={() => setSettings({ ...settings, taskTimeRange: hours })}
-                className={settings.taskTimeRange === hours ? choiceActive : choiceBase}
+                className={settings.taskTimeRange === hours ? settingsModalChoiceActive : settingsModalChoiceBase}
               >
                 {label}
               </button>
             ))}
           </div>
-          <p className="text-xs sm:text-sm text-gray-700 dark:text-slate-300 mt-2.5 leading-relaxed">
+          <p className="text-xs sm:text-sm dim:text-slate-300 night:text-slate-300 mt-2.5 leading-relaxed">
             {t('proxmoxDashboardSettings.task_range_help')}
           </p>
         </div>
 
-        <div className="rounded-xl border border-blue-400/35 dark:border-blue-400/30 bg-blue-500/[0.08] dark:bg-blue-950/45 px-4 py-3">
+        <div className={settingsModalInfoBlue}>
           <div className="flex gap-2.5 items-start">
-            <Palette size={18} weight="duotone" className="shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
-            <p className="text-sm text-blue-950 dark:text-blue-100 leading-relaxed m-0">
+            <Palette size={18} weight="duotone" className="shrink-0 mt-0.5 text-blue-400" />
+            <p className="text-sm leading-relaxed m-0">
               {t('proxmoxDashboardSettings.card_layout_placeholder')}
             </p>
           </div>
         </div>
 
         {saveStatus === 'success' && (
-          <div className="flex items-center gap-2 rounded-xl border border-emerald-400/35 dark:border-emerald-500/25 bg-emerald-500/10 dark:bg-emerald-950/40 px-4 py-3 text-sm font-medium text-emerald-950 dark:text-emerald-100">
-            <CheckCircle size={18} weight="fill" className="shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <div className={`${settingsModalStatusSuccess} flex items-center gap-2`}>
+            <CheckCircle size={18} weight="fill" className="shrink-0 text-emerald-500" />
             {t('proxmoxDashboardSettings.save_success')}
           </div>
         )}
 
         {saveStatus === 'reset' && (
-          <div className="flex items-center gap-2 rounded-xl border border-blue-400/35 dark:border-blue-500/25 bg-blue-500/10 dark:bg-blue-950/40 px-4 py-3 text-sm font-medium text-blue-950 dark:text-blue-100">
-            <CheckCircle size={18} weight="fill" className="shrink-0 text-blue-600 dark:text-blue-400" />
+          <div className={`${settingsModalStatusInfo} flex items-center gap-2`}>
+            <CheckCircle size={18} weight="fill" className="shrink-0 text-blue-400" />
             {t('proxmoxDashboardSettings.reset_success')}
           </div>
         )}
@@ -199,7 +197,7 @@ function ProxmoxDashboardSettingsCard({ activeDashboard, onDirtyChange, onBindDi
           <button
             type="button"
             onClick={handleReset}
-            className="inline-flex items-center justify-center py-2 px-4 rounded-lg text-sm font-medium border border-gray-300/80 dark:border-white/[0.14] bg-white/50 dark:bg-white/[0.06] text-gray-900 night:text-slate-100 hover:bg-white/80 dark:hover:bg-white/[0.1] transition-colors"
+            className={settingsModalSecondaryButton}
           >
             {t('common.reset')}
           </button>
@@ -211,14 +209,14 @@ function ProxmoxDashboardSettingsCard({ activeDashboard, onDirtyChange, onBindDi
             {t('proxmoxDashboardSettings.save_settings')}
           </button>
         </div>
-        <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed m-0">
+        <p className="text-xs dim:text-slate-400 night:text-slate-400 leading-relaxed m-0">
           {t('proxmoxDashboardSettings.reload_hint')}
         </p>
 
-        <div className="rounded-xl border border-amber-400/40 dark:border-amber-500/30 bg-amber-500/[0.09] dark:bg-amber-950/50 px-4 py-3">
+        <div className={settingsModalInfoAmber}>
           <div className="flex gap-2.5 items-start">
-            <Lightbulb size={18} weight="duotone" className="shrink-0 mt-0.5 text-amber-700 dark:text-amber-300" />
-            <p className="text-xs sm:text-sm text-amber-950 dark:text-amber-50 leading-relaxed m-0">
+            <Lightbulb size={18} weight="duotone" className="shrink-0 mt-0.5 text-amber-400" />
+            <p className="text-xs sm:text-sm leading-relaxed m-0">
               {t('proxmoxDashboardSettings.note')}
             </p>
           </div>

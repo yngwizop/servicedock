@@ -13,6 +13,14 @@ import {
   Info,
 } from 'phosphor-react';
 import SettingsModalSectionTitle from './SettingsModalSectionTitle';
+import {
+  settingsInputClass,
+  settingsInputReadonlyClass,
+  settingsModalBadgeNeutral,
+  settingsModalInfoBlue,
+  settingsModalInfoAmber,
+  settingsModalInfoGreen,
+} from './settingsSurfaces';
 
 function SpotifyAddon({
   BACKEND_URL,
@@ -47,7 +55,7 @@ function SpotifyAddon({
               {t('spotifyAddon.configured')}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700/50 dim:text-slate-400 night:text-gray-400 text-sm font-semibold rounded-full">
+            <span className={settingsModalBadgeNeutral}>
               <MusicNotes size={18} weight="duotone" className="shrink-0 opacity-80" aria-hidden />
               {t('spotifyAddon.not_installed')}
             </span>
@@ -57,11 +65,11 @@ function SpotifyAddon({
         {!spotifyStatus.configured ? (
           // Installation Form
           <form onSubmit={handleSaveSpotify} className="space-y-4">
-            <div className="p-4 bg-blue-50/80 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+            <div className={settingsModalInfoBlue}>
               <SettingsModalSectionTitle icon={PencilSimple} variant="blue" dense>
                 {t('spotifyAddon.setup_required')}
               </SettingsModalSectionTitle>
-              <p className="text-sm text-blue-700 dark:text-blue-400 mb-2">
+              <p className="text-sm mb-2">
                 {t('spotifyAddon.setup_intro')}
                 <a 
                   href="https://developer.spotify.com/dashboard" 
@@ -72,12 +80,12 @@ function SpotifyAddon({
                   {t('spotifyAddon.register_link')}
                 </a>
               </p>
-              <ol className="text-sm text-blue-600 dark:text-blue-400 list-decimal list-inside space-y-1">
+              <ol className="text-sm list-decimal list-inside space-y-1 opacity-90">
                 <li>{t('spotifyAddon.step1')}</li>
                 <li>{t('spotifyAddon.step2')}</li>
                 <li className="break-words">
                   {t('spotifyAddon.step3')}
-                  <code className="bg-blue-100 dark:bg-blue-800 px-1.5 py-0.5 rounded text-[11px] block mt-1 w-fit">
+                  <code className="dim:bg-blue-500/20 night:bg-blue-500/20 dim:text-blue-100 night:text-blue-100 px-1.5 py-0.5 rounded text-[11px] block mt-1 w-fit">
                     {SPOTIFY_REDIRECT_URI}
                   </code>
                 </li>
@@ -95,7 +103,7 @@ function SpotifyAddon({
                 onChange={(e) => setSpotifyConfig({ ...spotifyConfig, client_id: e.target.value })}
                 required
                 placeholder={t('spotifyAddon.client_id_placeholder')}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300/50 dark:border-gray-600/50 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm dim:text-slate-200 night:text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all"
+                className={`${settingsInputClass} focus:ring-green-500`}
               />
             </div>
 
@@ -109,7 +117,7 @@ function SpotifyAddon({
                 onChange={(e) => setSpotifyConfig({ ...spotifyConfig, client_secret: e.target.value })}
                 required
                 placeholder={t('spotifyAddon.client_secret_placeholder')}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300/50 dark:border-gray-600/50 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm dim:text-slate-200 night:text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all"
+                className={`${settingsInputClass} focus:ring-green-500`}
               />
             </div>
 
@@ -121,7 +129,7 @@ function SpotifyAddon({
                 type="text"
                 value={spotifyConfig.redirect_uri}
                 readOnly
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300/50 dark:border-gray-600/50 bg-gray-100/60 dark:bg-gray-700/60 backdrop-blur-sm dim:text-slate-400 night:text-gray-400 cursor-not-allowed"
+                className={`${settingsInputClass} ${settingsInputReadonlyClass}`}
               />
             </div>
 
@@ -146,9 +154,9 @@ function SpotifyAddon({
         ) : !spotifyStatus.connected ? (
           // Connect Section
           <div className="space-y-4">
-            <div className="p-4 bg-yellow-50/80 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl">
-              <p className="text-sm text-yellow-800 dark:text-yellow-300 flex items-start gap-2">
-                <Info size={18} weight="fill" className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" aria-hidden />
+            <div className={settingsModalInfoAmber}>
+              <p className="text-sm flex items-start gap-2">
+                <Info size={18} weight="fill" className="shrink-0 mt-0.5 text-amber-500" aria-hidden />
                 <span>{t('spotifyAddon.connect_info')}</span>
               </p>
             </div>
@@ -172,9 +180,9 @@ function SpotifyAddon({
         ) : (
           // Connected - Management
           <div className="space-y-4">
-            <div className="p-4 bg-green-50/80 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl">
-              <p className="text-sm text-green-800 dark:text-green-300 flex items-start gap-2">
-                <CheckCircle size={18} weight="fill" className="shrink-0 mt-0.5 text-green-600 dark:text-green-400" aria-hidden />
+            <div className={settingsModalInfoGreen}>
+              <p className="text-sm flex items-start gap-2">
+                <CheckCircle size={18} weight="fill" className="shrink-0 mt-0.5 text-emerald-500" aria-hidden />
                 <span>{t('spotifyAddon.connected_info')}</span>
               </p>
             </div>

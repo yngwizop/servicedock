@@ -14,6 +14,15 @@ import {
   UsersThree,
 } from 'phosphor-react';
 import SettingsModalSectionTitle from './SettingsModalSectionTitle';
+import {
+  settingsInputClass,
+  settingsLabelClass,
+  settingsModalBadgeNeutral,
+  settingsModalInfoBlue,
+  settingsModalInfoGreen,
+  settingsModalInfoRed,
+  settingsModalSubPanel,
+} from './settingsSurfaces';
 
 function LdapAddon({
   BACKEND_URL,
@@ -33,8 +42,8 @@ function LdapAddon({
   const { t } = useTranslation();
   const [showBindPassword, setShowBindPassword] = useState(false);
 
-  const inputClass = "w-full px-3 py-2 text-sm bg-white/70 dark:bg-white/10 backdrop-blur-md border border-gray-400/60 dark:border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 night:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all";
-  const labelClass = "block text-sm font-semibold dim:text-slate-200 night:text-slate-200 mb-1";
+  const inputClass = settingsInputClass;
+  const labelClass = settingsLabelClass;
 
   // Im Modal-Modus: Content ohne eigenen Container/Header
   const renderContent = () => (
@@ -51,7 +60,7 @@ function LdapAddon({
               {t('ldapAddon.status_configured')}
             </span>
           ) : (
-            <span className="px-4 py-2 bg-gray-100 dark:bg-gray-700/50 dim:text-slate-400 night:text-gray-400 text-sm font-semibold rounded-full">
+            <span className={settingsModalBadgeNeutral}>
               {t('ldapAddon.status_not_configured')}
             </span>
           )}
@@ -60,11 +69,11 @@ function LdapAddon({
 
       {/* Info Box */}
       {!ldapStatus.configured && (
-        <div className="p-4 bg-blue-50/80 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-          <h5 className="text-base font-bold text-blue-900 dark:text-blue-100 mb-2">
+        <div className={settingsModalInfoBlue}>
+          <h5 className="text-base font-bold mb-2">
             {t('ldapAddon.setup_info_title')}
           </h5>
-          <p className="text-sm text-blue-700 dark:text-blue-400">
+          <p className="text-sm opacity-90">
             {t('ldapAddon.setup_info_text')}
           </p>
         </div>
@@ -122,7 +131,7 @@ function LdapAddon({
                 placeholder="domain.local"
                 className={inputClass}
               />
-              <p className="text-xs text-gray-500 night:text-gray-400 mt-1">{t('ldapAddon.domain_hint')}</p>
+              <p className="text-xs dim:text-slate-400 night:text-gray-400 mt-1">{t('ldapAddon.domain_hint')}</p>
             </div>
           </div>
 
@@ -178,7 +187,7 @@ function LdapAddon({
               <button
                 type="button"
                 onClick={() => setShowBindPassword(!showBindPassword)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 night:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 dim:text-slate-400 night:text-gray-400 dim:hover:text-slate-200 night:hover:text-gray-200 transition-colors"
               >
                 {showBindPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
               </button>
@@ -194,7 +203,7 @@ function LdapAddon({
               placeholder="CN=Users,DC=domain,DC=local"
               className={inputClass}
             />
-            <p className="text-xs text-gray-500 night:text-gray-400 mt-1">{t('ldapAddon.user_search_base_hint')}</p>
+            <p className="text-xs dim:text-slate-400 night:text-gray-400 mt-1">{t('ldapAddon.user_search_base_hint')}</p>
           </div>
 
           <div>
@@ -224,7 +233,7 @@ function LdapAddon({
               placeholder="CN=Servicedock-Admins,CN=Users,DC=domain,DC=local"
               className={inputClass}
             />
-            <p className="text-xs text-gray-500 night:text-gray-400 mt-1">{t('ldapAddon.admin_group_hint')}</p>
+            <p className="text-xs dim:text-slate-400 night:text-gray-400 mt-1">{t('ldapAddon.admin_group_hint')}</p>
           </div>
 
           <div>
@@ -236,15 +245,15 @@ function LdapAddon({
               placeholder="CN=Servicedock-Viewers,CN=Users,DC=domain,DC=local"
               className={inputClass}
             />
-            <p className="text-xs text-gray-500 night:text-gray-400 mt-1">{t('ldapAddon.viewer_group_hint')}</p>
+            <p className="text-xs dim:text-slate-400 night:text-gray-400 mt-1">{t('ldapAddon.viewer_group_hint')}</p>
           </div>
         </div>
 
         {/* Enable Toggle */}
-        <div className="flex items-center justify-between p-4 bg-white/50 dark:bg-gray-700/30 rounded-xl border border-gray-200/50 dark:border-white/10">
+        <div className={`flex items-center justify-between ${settingsModalSubPanel}`}>
           <div>
             <p className="text-sm font-semibold dim:text-slate-200 night:text-gray-200">{t('ldapAddon.enable_label')}</p>
-            <p className="text-xs text-gray-500 night:text-gray-400">{t('ldapAddon.enable_hint')}</p>
+            <p className="text-xs dim:text-slate-400 night:text-gray-400">{t('ldapAddon.enable_hint')}</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -253,20 +262,14 @@ function LdapAddon({
               onChange={(e) => setLdapConfig(prev => ({ ...prev, enabled: e.target.checked }))}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+            <div className="w-11 h-6 dim:bg-sd-dim-700/70 night:bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
           </label>
         </div>
 
         {/* Test Result */}
         {testResult && (
-          <div className={`p-4 rounded-xl border ${
-            testResult.success 
-              ? 'bg-green-50/80 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
-              : 'bg-red-50/80 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-          }`}>
-            <p className={`text-sm font-semibold mb-1 flex items-start gap-2 ${
-              testResult.success ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'
-            }`}>
+          <div className={testResult.success ? settingsModalInfoGreen : settingsModalInfoRed}>
+            <p className="text-sm font-semibold mb-1 flex items-start gap-2">
               {testResult.success ? (
                 <CheckCircle size={20} weight="fill" className="shrink-0 mt-0.5 text-green-600 dark:text-green-400" aria-hidden />
               ) : (
@@ -275,14 +278,14 @@ function LdapAddon({
               <span>{testResult.message}</span>
             </p>
             {testResult.server && (
-              <p className="text-xs text-green-700 dark:text-green-400">
+              <p className="text-xs opacity-90">
                 Server: {testResult.server} | {t('ldapAddon.users_found')}: {testResult.users_found}
               </p>
             )}
             {testResult.groups && testResult.groups.length > 0 && (
               <div className="mt-2 space-y-1">
                 {testResult.groups.map((g, i) => (
-                  <p key={i} className="text-xs text-green-700 dark:text-green-400">
+                  <p key={i} className="text-xs opacity-90">
                     {t('ldapAddon.group')}: {g.name} ({g.members} {t('ldapAddon.members')})
                   </p>
                 ))}
@@ -330,7 +333,7 @@ function LdapAddon({
       </form>
 
       {/* Security Note */}
-      <div className="p-4 bg-gray-50/80 dark:bg-gray-700/30 rounded-xl border border-gray-200/50 dark:border-white/10">
+      <div className={settingsModalSubPanel}>
         <p className="text-xs dim:text-slate-400 night:text-gray-400">
           <span className="font-semibold">{t('ldapAddon.security_note_title')}</span>{' '}
           {t('ldapAddon.security_note_text')}

@@ -14,6 +14,11 @@ import {
   CheckCircle,
 } from 'phosphor-react';
 import { authenticatedFetch } from '../../utils/auth';
+import {
+  settingsModalSubPanelAccent,
+  settingsModalChoiceCard,
+  settingsModalSubPanel,
+} from './settingsSurfaces';
 
 function ConfigAddon({ 
   BACKEND_URL,
@@ -53,7 +58,7 @@ function ConfigAddon({
 
       <div className="space-y-6">
         {/* Export Section */}
-        <div className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-blue-500/50 dark:border-blue-500/40">
+        <div className={settingsModalSubPanelAccent}>
           <h3 className="font-bold text-lg dim:text-slate-50 night:text-white mb-4 flex items-center gap-2.5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/15 dark:bg-blue-400/20 ring-1 ring-blue-500/25 dark:ring-blue-400/15">
               <DownloadSimple size={20} weight="duotone" className="text-blue-600 dark:text-blue-300" aria-hidden />
@@ -92,7 +97,7 @@ function ConfigAddon({
         </div>
 
         {/* Import Section */}
-        <div className="p-6 bg-white/70 dark:bg-white/5 backdrop-blur-md shadow-xl rounded-2xl border border-blue-500/50 dark:border-blue-500/40">
+        <div className={settingsModalSubPanelAccent}>
           <h3 className="font-bold text-lg dim:text-slate-50 night:text-white mb-4 flex items-center gap-2.5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/15 dark:bg-blue-400/20 ring-1 ring-blue-500/25 dark:ring-blue-400/15">
               <UploadSimple size={20} weight="duotone" className="text-blue-600 dark:text-blue-300" aria-hidden />
@@ -106,7 +111,7 @@ function ConfigAddon({
               {t('configAddon.import_mode')}
             </label>
             <div className="space-y-3">
-              <label className="flex items-start gap-3 cursor-pointer p-4 border-2 rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 border-gray-300 dark:border-gray-600">
+              <label className={`${settingsModalChoiceCard} has-[:checked]:border-blue-500 dim:has-[:checked]:bg-blue-500/12 night:has-[:checked]:bg-blue-500/15`}>
                 <input
                   type="radio"
                   name="importMode"
@@ -125,7 +130,7 @@ function ConfigAddon({
                   </div>
                 </div>
               </label>
-              <label className="flex items-start gap-3 cursor-pointer p-4 border-2 rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50 has-[:checked]:border-red-500 has-[:checked]:bg-red-50 dark:has-[:checked]:bg-red-900/20 border-gray-300 dark:border-gray-600">
+              <label className={`${settingsModalChoiceCard} has-[:checked]:border-red-500 dim:has-[:checked]:bg-red-500/12 night:has-[:checked]:bg-red-500/15`}>
                 <input
                   type="radio"
                   name="importMode"
@@ -160,7 +165,7 @@ function ConfigAddon({
               >
                 {t('configAddon.choose_file')}
               </button>
-              <span className="text-sm text-gray-500 night:text-gray-400 truncate">
+              <span className="text-sm dim:text-slate-400 night:text-gray-400 truncate">
                 {importFile ? importFile.name : t('configAddon.no_file_selected')}
               </span>
               <input
@@ -313,7 +318,7 @@ function ConfigAddon({
             disabled={!importFile || !importPreview || isImporting}
             className={`w-full py-2.5 text-sm font-medium rounded-lg transition-colors shadow-sm inline-flex items-center justify-center gap-2 ${
               !importFile || !importPreview || isImporting
-                ? 'bg-gray-400 cursor-not-allowed text-gray-200'
+                ? 'dim:bg-sd-dim-700/60 night:bg-slate-600/50 cursor-not-allowed dim:text-slate-500 night:text-slate-400'
                 : importMode === 'replace'
                 ? 'bg-red-500/90 hover:bg-red-600 text-white'
                 : 'bg-blue-500/90 hover:bg-blue-600 text-white'
@@ -338,7 +343,7 @@ function ConfigAddon({
           </button>
 
           {/* Info Box */}
-          <div className="mt-6 p-4 bg-white/70 dark:bg-white/5 backdrop-blur-sm border border-blue-500/50 dark:border-blue-500/40 rounded-2xl shadow-lg">
+          <div className={`mt-6 ${settingsModalSubPanel}`}>
             <h5 className="font-semibold dim:text-slate-50 night:text-white mb-2 flex items-center gap-2">
               <Lightbulb size={20} weight="duotone" className="shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
               {t('configAddon.notes_title')}

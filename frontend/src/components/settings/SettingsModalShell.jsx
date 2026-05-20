@@ -8,29 +8,29 @@ const overlayClass =
   'bg-black/35 dark:bg-black/50 night:bg-black/55 backdrop-blur-md';
 
 const panelClass =
-  'w-full flex flex-col max-h-[90vh] overflow-hidden rounded-3xl ' +
-  'border border-white/28 dark:border-white/[0.12] night:border-white/[0.08] ' +
-  'bg-gradient-to-br from-white/[0.88] via-white/[0.76] to-white/[0.68] ' +
-  'dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 ' +
-  'night:from-sd-night-950 night:via-sd-night-900 night:to-sd-night-950 ' +
-  'shadow-2xl shadow-black/12 dark:shadow-black/40 night:shadow-black/55 ' +
-  'ring-1 ring-black/[0.06] dark:ring-white/[0.08] night:ring-white/[0.06]';
+  'settings-glass-inner-card w-full flex flex-col max-h-[90vh] overflow-hidden rounded-3xl ' +
+  'border dim:border-white/12 night:border-white/[0.08] ' +
+  'dim:bg-transparent night:bg-transparent ' +
+  'shadow-2xl dim:shadow-black/25 night:shadow-black/55 ' +
+  'ring-1 dim:ring-white/[0.08] night:ring-white/[0.06]';
 
 const headerClass =
-  'shrink-0 px-6 pt-5 pb-4 border-b border-white/22 dark:border-white/[0.08] night:border-white/[0.06] ' +
-  'bg-white/40 dark:bg-slate-950 night:bg-sd-night-950';
+  'shrink-0 px-6 pt-5 pb-4 border-b ' +
+  'dim:border-white/10 dim:bg-sd-dim-950/45 ' +
+  'night:border-white/[0.06] night:bg-sd-night-950';
 
 const footerClass =
-  'shrink-0 px-6 py-3 border-t border-white/22 dark:border-white/[0.08] night:border-white/[0.06] ' +
-  'bg-white/35 dark:bg-slate-950 night:bg-sd-night-950';
+  'shrink-0 px-6 py-3 border-t ' +
+  'dim:border-white/10 dim:bg-sd-dim-950/45 ' +
+  'night:border-white/[0.06] night:bg-sd-night-950';
 
 const closeButtonClass =
   'shrink-0 p-2 rounded-xl dim:text-slate-200 night:text-slate-200 ' +
-  'hover:bg-white/60 dark:hover:bg-white/[0.1] transition-colors';
+  'dim:hover:bg-sd-dim-800/55 night:hover:bg-white/[0.1] transition-colors';
 
 const defaultContentClass =
   'px-6 py-5 overflow-y-auto flex-1 min-h-0 ' +
-  'bg-white/[0.5] dark:bg-slate-900 night:bg-sd-night-900';
+  'dim:bg-sd-dim-900/25 night:bg-sd-night-900/40';
 
 function SettingsModalShell({
   open,
@@ -89,7 +89,7 @@ function SettingsModalShell({
                   {title}
                 </h3>
                 {subtitle ? (
-                  <p className="text-sm text-gray-700 dark:text-slate-300 mt-1.5 leading-relaxed">
+                  <p className="text-sm dim:text-slate-300 night:text-slate-300 mt-1.5 leading-relaxed">
                     {subtitle}
                   </p>
                 ) : null}

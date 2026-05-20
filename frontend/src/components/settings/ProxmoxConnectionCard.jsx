@@ -3,19 +3,13 @@ import { CheckCircle, LockKey } from 'phosphor-react';
 import { useTranslation } from 'react-i18next';
 import { authenticatedFetch } from '../../utils/auth';
 import { BACKEND_URL } from '../../utils/backendUrl';
-
-const labelClass = 'block text-sm font-semibold text-gray-900 night:text-slate-100 mb-2';
-
-const inputClass =
-  'w-full px-4 py-2.5 rounded-xl border outline-none transition-all ' +
-  'border-gray-300/70 dark:border-white/[0.12] ' +
-  'bg-white dark:bg-slate-950/95 ' +
-  'text-gray-900 night:text-slate-100 ' +
-  'placeholder-gray-500 dark:placeholder-slate-500 ' +
-  'focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 dark:focus:border-orange-400/60';
-
-const statusBoxBase =
-  'p-4 rounded-xl text-sm font-medium border';
+import {
+  settingsInputClass,
+  settingsLabelClass,
+  settingsModalStatusSuccess,
+  settingsModalStatusError,
+  settingsModalStatusInfo,
+} from './settingsSurfaces';
 
 const EMPTY_CONFIG = {
   host: '',
@@ -180,9 +174,9 @@ function ProxmoxConnectionCard({
   return (
     <div className="space-y-6">
       {isConfigured && (
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-300/60 dark:border-emerald-600/35 bg-emerald-50/90 dark:bg-emerald-950/75">
-          <CheckCircle size={20} weight="fill" className="text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <span className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+        <div className={`${settingsModalStatusSuccess} flex items-center gap-2 !p-2.5`}>
+          <CheckCircle size={20} weight="fill" className="text-emerald-500 shrink-0" />
+          <span className="text-sm font-medium">
             {t('common.configured')}
           </span>
         </div>
@@ -190,7 +184,7 @@ function ProxmoxConnectionCard({
 
       <div className="space-y-4">
         <div>
-          <label className={labelClass}>
+          <label className={settingsLabelClass}>
             {t('proxmoxConnection.host_label')} <span className="text-red-500">*</span>
           </label>
           <input
@@ -198,27 +192,27 @@ function ProxmoxConnectionCard({
             value={config.host}
             onChange={(e) => setConfig({ ...config, host: e.target.value })}
             placeholder={t('proxmoxConnection.host_placeholder')}
-            className={inputClass}
+            className={settingsInputClass}
           />
         </div>
 
         <div>
-          <label className={labelClass}>{t('proxmoxConnection.port_label')}</label>
+          <label className={settingsLabelClass}>{t('proxmoxConnection.port_label')}</label>
           <input
             type="number"
             value={config.port}
             onChange={(e) => setConfig({ ...config, port: parseInt(e.target.value, 10) || 8006 })}
-            className={inputClass}
+            className={settingsInputClass}
           />
         </div>
 
         <div>
-          <label className={labelClass}>
+          <label className={settingsLabelClass}>
             <span className="inline-flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <span>
                 {t('proxmoxConnection.token_name_label')} <span className="text-red-500">*</span>
               </span>
-              <span className="text-xs font-normal text-gray-600 dark:text-slate-400">
+              <span className="text-xs font-normal dim:text-slate-400 night:text-slate-400">
                 {t('proxmoxConnection.token_name_format')}
               </span>
             </span>
@@ -228,12 +222,12 @@ function ProxmoxConnectionCard({
             value={config.token_name}
             onChange={(e) => setConfig({ ...config, token_name: e.target.value })}
             placeholder="root@pam!mytoken"
-            className={inputClass}
+            className={settingsInputClass}
           />
         </div>
 
         <div>
-          <label className={`${labelClass} flex flex-wrap items-center gap-x-2 gap-y-0.5`}>
+          <label className={`${settingsLabelClass} flex flex-wrap items-center gap-x-2 gap-y-0.5`}>
             <span>
               {t('proxmoxConnection.token_secret_label')}{' '}
               {!isConfigured ? <span className="text-red-500">*</span> : null}
@@ -250,7 +244,7 @@ function ProxmoxConnectionCard({
             value={config.token_value}
             onChange={(e) => setConfig({ ...config, token_value: e.target.value })}
             placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-            className={inputClass}
+            className={settingsInputClass}
           />
         </div>
 
@@ -263,10 +257,10 @@ function ProxmoxConnectionCard({
                 onChange={(e) => setConfig({ ...config, verify_ssl: e.target.checked })}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-300 dark:bg-slate-600 rounded-full peer-checked:bg-orange-500 transition-all" />
+              <div className="w-11 h-6 dim:bg-sd-dim-700/70 night:bg-slate-600 rounded-full peer-checked:bg-orange-500 transition-all" />
               <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-5" />
             </div>
-            <span className="text-sm dim:text-slate-200 night:text-slate-200 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+            <span className="text-sm dim:text-slate-200 night:text-slate-200 group-hover:dim:text-slate-50 night:group-hover:text-white transition-colors">
               {t('proxmoxConnection.verify_ssl')}
             </span>
           </label>
@@ -279,23 +273,23 @@ function ProxmoxConnectionCard({
                 onChange={(e) => setConfig({ ...config, is_cluster: e.target.checked })}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-300 dark:bg-slate-600 rounded-full peer-checked:bg-orange-500 transition-all" />
+              <div className="w-11 h-6 dim:bg-sd-dim-700/70 night:bg-slate-600 rounded-full peer-checked:bg-orange-500 transition-all" />
               <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-5" />
             </div>
-            <span className="text-sm dim:text-slate-200 night:text-slate-200 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+            <span className="text-sm dim:text-slate-200 night:text-slate-200 group-hover:dim:text-slate-50 night:group-hover:text-white transition-colors">
               {t('proxmoxConnection.cluster_mode')}
             </span>
           </label>
         </div>
 
         <div>
-          <label className={labelClass}>{t('proxmoxConnection.specific_node')}</label>
+          <label className={settingsLabelClass}>{t('proxmoxConnection.specific_node')}</label>
           <input
             type="text"
             value={config.node}
             onChange={(e) => setConfig({ ...config, node: e.target.value })}
             placeholder={t('proxmoxConnection.node_placeholder')}
-            className={inputClass}
+            className={settingsInputClass}
           />
           <p className="mt-1.5 text-xs dim:text-slate-400 night:text-gray-400">
             {config.is_cluster
@@ -306,13 +300,13 @@ function ProxmoxConnectionCard({
 
         {saveStatus.message && (
           <div
-            className={`${statusBoxBase} ${
+            className={
               saveStatus.type === 'success'
-                ? 'bg-emerald-50/95 dark:bg-emerald-950/80 border-emerald-300/70 dark:border-emerald-600/35 text-emerald-900 dark:text-emerald-100'
+                ? settingsModalStatusSuccess
                 : saveStatus.type === 'error'
-                  ? 'bg-red-50/95 dark:bg-red-950/80 border-red-300/70 dark:border-red-600/35 text-red-900 dark:text-red-100'
-                  : 'bg-blue-50/95 dark:bg-blue-950/80 border-blue-300/70 dark:border-blue-600/35 text-blue-900 dark:text-blue-100'
-            }`}
+                  ? settingsModalStatusError
+                  : settingsModalStatusInfo
+            }
           >
             {saveStatus.message}
           </div>
@@ -320,13 +314,13 @@ function ProxmoxConnectionCard({
 
         {testStatus.message && (
           <div
-            className={`${statusBoxBase} ${
+            className={
               testStatus.type === 'success'
-                ? 'bg-emerald-50/95 dark:bg-emerald-950/80 border-emerald-300/70 dark:border-emerald-600/35 text-emerald-900 dark:text-emerald-100'
+                ? settingsModalStatusSuccess
                 : testStatus.type === 'error'
-                  ? 'bg-red-50/95 dark:bg-red-950/80 border-red-300/70 dark:border-red-600/35 text-red-900 dark:text-red-100'
-                  : 'bg-blue-50/95 dark:bg-blue-950/80 border-blue-300/70 dark:border-blue-600/35 text-blue-900 dark:text-blue-100'
-            }`}
+                  ? settingsModalStatusError
+                  : settingsModalStatusInfo
+            }
           >
             {testStatus.message}
           </div>
@@ -337,7 +331,7 @@ function ProxmoxConnectionCard({
             type="button"
             onClick={handleSave}
             disabled={!canSave}
-            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg bg-orange-500/90 hover:bg-orange-600 text-white shadow-sm transition-colors disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-slate-600/50 dark:disabled:text-slate-400 disabled:cursor-not-allowed disabled:opacity-70 disabled:shadow-none"
+            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg bg-orange-500/90 hover:bg-orange-600 text-white shadow-sm transition-colors disabled:dim:bg-sd-dim-700/60 disabled:dim:text-slate-500 disabled:night:bg-slate-600/50 disabled:night:text-slate-400 disabled:cursor-not-allowed disabled:opacity-70 disabled:shadow-none"
           >
             {t('common.save')}
           </button>
@@ -346,7 +340,7 @@ function ProxmoxConnectionCard({
             type="button"
             onClick={handleTest}
             disabled={!isConfigured}
-            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg bg-sky-600/90 hover:bg-sky-700 text-white shadow-sm transition-colors disabled:bg-gray-300 dark:disabled:bg-slate-600/45 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg bg-sky-600/90 hover:bg-sky-700 text-white shadow-sm transition-colors disabled:dim:bg-sd-dim-700/60 disabled:night:bg-slate-600/45 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t('proxmoxConnection.test_connection')}
           </button>

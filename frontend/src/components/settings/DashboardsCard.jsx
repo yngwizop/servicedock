@@ -436,7 +436,7 @@ function DashboardsCard({ dashboards, activeDashboard, onDashboardsChange, onTip
             <button
               type="button"
               onClick={() => setShowDeleteConfirm(null)}
-              className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium bg-gray-200/70 dark:bg-white/10 dim:text-slate-200 night:text-gray-200 hover:bg-gray-300/80 dark:hover:bg-white/15 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium dim:bg-sd-dim-800/55 dim:hover:bg-sd-dim-700/60 night:bg-white/10 night:hover:bg-white/15 dim:text-slate-200 night:text-gray-200 transition-colors"
             >
               {t('common.cancel')}
             </button>
