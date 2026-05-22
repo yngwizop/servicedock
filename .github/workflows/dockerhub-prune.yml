@@ -1,0 +1,156 @@
+name: Prune old Docker Hub tags
+
+on:
+  schedule:
+    # Sundays 03:00 UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'List tags to delete without deleting'
+        required: false
+        type: boolean
+        default: true
+      keep_versions:
+        description: 'SemVer tags to keep per repository (plus latest)'
+        required: false
+        type: number
+        default: 4
+
+env:
+  DOCKERHUB_NAMESPACE: ${{ secrets.DOCKERHUB_USERNAME }}
+  REPOS: servicedock-backend servicedock-frontend servicedock-nginx
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate secrets
+        run: |
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            echo "::error::DOCKERHUB_USERNAME and DOCKERHUB_TOKEN repository secrets are required."
+            exit 1
+          fi
+
+      - name: Prune old tags on Docker Hub
+        env:
+          DOCKERHUB_NAMESPACE: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          KEEP_VERSIONS: ${{ github.event.inputs.keep_versions || '4' }}
+          DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || (github.event.inputs.dry_run != false && 'true' || 'false') }}
+        run: |
+          set -euo pipefail
+
+          if ! [[ "${KEEP_VERSIONS}" =~ ^[0-9]+$ ]] || [ "${KEEP_VERSIONS}" -lt 1 ] || [ "${KEEP_VERSIONS}" -gt 50 ]; then
+            echo "::error::keep_versions must be an integer between 1 and 50 (got: ${KEEP_VERSIONS})"
+            exit 1
+          fi
+
+          echo "Namespace: ${DOCKERHUB_NAMESPACE}"
+          echo "Keep: latest + ${KEEP_VERSIONS} newest SemVer tag(s) per repo"
+          echo "Dry run: ${DRY_RUN}"
+          echo ""
+
+          TOKEN=$(curl -fsS -X POST "https://hub.docker.com/v2/users/login/" \
+            -H "Content-Type: application/json" \
+            -d "{\"username\":\"${DOCKERHUB_USER}\",\"password\":\"${DOCKERHUB_TOKEN}\"}" \
+            | jq -r '.token')
+
+          if [ -z "${TOKEN}" ] || [ "${TOKEN}" = "null" ]; then
+            echo "::error::Docker Hub login failed"
+            exit 1
+          fi
+
+          auth_header="Authorization: JWT ${TOKEN}"
+
+          for repo in ${REPOS}; do
+            echo "=== ${DOCKERHUB_NAMESPACE}/${repo} ==="
+
+            tags_json=$(curl -fsS -H "${auth_header}" \
+              "https://hub.docker.com/v2/repositories/${DOCKERHUB_NAMESPACE}/${repo}/tags/?page_size=100")
+
+            mapfile -t all_tags < <(echo "${tags_json}" | jq -r '.results[].name')
+
+            if [ "${#all_tags[@]}" -eq 0 ]; then
+              echo "No tags found, skipping."
+              continue
+            fi
+
+            mapfile -t semver_tags < <(printf '%s\n' "${all_tags[@]}" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V -r || true)
+
+            keep_latest="latest"
+            mapfile -t keep_semver < <(printf '%s\n' "${semver_tags[@]}" | head -n "${KEEP_VERSIONS}")
+
+            declare -A keep_set=()
+            keep_set["${keep_latest}"]=1
+            for t in "${keep_semver[@]}"; do
+              [ -n "${t}" ] && keep_set["${t}"]=1
+            done
+
+            semver_count=${#semver_tags[@]}
+            echo "Found ${#all_tags[@]} tag(s) total, ${semver_count} SemVer (X.Y.Z)"
+            echo "Keeping: ${keep_latest} (always)"
+            if [ "${#keep_semver[@]}" -gt 0 ]; then
+              echo "Keeping SemVer (${#keep_semver[@]}/${KEEP_VERSIONS} slots): $(printf '%s ' "${keep_semver[@]}")"
+            else
+              echo "Keeping SemVer: (none — no X.Y.Z tags on this repo)"
+            fi
+            if [ "${semver_count}" -gt "${KEEP_VERSIONS}" ]; then
+              echo "→ ${semver_count} SemVer tags exist; oldest $((semver_count - KEEP_VERSIONS)) will be removed"
+            else
+              echo "→ ${semver_count} SemVer tag(s); all kept (threshold is ${KEEP_VERSIONS})"
+            fi
+
+            to_delete=()
+            for tag in "${all_tags[@]}"; do
+              # Never delete latest, even if logic above changes later
+              if [ "${tag}" = "latest" ]; then
+                continue
+              fi
+              if [ -z "${keep_set[${tag}]+x}" ]; then
+                to_delete+=("${tag}")
+              fi
+            done
+
+            if [ "${#to_delete[@]}" -eq 0 ]; then
+              echo "Nothing to prune."
+              continue
+            fi
+
+            echo "Would delete (${#to_delete[@]}): $(printf '%s ' "${to_delete[@]}")"
+
+            if [ "${DRY_RUN}" = "true" ]; then
+              echo "(dry run — no tags deleted)"
+              continue
+            fi
+
+            for tag in "${to_delete[@]}"; do
+              if [ "${tag}" = "latest" ]; then
+                echo "::error::Refusing to delete protected tag: latest"
+                exit 1
+              fi
+              http_code=$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE \
+                -H "${auth_header}" \
+                "https://hub.docker.com/v2/repositories/${DOCKERHUB_NAMESPACE}/${repo}/tags/${tag}/")
+
+              if [ "${http_code}" = "204" ] || [ "${http_code}" = "200" ]; then
+                echo "Deleted: ${tag}"
+              else
+                echo "::warning::Failed to delete ${tag} (HTTP ${http_code})"
+              fi
+            done
+          done
+
+      - name: Summary
+        if: always()
+        run: |
+          mode="${{ github.event_name == 'schedule' && 'live' || (github.event.inputs.dry_run != false && 'dry-run' || 'live') }}"
+          {
+            echo "### Docker Hub tag prune"
+            echo ""
+            echo "- **Namespace:** \`${{ secrets.DOCKERHUB_USERNAME }}\`"
+            echo "- **Repositories:** backend, frontend, nginx"
+            echo "- **Retention:** \`latest\` + **${{ github.event.inputs.keep_versions || '4' }}** newest SemVer tags"
+            echo "- **Mode:** ${mode}"
+          } >> "$GITHUB_STEP_SUMMARY"
