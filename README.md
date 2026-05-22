@@ -162,6 +162,40 @@ More detail: [docs/QUICKSTART.md](docs/QUICKSTART.md) · HTTPS: [docs/HTTPS_SETU
 
 ---
 
+## 🔄 Upgrade
+
+Upgrading is zero-touch — pull the latest images and restart. Database migrations run automatically on backend start.
+
+```bash
+cd servicedock
+docker compose pull
+docker compose up -d
+```
+
+After the backend container is up, verify it logged the migration step:
+
+```bash
+docker compose logs backend --tail 50 | grep -iE 'alembic|migration'
+# expected:
+#   Running database migrations (alembic upgrade head)...
+#   Database migrations completed (head reached).
+```
+
+**One-time after upgrading to v1.1.0 or later:** log out and back in. The refresh-token format gained a `jti` claim — older tokens are rejected by design.
+
+### Troubleshooting upgrades
+
+| Symptom | Cause / Fix |
+|---------|-------------|
+| `docker compose pull` hits `connection timed out` / `TLS handshake timeout` | Docker Hub CDN / rate limits. Retry, or pull each image sequentially: `docker pull postgres:16 && docker pull redis:7-alpine && docker pull servicedockapp/servicedock-backend:latest && docker pull servicedockapp/servicedock-frontend:latest && docker pull servicedockapp/servicedock-nginx:latest`. Authenticated pulls (`docker login`) have higher limits. |
+| `docker compose up -d` reports containers `Running` but nothing changed | Old image is still cached. Force a recreate: `docker compose up -d --force-recreate backend frontend nginx`. Check the `CREATED` column in `docker compose images backend` — it should be the current release, not days old. |
+| `alembic_version` table missing after upgrade | Backend container is still on a pre-v1.1.0 image (auto-migrations were added in v1.1.0). Re-pull and `--force-recreate backend`. |
+| `psycopg2.OperationalError: SSL connection has been closed unexpectedly` | Stale connection in the pool after the DB restarted. `docker compose restart backend` is enough. |
+
+For release notes and breaking changes, see the [GitHub Releases](https://github.com/yngwizop/servicedock/releases) page.
+
+---
+
 ## 📚 Documentation
 
 | Guide | Description |
