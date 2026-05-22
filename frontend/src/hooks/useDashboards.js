@@ -28,7 +28,7 @@ export function useDashboards({ onSessionExpired } = {}) {
         localStorage.setItem('activeDashboard', fallbackId.toString());
       }
     } catch (err) {
-      console.error("Fehler beim Laden der Dashboards:", err);
+      console.error("Failed to load dashboards:", err);
       if (err.message?.includes('Session expired') && onSessionExpired) onSessionExpired();
     }
   };

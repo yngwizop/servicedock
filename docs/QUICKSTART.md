@@ -18,7 +18,9 @@ chmod +x setup-servicedock.sh
 
 The script creates `servicedock/`, generates TLS certs, writes `.env`, pulls Docker Hub images, and starts the stack.
 
-**Login after install:** `admin` / `changeme` (change password when prompted in the UI).
+**Login after install:** `admin` / `changeme` — you must change the password in the UI on first login (enforced server-side; all API access is blocked until the password is changed).
+
+To use a stronger initial password, set `INITIAL_ADMIN_PASSWORD` in `.env` **before** the first start.
 
 **Optional:**
 
@@ -98,7 +100,7 @@ Set at least:
 
 Do **not** set `DATABASE_URL` manually — compose builds it from `POSTGRES_*`.
 
-Admin password is **not** in `.env`; default DB user is `admin` / `changeme` until changed in the UI.
+Admin password is **not** in `.env` by default. Set `INITIAL_ADMIN_PASSWORD` or read it once from backend logs (`INITIAL ADMIN PASSWORD`). User `admin` must change password in the UI before other API routes work.
 
 #### 6. Start
 
@@ -110,7 +112,7 @@ docker compose up -d
 #### 7. Access
 
 - Browser: your `FRONTEND_URL` (or `https://<server-ip>`)
-- Login: `admin` / `changeme`
+- Login: `admin` + password from logs or `INITIAL_ADMIN_PASSWORD`
 - Accept the self-signed certificate warning if you used the OpenSSL commands above
 
 ---

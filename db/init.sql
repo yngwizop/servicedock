@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS proxmox_config (
     port INT DEFAULT 8006,
     token_name VARCHAR(255) NOT NULL,  -- z.B. "root@pam!mytoken"
     token_value TEXT NOT NULL,         -- Der API Token Secret (verschlüsselt)
-    verify_ssl BOOLEAN DEFAULT FALSE,
+    verify_ssl BOOLEAN DEFAULT TRUE,
     node VARCHAR(100),                 -- Optional: spezifischer Node-Name
     is_cluster BOOLEAN DEFAULT FALSE,  -- NEU: Ist es ein Cluster?
     token_created_at TIMESTAMP DEFAULT NOW(),  -- NEU: Wann wurde Token erstellt
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS spotify_config (
 -- Index für schnelle Token-Abfrage
 CREATE INDEX IF NOT EXISTS idx_spotify_connected ON spotify_config(connected);
 
--- NEU: Admin-Authentifizierung (Passwort in DB statt .env)
+-- Admin authentication (password stored in DB, not .env)
 CREATE TABLE IF NOT EXISTS admin_auth (
     id INT PRIMARY KEY DEFAULT 1,
     password_hash TEXT NOT NULL,
@@ -115,12 +115,19 @@ CREATE TABLE IF NOT EXISTS admin_auth (
     CONSTRAINT admin_auth_single_row CHECK (id = 1)
 );
 
--- Default: "changeme" (bcrypt 12 rounds) — MUSS beim ersten Login geändert werden
+-- Idempotent upgrade: add force_change column to existing installs.
+-- Existing rows default to FALSE so upgrading users are NOT forced into a password change.
+ALTER TABLE admin_auth ADD COLUMN IF NOT EXISTS force_change BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- Default admin credentials on a FRESH install: admin / changeme (force_change=TRUE).
+-- Server-side guard blocks all API calls until password is changed in the UI on first login.
+-- For a stronger initial password, set INITIAL_ADMIN_PASSWORD in the environment BEFORE the
+-- first backend start (only applied when no local user exists yet — see core/local_users.py).
 INSERT INTO admin_auth (id, password_hash, force_change)
 VALUES (1, '$2b$12$YU.qWhwL8Y2m0a0NDlD5nON0UE5QrtkDfUh47pYIKgtDg/yg9HF.m', TRUE)
 ON CONFLICT (id) DO NOTHING;
 
--- Lokale Benutzer (Multi-User ohne LDAP); Username immer kleingeschrieben gespeichert
+-- Local users (multi-user without LDAP); usernames always stored lowercase
 CREATE TABLE IF NOT EXISTS local_users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
@@ -134,6 +141,9 @@ CREATE TABLE IF NOT EXISTS local_users (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Idempotent upgrade: add force_change column for installs that pre-date this feature.
+ALTER TABLE local_users ADD COLUMN IF NOT EXISTS force_change BOOLEAN NOT NULL DEFAULT FALSE;
+
 INSERT INTO local_users (username, password_hash, role, enabled, force_change)
 VALUES (
     'admin',
@@ -141,8 +151,7 @@ VALUES (
     'admin',
     TRUE,
     TRUE
-)
-ON CONFLICT (username) DO NOTHING;
+) ON CONFLICT (username) DO NOTHING;
 
 -- NEU: LDAP/Active Directory Konfigurationstabelle (AddOn)
 CREATE TABLE IF NOT EXISTS ldap_config (

@@ -96,7 +96,7 @@ function AppContent() {
         setSpotifyConfigured(false);
       }
     } catch (err) {
-      console.error("Fehler beim Laden des Spotify-Status:", err);
+      console.error("Failed to load Spotify status:", err);
       setSpotifyConfigured(false);
     }
   };

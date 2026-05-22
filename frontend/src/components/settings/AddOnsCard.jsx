@@ -196,8 +196,13 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
         const statusData = await statusRes.json();
         setSpotifyStatus(statusData);
       } else {
-        const error = await res.json();
-        alert(error.detail || t('addons.spotify_save_error'));
+        const error = await res.json().catch(() => ({}));
+        const detail = error?.detail;
+        if (detail && typeof detail === 'object' && detail.code) {
+          alert(t(`addons.spotify_errors.${detail.code}`, t('addons.spotify_save_error')));
+        } else {
+          alert((typeof detail === 'string' && detail) || t('addons.spotify_save_error'));
+        }
       }
     } catch (err) {
       console.error('Failed to save Spotify config:', err);
@@ -269,8 +274,13 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
         });
         void broadcastAuthModeFromServer();
       } else {
-        const error = await res.json();
-        alert(error.detail || t('addons.ldap_save_error'));
+        const error = await res.json().catch(() => ({}));
+        const detail = error?.detail;
+        if (detail && typeof detail === 'object' && detail.code) {
+          alert(t(`addons.ldap_errors.${detail.code}`, t('addons.ldap_save_error')));
+        } else {
+          alert((typeof detail === 'string' && detail) || t('addons.ldap_save_error'));
+        }
       }
     } catch (err) {
       console.error('Failed to save LDAP config:', err);
@@ -304,7 +314,7 @@ function AddOnsCard({ onTipsTopicChange, dashboards = [] }) {
       setTestResult(data);
     } catch (err) {
       console.error('Failed to test LDAP:', err);
-      setTestResult({ success: false, message: t('addons.ldap_test_error') });
+      setTestResult({ success: false, code: 'ldap_test_failed', message: t('addons.ldap_test_error') });
     } finally {
       setIsTesting(false);
     }

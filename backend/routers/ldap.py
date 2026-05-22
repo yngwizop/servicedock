@@ -142,7 +142,7 @@ async def save_ldap_config(
         details={"host": config.host, "enabled": config.enabled}
     )
     
-    logger.info(f"LDAP-Config gespeichert: {config.host} (enabled={config.enabled})")
+    logger.info(f"LDAP config saved: {config.host} (enabled={config.enabled})")
     
     return LdapConfigResponse(
         enabled=config.enabled,
@@ -222,6 +222,6 @@ async def delete_ldap_config(
         details={"reason": "uninstall"}
     )
     
-    logger.info("LDAP-Config gelöscht (deinstalliert)")
+    logger.info("LDAP config removed (uninstalled)")
     
     return {"message": "LDAP configuration removed"}

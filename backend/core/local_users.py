@@ -1,10 +1,13 @@
 """Local user accounts (multi-user without LDAP). Usernames stored lowercase."""
 from __future__ import annotations
 
+import os
+import secrets
 from typing import Any, Dict, List, Optional, Tuple
 
 import config.database as database_module
 from core.logging import logger
+from core.security import get_password_hash
 
 
 def _norm_username(username: str) -> str:
@@ -13,8 +16,14 @@ def _norm_username(username: str) -> str:
 
 def ensure_local_users_schema_and_bootstrap() -> None:
     """
-    Create local_users if missing; if empty, copy admin row from admin_auth (legacy).
-    Idempotent — safe on every startup.
+    Seed the initial admin user when no local user exists yet.
+
+    The local_users / admin_auth schema is owned by Alembic
+    (see backend/migrations/versions/), which runs before this function on
+    startup. We keep a safety-net `CREATE TABLE IF NOT EXISTS` for setups
+    that somehow boot the backend against an empty database without
+    init.sql or Alembic having created the table — re-creating an existing
+    table is a no-op.
     """
     pool = database_module.db_pool
     if pool is None:
@@ -49,31 +58,64 @@ def ensure_local_users_schema_and_bootstrap() -> None:
         cur.close()
 
         if count == 0:
-            cur = db.cursor()
-            cur.execute(
-                "SELECT password_hash, force_change FROM admin_auth WHERE id = 1"
-            )
-            row = cur.fetchone()
-            if row:
-                ph, fc = row[0], row[1]
-                cur.execute(
-                    """
-                    INSERT INTO local_users (username, password_hash, role, enabled, force_change)
-                    VALUES ('admin', %s, 'admin', TRUE, %s)
-                    ON CONFLICT (username) DO NOTHING
-                    """,
-                    (ph, fc),
-                )
-                db.commit()
-                logger.info("Bootstrapped local_users from admin_auth (user admin)")
-            else:
-                logger.warning("local_users empty and no admin_auth row — create admin_auth first")
-            cur.close()
+            _bootstrap_initial_admin(db)
     except Exception as e:
         logger.error(f"local_users bootstrap failed: {e}")
         db.rollback()
     finally:
         pool.putconn(db)
+
+
+def _bootstrap_initial_admin(db) -> None:
+    """
+    Fallback: create admin user if it is missing (e.g. fresh DB without init.sql).
+    Normally init.sql already seeds 'admin / changeme' with force_change=TRUE.
+    Honors INITIAL_ADMIN_PASSWORD env var when set (>= 8 chars), otherwise uses 'changeme'.
+    """
+    cur = db.cursor()
+    try:
+        cur.execute("SELECT 1 FROM local_users WHERE username = 'admin' LIMIT 1")
+        if cur.fetchone():
+            return
+    finally:
+        cur.close()
+
+    initial_pw = os.getenv("INITIAL_ADMIN_PASSWORD", "").strip()
+    if initial_pw:
+        if len(initial_pw) < 8:
+            raise ValueError("INITIAL_ADMIN_PASSWORD must be at least 8 characters")
+        plain = initial_pw
+        logger.info("Bootstrapping admin user from INITIAL_ADMIN_PASSWORD environment variable")
+    else:
+        plain = "changeme"
+        logger.warning("Bootstrapping admin user with default password 'changeme' — change after first login")
+
+    ph = get_password_hash(plain)
+    cur = db.cursor()
+    try:
+        cur.execute(
+            """
+            INSERT INTO local_users (username, password_hash, role, enabled, force_change)
+            VALUES ('admin', %s, 'admin', TRUE, TRUE)
+            ON CONFLICT (username) DO NOTHING
+            """,
+            (ph,),
+        )
+        cur.execute(
+            """
+            INSERT INTO admin_auth (id, password_hash, force_change)
+            VALUES (1, %s, TRUE)
+            ON CONFLICT (id) DO UPDATE SET
+                password_hash = EXCLUDED.password_hash,
+                force_change = TRUE,
+                updated_at = NOW()
+            """,
+            (ph,),
+        )
+        db.commit()
+        logger.info("Initial admin user created (force_change=TRUE)")
+    finally:
+        cur.close()
 
 
 def count_local_users() -> int:
@@ -213,7 +255,7 @@ def get_user_by_id(user_id: int) -> Optional[Dict[str, Any]]:
         pool.putconn(db)
 
 
-def list_local_users() -> List[Dict[str, Any]]:
+def list_local_users(limit: int = 500, offset: int = 0) -> List[Dict[str, Any]]:
     pool = database_module.db_pool
     if pool is None:
         return []
@@ -224,7 +266,9 @@ def list_local_users() -> List[Dict[str, Any]]:
             """
             SELECT id, username, role, display_name, enabled, force_change, created_at, updated_at
             FROM local_users ORDER BY lower(username)
-            """
+            LIMIT %s OFFSET %s
+            """,
+            (limit, offset),
         )
         rows = cur.fetchall()
         cur.close()

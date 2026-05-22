@@ -89,6 +89,8 @@ routers/
 
 Cookies `access_token` und `refresh_token` (httpOnly) werden wie bisher gesetzt; JWT enthält `sub` (= Benutzername), `type` (= `admin` | `viewer`), `auth_method` (`local` | `ad`).
 
+**`force_password_change: true`:** Lokale Nutzer mit `force_change` in der DB dürfen nur `GET /api/auth/me`, `PUT /api/auth/password`, `POST /api/logout`, `GET /api/auth/mode` und `GET /api/appearance/wallpaper` aufrufen. Alle anderen authentifizierten Endpoints antworten mit **403** (`Password change required before accessing this resource.`).
+
 ### GET /api/auth/mode
 
 **Öffentlich** — liefert u. a.:

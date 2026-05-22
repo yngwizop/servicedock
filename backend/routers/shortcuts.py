@@ -1,6 +1,6 @@
 """Shortcuts CRUD router"""
 from typing import Any, List
-from fastapi import APIRouter, HTTPException, Depends, Body, Request
+from fastapi import APIRouter, HTTPException, Depends, Body, Request, Query
 from fastapi.concurrency import run_in_threadpool
 
 from models.shortcut import Shortcut
@@ -15,14 +15,22 @@ router = APIRouter(prefix="/api/shortcuts", tags=["shortcuts"])
 
 @router.get("", response_model=List[ShortcutResponse])
 @limiter.limit("60/minute")  # Read operations - generous limit
-async def get_shortcuts(request: Request, dashboard_id: int = 1, db = Depends(get_db), _admin = Depends(require_any_role("admin", "viewer"))) -> List[ShortcutResponse]:
+async def get_shortcuts(
+    request: Request,
+    dashboard_id: int = 1,
+    limit: int = Query(500, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db=Depends(get_db),
+    _admin=Depends(require_any_role("admin", "viewer")),
+) -> List[ShortcutResponse]:
     """Get all shortcuts for a specific dashboard (default: 1)"""
     def _get_shortcuts_sync():
         cur = db.cursor()
         try:
             cur.execute(
-                "SELECT id, name, url, icon, position FROM shortcuts WHERE dashboard_id = %s ORDER BY position ASC, id ASC;",
-                (dashboard_id,)
+                "SELECT id, name, url, icon, position FROM shortcuts "
+                "WHERE dashboard_id = %s ORDER BY position ASC, id ASC LIMIT %s OFFSET %s;",
+                (dashboard_id, limit, offset),
             )
             rows = cur.fetchall()
             return [{"id": r[0], "name": r[1], "url": r[2], "icon": r[3], "position": r[4]} for r in rows]

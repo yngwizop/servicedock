@@ -129,7 +129,7 @@ When it finishes, open the URL shown in the terminal (your machine’s IP over H
 
 | | |
 |--|--|
-| **Dashboard login** | `admin` / `changeme` — you will be prompted to change the password in the UI |
+| **Dashboard login** | `admin` — initial password from `INITIAL_ADMIN_PASSWORD` or backend logs; mandatory password change in UI (API enforced) |
 | **Browser** | Accept the self-signed certificate warning (normal for local HTTPS) |
 | **Secrets** | Stored in `servicedock/.env` (mode `600`) — no manual editing required |
 

@@ -20,7 +20,9 @@ db/ssl/server.crt
 postgres_data/
 
 # Python / Backend
-backend/__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
 backend/.venv/
 
 # Node.js / Frontend
@@ -75,6 +77,10 @@ docs/INITIAL_SETUP.md
 # Samba AD Test-Daten (Zugangsdaten, nicht committen!)
 /SAMBA_TEST_DATA.md
 docs/SAMBA_TEST_DATA.md
+
+# Lokale Maintainer-Notizen (nicht öffentlich)
+UPGRADE_NOTES.local.md
+docs/UPGRADE_NOTES.local.md
 
 # Lokale SSL-Kopien außerhalb db/ssl und nginx/ssl
 /ssl/

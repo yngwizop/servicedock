@@ -1,18 +1,74 @@
 """Proxmox router - VM and container management"""
-from fastapi import APIRouter, Request, HTTPException, Depends
+import warnings
+
+from typing import Optional
+
+from fastapi import APIRouter, Request, HTTPException, Depends, Body
 from fastapi.concurrency import run_in_threadpool
 from proxmoxer import ProxmoxAPI
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 import config.database
-from models.proxmox import ProxmoxConfig, ClusterStats, NodeSummary, ResourceSummary, TopUsageItem, TaskSummary
+from models.proxmox import (
+    ProxmoxConfig,
+    ProxmoxConfigUpdate,
+    ProxmoxTestConfig,
+    ClusterStats,
+    NodeSummary,
+    ResourceSummary,
+    TopUsageItem,
+    TaskSummary,
+)
 from core.security import decrypt_value, encrypt_value
 from core.logging import logger
 from core.audit import log_audit
+from core.network_safety import is_safe_proxmox_host
 from core.limiter import limiter
 from dependencies.auth import require_role, get_client_ip
 from config.database import get_db
 
 router = APIRouter()
+
+
+def _assert_safe_proxmox_host(host: str) -> None:
+    ok, reason = is_safe_proxmox_host(host)
+    if not ok:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "proxmox_host_not_allowed", "reason": reason},
+        )
+
+
+def _log_tls_verify_disabled(host: str, request: Request, token: dict) -> None:
+    log_audit(
+        action="PROXMOX_TLS_VERIFY_DISABLED",
+        status="warning",
+        user_type=token.get("type", "admin"),
+        ip_address=get_client_ip(request),
+        details={"host": host},
+    )
+
+
+def _build_proxmox_api(host: str, port: int, token_name: str, token_value: str, verify_ssl: bool):
+    """Create a ProxmoxAPI client from plain credentials."""
+    if "!" in token_name:
+        user_part = token_name.split("!")[0]
+        token_id = token_name.split("!")[1]
+    else:
+        user_part = token_name
+        token_id = "default"
+    with warnings.catch_warnings():
+        if not verify_ssl:
+            warnings.simplefilter("ignore", InsecureRequestWarning)
+        return ProxmoxAPI(
+            host,
+            port=port,
+            user=user_part,
+            token_name=token_id,
+            token_value=token_value,
+            verify_ssl=verify_ssl,
+        )
+
 
 def get_proxmox_connection(dashboard_id: int = 1):
     """
@@ -39,6 +95,8 @@ def get_proxmox_connection(dashboard_id: int = 1):
             return None, None, False
         
         host, port, token_name, token_value_encrypted, verify_ssl, node, is_cluster = row
+
+        _assert_safe_proxmox_host(host)
         
         # Entschlüssele den Token
         token_value = decrypt_value(token_value_encrypted)
@@ -48,25 +106,7 @@ def get_proxmox_connection(dashboard_id: int = 1):
             return None, None
         
         try:
-            # Token Format: "user@realm!tokenname"
-            # Proxmoxer erwartet user und token_name getrennt
-            if '!' in token_name:
-                user_part = token_name.split('!')[0]  # z.B. "root@pam"
-                token_id = token_name.split('!')[1]   # z.B. "mytoken"
-            else:
-                # Fallback wenn kein ! vorhanden
-                user_part = token_name
-                token_id = 'default'
-            
-            # Proxmox API Connection erstellen
-            proxmox = ProxmoxAPI(
-                host,
-                port=port,
-                user=user_part,
-                token_name=token_id,
-                token_value=token_value,
-                verify_ssl=verify_ssl
-            )
+            proxmox = _build_proxmox_api(host, port, token_name, token_value, verify_ssl)
             return proxmox, node, is_cluster
         except Exception as e:
             # Keine Details loggen, um Token-Leaks zu vermeiden
@@ -143,59 +183,122 @@ async def get_proxmox_config(request: Request, dashboard_id: int = 1, token: dic
 
 @router.put("/api/proxmox/config")
 @limiter.limit("5/minute")  # Stricter limit for config changes
-async def update_proxmox_config(config: ProxmoxConfig, request: Request, dashboard_id: int = 1, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
-    """Speichert Proxmox-Konfiguration (Token wird verschlüsselt)"""
+async def update_proxmox_config(
+    config: ProxmoxConfigUpdate,
+    request: Request,
+    dashboard_id: int = 1,
+    token: dict = Depends(require_role("admin")),
+    db=Depends(get_db),
+):
+    """Speichert Proxmox-Konfiguration (Token wird verschlüsselt)."""
+    _assert_safe_proxmox_host(config.host)
+    if not config.verify_ssl:
+        _log_tls_verify_disabled(config.host, request, token)
+
     def _update_config_sync():
         cur = db.cursor()
         try:
-            # Verschlüssele den Token-Wert
-            encrypted_token = encrypt_value(config.token_value)
-            
-            # Prüfe ob Eintrag existiert
-            cur.execute("SELECT id, token_value FROM proxmox_config WHERE dashboard_id = %s;", (dashboard_id,))
+            cur.execute(
+                "SELECT id, token_name, token_value FROM proxmox_config WHERE dashboard_id = %s;",
+                (dashboard_id,),
+            )
             existing = cur.fetchone()
-            
-            # Wenn kein neuer Token angegeben wurde, behalte den alten
+
+            if not existing:
+                if not config.token_name:
+                    raise HTTPException(
+                        status_code=400,
+                        detail={"code": "proxmox_token_name_required"},
+                    )
+                if not config.token_value:
+                    raise HTTPException(
+                        status_code=400,
+                        detail={"code": "proxmox_token_value_required"},
+                    )
+
+            token_name = (
+                config.token_name
+                if config.token_name
+                else (existing[1] if existing else None)
+            )
             token_was_updated = bool(config.token_value)
-            if not config.token_value and existing:
-                encrypted_token = existing[1]  # Behalte den alten verschlüsselten Token
-            
+            if config.token_value:
+                encrypted_token = encrypt_value(config.token_value)
+            elif existing:
+                encrypted_token = existing[2]
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"code": "proxmox_token_value_required"},
+                )
+
             if existing:
-                # Wenn ein neuer Token gesetzt wurde, aktualisiere token_created_at
                 if token_was_updated:
                     cur.execute(
-                        """UPDATE proxmox_config 
-                           SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s, is_cluster=%s, token_created_at=NOW(), updated_at=NOW() 
-                           WHERE dashboard_id=%s 
+                        """UPDATE proxmox_config
+                           SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s,
+                               node=%s, is_cluster=%s, token_created_at=NOW(), updated_at=NOW()
+                           WHERE dashboard_id=%s
                            RETURNING id;""",
-                        (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node, config.is_cluster, dashboard_id)
+                        (
+                            config.host,
+                            config.port,
+                            token_name,
+                            encrypted_token,
+                            config.verify_ssl,
+                            config.node,
+                            config.is_cluster,
+                            dashboard_id,
+                        ),
                     )
                 else:
                     cur.execute(
-                        """UPDATE proxmox_config 
-                           SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s, node=%s, is_cluster=%s, updated_at=NOW() 
-                           WHERE dashboard_id=%s 
+                        """UPDATE proxmox_config
+                           SET host=%s, port=%s, token_name=%s, token_value=%s, verify_ssl=%s,
+                               node=%s, is_cluster=%s, updated_at=NOW()
+                           WHERE dashboard_id=%s
                            RETURNING id;""",
-                        (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node, config.is_cluster, dashboard_id)
+                        (
+                            config.host,
+                            config.port,
+                            token_name,
+                            encrypted_token,
+                            config.verify_ssl,
+                            config.node,
+                            config.is_cluster,
+                            dashboard_id,
+                        ),
                     )
             else:
                 cur.execute(
-                    """INSERT INTO proxmox_config (host, port, token_name, token_value, verify_ssl, node, is_cluster, dashboard_id, updated_at) 
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW()) 
+                    """INSERT INTO proxmox_config
+                       (host, port, token_name, token_value, verify_ssl, node, is_cluster, dashboard_id, updated_at)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
                        RETURNING id;""",
-                    (config.host, config.port, config.token_name, encrypted_token, config.verify_ssl, config.node, config.is_cluster, dashboard_id)
+                    (
+                        config.host,
+                        config.port,
+                        token_name,
+                        encrypted_token,
+                        config.verify_ssl,
+                        config.node,
+                        config.is_cluster,
+                        dashboard_id,
+                    ),
                 )
-            
+
             updated = cur.fetchone()
             db.commit()
-            
+
             if not updated:
-                raise HTTPException(status_code=500, detail="Failed to save Proxmox configuration")
-            
+                raise HTTPException(
+                    status_code=500, detail="Failed to save Proxmox configuration"
+                )
+
             return {"message": "Proxmox configuration saved"}
         finally:
             cur.close()
-    
+
     return await run_in_threadpool(_update_config_sync)
 
 @router.delete("/api/proxmox/config")
@@ -222,67 +325,134 @@ async def delete_proxmox_config(request: Request, dashboard_id: int = 1, token: 
     
     return await run_in_threadpool(_delete_config_sync)
 
+def _proxmox_test_error_code(error_msg: str) -> tuple[str, dict]:
+    lower = error_msg.lower()
+    if "401" in error_msg or "authentication" in lower:
+        return "proxmox_test_auth_failed", {}
+    if "403" in error_msg or "permission" in lower:
+        return "proxmox_test_forbidden", {}
+    if "connection" in lower or "timeout" in lower or "refused" in lower:
+        return "proxmox_test_connection_failed", {}
+    if "ssl" in lower or "certificate" in lower:
+        return "proxmox_test_ssl_failed", {}
+    return "proxmox_test_unknown", {"raw": error_msg}
+
+
+def _run_proxmox_connection_test(proxmox, configured_node: Optional[str]) -> dict:
+    try:
+        nodes = proxmox.nodes.get()
+        if not nodes:
+            return {
+                "success": False,
+                "error_code": "proxmox_test_no_nodes",
+            }
+        node_names = [node["node"] for node in nodes]
+        if configured_node and configured_node not in node_names:
+            return {
+                "success": False,
+                "error_code": "proxmox_test_node_mismatch",
+                "error_context": {
+                    "configured": configured_node,
+                    "available": node_names,
+                },
+            }
+        return {
+            "success": True,
+            "nodes": node_names,
+            "configured_node": configured_node,
+        }
+    except Exception as e:
+        error_msg = str(e)
+        logger.error(f"Proxmox connection test failed: {error_msg}")
+        code, ctx = _proxmox_test_error_code(error_msg)
+        return {"success": False, "error_code": code, "error_context": ctx}
+
+
+def _resolve_stored_token_plain(dashboard_id: int, db) -> Optional[str]:
+    cur = db.cursor()
+    try:
+        cur.execute(
+            "SELECT token_value FROM proxmox_config WHERE dashboard_id = %s;",
+            (dashboard_id,),
+        )
+        row = cur.fetchone()
+        if not row:
+            return None
+        return decrypt_value(row[0])
+    finally:
+        cur.close()
+
+
 @router.post("/api/proxmox/test")
 @limiter.limit("10/minute")  # Rate limit for connection tests
-async def test_proxmox_connection(request: Request, dashboard_id: int = 1, token: dict = Depends(require_role("admin")), db = Depends(get_db)):
-    """Testet die Proxmox-Verbindung und gibt detailliertes Feedback"""
+async def test_proxmox_connection(
+    request: Request,
+    dashboard_id: int = 1,
+    test_config: Optional[ProxmoxTestConfig] = Body(None),
+    token: dict = Depends(require_role("admin")),
+    db=Depends(get_db),
+):
+    """Test Proxmox connection using form values (optional body) or saved DB config."""
+
     def _test_connection_sync():
-        proxmox, configured_node, is_cluster = get_proxmox_connection(dashboard_id)
-        
-        if not proxmox:
+        if test_config is None:
+            proxmox, configured_node, _is_cluster = get_proxmox_connection(dashboard_id)
+            if not proxmox:
+                return {
+                    "success": False,
+                    "error_code": "proxmox_test_not_configured",
+                }
+            return _run_proxmox_connection_test(proxmox, configured_node)
+
+        _assert_safe_proxmox_host(test_config.host)
+        if not test_config.verify_ssl:
+            _log_tls_verify_disabled(test_config.host, request, token)
+
+        token_plain = test_config.token_value
+        if not token_plain:
+            token_plain = _resolve_stored_token_plain(dashboard_id, db)
+            if not token_plain:
+                return {
+                    "success": False,
+                    "error_code": "proxmox_test_token_missing",
+                }
+
+        token_name = test_config.token_name
+        if not token_name:
+            cur = db.cursor()
+            try:
+                cur.execute(
+                    "SELECT token_name FROM proxmox_config WHERE dashboard_id = %s;",
+                    (dashboard_id,),
+                )
+                row = cur.fetchone()
+                if row and row[0]:
+                    token_name = row[0]
+            finally:
+                cur.close()
+        if not token_name:
             return {
                 "success": False,
-                "error": "Proxmox nicht konfiguriert oder Token-Entschlüsselung fehlgeschlagen"
+                "error_code": "proxmox_test_token_name_missing",
             }
-        
+
         try:
-            # Versuche Nodes abzurufen
-            nodes = proxmox.nodes.get()
-            
-            if not nodes or len(nodes) == 0:
-                return {
-                    "success": False,
-                    "error": "Keine Nodes gefunden. Prüfe die Berechtigungen des API Tokens."
-                }
-            
-            # Sammle Node-Namen
-            node_names = [node['node'] for node in nodes]
-            
-            # Prüfe ob konfigurierter Node existiert
-            if configured_node and configured_node not in node_names:
-                return {
-                    "success": False,
-                    "error": f"Konfigurierter Node '{configured_node}' nicht gefunden. Verfügbare Nodes: {', '.join(node_names)}"
-                }
-            
-            return {
-                "success": True,
-                "message": "Verbindung erfolgreich!",
-                "nodes": node_names,
-                "configured_node": configured_node
-            }
-            
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"Proxmox connection test failed: {error_msg}")
-            
-            # Detaillierte Fehlermeldung
-            if "401" in error_msg or "authentication" in error_msg.lower():
-                detail = "Authentifizierung fehlgeschlagen. Prüfe Token Name (Format: user@realm!tokenname) und Token Secret."
-            elif "403" in error_msg or "permission" in error_msg.lower():
-                detail = "Keine Berechtigung. Der API Token benötigt mindestens:\n- Pfad: /\n- Rolle: PVEAuditor (für Lesezugriff) oder PVEAdmin (für volle Kontrolle)\n\nWichtig: Bei aktivierter 'Privilege Separation' benötigt der TOKEN die Berechtigung, nicht der User!"
-            elif "connection" in error_msg.lower() or "timeout" in error_msg.lower() or "refused" in error_msg.lower():
-                detail = "Verbindung fehlgeschlagen. Prüfe:\n- Host/IP-Adresse korrekt?\n- Port erreichbar? (Standard: 8006)\n- Firewall blockiert Zugriff?"
-            elif "ssl" in error_msg.lower() or "certificate" in error_msg.lower():
-                detail = "SSL-Zertifikatfehler. Bei self-signed Zertifikaten: Deaktiviere 'SSL-Zertifikat verifizieren'."
-            else:
-                detail = f"Proxmox API Fehler: {error_msg}"
-            
+            proxmox = _build_proxmox_api(
+                test_config.host,
+                test_config.port,
+                token_name,
+                token_plain,
+                test_config.verify_ssl,
+            )
+        except Exception:
+            logger.error("Proxmox connection error during test")
             return {
                 "success": False,
-                "error": detail
+                "error_code": "proxmox_test_build_failed",
             }
-    
+
+        return _run_proxmox_connection_test(proxmox, test_config.node)
+
     return await run_in_threadpool(_test_connection_sync)
 
 @router.get("/api/proxmox/vms")
@@ -387,19 +557,12 @@ def list_proxmox_vms(request: Request, dashboard_id: int = 1, token: dict = Depe
             except Exception as e:
                 error_msg = str(e)
                 logger.error(f"Failed to fetch cluster resources: {error_msg}")
-                
-                if "401" in error_msg or "authentication" in error_msg.lower():
-                    detail_msg = "Authentifizierung fehlgeschlagen. Prüfe Token Name und Secret."
-                elif "403" in error_msg or "permission" in error_msg.lower():
-                    detail_msg = "Keine Berechtigung. API Token benötigt für Cluster-Zugriff die Rolle 'PVEAuditor' oder höher auf Pfad '/'."
-                elif "connection" in error_msg.lower() or "timeout" in error_msg.lower():
-                    detail_msg = "Verbindung zum Proxmox-Cluster fehlgeschlagen. Prüfe Host/IP und Port."
-                elif "ssl" in error_msg.lower() or "certificate" in error_msg.lower():
-                    detail_msg = "SSL-Zertifikatfehler. Deaktiviere 'SSL-Zertifikat verifizieren' bei self-signed Zertifikaten."
-                else:
-                    detail_msg = f"Cluster API Fehler: {error_msg}"
-                
-                raise HTTPException(status_code=503, detail=detail_msg)
+
+                code, ctx = _proxmox_test_error_code(error_msg)
+                raise HTTPException(
+                    status_code=503,
+                    detail={"code": code, "context": ctx, "scope": "cluster"},
+                )
         
         # STANDALONE-MODUS: Nutze /nodes/<node>/qemu und /nodes/<node>/lxc API
         else:
@@ -410,37 +573,23 @@ def list_proxmox_vms(request: Request, dashboard_id: int = 1, token: dict = Depe
             except Exception as e:
                 error_msg = str(e)
                 logger.error(f"Failed to fetch Proxmox nodes: {error_msg}")
-                
-                # Detaillierte Fehlermeldung für häufige Probleme
-                if "401" in error_msg or "authentication" in error_msg.lower():
-                    detail_msg = "Authentifizierung fehlgeschlagen. Prüfe Token Name und Secret."
-                elif "403" in error_msg or "permission" in error_msg.lower():
-                    detail_msg = "Keine Berechtigung. API Token benötigt mindestens die Rolle 'PVEAuditor' für Lesezugriff."
-                elif "connection" in error_msg.lower() or "timeout" in error_msg.lower():
-                    detail_msg = "Verbindung zum Proxmox-Server fehlgeschlagen. Prüfe Host/IP und Port."
-                elif "ssl" in error_msg.lower() or "certificate" in error_msg.lower():
-                    detail_msg = "SSL-Zertifikatfehler. Deaktiviere 'SSL-Zertifikat verifizieren' bei self-signed Zertifikaten."
-                else:
-                    detail_msg = f"Proxmox API Fehler: {error_msg}"
+                code, ctx = _proxmox_test_error_code(error_msg)
+                detail_payload = {"code": code, "context": ctx, "scope": "standalone"}
                 
                 log_audit(
                     action="VIEW_VMS",
                     status="failed",
                     user_type="admin",
                     ip_address=client_ip,
-                    details={"error": detail_msg}
+                    details={"code": code},
                 )
-                raise HTTPException(status_code=503, detail=detail_msg)
-            
+                raise HTTPException(status_code=503, detail=detail_payload)
+
             logger.info(f"📡 Found {len(nodes)} node(s)")
-            
+
             for node_data in nodes:
                 node_name = node_data['node']
-                
-                # Wenn ein spezifischer Node konfiguriert ist, nur diesen abfragen
-                if configured_node and node_name != configured_node:
-                    continue
-            
+
                 # Wenn ein spezifischer Node konfiguriert ist, nur diesen abfragen
                 if configured_node and node_name != configured_node:
                     continue

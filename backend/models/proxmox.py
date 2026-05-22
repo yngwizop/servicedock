@@ -42,6 +42,89 @@ class ProxmoxConfig(BaseModel):
         return v
 
 
+def _normalize_optional_token_name(v: Optional[str]) -> Optional[str]:
+    if v is None:
+        return None
+    v = v.strip()
+    if not v:
+        return None
+    if v == "***" or v.endswith("!***"):
+        return None
+    if "@" not in v:
+        raise ValueError("Token name must contain @ (e.g., root@pam!mytoken)")
+    return v
+
+
+class ProxmoxConfigUpdate(BaseModel):
+    """PUT payload — token fields optional; omitted/empty keeps existing DB values."""
+
+    host: str = Field(..., min_length=1, max_length=255)
+    port: int = Field(8006, ge=1, le=65535)
+    token_name: Optional[str] = Field(None, max_length=255)
+    token_value: Optional[str] = Field(None, max_length=1000)
+    verify_ssl: bool = True
+    node: Optional[str] = Field(None, max_length=100)
+    is_cluster: bool = False
+
+    @validator("host")
+    def host_not_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError("Host cannot be empty or whitespace only")
+        return v.strip()
+
+    @validator("token_name")
+    def token_name_optional(cls, v):
+        return _normalize_optional_token_name(v)
+
+    @validator("token_value")
+    def token_value_optional(cls, v):
+        if v is None:
+            return None
+        v = v.strip()
+        return v or None
+
+    @validator("node")
+    def node_strip(cls, v):
+        if v:
+            return v.strip()
+        return v
+
+
+class ProxmoxTestConfig(BaseModel):
+    """Connection test from current form values (token fields optional — uses DB if empty/masked)."""
+
+    host: str = Field(..., min_length=1, max_length=255)
+    port: int = Field(8006, ge=1, le=65535)
+    token_name: Optional[str] = Field(None, max_length=255)
+    token_value: Optional[str] = Field(None, max_length=1000)
+    verify_ssl: bool = True
+    node: Optional[str] = Field(None, max_length=100)
+    is_cluster: bool = False
+
+    @validator('host')
+    def host_not_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Host cannot be empty or whitespace only')
+        return v.strip()
+
+    @validator('token_name')
+    def token_name_format(cls, v):
+        return _normalize_optional_token_name(v)
+
+    @validator('token_value')
+    def token_value_strip(cls, v):
+        if v is None:
+            return None
+        v = v.strip()
+        return v or None
+
+    @validator('node')
+    def node_strip(cls, v):
+        if v:
+            return v.strip()
+        return v
+
+
 # ========================================
 # Modelle für Cluster-Statistiken
 # ========================================

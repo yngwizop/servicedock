@@ -292,7 +292,20 @@ def refresh_token(
             raise HTTPException(status_code=401, detail="Invalid token")
 
         token_jti = payload.get("jti")
-        if token_jti and not validate_refresh_jti(username, token_jti):
+        if not token_jti:
+            client_ip = get_client_ip(request)
+            log_audit(
+                action="REFRESH_TOKEN_LEGACY_REJECTED",
+                status="failed",
+                user_type=payload.get("type", "unknown"),
+                ip_address=client_ip,
+                details={"username": username, "reason": "missing_jti"},
+            )
+            raise HTTPException(
+                status_code=401,
+                detail="Refresh token expired; please log in again",
+            )
+        if not validate_refresh_jti(username, token_jti):
             raise HTTPException(
                 status_code=401,
                 detail="Refresh token revoked or reused",
@@ -330,7 +343,9 @@ def refresh_token(
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
 @router.post("/api/logout")
+@limiter.limit("10/minute")
 def logout(
+    request: Request,
     response: Response,
     refresh_token: Optional[str] = Cookie(None),
 ):

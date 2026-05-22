@@ -11,10 +11,29 @@ import {
   settingsModalStatusInfo,
 } from './settingsSurfaces';
 
+import { translateProxmoxError } from '../../utils/proxmoxErrors';
+
+function formatProxmoxApiError(detail, t) {
+  if (detail && typeof detail === 'object' && detail.code) {
+    return translateProxmoxError(detail.code, detail.context || null, null, t)
+      || t('proxmoxConnection.save_error');
+  }
+  if (typeof detail === 'string') return detail;
+  return t('proxmoxConnection.save_error');
+}
+
+function formatProxmoxTestError(data, t) {
+  if (data?.error_code) {
+    return translateProxmoxError(data.error_code, data.error_context || null, data.error, t);
+  }
+  return data?.error || t('proxmoxConnection.test_failed');
+}
+
 const EMPTY_CONFIG = {
   host: '',
   port: 8006,
   token_name: '',
+  token_name_masked: '',
   token_value: '',
   verify_ssl: false,
   node: '',
@@ -23,12 +42,47 @@ const EMPTY_CONFIG = {
 
 function isProxmoxConfigDirty(current, snapshot) {
   if (!snapshot) return false;
-  const fields = ['host', 'port', 'token_name', 'verify_ssl', 'node', 'is_cluster'];
+  const fields = ['host', 'port', 'verify_ssl', 'node', 'is_cluster'];
   for (const f of fields) {
     if (current[f] !== snapshot[f]) return true;
   }
+  if (current.token_name?.trim()) return true;
   if (current.token_value?.trim()) return true;
   return false;
+}
+
+function buildProxmoxSavePayload(config) {
+  const body = {
+    host: config.host.trim(),
+    port: config.port,
+    verify_ssl: config.verify_ssl,
+    node: config.node?.trim() || null,
+    is_cluster: config.is_cluster,
+  };
+  if (config.token_name?.trim()) {
+    body.token_name = config.token_name.trim();
+  }
+  if (config.token_value?.trim()) {
+    body.token_value = config.token_value.trim();
+  }
+  return body;
+}
+
+function buildProxmoxTestPayload(config) {
+  const body = {
+    host: config.host.trim(),
+    port: config.port,
+    verify_ssl: config.verify_ssl,
+    node: config.node?.trim() || null,
+    is_cluster: config.is_cluster,
+  };
+  if (config.token_name?.trim()) {
+    body.token_name = config.token_name.trim();
+  }
+  if (config.token_value?.trim()) {
+    body.token_value = config.token_value.trim();
+  }
+  return body;
 }
 
 function ProxmoxConnectionCard({
@@ -72,7 +126,8 @@ function ProxmoxConnectionCard({
           const loaded = {
             host: data.host || '',
             port: data.port || 8006,
-            token_name: data.token_name || '',
+            token_name: '',
+            token_name_masked: data.token_name || '',
             token_value: '',
             verify_ssl: data.verify_ssl || false,
             node: data.node || '',
@@ -95,25 +150,54 @@ function ProxmoxConnectionCard({
 
   const handleSave = async () => {
     setSaveStatus({ type: 'loading', message: t('proxmoxConnection.saving') });
+    setTestStatus({ type: '', message: '' });
 
     try {
       const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/config?dashboard_id=${activeDashboard}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(config),
+        body: JSON.stringify(buildProxmoxSavePayload(config)),
       });
 
       if (res.ok) {
-        const saved = { ...config, token_value: '' };
-        setConfig(saved);
-        setSnapshot(saved);
         setSaveStatus({ type: 'success', message: t('proxmoxConnection.save_success') });
         setIsConfigured(true);
         onSettingsChange?.();
+        try {
+          const reload = await authenticatedFetch(
+            `${BACKEND_URL}/api/proxmox/config?dashboard_id=${activeDashboard}`
+          );
+          const data = await reload.json();
+          if (data.configured) {
+            const loaded = {
+              host: data.host || '',
+              port: data.port || 8006,
+              token_name: '',
+              token_name_masked: data.token_name || '',
+              token_value: '',
+              verify_ssl: data.verify_ssl || false,
+              node: data.node || '',
+              is_cluster: data.is_cluster || false,
+            };
+            setConfig(loaded);
+            setSnapshot(loaded);
+          }
+        } catch {
+          const saved = {
+            ...config,
+            token_name: '',
+            token_value: '',
+          };
+          setConfig(saved);
+          setSnapshot(saved);
+        }
         setTimeout(() => setSaveStatus({ type: '', message: '' }), 3000);
       } else {
-        const error = await res.json();
-        setSaveStatus({ type: 'error', message: error.detail || t('proxmoxConnection.save_error') });
+        const error = await res.json().catch(() => ({}));
+        setSaveStatus({
+          type: 'error',
+          message: formatProxmoxApiError(error.detail, t),
+        });
       }
     } catch {
       setSaveStatus({ type: 'error', message: t('common.network_error') });
@@ -121,11 +205,26 @@ function ProxmoxConnectionCard({
   };
 
   const handleTest = async () => {
+    if (!config.host?.trim()) {
+      setTestStatus({ type: 'error', message: t('proxmoxConnection.test_missing_fields') });
+      return;
+    }
+    if (!isConfigured && !config.token_name?.trim()) {
+      setTestStatus({ type: 'error', message: t('proxmoxConnection.test_missing_fields') });
+      return;
+    }
+    if (!isConfigured && !config.token_value?.trim()) {
+      setTestStatus({ type: 'error', message: t('proxmoxConnection.test_token_required') });
+      return;
+    }
+
     setTestStatus({ type: 'loading', message: t('proxmoxConnection.testing') });
 
     try {
       const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/test?dashboard_id=${activeDashboard}`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(buildProxmoxTestPayload(config)),
       });
       const data = await res.json();
 
@@ -135,7 +234,7 @@ function ProxmoxConnectionCard({
           message: t('proxmoxConnection.test_success', { count: data.nodes?.length || 0 }),
         });
       } else {
-        setTestStatus({ type: 'error', message: data.error || t('proxmoxConnection.test_failed') });
+        setTestStatus({ type: 'error', message: formatProxmoxTestError(data, t) });
       }
     } catch {
       setTestStatus({ type: 'error', message: t('proxmoxConnection.test_error') });
@@ -168,8 +267,7 @@ function ProxmoxConnectionCard({
 
   const canSave =
     config.host &&
-    config.token_name &&
-    (isConfigured ? true : Boolean(config.token_value?.trim()));
+    (isConfigured || (config.token_name?.trim() && config.token_value?.trim()));
 
   return (
     <div className="space-y-6">
@@ -217,13 +315,27 @@ function ProxmoxConnectionCard({
               </span>
             </span>
           </label>
+          {isConfigured && config.token_name_masked && !config.token_name?.trim() ? (
+            <p className="text-xs dim:text-slate-400 night:text-slate-400 mb-2">
+              {t('proxmoxConnection.token_name_stored', { masked: config.token_name_masked })}
+            </p>
+          ) : null}
           <input
             type="text"
             value={config.token_name}
             onChange={(e) => setConfig({ ...config, token_name: e.target.value })}
-            placeholder="root@pam!mytoken"
+            placeholder={
+              isConfigured && config.token_name_masked
+                ? t('proxmoxConnection.token_name_change_placeholder')
+                : 'root@pam!mytoken'
+            }
             className={settingsInputClass}
           />
+          {isConfigured ? (
+            <p className="text-xs dim:text-slate-500 night:text-slate-500 mt-1.5">
+              {t('proxmoxConnection.token_name_keep_hint')}
+            </p>
+          ) : null}
         </div>
 
         <div>

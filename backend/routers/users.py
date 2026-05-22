@@ -1,7 +1,7 @@
 """Local user accounts CRUD (admin-only)."""
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 
 from core.audit import log_audit
 from core.limiter import limiter
@@ -51,9 +51,11 @@ def _to_response(row: dict) -> LocalUserResponse:
 @limiter.limit("60/minute")
 def list_users(
     request: Request,
+    limit: int = Query(500, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
     token: dict = Depends(require_role("admin")),
 ):
-    rows = list_local_users()
+    rows = list_local_users(limit=limit, offset=offset)
     return [_to_response(r) for r in rows]
 
 

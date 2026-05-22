@@ -77,7 +77,7 @@ def get_ldap_config(db=None) -> Optional[Dict[str, Any]]:
         _ldap_config_cache_time = now
         return config
     except Exception as e:
-        logger.error(f"Fehler beim Laden der LDAP-Config: {e}")
+        logger.error(f"Failed to load LDAP config: {e}")
         return None
     finally:
         if close_db and db:
@@ -212,7 +212,7 @@ def ldap_authenticate(username: str, password: str) -> Optional[Dict[str, Any]]:
         )
         
         if not search_conn.entries:
-            logger.info(f"LDAP: User '{username}' nicht gefunden")
+            logger.info(f"LDAP: User '{username}' not found")
             search_conn.unbind()
             return None
         
@@ -236,16 +236,16 @@ def ldap_authenticate(username: str, password: str) -> Optional[Dict[str, Any]]:
             user_conn = Connection(server, user=user_bind_dn, password=password, auto_bind=True)
             user_conn.unbind()
         except Exception as e:
-            logger.info(f"LDAP: Bind fehlgeschlagen für '{username}': {e}")
+            logger.info(f"LDAP: Bind failed for '{username}': {e}")
             return None
         
         # --- Schritt 4: Gruppen-Check ---
         role = _determine_role(config, member_of)
         if not role:
-            logger.info(f"LDAP: User '{username}' ist in keiner Servicedock-Gruppe")
+            logger.info(f"LDAP: User '{username}' is not a member of any Servicedock group")
             return None
         
-        logger.info(f"LDAP: User '{username}' authentifiziert als '{role}'")
+        logger.info(f"LDAP: User '{username}' authenticated as '{role}'")
         return {
             "username": username,
             "display_name": display_name,
@@ -254,7 +254,7 @@ def ldap_authenticate(username: str, password: str) -> Optional[Dict[str, Any]]:
         }
         
     except Exception as e:
-        logger.error(f"LDAP Authentifizierung fehlgeschlagen: {e}")
+        logger.error(f"LDAP authentication failed: {e}")
         return None
 
 
@@ -343,14 +343,15 @@ def test_ldap_connection(config: Dict[str, Any]) -> Dict[str, Any]:
         
         return {
             "success": True,
-            "message": "LDAP-Verbindung erfolgreich",
+            "code": "ldap_test_success",
             "server": server_info,
             "users_found": user_count,
             "groups": groups_found,
         }
-        
+
     except Exception as e:
         return {
             "success": False,
-            "message": f"LDAP-Verbindung fehlgeschlagen: {str(e)}",
+            "code": "ldap_test_failed",
+            "error_detail": str(e),
         }

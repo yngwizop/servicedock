@@ -398,7 +398,7 @@ const OverviewCards = React.memo(function OverviewCards({ tokenInfo, auditStats,
 });
 
 function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashboard = 1, searchTerm = "", integrationHealth = null }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [tokenInfo, setTokenInfo] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
@@ -524,8 +524,10 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
       } else if (res.status === 403) {
         alert(t('security.wrong_password'));
       } else {
-        const errorData = await res.json();
-        alert(t('security.delete_error_detail', { detail: errorData.detail || 'Failed to delete logs' }));
+        const errorData = await res.json().catch(() => ({}));
+        const detail = errorData?.detail;
+        const text = (typeof detail === 'string' && detail) || 'Failed to delete logs';
+        alert(t('security.delete_error_detail', { detail: text }));
       }
     } catch (err) {
       console.error('Delete logs error:', err);
@@ -535,13 +537,13 @@ function SecurityDashboard({ isLoggedIn, textColor, onOpenSettings, activeDashbo
 
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp);
-    return date.toLocaleString('de-DE', {
+    return date.toLocaleString(i18n.language || undefined, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
     });
   };
 

@@ -30,7 +30,7 @@ export function useServices({ activeDashboard, onSessionExpired }) {
       }
     } catch (err) {
       if (requestId !== fetchRequestId.current) return;
-      console.error("Fehler beim Laden der Daten:", err);
+      console.error("Failed to load services:", err);
       if (err.message?.includes('Session expired')) onSessionExpired();
     }
   }, [activeDashboard, onSessionExpired]);

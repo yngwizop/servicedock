@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 import secrets
-import requests
+import httpx
 import threading
 from urllib.parse import urlencode
 
@@ -119,16 +119,16 @@ def refresh_access_token(spotify_config: dict) -> Optional[str]:
                 return current_config["access_token"]
         
         try:
-            response = requests.post(
-                SPOTIFY_TOKEN_URL,
-                data={
-                    "grant_type": "refresh_token",
-                    "refresh_token": spotify_config["refresh_token"]
-                },
-                auth=(spotify_config["client_id"], spotify_config["client_secret"]),
-                timeout=10
-            )
-            
+            with httpx.Client(timeout=10.0) as client:
+                response = client.post(
+                    SPOTIFY_TOKEN_URL,
+                    data={
+                        "grant_type": "refresh_token",
+                        "refresh_token": spotify_config["refresh_token"],
+                    },
+                    auth=(spotify_config["client_id"], spotify_config["client_secret"]),
+                )
+
             if response.status_code != 200:
                 logger.error(f"Spotify token refresh failed: {response.status_code}")
                 return None
@@ -259,13 +259,13 @@ async def install_spotify(
         
         return {
             "success": True,
-            "message": "Spotify AddOn konfiguriert. Bitte verbinden Sie Ihr Spotify-Konto.",
-            "configured": True
+            "code": "spotify_installed",
+            "configured": True,
         }
-    
+
     except Exception as e:
         logger.error(f"Error installing Spotify: {str(e)}")
-        raise HTTPException(status_code=500, detail="Installation fehlgeschlagen")
+        raise HTTPException(status_code=500, detail={"code": "spotify_install_failed"})
 
 
 @router.get("/api/spotify/status", response_model=SpotifyConfigResponse)
@@ -324,7 +324,7 @@ async def get_auth_url(
     if not spotify_config:
         raise HTTPException(
             status_code=400,
-            detail="Spotify nicht konfiguriert. Bitte zuerst installieren."
+            detail={"code": "spotify_not_configured"},
         )
     
     # Generate CSRF State Token
@@ -372,15 +372,15 @@ async def spotify_callback(
     # Error Handling
     if error:
         logger.warning(f"Spotify OAuth error: {error}")
-        raise HTTPException(status_code=400, detail="Spotify Autorisierung fehlgeschlagen")
-    
+        raise HTTPException(status_code=400, detail={"code": "spotify_oauth_denied"})
+
     if not code or not state:
-        raise HTTPException(status_code=400, detail="Code oder State fehlt")
-    
+        raise HTTPException(status_code=400, detail={"code": "spotify_oauth_missing_params"})
+
     # CSRF Protection: Verify State
     state_data = pop_state("spotify", state)
     if not state_data:
-        raise HTTPException(status_code=400, detail="Ungültiger State Token (CSRF)")
+        raise HTTPException(status_code=400, detail={"code": "spotify_oauth_invalid_state"})
     
     # Hole die beim Auth-Request verwendete redirect_uri
     used_redirect_uri = state_data["redirect_uri"] if isinstance(state_data, dict) else spotify_config["redirect_uri"]
@@ -388,35 +388,35 @@ async def spotify_callback(
     
     spotify_config = get_spotify_config()
     if not spotify_config:
-        raise HTTPException(status_code=500, detail="Spotify Konfiguration nicht gefunden")
+        raise HTTPException(status_code=500, detail={"code": "spotify_config_missing"})
     
     # Exchange Code for Access Token
     try:
-        response = requests.post(
-            SPOTIFY_TOKEN_URL,
-            data={
-                "grant_type": "authorization_code",
-                "code": code,
-                "redirect_uri": used_redirect_uri  # Verwende die GLEICHE URI wie beim Auth-Request!
-            },
-            auth=(spotify_config["client_id"], spotify_config["client_secret"]),
-            timeout=10
-        )
-        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                SPOTIFY_TOKEN_URL,
+                data={
+                    "grant_type": "authorization_code",
+                    "code": code,
+                    "redirect_uri": used_redirect_uri,
+                },
+                auth=(spotify_config["client_id"], spotify_config["client_secret"]),
+            )
+
         if response.status_code != 200:
             logger.error(f"Spotify token exchange failed: {response.status_code}")
             raise HTTPException(
                 status_code=400,
-                detail="Token-Austausch fehlgeschlagen. Bitte erneut versuchen."
+                detail={"code": "spotify_token_exchange_failed"},
             )
-        
+
         data = response.json()
         access_token = data.get("access_token")
         refresh_token = data.get("refresh_token")
         expires_in = data.get("expires_in", 3600)
-        
+
         if not access_token or not refresh_token:
-            raise HTTPException(status_code=400, detail="Keine Tokens erhalten")
+            raise HTTPException(status_code=400, detail={"code": "spotify_no_tokens"})
         
         # Encrypt und speichere Tokens
         encrypted_access = encrypt_value(access_token)
@@ -462,12 +462,12 @@ async def spotify_callback(
             if conn is not None:
                 config.database.db_pool.putconn(conn)
     
-    except requests.RequestException as e:
+    except httpx.HTTPError as e:
         logger.error(f"Spotify API request failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Verbindung zu Spotify fehlgeschlagen")
+        raise HTTPException(status_code=500, detail={"code": "spotify_api_unreachable"})
     except Exception as e:
         logger.error(f"Spotify callback error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Ein Fehler ist aufgetreten")
+        raise HTTPException(status_code=500, detail={"code": "spotify_callback_error"})
 
 
 @router.get("/api/spotify/now-playing", response_model=SpotifyNowPlayingResponse)
@@ -487,29 +487,27 @@ async def get_now_playing(request: Request, _admin = Depends(require_role("admin
         )
     
     try:
-        response = requests.get(
-            f"{SPOTIFY_API_BASE_URL}/me/player/currently-playing",
-            headers={"Authorization": f"Bearer {access_token}"},
-            timeout=5
-        )
-        
-        # 204 = Nichts spielt gerade
-        if response.status_code == 204:
-            return SpotifyNowPlayingResponse(is_playing=False, track=None)
-        
-        # 401 = Token ungültig
-        if response.status_code == 401:
-            logger.warning("Spotify token invalid, attempting refresh...")
-            spotify_config = get_spotify_config()
-            new_token = refresh_access_token(spotify_config)
-            if new_token:
-                # Retry mit neuem Token
-                response = requests.get(
-                    f"{SPOTIFY_API_BASE_URL}/me/player/currently-playing",
-                    headers={"Authorization": f"Bearer {new_token}"},
-                    timeout=5
-                )
-        
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(
+                f"{SPOTIFY_API_BASE_URL}/me/player/currently-playing",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+
+            # 204 = Nichts spielt gerade
+            if response.status_code == 204:
+                return SpotifyNowPlayingResponse(is_playing=False, track=None)
+
+            # 401 = Token ungültig
+            if response.status_code == 401:
+                logger.warning("Spotify token invalid, attempting refresh...")
+                spotify_config = get_spotify_config()
+                new_token = refresh_access_token(spotify_config)
+                if new_token:
+                    response = await client.get(
+                        f"{SPOTIFY_API_BASE_URL}/me/player/currently-playing",
+                        headers={"Authorization": f"Bearer {new_token}"},
+                    )
+
         if response.status_code != 200:
             logger.error(f"Spotify API error: {response.status_code}")
             return SpotifyNowPlayingResponse(is_playing=False, track=None)
@@ -547,7 +545,7 @@ async def get_now_playing(request: Request, _admin = Depends(require_role("admin
             progress_percent=round(progress_percent, 2)
         )
     
-    except requests.RequestException as e:
+    except httpx.HTTPError as e:
         logger.error(f"Spotify API request failed: {str(e)}")
         return SpotifyNowPlayingResponse(is_playing=False, track=None)
     except Exception as e:
@@ -586,9 +584,9 @@ async def uninstall_spotify(
         
         return {
             "success": True,
-            "message": "Spotify AddOn erfolgreich entfernt"
+            "code": "spotify_uninstalled",
         }
-    
+
     except Exception as e:
         logger.error(f"Error uninstalling Spotify: {str(e)}")
-        raise HTTPException(status_code=500, detail="Deinstallation fehlgeschlagen")
+        raise HTTPException(status_code=500, detail={"code": "spotify_uninstall_failed"})

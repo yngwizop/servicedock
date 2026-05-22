@@ -1,5 +1,5 @@
 """Dashboard routes"""
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from dependencies.auth import require_role, require_any_role
 from config.database import get_db
 from models.dashboard import Dashboard, DashboardCreate, DashboardResponse
@@ -14,7 +14,13 @@ router = APIRouter(prefix="/api/dashboards", tags=["dashboards"])
 
 @router.get("", response_model=List[DashboardResponse])
 @limiter.limit("60/minute")
-async def get_dashboards(request: Request, db = Depends(get_db), _admin = Depends(require_any_role("admin", "viewer"))) -> List[DashboardResponse]:
+async def get_dashboards(
+    request: Request,
+    limit: int = Query(500, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db=Depends(get_db),
+    _admin=Depends(require_any_role("admin", "viewer")),
+) -> List[DashboardResponse]:
     """Get all dashboards with counts"""
     def _get_dashboards_sync():
         cur = db.cursor()
@@ -29,9 +35,10 @@ async def get_dashboards(request: Request, db = Depends(get_db), _admin = Depend
                 LEFT JOIN services s ON s.dashboard_id = d.id
                 LEFT JOIN shortcuts sh ON sh.dashboard_id = d.id
                 GROUP BY d.id, d.name, d.description, d.type, d.is_active, d.show_proxmox, d.updated_at
-                ORDER BY d.id ASC;
+                ORDER BY d.id ASC
+                LIMIT %s OFFSET %s;
             """
-            cur.execute(query)
+            cur.execute(query, (limit, offset))
             rows = cur.fetchall()
             return [
                 {

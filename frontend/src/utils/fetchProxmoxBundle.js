@@ -10,6 +10,8 @@ const emptyVmBundle = () => ({
   nodes: [],
   proxmoxName: '',
   error: null,
+  errorCode: null,
+  errorContext: null,
 });
 
 /**
@@ -32,14 +34,24 @@ export async function fetchProxmoxVmBundle(dashboardId) {
     const res = await authenticatedFetch(`${BACKEND_URL}/api/proxmox/vms?dashboard_id=${id}`);
 
     if (!res.ok) {
+      let errorCode = null;
+      let errorContext = null;
       let msg = `HTTP ${res.status}`;
       try {
         const errorData = await res.json();
-        msg = errorData.detail || msg;
+        if (errorData?.detail && typeof errorData.detail === 'object') {
+          errorCode = errorData.detail.code || null;
+          errorContext = errorData.detail.context || null;
+        } else if (typeof errorData?.detail === 'string') {
+          msg = errorData.detail;
+        }
       } catch {
         /* ignore */
       }
-      throw new Error(msg);
+      const err = new Error(msg);
+      err.code = errorCode;
+      err.context = errorContext;
+      throw err;
     }
 
     const data = await res.json();
@@ -69,6 +81,8 @@ export async function fetchProxmoxVmBundle(dashboardId) {
       ok: false,
       configured: true,
       error: err.message || 'Failed to connect to Proxmox',
+      errorCode: err.code || null,
+      errorContext: err.context || null,
     };
   }
 }

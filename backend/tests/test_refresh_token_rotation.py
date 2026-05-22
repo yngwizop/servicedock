@@ -25,6 +25,7 @@ def test_refresh_rotation_and_revocation():
     assert validate_refresh_jti(user, jti2) is False
 
 
-def test_legacy_token_without_jti_allowed():
+def test_refresh_without_jti_rejected():
+    """Legacy tokens without jti are no longer accepted (see test_refresh_legacy_rejected)."""
     user = "legacy-user"
-    assert validate_refresh_jti(user, None) is True
+    assert validate_refresh_jti(user, None) is False

@@ -15,6 +15,9 @@ from config.database import get_db
 
 router = APIRouter()
 
+_STATS_CACHE: dict = {}
+_STATS_CACHE_TTL_SEC = 30
+
 
 @router.get("/api/proxmox/cluster-stats", response_model=ClusterStats)
 @limiter.limit("20/minute")
@@ -38,6 +41,12 @@ def get_cluster_stats(
     - Task-Zusammenfassung (failed/running/success)
     - compute_cluster / top_node: aggregierte Host-CPU/RAM und „heißester“ Node
     """
+    cache_key = (dashboard_id, top_n, task_hours)
+    now = time.time()
+    cached = _STATS_CACHE.get(cache_key)
+    if cached and cached[0] > now:
+        return cached[1]
+
     client_ip = get_client_ip(request)
     proxmox, configured_node, is_cluster = get_proxmox_connection(dashboard_id)
 
@@ -49,7 +58,7 @@ def get_cluster_stats(
             ip_address=client_ip,
             details={"error": "Proxmox not configured"}
         )
-        raise HTTPException(status_code=404, detail="Proxmox nicht konfiguriert")
+        raise HTTPException(status_code=404, detail={"code": "proxmox_not_configured"})
 
     try:
         # Initialisiere Statistiken
@@ -219,8 +228,8 @@ def get_cluster_stats(
             except Exception as e:
                 logger.error(f"Failed to fetch cluster resources: {e}")
                 raise HTTPException(
-                    status_code=503, 
-                    detail="Cluster-Ressourcen konnten nicht abgerufen werden"
+                    status_code=503,
+                    detail={"code": "proxmox_cluster_resources_failed"},
                 )
 
             # Tasks abrufen (letzte X Stunden)
@@ -461,8 +470,8 @@ def get_cluster_stats(
             except Exception as e:
                 logger.error(f"Failed to fetch standalone server data: {e}")
                 raise HTTPException(
-                    status_code=503, 
-                    detail="Server-Daten konnten nicht abgerufen werden"
+                    status_code=503,
+                    detail={"code": "proxmox_server_data_failed"},
                 )
 
         # ========================================
@@ -734,6 +743,7 @@ def get_cluster_stats(
             details={"dashboard_id": dashboard_id}
         )
 
+        _STATS_CACHE[cache_key] = (now + _STATS_CACHE_TTL_SEC, stats)
         return stats
         
     except HTTPException:
@@ -748,6 +758,6 @@ def get_cluster_stats(
             details={"error": str(e)}
         )
         raise HTTPException(
-            status_code=500, 
-            detail="Cluster-Statistiken konnten nicht abgerufen werden"
+            status_code=500,
+            detail={"code": "proxmox_cluster_stats_failed"},
         )

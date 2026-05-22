@@ -1,7 +1,7 @@
 """Admin router - Audit logs and token management"""
 import json as json_lib
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, Query
 
 from models import DeleteLogsRequest, ProxmoxConfig
 from core.security import encrypt_value
@@ -12,32 +12,38 @@ from config.database import get_db
 
 router = APIRouter()
 
+_AUDIT_FILTER_WHERE = {
+    "all": "",
+    "failed": "WHERE status = 'failed'",
+    "failed_logins": "WHERE action IN ('LOGIN_FAILED', 'LOGIN_BLOCKED')",
+    "permission_errors": (
+        "WHERE status = 'failed' AND (details::text ILIKE '%permission%' "
+        "OR details::text ILIKE '%forbidden%' OR details::text ILIKE '%403%')"
+    ),
+    "vm_operations": (
+        "WHERE action IN ('START_VM', 'STOP_VM', 'REBOOT_VM', 'START_LXC', 'STOP_LXC', 'REBOOT_LXC')"
+    ),
+    "success": "WHERE status = 'success'",
+}
+
+
 @router.get("/api/admin/audit-logs")
 @limiter.limit("30/minute")  # Rate limit for audit log access
 def get_audit_logs(
-    request: Request, 
-    limit: int = 100, 
-    offset: int = 0, 
-    filter_type: str = "all",  # all, failed, failed_logins, permission_errors, vm_operations, success
-    token: dict = Depends(require_role("admin")), 
-    db = Depends(get_db)
+    request: Request,
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    filter_type: str = Query("all"),
+    token: dict = Depends(require_role("admin")),
+    db=Depends(get_db),
 ):
     """Holt die neuesten Audit-Log-Einträge mit optionaler Filterung (Admin-only)"""
+    if filter_type not in _AUDIT_FILTER_WHERE:
+        raise HTTPException(status_code=400, detail="Invalid filter_type")
+
     cur = db.cursor()
-    
-    # Build WHERE clause based on filter
-    where_clause = ""
-    if filter_type == "failed":
-        where_clause = "WHERE status = 'failed'"
-    elif filter_type == "failed_logins":
-        where_clause = "WHERE action IN ('LOGIN_FAILED', 'LOGIN_BLOCKED')"
-    elif filter_type == "permission_errors":
-        where_clause = "WHERE status = 'failed' AND (details::text ILIKE '%permission%' OR details::text ILIKE '%forbidden%' OR details::text ILIKE '%403%')"
-    elif filter_type == "vm_operations":
-        where_clause = "WHERE action IN ('START_VM', 'STOP_VM', 'REBOOT_VM', 'START_LXC', 'STOP_LXC', 'REBOOT_LXC')"
-    elif filter_type == "success":
-        where_clause = "WHERE status = 'success'"
-    
+    where_clause = _AUDIT_FILTER_WHERE[filter_type]
+
     cur.execute(
         f"""SELECT id, timestamp, user_type, ip_address, action, resource_type, 
                   resource_id, status, details, user_agent
@@ -45,12 +51,11 @@ def get_audit_logs(
            {where_clause}
            ORDER BY timestamp DESC
            LIMIT %s OFFSET %s;""",
-        (limit, offset)
+        (limit, offset),
     )
-    
+
     rows = cur.fetchall()
-    
-    # Zähle total Einträge (mit Filter)
+
     cur.execute(f"SELECT COUNT(*) FROM audit_log {where_clause};")
     filtered_total = cur.fetchone()[0]
     
@@ -194,9 +199,9 @@ def cleanup_audit_logs(request: Request, days: int = 90, token: dict = Depends(r
     db.commit()
     
     return {
-        "message": f"Alte Audit-Logs gelöscht",
+        "code": "audit_logs_old_deleted",
         "deleted_count": count_to_delete,
-        "older_than_days": days
+        "older_than_days": days,
     }
 
 @router.post("/api/admin/audit-logs/delete-all")
@@ -205,7 +210,7 @@ def delete_all_audit_logs(request: Request, delete_request: DeleteLogsRequest, t
     """Löscht ALLE Audit-Logs (Admin-Passwort erforderlich)"""
     
     if not verify_destructive_password(token, delete_request.password):
-        raise HTTPException(status_code=403, detail="Falsches Admin-Passwort")
+        raise HTTPException(status_code=403, detail={"code": "admin_password_wrong"})
     
     cur = db.cursor()
     
@@ -222,8 +227,8 @@ def delete_all_audit_logs(request: Request, delete_request: DeleteLogsRequest, t
     db.commit()
     
     return {
-        "message": "Alle Audit-Logs gelöscht",
-        "deleted_count": count_to_delete
+        "code": "audit_logs_all_deleted",
+        "deleted_count": count_to_delete,
     }
 
 # ===== Token Rotation =====

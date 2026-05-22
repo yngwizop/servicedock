@@ -6,6 +6,7 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import '../styles/grid-layout.css';
 import { authenticatedFetch } from '../utils/auth';
+import { translateProxmoxError } from '../utils/proxmoxErrors';
 import { BACKEND_URL } from '../utils/backendUrl';
 import {
   getProxmoxRefreshInterval,
@@ -277,7 +278,13 @@ function ProxmoxStatusDashboard({
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'Failed to fetch statistics');
+        const detail = errorData?.detail;
+        const err = new Error(typeof detail === 'string' ? detail : 'Failed to fetch statistics');
+        if (detail && typeof detail === 'object') {
+          err.code = detail.code || null;
+          err.context = detail.context || null;
+        }
+        throw err;
       }
 
       const data = await res.json();
@@ -285,7 +292,7 @@ function ProxmoxStatusDashboard({
       setError(null);
     } catch (err) {
       console.error('Error fetching Proxmox stats:', err);
-      setError(err.message);
+      setError(translateProxmoxError(err.code, err.context, err.message, t));
     } finally {
       setLoading(false);
     }

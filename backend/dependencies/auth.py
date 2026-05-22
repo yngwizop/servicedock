@@ -9,6 +9,7 @@ from jose import JWTError, jwt
 from config.settings import SECRET_KEY, ALGORITHM
 from core.security import get_password_hash, verify_password
 from core.logging import logger
+from core.audit import log_audit
 from core.local_users import (
     get_user_by_username,
     sync_admin_auth_from_local_admin,
@@ -78,6 +79,40 @@ def update_local_user_password(username: str, new_password: str) -> None:
     logger.info("Local user password updated: %s", username)
 
 
+_FORCE_CHANGE_ALLOWED_PATHS = frozenset({
+    "/api/auth/me",
+    "/api/auth/password",
+})
+
+
+def _enforce_password_changed(payload: dict, request: Optional[Request] = None) -> None:
+    """
+    Block API access for local users with force_change=TRUE until password is updated.
+    AD/LDAP users are exempt.
+    """
+    if request is not None and request.url.path in _FORCE_CHANGE_ALLOWED_PATHS:
+        return
+    if (payload.get("auth_method") or "local") == "ad":
+        return
+    username = payload.get("sub")
+    if not username:
+        return
+    if not get_force_change_for_username(username):
+        return
+    ip = get_client_ip(request) if request is not None else "unknown"
+    log_audit(
+        action="FORCE_CHANGE_BYPASS_ATTEMPT",
+        status="denied",
+        user_type=payload.get("type", "unknown"),
+        ip_address=ip,
+        details={"username": username},
+    )
+    raise HTTPException(
+        status_code=403,
+        detail="Password change required before accessing this resource.",
+    )
+
+
 def verify_destructive_password(token: dict, password: str) -> bool:
     """
     Passwort-Bestätigung für kritische Aktionen (lokal: bcrypt; AD: LDAP-Bind).
@@ -139,8 +174,9 @@ def require_role(required_role: str):
             ...
     """
     def role_checker(
+        request: Request,
         credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-        access_token: Optional[str] = Cookie(None)
+        access_token: Optional[str] = Cookie(None),
     ) -> dict:
         token = None
         
@@ -175,6 +211,8 @@ def require_role(required_role: str):
                     status_code=403, 
                     detail=f"Access denied. Required role: {required_role}"
                 )
+
+            _enforce_password_changed(payload, request)
             
             return payload
             
@@ -198,8 +236,9 @@ def require_any_role(*roles: str):
             ...
     """
     def role_checker(
+        request: Request,
         credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-        access_token: Optional[str] = Cookie(None)
+        access_token: Optional[str] = Cookie(None),
     ) -> dict:
         token = None
         
@@ -230,6 +269,8 @@ def require_any_role(*roles: str):
                     status_code=403,
                     detail=f"Access denied. Required role: {' or '.join(roles)}"
                 )
+
+            _enforce_password_changed(payload, request)
             
             return payload
             
@@ -243,6 +284,7 @@ def require_any_role(*roles: str):
 
 
 def require_help_docs_access(
+    request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     access_token: Optional[str] = Cookie(None),
 ) -> dict:
@@ -284,6 +326,7 @@ def require_help_docs_access(
             )
             raise HTTPException(status_code=403, detail=detail)
 
+        _enforce_password_changed(payload, request)
         return payload
     except JWTError:
         raise HTTPException(

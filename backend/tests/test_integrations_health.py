@@ -1,11 +1,22 @@
+from datetime import timedelta
+from unittest.mock import patch
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from core.limiter import limiter
-from dependencies.auth import require_any_role
+from core.security import create_access_token
 from routers.integrations import router as integrations_router
+
+
+def _auth_headers():
+  token = create_access_token(
+    data={"sub": "ci-admin", "type": "admin", "auth_method": "local"},
+    expires_delta=timedelta(minutes=15),
+  )
+  return {"Authorization": f"Bearer {token}"}
 
 
 def build_app():
@@ -44,19 +55,19 @@ def test_integrations_health_shape(monkeypatch):
   )
 
   app = build_app()
-  app.dependency_overrides[require_any_role] = lambda *roles: (lambda: {"sub": "t", "type": "admin"})
-  try:
-    client = TestClient(app)
-    r = client.get("/api/integrations/health?dashboard_id=1")
-    assert r.status_code == 200, r.text
-    body = r.json()
-    assert body["dashboard_id"] == 1
-    assert "generated_at" in body
-    assert isinstance(body["checks"], list)
-    assert {c["name"] for c in body["checks"]} == {"proxmox", "spotify", "ldap"}
-    assert body["overall_status"] in {"ok", "warning", "not_configured", "down", "disabled"}
-  finally:
-    app.dependency_overrides.clear()
+  client = TestClient(app)
+  with patch("dependencies.auth.get_force_change_for_username", return_value=False):
+    r = client.get(
+      "/api/integrations/health?dashboard_id=1",
+      headers=_auth_headers(),
+    )
+  assert r.status_code == 200, r.text
+  body = r.json()
+  assert body["dashboard_id"] == 1
+  assert "generated_at" in body
+  assert isinstance(body["checks"], list)
+  assert {c["name"] for c in body["checks"]} == {"proxmox", "spotify", "ldap"}
+  assert body["overall_status"] in {"ok", "warning", "not_configured", "down", "disabled"}
 
 
 def test_integrations_health_ldap_disabled_does_not_warn(monkeypatch):
@@ -79,15 +90,15 @@ def test_integrations_health_ldap_disabled_does_not_warn(monkeypatch):
   )
 
   app = build_app()
-  app.dependency_overrides[require_any_role] = lambda *roles: (lambda: {"sub": "t", "type": "admin"})
-  try:
-    client = TestClient(app)
-    r = client.get("/api/integrations/health?dashboard_id=1")
-    assert r.status_code == 200
-    body = r.json()
-    assert body["overall_status"] == "ok"
-    ldap = next(c for c in body["checks"] if c["name"] == "ldap")
-    assert ldap["status"] == "disabled"
-  finally:
-    app.dependency_overrides.clear()
+  client = TestClient(app)
+  with patch("dependencies.auth.get_force_change_for_username", return_value=False):
+    r = client.get(
+      "/api/integrations/health?dashboard_id=1",
+      headers=_auth_headers(),
+    )
+  assert r.status_code == 200
+  body = r.json()
+  assert body["overall_status"] == "ok"
+  ldap = next(c for c in body["checks"] if c["name"] == "ldap")
+  assert ldap["status"] == "disabled"
 

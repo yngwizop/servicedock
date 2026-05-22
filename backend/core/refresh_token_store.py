@@ -70,10 +70,10 @@ def get_refresh_jti(user_sub: str) -> Optional[str]:
 def validate_refresh_jti(user_sub: str, jti: Optional[str]) -> bool:
     """
     True if jti matches the active server-side session.
-    Legacy JWTs without jti are allowed once (migration); revoked/logout has no store → reject.
+    Tokens without jti are rejected (legacy migration complete).
     """
     if not jti:
-        return True
+        return False
     current = get_refresh_jti(user_sub)
     if current is None:
         return False

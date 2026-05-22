@@ -7,7 +7,10 @@ from sqlalchemy import engine_from_config, pool
 # Alembic Config object (reads alembic.ini)
 config = context.config
 
-if config.config_file_name is not None:
+# Only reconfigure logging when alembic is invoked from the CLI.
+# When the backend embeds alembic via core.db_migrations.run_alembic_upgrade()
+# we pass configure_logger=False so the FastAPI 'dashboard' logger stays intact.
+if config.config_file_name is not None and config.attributes.get("configure_logger", True):
   fileConfig(config.config_file_name)
 
 # We don't use ORM metadata yet (raw SQL project).

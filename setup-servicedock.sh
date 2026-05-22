@@ -210,6 +210,14 @@ REDIS_URL=redis://redis:6379/0
 # Behind bundled nginx: real client IP for lockout/audit
 TRUST_FORWARDED_HEADERS=true
 TRUSTED_PROXIES=172.16.0.0/12,10.0.0.0/8,192.168.0.0/16
+
+# Optional: replace default 'changeme' password for first install (only used when
+# no local user exists yet). Login: admin / <this password> → forced change in UI.
+# INITIAL_ADMIN_PASSWORD=
+
+# Optional: restrict Proxmox API targets to specific networks (comma-separated CIDRs).
+# Default (empty) allows private RFC1918 + public addresses, blocks loopback/link-local/metadata.
+# PROXMOX_HOST_ALLOWLIST=192.168.0.0/16,10.0.0.0/8
 EOF
 
 chmod 600 .env
@@ -228,8 +236,9 @@ echo -e "${GREEN}🎉 Servicedock is running!${NC}"
 echo ""
 echo "🌐 Access:"
 echo "   Browser: ${FRONTEND_URL}"
-echo "   Dashboard login: admin / changeme (you will be asked to change this in the UI)"
-echo "   (Accept the self-signed certificate warning in your browser)"
+echo "   Dashboard login: admin / changeme"
+echo "   (You will be asked to change the password on first login — required.)"
+echo "   (Accept the self-signed certificate warning in your browser.)"
 echo ""
 echo "🔒 Generated secrets are stored in: $(pwd)/.env (chmod 600)"
 echo "   Postgres password was auto-generated — only needed for direct DB access, not for the web UI."

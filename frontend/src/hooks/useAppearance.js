@@ -68,7 +68,7 @@ export function useAppearance({ onSessionExpired }) {
       setAppearance(safeData);
       setEditAppearance(safeData);
     } catch (err) {
-      console.error("Fehler beim Laden der Appearance:", err);
+      console.error("Failed to load appearance:", err);
     }
   };
 

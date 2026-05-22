@@ -1,6 +1,6 @@
 """Services CRUD router"""
 from typing import Any, List
-from fastapi import APIRouter, HTTPException, Depends, Body, Request
+from fastapi import APIRouter, HTTPException, Depends, Body, Request, Query
 from fastapi.concurrency import run_in_threadpool
 
 from models.service import Service
@@ -15,14 +15,23 @@ router = APIRouter(prefix="/api/services", tags=["services"])
 
 @router.get("", response_model=List[ServiceResponse])
 @limiter.limit("60/minute")  # Read operations - generous limit
-async def get_services(request: Request, dashboard_id: int = 1, db = Depends(get_db), _admin = Depends(require_any_role("admin", "viewer"))) -> List[ServiceResponse]:
+async def get_services(
+    request: Request,
+    dashboard_id: int = 1,
+    limit: int = Query(500, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    _admin=Depends(require_any_role("admin", "viewer")),
+    db=Depends(get_db),
+) -> List[ServiceResponse]:
     """Get all services for a specific dashboard (default: 1)"""
     def _get_services_sync():
         cur = db.cursor()
         try:
             cur.execute(
-                "SELECT id, name, description, url, icon, position, COALESCE(is_favorite, FALSE) FROM services WHERE dashboard_id = %s ORDER BY position ASC, id ASC;",
-                (dashboard_id,)
+                "SELECT id, name, description, url, icon, position, COALESCE(is_favorite, FALSE) "
+                "FROM services WHERE dashboard_id = %s ORDER BY position ASC, id ASC "
+                "LIMIT %s OFFSET %s;",
+                (dashboard_id, limit, offset),
             )
             rows = cur.fetchall()
             return [

@@ -7,6 +7,7 @@ import { ArrowsClockwise, WarningCircle, GearSix, LockKey, FunnelSimple, SortAsc
 import CustomSelect from './CustomSelect';
 import { authenticatedFetch } from '../utils/auth';
 import { fetchProxmoxVmBundle, fetchProxmoxClusterStatsPrefetch } from '../utils/fetchProxmoxBundle';
+import { translateProxmoxError } from '../utils/proxmoxErrors';
 import { BACKEND_URL } from '../utils/backendUrl';
 
 function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, searchTerm = "", isAdmin = false, proxmoxWarm = null }) {
@@ -109,7 +110,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
         setProxmoxName('');
         setIsCluster(false);
         setClusterStatsPrefetch(null);
-        setError(bundle.error || 'Failed to load Proxmox');
+        setError(translateProxmoxError(bundle.errorCode, bundle.errorContext, bundle.error, t));
         setLoading(false);
         return;
       }
@@ -122,7 +123,7 @@ function ProxmoxGrid({ isLoggedIn, textColor, onOpenSettings, activeDashboard, s
       runStatsPrefetch = true;
     } catch (err) {
       console.error('Error fetching Proxmox data:', err);
-      setError(err.message || 'Failed to connect to Proxmox');
+      setError(translateProxmoxError(err.code, err.context, err.message, t));
     } finally {
       setLoading(false);
     }

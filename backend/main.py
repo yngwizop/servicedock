@@ -2,8 +2,6 @@
 FastAPI Web Dashboard Backend - Fully Modularized
 Main application file with clean router-based architecture
 """
-import requests
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -34,10 +32,6 @@ from routers.wallpapers import router as wallpapers_router  # NEW: Wallpaper Upl
 from routers.docs import router as docs_router  # Help / Markdown from repo root
 from routers.users import router as users_router  # Local user accounts
 from routers.integrations import router as integrations_router  # Integration health summary
-
-# Homelab only: suppress urllib3 warnings when Proxmox verify_ssl=false in dashboard config.
-# Prefer verify_ssl=true (default) in production; do not disable warnings globally without reason.
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # Initialize FastAPI app
 if ENVIRONMENT == "production":
@@ -140,13 +134,21 @@ async def startup_event():
         for warning in warnings:
             logger.warning(f"⚠️  {warning}")
     
-    # Initialize database
+    # Apply pending DB schema migrations BEFORE serving any traffic.
+    # Idempotent (Alembic tracks applied revisions). If this fails the
+    # container exits with a clear log line — no half-migrated state.
+    from core.db_migrations import run_alembic_upgrade
+    run_alembic_upgrade()
+
+    # Initialize database connection pool used by the app
     initialize_connection_pool()
-    
-    # Lokale Benutzer-Tabelle + Migration admin_auth → local_users
+
+    # Belt-and-suspenders bootstrap for the local_users table.
+    # The schema itself is owned by Alembic now; this only seeds the
+    # initial admin user when no local user exists yet.
     from core.local_users import ensure_local_users_schema_and_bootstrap
     ensure_local_users_schema_and_bootstrap()
-    
+
     logger.info("✅ Application startup complete")
 
 # ===== Include ALL Routers =====

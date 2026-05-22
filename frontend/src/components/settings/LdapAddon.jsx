@@ -275,7 +275,13 @@ function LdapAddon({
               ) : (
                 <XCircle size={20} weight="fill" className="shrink-0 mt-0.5 text-red-600 dark:text-red-400" aria-hidden />
               )}
-              <span>{testResult.message}</span>
+              <span>
+                {testResult.code === 'ldap_test_success'
+                  ? t('ldapAddon.test_success')
+                  : testResult.code === 'ldap_test_failed'
+                    ? t('ldapAddon.test_failed', { detail: testResult.error_detail || '' })
+                    : testResult.message}
+              </span>
             </p>
             {testResult.server && (
               <p className="text-xs opacity-90">

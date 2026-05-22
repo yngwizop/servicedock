@@ -87,6 +87,7 @@
     "mismatch": "Passwörter stimmen nicht überein.",
     "too_short": "Passwort muss mindestens 8 Zeichen lang sein.",
     "same_password": "Neues Passwort muss sich vom aktuellen unterscheiden.",
+    "force_change_required": "Bitte ändere zuerst dein Passwort, bevor du andere Funktionen nutzt.",
     "success": "Passwort erfolgreich geändert!",
     "error": "Fehler beim Ändern des Passworts."
   },
@@ -709,11 +710,35 @@
     "node_hint_cluster": "Cluster-Ansicht auf einen Node beschränken. Name exakt wie in Proxmox (Groß-/Kleinschreibung).",
     "node_hint_standalone": "Bei einem einzelnen Proxmox-Host empfohlen — wichtig für Storage-Statistiken. Hostname wie unter Datacenter → Node.",
     "test_connection": "Verbindung testen",
+    "test_missing_fields": "Host und Token-Name sind für den Test erforderlich.",
+    "test_token_required": "API-Token-Secret eingeben (bei Erstkonfiguration) oder zuerst speichern.",
     "port_label": "Port",
     "token_name_label": "API Token Name *",
     "token_name_format": "(Format: user@realm!tokenname)",
+    "token_name_stored": "Gespeichert: {{masked}}",
+    "token_name_change_placeholder": "Nur ausfüllen, wenn du den Token-Namen änderst",
+    "token_name_keep_hint": "Leer lassen, um den gespeicherten Token-Namen zu behalten.",
     "token_secret_label": "API Token Secret *",
-    "host_placeholder": "192.168.1.100 oder proxmox.local"
+    "host_placeholder": "192.168.1.100 oder proxmox.local",
+    "host_not_allowed": "Dieser Host ist nicht erlaubt (blockierte Adresse oder nicht in PROXMOX_HOST_ALLOWLIST).",
+    "errors": {
+      "token_name_required": "API-Token-Name ist bei der Erstkonfiguration erforderlich.",
+      "token_value_required": "API-Token-Secret ist bei der Erstkonfiguration erforderlich.",
+      "not_configured": "Proxmox ist nicht konfiguriert oder die Token-Entschlüsselung ist fehlgeschlagen.",
+      "token_missing": "Kein API-Token-Secret angegeben und keine gespeicherte Konfiguration gefunden.",
+      "token_name_missing": "API-Token-Name fehlt. Bitte eintragen oder zuerst speichern.",
+      "build_failed": "Verbindung konnte nicht aufgebaut werden.",
+      "no_nodes": "Keine Nodes gefunden. Prüfe die Berechtigungen des API-Tokens.",
+      "node_mismatch": "Konfigurierter Node „{{configured}}“ nicht gefunden. Verfügbar: {{available}}.",
+      "auth_failed": "Authentifizierung fehlgeschlagen. Prüfe Token-Name (Format: user@realm!tokenname) und Token-Secret.",
+      "forbidden": "Keine Berechtigung. Der API-Token benötigt mindestens Rolle PVEAuditor (Lesen) oder PVEAdmin (Vollzugriff) auf Pfad /. Bei Privilege Separation: Berechtigung gilt für den Token, nicht den User.",
+      "connection_failed": "Verbindung fehlgeschlagen. Prüfe Host/IP, Port (Standard 8006) und Firewall.",
+      "ssl_failed": "SSL-Zertifikatfehler. Bei self-signed Zertifikaten: „SSL-Zertifikat verifizieren“ deaktivieren.",
+      "unknown": "Proxmox-API-Fehler: {{raw}}",
+      "cluster_resources_failed": "Cluster-Ressourcen konnten nicht abgerufen werden.",
+      "server_data_failed": "Server-Daten konnten nicht abgerufen werden.",
+      "cluster_stats_failed": "Cluster-Statistiken konnten nicht abgerufen werden."
+    }
   },
   "proxmoxDashboardSettings": {
     "title": "Dashboard Einstellungen",
@@ -745,6 +770,19 @@
     "spotify_description": "Zeige aktuell abgespielte Musik direkt auf deinem Dashboard.",
     "back": "Zurück zu AddOns",
     "spotify_save_error": "Fehler beim Speichern der Spotify-Konfiguration",
+    "spotify_errors": {
+      "spotify_install_failed": "Spotify-Installation fehlgeschlagen.",
+      "spotify_uninstall_failed": "Spotify-Deinstallation fehlgeschlagen.",
+      "spotify_not_configured": "Spotify ist nicht konfiguriert. Bitte zuerst installieren.",
+      "spotify_oauth_denied": "Spotify-Autorisierung abgelehnt.",
+      "spotify_oauth_missing_params": "OAuth-Parameter (Code oder State) fehlen.",
+      "spotify_oauth_invalid_state": "Ungültiger State-Token (CSRF-Schutz).",
+      "spotify_config_missing": "Spotify-Konfiguration nicht gefunden.",
+      "spotify_token_exchange_failed": "Token-Austausch fehlgeschlagen. Bitte erneut versuchen.",
+      "spotify_no_tokens": "Keine Tokens von Spotify erhalten.",
+      "spotify_api_unreachable": "Verbindung zu Spotify fehlgeschlagen.",
+      "spotify_callback_error": "Ein Fehler ist beim Spotify-Callback aufgetreten."
+    },
     "spotify_connected": "Spotify erfolgreich verbunden!",
     "spotify_connect_error": "Fehler beim Starten der Spotify-Verbindung",
     "spotify_remove_confirm": "Möchten Sie Spotify wirklich entfernen? Alle Daten werden gelöscht.",
@@ -854,6 +892,7 @@
     "upload_hint": "JPG, PNG oder WebP. Maximal 10 MB.",
     "custom_url": "Bild-URL eingeben",
     "delete_confirm": "Dieses Wallpaper wirklich löschen?",
+    "upload_failed": "Upload fehlgeschlagen",
     "mountains": "Berge",
     "ocean": "Ozean",
     "forest": "Wald",
@@ -909,6 +948,8 @@
     "group": "Gruppe",
     "members": "Mitglieder",
     "security_note_title": "Sicherheit:",
-    "security_note_text": "Das Bind-Passwort wird verschlüsselt gespeichert. Für Produktionsumgebungen wird LDAPS (Port 636) oder StartTLS empfohlen."
+    "security_note_text": "Das Bind-Passwort wird verschlüsselt gespeichert. Für Produktionsumgebungen wird LDAPS (Port 636) oder StartTLS empfohlen.",
+    "test_success": "LDAP-Verbindung erfolgreich",
+    "test_failed": "LDAP-Verbindung fehlgeschlagen: {{detail}}"
   }
 }

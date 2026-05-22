@@ -118,7 +118,7 @@ function AppearanceTab({
           setUploadedWallpapers(data);
         }
       } catch (err) {
-        console.error('Fehler beim Laden der Wallpapers:', err);
+        console.error('Failed to load wallpapers:', err);
       }
     };
     fetchUploaded();
@@ -146,12 +146,17 @@ function AppearanceTab({
         // Liste aktualisieren
         setUploadedWallpapers(prev => [...prev, { filename: data.filename, url: data.url, size: data.size }]);
       } else {
-        const err = await res.json().catch(() => ({ detail: 'Upload fehlgeschlagen' }));
-        alert(err.detail || 'Upload fehlgeschlagen');
+        const err = await res.json().catch(() => ({}));
+        const detail = err?.detail;
+        if (typeof detail === 'string' && detail) {
+          alert(detail);
+        } else {
+          alert(t('wallpaper.upload_failed'));
+        }
       }
     } catch (err) {
-      console.error('Upload Fehler:', err);
-      alert('Upload fehlgeschlagen');
+      console.error('Upload failed:', err);
+      alert(t('wallpaper.upload_failed'));
     } finally {
       setIsUploading(false);
       // File Input zurücksetzen für erneuten Upload derselben Datei
@@ -172,7 +177,7 @@ function AppearanceTab({
         }
       }
     } catch (err) {
-      console.error('Fehler beim Löschen:', err);
+      console.error('Failed to delete wallpaper:', err);
     }
   };
 
