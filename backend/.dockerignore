@@ -16,11 +16,14 @@ env/
 ENV/
 virtualenv/
 
-# Testing
+# Testing (not needed in production image)
+tests/
+pytest.ini
 .pytest_cache/
 .coverage
 htmlcov/
 *.cover
+requirements-dev.txt
 
 # IDE
 .vscode/

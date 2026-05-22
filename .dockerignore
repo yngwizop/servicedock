@@ -57,6 +57,12 @@ yarn-error.log*
 # Python
 __pycache__/
 *.py[cod]
+
+# Backend: dev-only (production image uses repo root as build context)
+backend/tests/
+backend/pytest.ini
+backend/requirements-dev.txt
+backend/.pytest_cache/
 *$py.class
 *.so
 .Python

@@ -12,8 +12,6 @@ python-jose[cryptography]
 bcrypt>=4.0.0
 python-multipart
 ldap3>=2.9.1
-pytest
-pytest-asyncio
 alembic
 redis
 Pillow>=10.0.0
