@@ -15,11 +15,12 @@ def test_settings_enforces_redis_in_production():
 
 
 def test_production_compose_defaults():
+    """docker-compose.yml uses YAML env blocks (x-backend-env), not KEY=value lines."""
     compose_path = REPO_ROOT / "docker-compose.yml"
     if not compose_path.is_file():
         pytest.skip("docker-compose.yml not in workspace (backend-only checkout)")
     compose = compose_path.read_text(encoding="utf-8")
-    assert "ENVIRONMENT=production" in compose
-    assert "REDIS_URL=${REDIS_URL:-redis://redis:6379/0}" in compose
+    assert "ENVIRONMENT: production" in compose
+    assert "REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}" in compose
     assert "DOCKERHUB_USER" in compose
-    assert "FRONTEND_URL=${FRONTEND_URL:?" in compose or "FRONTEND_URL=${FRONTEND_URL:?Set" in compose
+    assert "FRONTEND_URL: ${FRONTEND_URL:?" in compose
